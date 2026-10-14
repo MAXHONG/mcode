@@ -1,20 +1,20 @@
 import { create } from "zustand";
-import type { ZCodeTaskMeta } from "@zcode/shared";
-import type { IZCodeTaskService } from "@zcode/services";
+import type { McodeTaskMeta } from "@mcode/shared";
+import type { IMcodeTaskService } from "@mcode/services";
 import { logger } from "@/logger.js";
 import { buildTaskWorkspaceKey } from "@/lib/taskQueryCache.js";
 import { getRemoteWorkspaceSession } from "@/store/remoteWorkspaceSessionStore.js";
 
 interface RemotePinnedTaskState {
-  itemsByWorkspaceKey: Record<string, ZCodeTaskMeta[]>;
+  itemsByWorkspaceKey: Record<string, McodeTaskMeta[]>;
   loadingByWorkspaceKey: Record<string, boolean>;
   errorByWorkspaceKey: Record<string, string>;
   refreshWorkspace: (params: {
     workspacePath: string;
     workspaceIdentity?: string;
-    zcodeTaskService: Pick<IZCodeTaskService, "listPinnedTasks">;
+    mcodeTaskService: Pick<IMcodeTaskService, "listPinnedTasks">;
   }) => Promise<void>;
-  upsertTask: (task: ZCodeTaskMeta) => void;
+  upsertTask: (task: McodeTaskMeta) => void;
   removeTask: (workspacePath: string, taskId: string, workspaceIdentity?: string) => void;
   clearWorkspace: (workspacePath: string, workspaceIdentity?: string) => void;
 }
@@ -23,7 +23,7 @@ function getWorkspaceKey(workspacePath: string, workspaceIdentity?: string): str
   return buildTaskWorkspaceKey(workspacePath, workspaceIdentity);
 }
 
-function sortPinnedTasks(tasks: ZCodeTaskMeta[]): ZCodeTaskMeta[] {
+function sortPinnedTasks(tasks: McodeTaskMeta[]): McodeTaskMeta[] {
   return [...tasks].sort((left, right) => {
     if (right.updatedAt !== left.updatedAt) {
       return right.updatedAt - left.updatedAt;
@@ -39,7 +39,7 @@ export const useRemotePinnedTaskStore = create<RemotePinnedTaskState>()((set) =>
   itemsByWorkspaceKey: {},
   loadingByWorkspaceKey: {},
   errorByWorkspaceKey: {},
-  async refreshWorkspace({ workspacePath, workspaceIdentity, zcodeTaskService }) {
+  async refreshWorkspace({ workspacePath, workspaceIdentity, mcodeTaskService }) {
     const workspaceKey = getWorkspaceKey(workspacePath, workspaceIdentity);
     set((state) => ({
       loadingByWorkspaceKey: {
@@ -53,7 +53,7 @@ export const useRemotePinnedTaskStore = create<RemotePinnedTaskState>()((set) =>
     }));
 
     try {
-      const items = await zcodeTaskService.listPinnedTasks({
+      const items = await mcodeTaskService.listPinnedTasks({
         workspacePath,
         ...(workspaceIdentity ? { workspaceIdentity } : {}),
       });
@@ -152,6 +152,6 @@ export async function refreshRemotePinnedTasksForSession({
   await useRemotePinnedTaskStore.getState().refreshWorkspace({
     workspacePath,
     workspaceIdentity,
-    zcodeTaskService: session.services.zcodeTaskService,
+    mcodeTaskService: session.services.mcodeTaskService,
   });
 }

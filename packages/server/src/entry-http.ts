@@ -1,23 +1,23 @@
-import { createLocalServices, createTopicResourcePeers, getAppConfigDir } from "@zcode/services/node";
+import { createLocalServices, createTopicResourcePeers, getAppConfigDir } from "@mcode/services/node";
 import {
-  materializeBundledZCodeBuiltinProviderConfig,
-  readBundledZCodeBuiltinProviderConfig,
-} from "./bundledZCodeBuiltinProviderConfig.js";
+  materializeBundledMcodeBuiltinProviderConfig,
+  readBundledMcodeBuiltinProviderConfig,
+} from "./bundledMcodeBuiltinProviderConfig.js";
 import { createHttpServer } from "./http.js";
 
 async function main(): Promise<void> {
-  const zcodeBuiltinProviderConfigFilePath = await materializeBundledZCodeBuiltinProviderConfig({
+  const mcodeBuiltinProviderConfigFilePath = await materializeBundledMcodeBuiltinProviderConfig({
     environmentConfigRoot: getAppConfigDir(),
-    content: readBundledZCodeBuiltinProviderConfig(),
+    content: readBundledMcodeBuiltinProviderConfig(),
   });
   const port = Number(process.env["PORT"]) || 3030;
-  const host = process.env["ZCODE_SERVER_HOST"]?.trim() || process.env["HOST"]?.trim() || undefined;
-  const staticRoot = process.env["ZCODE_WEB_STATIC_ROOT"]?.trim() || undefined;
-  const authToken = process.env["ZCODE_SERVER_AUTH_TOKEN"]?.trim() || undefined;
+  const host = process.env["MCODE_SERVER_HOST"]?.trim() || process.env["HOST"]?.trim() || undefined;
+  const staticRoot = process.env["MCODE_WEB_STATIC_ROOT"]?.trim() || undefined;
+  const authToken = process.env["MCODE_SERVER_AUTH_TOKEN"]?.trim() || undefined;
   const topicResourcePeers = createTopicResourcePeers();
   const services = createLocalServices({
     topicResourceRelayChannel: (request) => topicResourcePeers.getChannel(request),
-    zcodeBuiltinProviderConfigFilePath,
+    mcodeBuiltinProviderConfigFilePath,
     providerProvisioningTargetEnabled: Boolean(authToken),
   });
 
@@ -30,6 +30,6 @@ async function main(): Promise<void> {
 }
 
 void main().catch((error: unknown) => {
-  console.error("[zcode-server:http] startup failed", error);
+  console.error("[mcode-server:http] startup failed", error);
   process.exitCode = 1;
 });

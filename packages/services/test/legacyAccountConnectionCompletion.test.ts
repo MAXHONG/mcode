@@ -14,10 +14,10 @@ const oldFields = {
 };
 
 async function setup(raw: unknown = oldFields) {
-  const home = await mkdtemp(join(tmpdir(), "zcode-team-migration-"));
+  const home = await mkdtemp(join(tmpdir(), "mcode-team-migration-"));
   homes.push(home);
   process.env.HOME = home;
-  const dir = join(home, ".zcode", "v2");
+  const dir = join(home, ".mcode", "v2");
   await mkdir(dir, { recursive: true });
   const file = join(dir, "setting.json");
   await writeFile(file, JSON.stringify(raw));

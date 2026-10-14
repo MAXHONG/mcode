@@ -1,13 +1,13 @@
-import type { RendererTelemetryEventPayload } from "@zcode/shared";
+import type { RendererTelemetryEventPayload } from "@mcode/shared";
 /* eslint-disable max-lines -- Web 远程控制 manager 承担外部 relay app payload 路由与 workspace bridge 编排。 */
 import type { MessagePortMain, UtilityProcess as ElectronUtilityProcess } from "electron";
 import { randomUUID } from "node:crypto";
-import { MessagePortProtocol, type MessagePortLike, type MessagePortPayload } from "@zcode/rpc";
+import { MessagePortProtocol, type MessagePortLike, type MessagePortPayload } from "@mcode/rpc";
 import {
   createAcknowledgedWebRemoteControlRelayProtocol,
   type AcknowledgedWebRemoteControlRelayProtocolAdapter,
   type WebRemoteControlPayloadSendResult,
-} from "@zcode/client";
+} from "@mcode/client";
 import {
   buildWebRemoteControlExternalQrUrl,
   buildWebRemoteControlBridgeResultTelemetry,
@@ -15,7 +15,7 @@ import {
   classifyRemoteUsageError,
   parseRemoteWorkspaceIdentity,
   WEB_REMOTE_CONTROL_OUTBOUND_PAYLOAD_BUFFER_TIMEOUT_MS,
-  type ZCodeEndpointUrls,
+  type McodeEndpointUrls,
   resolveWebRemoteControlWorkspaceKey,
   type WebRemoteControlAppPayload,
   type WebRemoteControlContext,
@@ -40,7 +40,7 @@ import {
   type RemoteUsageRemoteKind,
   type TelemetryEventPayload,
   measureWebRemoteControlRpcRelayEnvelopeBytes,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import {
   WebRemoteControlDeviceTransport,
   type WebRemoteControlDeviceTransportAuth,
@@ -130,7 +130,7 @@ interface WindowControlRuntime {
 }
 
 interface WebRemoteControlManagerDependencies {
-  getEndpointUrls?: () => Promise<ZCodeEndpointUrls> | ZCodeEndpointUrls;
+  getEndpointUrls?: () => Promise<McodeEndpointUrls> | McodeEndpointUrls;
   relayWsUrl: string;
   mobileRemoteControlUrl: string;
   deviceMid: string;
@@ -575,7 +575,7 @@ export function createWebRemoteControlManager(dependencies: WebRemoteControlMana
       if (result.kind === "oversize") {
         // Bugfix：永久 oversize 不能伪装成临时不可发送后反复进入 50 项 buffer。
         dependencies.logger.warn("[web-remote-control] dropped oversize app payload", {
-          zcodeType: payload.zcode_type,
+          mcodeType: payload.zcode_type,
           bytes: result.bytes,
           maxBytes: result.maxBytes,
         });
@@ -600,7 +600,7 @@ export function createWebRemoteControlManager(dependencies: WebRemoteControlMana
     }
     if (result.kind === "oversize") {
       dependencies.logger.warn("[web-remote-control] rejected oversize app payload", {
-        zcodeType: payload.zcode_type,
+        mcodeType: payload.zcode_type,
         bytes: result.bytes,
         maxBytes: result.maxBytes,
       });

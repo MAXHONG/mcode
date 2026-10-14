@@ -27,7 +27,7 @@ vi.mock("@/components/ui/pdf-viewer.js", () => ({
 }));
 
 vi.mock("@/i18n/IntlProvider.js", () => ({
-  useZCodeIntl: () => ({
+  useMcodeIntl: () => ({
     intl: { formatMessage: ({ id }: { id: string }) => id },
   }),
 }));

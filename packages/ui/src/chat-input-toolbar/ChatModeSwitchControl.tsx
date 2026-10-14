@@ -1,8 +1,8 @@
 import type { RefObject } from "react";
-import type { ZCodeConfigOption, ZCodeProvider } from "@zcode/shared";
+import type { McodeConfigOption, McodeProvider } from "@mcode/shared";
 import { SlidersHorizontalIcon } from "lucide-react";
 import { ConfigSelect } from "@/chat-input-toolbar/display.js";
-import type { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import type { useMcodeIntl } from "@/i18n/IntlProvider.js";
 
 export function ChatModeSwitchControl({
   compactIconOnly = false,
@@ -22,16 +22,16 @@ export function ChatModeSwitchControl({
   compactIconOnly?: boolean;
   disabled?: boolean;
   disabledReason?: string;
-  intl: ReturnType<typeof useZCodeIntl>["intl"];
+  intl: ReturnType<typeof useMcodeIntl>["intl"];
   labelVisibilityClassName?: string;
-  modeOption: ZCodeConfigOption;
+  modeOption: McodeConfigOption;
   modeShortcutLabel: string;
   modeTriggerRef: RefObject<HTMLSpanElement | null>;
-  onConfigValueChange: (option: ZCodeConfigOption, value: string) => void;
+  onConfigValueChange: (option: McodeConfigOption, value: string) => void;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
   restoreFocusSelector?: string | null;
-  selectedProvider: ZCodeProvider;
+  selectedProvider: McodeProvider;
 }) {
   return (
     <ConfigSelect

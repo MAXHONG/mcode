@@ -1,5 +1,5 @@
-import { BIGMODEL_PROVIDER_ID, ZAI_PROVIDER_ID } from "@zcode/shared";
-import type { OAuthTokenSet, UserInfo } from "@zcode/shared";
+import { BIGMODEL_PROVIDER_ID, ZAI_PROVIDER_ID } from "@mcode/shared";
+import type { OAuthTokenSet, UserInfo } from "@mcode/shared";
 import type { WebOAuthProviderId } from "./browserOAuthCredentialRepo.js";
 
 export interface WebZaiOAuthProviderConfig {
@@ -118,8 +118,8 @@ function normalizeTokenResponse(
     throw new Error(payload.msg?.trim() || "OAuth token exchange failed");
   }
 
-  const zcodeJwtToken = payload.data?.token?.trim();
-  if (!zcodeJwtToken) {
+  const mcodeJwtToken = payload.data?.token?.trim();
+  if (!mcodeJwtToken) {
     throw new Error("Token exchange response missing data.token");
   }
 
@@ -151,7 +151,7 @@ function normalizeTokenResponse(
   return {
     tokenSet: {
       accessToken,
-      zcodeJwtToken,
+      mcodeJwtToken,
       ...(expiresAt ? { expiresAt } : {}),
     },
     userInfo,

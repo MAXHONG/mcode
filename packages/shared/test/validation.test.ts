@@ -6,7 +6,7 @@ import {
   hostIncomingMessageSchema,
   hostResponseMessageSchema,
   wslConnectOptionsSchema,
-  zcodePersistedMessageSchema,
+  mcodePersistedMessageSchema,
 } from "../src/validation.js";
 
 it("资源查询取消必须指定 requestId 且不接受附加字段", () => {
@@ -20,7 +20,7 @@ it("资源查询取消必须指定 requestId 且不接受附加字段", () => {
 
 it("accepts persisted user messages with video attachments", () => {
   expect(
-    zcodePersistedMessageSchema.safeParse({
+    mcodePersistedMessageSchema.safeParse({
       role: "user",
       content: "Summarize the video.",
       timestamp: 1,
@@ -79,7 +79,7 @@ describe("hostResponseMessageSchema", () => {
       pid: 12345,
       provider: "glm",
       workspacePath: "/repo/demo",
-      command: "/tmp/zcode-agent",
+      command: "/tmp/mcode-agent",
       args: ["--stdio"],
       startedAt: Date.now(),
       runtimeGeneration: 2,
@@ -119,7 +119,7 @@ describe("hostResponseMessageSchema", () => {
       pid: null,
       provider: "glm",
       workspacePath: "/repo/demo",
-      command: "/tmp/missing-zcode-agent",
+      command: "/tmp/missing-mcode-agent",
       args: ["app-server", "--stdio"],
       errorName: "Error",
       errorCode: "ENOENT",
@@ -142,7 +142,7 @@ describe("hostResponseMessageSchema", () => {
       pid: 12345,
       provider: "glm",
       workspacePath: "/repo/demo",
-      command: "/tmp/zcode-agent",
+      command: "/tmp/mcode-agent",
       args: ["--stdio"],
       startedAt: Date.now(),
     });
@@ -278,7 +278,7 @@ describe("hostResponseMessageSchema", () => {
       type: "init-local",
       workspacePath: "/repo/active",
       agentWarmupTargets: [{ workspacePath: "/repo/active" }],
-      zcodeBuiltinProviderConfigFilePath: "/repo/config/provider/zcode-builtin.json",
+      mcodeBuiltinProviderConfigFilePath: "/repo/config/provider/mcode-builtin.json",
       runtimeProcessEnvPatch: {
         PATH: "/Users/demo/.local/bin:/usr/bin:/bin",
         FNM_DIR: "/Users/demo/.fnm",
@@ -288,13 +288,13 @@ describe("hostResponseMessageSchema", () => {
     expect(parsed.success).toBe(true);
     if (parsed.success && parsed.data.type === "init-local") {
       expect(parsed.data.runtimeProcessEnvPatch?.PATH).toContain("/Users/demo/.local/bin");
-      expect(parsed.data.zcodeBuiltinProviderConfigFilePath).toBe(
-        "/repo/config/provider/zcode-builtin.json",
+      expect(parsed.data.mcodeBuiltinProviderConfigFilePath).toBe(
+        "/repo/config/provider/mcode-builtin.json",
       );
     }
   });
 
-  it("rejects local host init without an ZCode Built-in Provider Config", () => {
+  it("rejects local host init without an Mcode Built-in Provider Config", () => {
     expect(
       hostIncomingMessageSchema.safeParse({
         type: "init-local",
@@ -306,7 +306,7 @@ describe("hostResponseMessageSchema", () => {
     expect(
       hostIncomingMessageSchema.safeParse({
         type: "init-local",
-        zcodeBuiltinProviderConfigFilePath: "/repo/config/provider/zcode-builtin.json",
+        mcodeBuiltinProviderConfigFilePath: "/repo/config/provider/mcode-builtin.json",
         runtimeProcessEnvPatch: { PATH: ["/usr/bin"] },
       }).success,
     ).toBe(false);
@@ -315,7 +315,7 @@ describe("hostResponseMessageSchema", () => {
   it("rejects more than one local host agent warmup target", () => {
     const parsed = hostIncomingMessageSchema.safeParse({
       type: "init-local",
-      zcodeBuiltinProviderConfigFilePath: "/repo/config/provider/zcode-builtin.json",
+      mcodeBuiltinProviderConfigFilePath: "/repo/config/provider/mcode-builtin.json",
       agentWarmupTargets: ["a", "b"].map((name) => ({
         workspacePath: `/repo/${name}`,
       })),
@@ -324,7 +324,7 @@ describe("hostResponseMessageSchema", () => {
     expect(parsed.success).toBe(false);
   });
 
-  it("accepts window Host connect payload with remote ZCode Agent asset dirs", () => {
+  it("accepts window Host connect payload with remote Mcode Agent asset dirs", () => {
     const parsed = hostIncomingMessageSchema.safeParse({
       type: "connect-remote-workspace",
       requestId: "connect-docker-1",
@@ -637,15 +637,15 @@ describe("hostResponseMessageSchema", () => {
     expect(patch.computerUseComposerEntryHidden).toBe(false);
   });
 
-  it("defaults ZCode interaction behavior to queue and accepts guide patches", () => {
+  it("defaults Mcode interaction behavior to queue and accepts guide patches", () => {
     const parsed = appSettingsSchema.parse({});
     const patch = appSettingsPatchSchema.parse({
-      zcodeInteractionBehavior: "guide",
+      mcodeInteractionBehavior: "guide",
     });
 
-    expect(parsed.zcodeInteractionBehavior).toBe("queue");
+    expect(parsed.mcodeInteractionBehavior).toBe("queue");
     expect(patch).toMatchObject({
-      zcodeInteractionBehavior: "guide",
+      mcodeInteractionBehavior: "guide",
     });
   });
 
@@ -671,7 +671,7 @@ describe("hostResponseMessageSchema", () => {
     expect(patch.providerFamilyDomainUpdatedAt).toBe(456);
   });
 
-  it("normalizes legacy enabled agent CLI providers to ZCode Agent", () => {
+  it("normalizes legacy enabled agent CLI providers to Mcode Agent", () => {
     const parsed = appSettingsSchema.parse({
       enabledBuiltinAgentCliProviders: ["claude", "codex", "gemini", "opencode"],
     });
@@ -813,7 +813,7 @@ describe("hostResponseMessageSchema", () => {
     expect(sessionEntry.target).not.toHaveProperty("resourcePackages");
   });
 
-  it("drops retired ZCode Agent proxy settings from legacy settings files", () => {
+  it("drops retired Mcode Agent proxy settings from legacy settings files", () => {
     const parsed = appSettingsSchema.safeParse({
       recentProjects: [],
       locale: "zh-CN",

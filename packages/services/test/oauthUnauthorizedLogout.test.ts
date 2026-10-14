@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { OAuthProviderId } from "@zcode/shared";
+import type { OAuthProviderId } from "@mcode/shared";
 import { OAuthService } from "#src/oauth/oauthService.js";
 import {
   isCurrentOAuthCredentialRequest,
@@ -35,7 +35,7 @@ function fixture(provider: OAuthProviderId = "zai", responseStatus = 401) {
   };
   const refresh = vi.fn(async () => ({ accessToken: "new-token", refreshToken: "refresh-token" }));
   const onProviderLogout = vi.fn(async () => {});
-  const env = { ZCODE_ENV: "production" };
+  const env = { MCODE_ENV: "production" };
   const service = new OAuthService(credentials, {
     env,
     onProviderLogout,
@@ -69,7 +69,7 @@ function fixture(provider: OAuthProviderId = "zai", responseStatus = 401) {
         { code: 401, msg: "登录状态已过期", success: false },
         { status: responseStatus },
       ),
-    isZcodeJwtRequest: (input, requestHeaders) =>
+    isMcodeJwtRequest: (input, requestHeaders) =>
       isCurrentOAuthCredentialRequest({
         input,
         headers: requestHeaders,
@@ -82,7 +82,7 @@ function fixture(provider: OAuthProviderId = "zai", responseStatus = 401) {
         credentialService: credentials,
         env,
       }),
-    onZcodeJwtInvalid: (input, requestHeaders) => {
+    onMcodeJwtInvalid: (input, requestHeaders) => {
       const logoutTask = service
         .logoutIfCurrentCredentialRequest(input, requestHeaders)
         .then((invalidated) => {

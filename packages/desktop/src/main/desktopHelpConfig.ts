@@ -1,10 +1,10 @@
 import { net } from "electron";
 import {
   buildHelpAppConfigUrl,
-  buildZCodeSourceHeadersFromContext,
+  buildMcodeSourceHeadersFromContext,
   createHelpAppConfigReader,
-  ZCODE_ENV,
-} from "@zcode/shared";
+  MCODE_ENV,
+} from "@mcode/shared";
 
 export function createDesktopHelpConfigReader(options: {
   resolveEndpointOrigin: () => Promise<string>;
@@ -20,13 +20,13 @@ export function createDesktopHelpConfigReader(options: {
         options.appVersion,
         `${process.platform}-${process.arch}`,
       ),
-      buildZCodeSourceHeadersFromContext({
+      buildMcodeSourceHeadersFromContext({
         endpointOrigin,
         appVersion: options.appVersion,
         deviceMid: options.deviceMid,
         platform: process.platform,
         arch: process.arch,
-        releaseChannel: ZCODE_ENV,
+        releaseChannel: MCODE_ENV,
         sourceTitle: "electron",
       }),
     );

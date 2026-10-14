@@ -1,4 +1,4 @@
-const ZCODE_PROCESS_PREFIX = "zcode";
+const MCODE_PROCESS_PREFIX = "mcode";
 const MAX_PROCESS_NAME_SEGMENT_LENGTH = 24;
 
 function sanitizeProcessNameSegment(value: string | null | undefined): string | null {
@@ -18,11 +18,11 @@ function sanitizeProcessNameSegment(value: string | null | undefined): string | 
   return normalized.slice(0, MAX_PROCESS_NAME_SEGMENT_LENGTH);
 }
 
-function joinZCodeProcessName(...segments: Array<string | null | undefined>): string {
+function joinMcodeProcessName(...segments: Array<string | null | undefined>): string {
   const sanitizedSegments = segments
     .map((segment) => sanitizeProcessNameSegment(segment))
     .filter((segment): segment is string => Boolean(segment));
-  return [ZCODE_PROCESS_PREFIX, ...sanitizedSegments].join("-");
+  return [MCODE_PROCESS_PREFIX, ...sanitizedSegments].join("-");
 }
 
 function pickWorkspaceTag(workspacePath: string | null | undefined): string | undefined {
@@ -35,44 +35,44 @@ function pickWorkspaceTag(workspacePath: string | null | undefined): string | un
   return parts.at(-1) ?? trimmedPath;
 }
 
-export function formatZCodeMainProcessName(): string {
-  return joinZCodeProcessName("main");
+export function formatMcodeMainProcessName(): string {
+  return joinMcodeProcessName("main");
 }
 
-export function formatZCodeGpuProcessName(): string {
-  return joinZCodeProcessName("gpu");
+export function formatMcodeGpuProcessName(): string {
+  return joinMcodeProcessName("gpu");
 }
 
-export function formatZCodeHostProcessName(label?: string): string {
-  return joinZCodeProcessName("host", label);
+export function formatMcodeHostProcessName(label?: string): string {
+  return joinMcodeProcessName("host", label);
 }
 
-export function formatZCodeRendererProcessName(windowTitle?: string): string {
+export function formatMcodeRendererProcessName(windowTitle?: string): string {
   const normalizedTitle = windowTitle?.trim();
-  if (!normalizedTitle || normalizedTitle === "ZCode") {
-    return joinZCodeProcessName("renderer", "main");
+  if (!normalizedTitle || normalizedTitle === "Mcode") {
+    return joinMcodeProcessName("renderer", "main");
   }
 
   if (normalizedTitle === "Resource Manager") {
-    return joinZCodeProcessName("renderer", "resource-manager");
+    return joinMcodeProcessName("renderer", "resource-manager");
   }
 
-  const remoteWindowPrefix = "ZCode - ";
+  const remoteWindowPrefix = "Mcode - ";
   if (normalizedTitle.startsWith(remoteWindowPrefix)) {
-    return joinZCodeProcessName(
+    return joinMcodeProcessName(
       "renderer",
       "remote",
       normalizedTitle.slice(remoteWindowPrefix.length),
     );
   }
 
-  return joinZCodeProcessName("renderer", normalizedTitle);
+  return joinMcodeProcessName("renderer", normalizedTitle);
 }
 
-export function formatZCodeAgentProcessName(provider: string, workspacePath?: string): string {
-  return joinZCodeProcessName("agent", provider, pickWorkspaceTag(workspacePath));
+export function formatMcodeAgentProcessName(provider: string, workspacePath?: string): string {
+  return joinMcodeProcessName("agent", provider, pickWorkspaceTag(workspacePath));
 }
 
-export function formatZCodeUtilityProcessName(name?: string, type = "utility"): string {
-  return joinZCodeProcessName(type, name);
+export function formatMcodeUtilityProcessName(name?: string, type = "utility"): string {
+  return joinMcodeProcessName(type, name);
 }

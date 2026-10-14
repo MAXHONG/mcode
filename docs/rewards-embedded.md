@@ -77,8 +77,8 @@ sequenceDiagram
 
 - 改动层级：presentation / validation / commit-effect / persistence；既有状态归属不变。
 - 页面级目录、组件、函数、类型、i18n、日志、测试标识与构建入口统一 Rewards/rewards；本地环境配置改为 VITE_REWARDS_WEBVIEW_ORIGIN，不读取旧变量。
-- 新分区为 persist:zcode-rewards，新上下文事件为 zcode-rewards-context；window.zcodeBridge、OAuth/JWT key 不变。
-- 不迁移、不读取、不自动清理旧 persist:zcode-referrals 分区，不订阅旧事件、不导出旧别名、不兼容旧路径，不添加重定向或切换失败时回旧页。现有非法配置校验、安全拒绝及普通 Web 无 bridge 行为不属于迁移兜底，继续保留。
+- 新分区为 persist:mcode-rewards，新上下文事件为 zcode-rewards-context；window.zcodeBridge、OAuth/JWT key 不变。
+- 不迁移、不读取、不自动清理旧 persist:mcode-referrals 分区，不订阅旧事件、不导出旧别名、不兼容旧路径，不添加重定向或切换失败时回旧页。现有非法配置校验、安全拒绝及普通 Web 无 bridge 行为不属于迁移兜底，继续保留。
 - Website 的 /invite、/invite/accept、/invite/unavailable 与 /referrals/unavailable 是实际邀请业务，不属于被移除的奖励主页，保持原语义；仅旧 /{cn|en}/referrals 根页面返回 404。
 - 升级、领取、营销上报、任务/session、手机 replayable 与桌面 continuous 均不改变。用户数据/奖励仍归服务端，页面展示状态归 Website，登录续接归窗口 Provider。
 

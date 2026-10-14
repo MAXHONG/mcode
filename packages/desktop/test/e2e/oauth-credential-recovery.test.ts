@@ -6,7 +6,7 @@ import {
   TID_OAUTH_LOGIN_BUTTON,
   testId,
   ZAI_PROVIDER_ID,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import {
   clearAppData,
   clickTestIdByDom,

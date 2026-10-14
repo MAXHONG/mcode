@@ -10,8 +10,8 @@ import {
   Pin,
   Smartphone,
 } from "lucide-react";
-import { isCronTask, isOffPeakTask, type ZCodeTaskMeta } from "@zcode/shared";
-import { TID_TASK_ARCHIVE, TID_TASK_ITEM, testId } from "@zcode/shared";
+import { isCronTask, isOffPeakTask, type McodeTaskMeta } from "@mcode/shared";
+import { TID_TASK_ARCHIVE, TID_TASK_ITEM, testId } from "@mcode/shared";
 import { Badge } from "@/components/ui/badge.js";
 import { Button } from "@/components/ui/button.js";
 import { cn } from "@/components/lib/utils.js";
@@ -61,7 +61,7 @@ type TaskListItemIntl = {
 interface TaskListItemProps {
   workspacePath: string;
   remoteSessionId?: string;
-  task: ZCodeTaskMeta;
+  task: McodeTaskMeta;
   isPinned: boolean;
   isActive: boolean;
   isMobileActive?: boolean;
@@ -74,7 +74,7 @@ interface TaskListItemProps {
   onArchiveTask: (taskId: string) => void;
   onMarkTaskAsUnread: (taskId: string) => void;
   onOpenTaskContextMenu?: (taskId: string) => void;
-  onOpenFileTree?: (task: ZCodeTaskMeta) => void;
+  onOpenFileTree?: (task: McodeTaskMeta) => void;
   variant?: "default" | "timeline";
   showPinAction?: boolean;
   intl: TaskListItemIntl;
@@ -86,16 +86,16 @@ function areJsonFieldsEqual(left: unknown, right: unknown) {
   return JSON.stringify(left ?? null) === JSON.stringify(right ?? null);
 }
 
-function getTaskAutomationIdentity(task: ZCodeTaskMeta): string | undefined {
+function getTaskAutomationIdentity(task: McodeTaskMeta): string | undefined {
   return (
     task.cronAutomationId ??
-    (task as ZCodeTaskMeta & { automationId?: string }).automationId
+    (task as McodeTaskMeta & { automationId?: string }).automationId
   );
 }
 
 function areTaskListItemTaskFieldsEqual(
-  left: ZCodeTaskMeta,
-  right: ZCodeTaskMeta,
+  left: McodeTaskMeta,
+  right: McodeTaskMeta,
 ) {
   if (left === right) {
     return true;
@@ -850,7 +850,7 @@ export function TaskListItemContextMenuContent({
 }: {
   workspacePath: string;
   remoteSessionId?: string;
-  task: ZCodeTaskMeta;
+  task: McodeTaskMeta;
   isPinned: boolean;
   intl: TaskListItemIntl;
   onTogglePinTask: (taskId: string, pinned: boolean) => void;

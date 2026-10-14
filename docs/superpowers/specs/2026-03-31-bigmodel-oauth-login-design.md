@@ -62,7 +62,7 @@
 
 ```ts
 // 在 app.whenReady() 之前注册协议
-app.setAsDefaultProtocolClient('zcode')
+app.setAsDefaultProtocolClient('mcode')
 
 // 单实例锁（新增）
 const gotTheLock = app.requestSingleInstanceLock()
@@ -96,8 +96,8 @@ app.on('open-url', (event, url) => {
 {
   protocols: [
     {
-      name: 'zcode',
-      schemes: ['zcode'],
+      name: 'mcode',
+      schemes: ['mcode'],
     },
   ],
 }
@@ -186,8 +186,8 @@ OAuth 业务逻辑放在 host process，遵循 AGENTS.md 规范。按照「新�
 
 ```ts
 // packages/services/src/oauth/oauth.ts（新建）
-import { createServiceDescriptor } from '@zcode/rpc'
-import { ServiceChannels } from '@zcode/shared'
+import { createServiceDescriptor } from '@mcode/rpc'
+import { ServiceChannels } from '@mcode/shared'
 
 export interface IOAuthService {
   // 发起 OAuth：生成 state + PKCE，返回完整的 authorize URL 和 state
@@ -270,10 +270,10 @@ export const ServiceChannels = {
 // Deep link 相关的平台 channel
 export const PlatformChannels = {
   ...existing,
-  OpenExternal: 'zcode:open-external',          // Renderer → Main：打开外部 URL
-  OAuthRegisterState: 'zcode:oauth-register-state', // Renderer → Main：上报 state 用于路由
-  OAuthCallback: 'zcode:oauth-callback',         // Main → Renderer：转发 deep link URL
-  RendererReady: 'zcode:renderer-ready',         // Renderer → Main：renderer 已就绪
+  OpenExternal: 'mcode:open-external',          // Renderer → Main：打开外部 URL
+  OAuthRegisterState: 'mcode:oauth-register-state', // Renderer → Main：上报 state 用于路由
+  OAuthCallback: 'mcode:oauth-callback',         // Main → Renderer：转发 deep link URL
+  RendererReady: 'mcode:renderer-ready',         // Renderer → Main：renderer 已就绪
 }
 ```
 
@@ -470,8 +470,8 @@ LoginDialog({
 修正：统一为 Zustand store 作为唯一数据源。
 
 - 删除 Root.tsx 中的 `const [user, setUser] = useState<UserInfo | null>(...)`
-- Root.tsx 改为 `const user = useZCodeStore(s => s.user)`
-- 所有登录/登出操作通过 `useZCodeStore(s => s.setUser)` 更新
+- Root.tsx 改为 `const user = useMcodeStore(s => s.user)`
+- 所有登录/登出操作通过 `useMcodeStore(s => s.setUser)` 更新
 - 启动时 Root 通过 `useAuthToken().getToken()` 读取 token，有则调用 `setUser`
 
 ## 启动流程调整
@@ -481,7 +481,7 @@ LoginDialog({
 // 删除 hasAuthToken() 函数及其分支判断
 // 删除 createLoginWindow()
 // 始终 createWindow()
-// 新增：setAsDefaultProtocolClient('zcode')
+// 新增：setAsDefaultProtocolClient('mcode')
 // 新增：requestSingleInstanceLock()
 // 新增：open-url / second-instance 监听
 ```
@@ -497,7 +497,7 @@ Root 组件启动时：
 
 ### 存储
 
-使用现有 `credentialService`（`~/.zcode/v2/credentials.json`）：
+使用现有 `credentialService`（`~/.mcode/v2/credentials.json`）：
 
 | Key | 用途 |
 |---|---|
@@ -566,7 +566,7 @@ export const BIGMODEL_OAUTH_CONFIG = {
   authorizeUrl: 'https://bigmodel.cn/login',
   tokenUrl: 'https://bigmodel.cn/api/oauth/token',      // 待确认
   userinfoUrl: 'https://bigmodel.cn/api/oauth/userinfo',  // 待确认，可选
-  appId: 'zcode-bigmodel-app',                            // 待确认
+  appId: 'mcode-bigmodel-app',                            // 待确认
   redirectUri: 'zcode://bigmodel-auth/callback',
 }
 // Desktop 是 public client，不使用 clientSecret，通过 PKCE 保障安全

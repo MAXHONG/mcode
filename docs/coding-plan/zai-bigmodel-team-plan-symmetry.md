@@ -182,11 +182,11 @@ zai token 用 `Bearer` header（区别于 bigmodel 裸 token）。
 
 ### 注入流程运行时验证（dev:desktop:test）
 
-5 环节对称化在 zai 已端到端打通，证据来自 app 日志 + `~/.zcode-dev` 凭证手动调用 `api.z.ai`：
+5 环节对称化在 zai 已端到端打通，证据来自 app 日志 + `~/.mcode-dev` 凭证手动调用 `api.z.ai`：
 
 1. **routing 正确**：`getEnterprisePricing` 由 `ZaiCodingPlanSubscriptionProvider` 处理，prewarm 日志带
    `family: "builtin:zai-coding-plan"`，请求落在测试环境 zai biz 域名 `api.z.ai`
-   （`TEST_ZAI_BUSINESS_BASE_URL`，不是 zcode 前端域 `zcode.z.ai`）。
+   （`TEST_ZAI_BUSINESS_BASE_URL`，不是 mcode 前端域 `zcode.z.ai`）。
 2. **customerInfo 正确**：测试账号在 `org-2B118...` / `proj_50399...` 下有 `projectType: 2` 团队项目，
    `getCustomerInfo` 200 成功，结构与 bigmodel 同构。
 3. **注入流程复用**：prewarm 已对 zai 执行 list + POST create `zcode-team-api-key`：
@@ -204,7 +204,7 @@ zai token 用 `Bearer` header（区别于 bigmodel 裸 token）。
 
 > 注意：zai 后端虽然在该项目下返回了 `name="member-{userId}", keyType=2` 的 key，但客户端注入流程
 > **不应**放宽 `isUsableBigModelTeamPlanApiKey` 的 name 校验去识别它——`zcode-team-api-key` 是
-> zcode 客户端注入流程的统一命名契约，zai/bigmodel 都必须遵守。修复方式是给 zai 测试账号补 grant，
+> mcode 客户端注入流程的统一命名契约，zai/bigmodel 都必须遵守。修复方式是给 zai 测试账号补 grant，
 > 让 POST 能成功创建 `zcode-team-api-key`，而不是在客户端做 family 特判。
 
 ### 实际改动的文件清单
@@ -251,7 +251,7 @@ zai token 用 `Bearer` header（区别于 bigmodel 裸 token）。
 
 - `codingPlanProviderAvailability.ts` 的 `validateBigModelCodingPlanPairAvailability` — 函数本身按 family 分离，zai 有独立的 `validateZaiCodingPlanPairAvailability`
 - `modelProviderService.ts:178` 的 `resolveSelectedBigModelTeamContext` — 读 `selectedKeys.bigmodel`，bigmodel bucket 专用
-- `zcodeAgentService.ts:1024` — 守卫 `providerId !== bigmodelCodingPlan` 直接 return false，仅服务 bigmodel provider 的项目成员提示
+- `mcodeAgentService.ts:1024` — 守卫 `providerId !== bigmodelCodingPlan` 直接 return false，仅服务 bigmodel provider 的项目成员提示
 
 ### 待评估项
 
@@ -410,7 +410,7 @@ sidebar badge               WorkspaceSidebarFooterUsageSummary.tsx
 全量相关测试（codingPlanUsagePanel 17 + providerFamilyConnectionVisibility / modelSelectionGroups /
 sidebarUsageCodingPlanProviderPreference / codingPlanEntitlements / enterpriseCodingPlanProducts /
 v4ComposerToolbarRecovery / modelProviderCodingPlan / modelProviderCodingPlanI18n /
-zcodeModelSelectionResolution / modelProviderFamilyConnectionSelection /
+mcodeModelSelectionResolution / modelProviderFamilyConnectionSelection /
 workspaceSidebarFooterWebRemoteControlTooltip）共 **319 tests 全绿**。
 
 ### 多端 / 远控影响
@@ -487,12 +487,12 @@ zai/bigmodel 两个分支共享 `modelProviderFamilySelectedKeys`：
 
 ### 根因
 
-`buildZCodeProviderRegistrySnapshot`（`modelProviderService.ts`）——发消息时下发给 agent runtime 的
+`buildMcodeProviderRegistrySnapshot`（`modelProviderService.ts`）——发消息时下发给 agent runtime 的
 provider 凭据快照——只有 bigmodel 的 team runtime key 投影（`resolveSelectedBigModelTeamPlanRuntimeApiKey`），
 **没有 zai 对应实现**：
 
 ```text
-buildZCodeProviderRegistrySnapshot
+buildMcodeProviderRegistrySnapshot
   ├─ bigmodelTeamRuntimeApiKey = resolveSelectedBigModelTeamPlanRuntimeApiKey(...)  ✅
   ├─ zaiTeamRuntimeApiKey     = （不存在）                                          ❌
   └─ filter.map(provider):
@@ -512,11 +512,11 @@ team 选中后才会被 enable）会被 `pickResolvedFamilyProvider` 提前丢�
 1. **`resolveSelectedZaiTeamContext`**：对齐 `resolveSelectedBigModelTeamContext`，用 family-aware
    `parseTeamPlanConnectionKeyByFamily("zai", selectedKey)` 解析出 `organizationId` / `projectId`。
 2. **`resolveSelectedZaiTeamPlanRuntimeApiKey`**：对齐 `resolveSelectedBigModelTeamPlanRuntimeApiKey`，
-   读 `oauth:${ZAI_PROVIDER_ID}:access_token` → 校验 zcode JWT 未过期 → 调用 zai 业务域名
+   读 `oauth:${ZAI_PROVIDER_ID}:access_token` → 校验 mcode JWT 未过期 → 调用 zai 业务域名
    （`resolveZaiBusinessBaseUrl` + `createZaiLoginAuthHeaders`）的 `getCustomerInfo` 校验 org/project
    存在 → `ensureBigModelTeamPlanProjectApiKey` + `copyBigModelTeamPlanProjectApiKeySecret`
    （zai/bigmodel 业务 API 路径同构，仅 host/providerId/token 不同）→ 返回 `${apiKey}.${secretKey}`。
-3. **`buildZCodeProviderRegistrySnapshot` 接入**：新增 `zaiTeamRuntimeApiKey` + `selectedZaiTeamContext`
+3. **`buildMcodeProviderRegistrySnapshot` 接入**：新增 `zaiTeamRuntimeApiKey` + `selectedZaiTeamContext`
    计算；filter 阶段保留 zai coding provider；map 阶段 zai team 选中时覆盖 `apiKey` + `enabled: true`。
 4. **`filterResolvedProviderFamiliesForRegistry`**：zai 也传
    `forceCodingPlan: Boolean(resolveSelectedZaiTeamContext(familySelectedKeys))`，与 bigmodel 对称。

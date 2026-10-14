@@ -82,7 +82,7 @@ describe("mcp-apps-protocol contract", () => {
   it("示例描述与句柄满足契约形状", () => {
     expect(exampleToolUiDescriptor.resourceUri.startsWith(MCP_APPS_UI_RESOURCE_SCHEME)).toBe(true);
     expect(exampleSandboxHandle.shellUrl).toBe(
-      `zcode-sandbox://shell-${exampleSandboxHandle.sandboxId}/`,
+      `mcode-sandbox://shell-${exampleSandboxHandle.sandboxId}/`,
     );
     expect(exampleSandboxHandle.partition.startsWith("persist:plugin-sandbox-")).toBe(true);
   });

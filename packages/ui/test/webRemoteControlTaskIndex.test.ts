@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ZCodeTaskMeta } from "@zcode/shared";
+import type { McodeTaskMeta } from "@mcode/shared";
 import * as webRemoteControlTaskIndexModule from "@/lib/webRemoteControlTaskIndex.js";
 import {
   applyWebRemoteControlTaskMembershipUpdate,
@@ -23,7 +23,7 @@ function createTab(overrides: Partial<WorkspaceTabState>): WorkspaceTabState {
   };
 }
 
-function createTask(overrides: Partial<ZCodeTaskMeta>): ZCodeTaskMeta {
+function createTask(overrides: Partial<McodeTaskMeta>): McodeTaskMeta {
   return {
     taskId: overrides.taskId ?? "task-default",
     traceId: "trace-default",

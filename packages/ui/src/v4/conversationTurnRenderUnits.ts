@@ -14,7 +14,7 @@ import type {
   TimelineMarkerRow,
   TurnHeaderRow,
   UserInputRow,
-} from "@zcode/shared/zcode-protocol-v4";
+} from "@mcode/shared/mcode-protocol-v4";
 import type { AssistantWorkRow, ConversationTurnFlowItem } from "@/v4/conversationTurnFlowItems.js";
 import {
   isWorkflowLaunchUserInputRow,

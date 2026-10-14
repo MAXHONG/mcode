@@ -1,6 +1,6 @@
-import { Emitter } from "@zcode/rpc";
-import type { AgentLaneResourceSample } from "@zcode/shared";
-import { HostResponseTypes } from "@zcode/shared";
+import { Emitter } from "@mcode/rpc";
+import type { AgentLaneResourceSample } from "@mcode/shared";
+import { HostResponseTypes } from "@mcode/shared";
 import { describe, expect, it, vi } from "vitest";
 import { registerHostAgentResourceTelemetry } from "../src/host/hostAgentResourceTelemetry.js";
 

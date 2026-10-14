@@ -16,7 +16,7 @@ vi.mock("@/hooks/usePlatform.js", () => ({
 }));
 
 vi.mock("@/i18n/IntlProvider.js", () => ({
-  useZCodeIntl: () => ({
+  useMcodeIntl: () => ({
     intl: {
       formatMessage: ({ id }: { id: string }) => id,
     },

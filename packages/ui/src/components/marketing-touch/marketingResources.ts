@@ -1,5 +1,5 @@
-import type { ICloudContentService } from "@zcode/services";
-import type { MarketingAsset, MarketingVisual } from "@zcode/shared";
+import type { ICloudContentService } from "@mcode/services";
+import type { MarketingAsset, MarketingVisual } from "@mcode/shared";
 import type { CloudDialogHero } from "@/components/cloud-content-dialog/cloudContentDialogTypes.js";
 import { logger } from "@/logger.js";
 
@@ -148,7 +148,7 @@ export async function prepareMarketingHero(
     return {
       hero: {
         type: "interactive_bundle",
-        runtime: "zcode-hero-sandbox-v1",
+        runtime: "mcode-hero-sandbox-v1",
         bundle,
         resolvedUrl: lease.url,
         viewport: { aspectRatio: "4:3" },

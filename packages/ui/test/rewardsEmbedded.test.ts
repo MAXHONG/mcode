@@ -5,11 +5,11 @@ import {
   resolveRewardsOrigin,
   REWARDS_PARTITION,
   REWARDS_CONTEXT_EVENT,
-} from "@zcode/shared";
+} from "@mcode/shared";
 
 describe("Rewards embedded contract", () => {
   it("直接使用新分区和事件，旧主页不再受信任", () => {
-    expect(REWARDS_PARTITION).toBe("persist:zcode-rewards");
+    expect(REWARDS_PARTITION).toBe("persist:mcode-rewards");
     expect(REWARDS_CONTEXT_EVENT).toBe("zcode-rewards-context");
     for (const lang of ["cn", "en"]) {
       expect(isTrustedRewardsUrl(`https://zcode.z.ai/${lang}/referrals?embedded=app`)).toBe(false);

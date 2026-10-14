@@ -84,35 +84,35 @@ PlatformChannels 删除 LoginSuccess 和 Logout，新增 OAuth 相关：
 ```ts
 export const PlatformChannels = {
   /** 打开系统目录选择框 */
-  SelectDirectory: "zcode:select-directory",
+  SelectDirectory: "mcode:select-directory",
   /** 检查目录是否已在其他窗口打开，如果是则激活该窗口 */
-  ActivateOrSetWorkspace: "zcode:activate-or-set-workspace",
+  ActivateOrSetWorkspace: "mcode:activate-or-set-workspace",
   /** 建立 SSH 远程连接 */
-  ConnectRemote: "zcode:connect-remote",
+  ConnectRemote: "mcode:connect-remote",
   /** Renderer 日志转发到 main 进程统一存储 */
-  Log: "zcode:log",
+  Log: "mcode:log",
   /** Renderer → Main：同步当前窗口所有 tab 的 workspace 路径 */
-  SyncWindowTabs: "zcode:sync-window-tabs",
+  SyncWindowTabs: "mcode:sync-window-tabs",
   /** Main → Renderer：聚焦到指定 workspace 路径的 tab */
-  FocusTab: "zcode:focus-tab",
+  FocusTab: "mcode:focus-tab",
   /** Main → Renderer：菜单触发新建 tab */
-  NewTab: "zcode:new-tab",
+  NewTab: "mcode:new-tab",
   /** Main → Renderer：菜单触发新建任务 */
-  NewTask: "zcode:new-task",
+  NewTask: "mcode:new-task",
   /** Renderer → Main：把本地工作区加入系统最近文档 */
-  AddRecentDocument: "zcode:add-recent-document",
+  AddRecentDocument: "mcode:add-recent-document",
   /** 获取进程指标（进程树形式） */
-  GetProcessMetrics: "zcode:get-process-metrics",
+  GetProcessMetrics: "mcode:get-process-metrics",
   /** 打开进程监控窗口（其他窗口触发） */
-  OpenProcessMonitor: "zcode:open-process-monitor",
+  OpenProcessMonitor: "mcode:open-process-monitor",
   /** Renderer → Main：打开外部 URL（用于 OAuth 跳转浏览器） */
-  OpenExternal: "zcode:open-external",
+  OpenExternal: "mcode:open-external",
   /** Renderer → Main：上报 OAuth state 用于 deep link 路由 */
-  OAuthRegisterState: "zcode:oauth-register-state",
+  OAuthRegisterState: "mcode:oauth-register-state",
   /** Main → Renderer：转发 deep link URL */
-  OAuthCallback: "zcode:oauth-callback",
+  OAuthCallback: "mcode:oauth-callback",
   /** Renderer → Main：renderer 已就绪，可接收缓存的 deep link */
-  RendererReady: "zcode:renderer-ready",
+  RendererReady: "mcode:renderer-ready",
 } as const;
 ```
 
@@ -135,7 +135,7 @@ export const BIGMODEL_OAUTH_CONFIG = {
   /** 待确认：用户信息端点（可选） */
   userinfoUrl: "https://bigmodel.cn/api/oauth/userinfo",
   /** 待确认：应用 ID */
-  appId: "zcode-bigmodel-app",
+  appId: "mcode-bigmodel-app",
   redirectUri: "zcode://bigmodel-auth/callback",
 } as const;
 ```
@@ -241,9 +241,9 @@ git commit -m "feat(shared): add OAuth channels, config, and platform types; rem
 
 创建 `packages/services/src/oauth/oauth.ts`：
 ```ts
-import { ServiceChannels } from "@zcode/shared";
+import { ServiceChannels } from "@mcode/shared";
 import { createServiceDescriptor } from "../descriptors.js";
-import type { UserInfo } from "@zcode/shared";
+import type { UserInfo } from "@mcode/shared";
 
 /**
  * OAuth 认证服务
@@ -301,8 +301,8 @@ git commit -m "feat(services): add IOAuthService interface and descriptor"
 创建 `packages/services/src/oauth/oauthService.ts`：
 ```ts
 import { randomBytes, createHash } from "node:crypto";
-import { BIGMODEL_OAUTH_CONFIG } from "@zcode/shared";
-import type { UserInfo } from "@zcode/shared";
+import { BIGMODEL_OAUTH_CONFIG } from "@mcode/shared";
+import type { UserInfo } from "@mcode/shared";
 import type { IOAuthService } from "./oauth.js";
 import type { ICredentialService } from "../credential/credential.js";
 
@@ -573,7 +573,7 @@ export { createOAuthService } from "./oauth/oauthService.js";
 import {
   ...existing imports,
   IOAuthService,
-} from "@zcode/services";
+} from "@mcode/services";
 ```
 
 添加字段和构造器中的初始化：
@@ -594,8 +594,8 @@ Remote 模式的 ServiceCollection（`InitRemote` 分支）不走 `createLocalSe
 
 添加 import：
 ```ts
-import { IOAuthService } from "@zcode/services";
-import { createOAuthService, createCredentialService } from "@zcode/services/node";
+import { IOAuthService } from "@mcode/services";
+import { createOAuthService, createCredentialService } from "@mcode/services/node";
 ```
 
 在 remote 模式的 `new ServiceCollection()` 链中添加（OAuth 是本地操作，不走 SSH）：
@@ -628,8 +628,8 @@ git commit -m "feat(services): wire IOAuthService into accessor, registry, remot
 替换 `packages/desktop/src/preload/index.ts` 为：
 ```ts
 import { contextBridge, ipcRenderer } from "electron";
-import type { SSHConnectOptions } from "@zcode/shared";
-import { PlatformChannels, InternalChannels } from "@zcode/shared";
+import type { SSHConnectOptions } from "@mcode/shared";
+import { PlatformChannels, InternalChannels } from "@mcode/shared";
 
 /**
  * Preload bridge —— 仅暴露需要 main 进程参与的平台操作
@@ -700,7 +700,7 @@ ipcRenderer.on(InternalChannels.ServicePort, (event) => {
 
 替换 `packages/client/src/globals.d.ts` 为：
 ```ts
-import type { SSHConnectOptions } from "@zcode/shared";
+import type { SSHConnectOptions } from "@mcode/shared";
 
 /**
  * window.zcode 类型定义 —— 仅包含需要 main 进程参与的平台操作
@@ -710,7 +710,7 @@ import type { SSHConnectOptions } from "@zcode/shared";
  */
 declare global {
   interface Window {
-    zcode: {
+    mcode: {
       connectRemote(options: SSHConnectOptions): Promise<{ success: boolean; error?: string }>;
       /** renderer 日志通过 IPC 传到 main 进程统一存储 */
       log(level: "info" | "warn" | "error", args: unknown[]): void;
@@ -778,7 +778,7 @@ git commit -m "feat(desktop): update preload bridge and globals.d.ts for OAuth; 
 // ============================================================================
 
 // 注册 zcode:// 协议（必须在 ready 之前）
-app.setAsDefaultProtocolClient("zcode");
+app.setAsDefaultProtocolClient("mcode");
 
 // macOS: deep link 通过 open-url 事件传递（必须在 ready 之前注册）
 app.on("open-url", (event, url) => {
@@ -1185,9 +1185,9 @@ git commit -m "feat(ui): add useOAuth and useTokenRefresh hooks"
  */
 import { useEffect } from "react";
 import { LogInIcon, TriangleAlertIcon, Loader2Icon } from "lucide-react";
-import { TID_OAUTH_LOGIN_BUTTON, TID_OAUTH_CANCEL, TID_OAUTH_ERROR } from "@zcode/shared";
+import { TID_OAUTH_LOGIN_BUTTON, TID_OAUTH_CANCEL, TID_OAUTH_ERROR } from "@mcode/shared";
 import { useOAuth } from "./hooks/useOAuth.js";
-import { useZCodeStore } from "./store/StoreProvider.js";
+import { useMcodeStore } from "./store/StoreProvider.js";
 import { Alert, AlertDescription } from "./components/ui/alert.js";
 import { Button } from "./components/ui/button.js";
 import {
@@ -1197,7 +1197,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "./components/ui/dialog.js";
-import { useZCodeIntl } from "./i18n/IntlProvider.js";
+import { useMcodeIntl } from "./i18n/IntlProvider.js";
 
 interface LoginDialogProps {
   open: boolean;
@@ -1205,11 +1205,11 @@ interface LoginDialogProps {
 }
 
 export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
-  const { intl } = useZCodeIntl();
+  const { intl } = useMcodeIntl();
   const { startLogin, cancel, reset, status, error } = useOAuth();
-  const user = useZCodeStore((s) => s.user);
-  const oauthError = useZCodeStore((s) => s.oauthError);
-  const setOAuthError = useZCodeStore((s) => s.setOAuthError);
+  const user = useMcodeStore((s) => s.user);
+  const oauthError = useMcodeStore((s) => s.oauthError);
+  const setOAuthError = useMcodeStore((s) => s.setOAuthError);
 
   // Root 层 OAuth 回调失败时写入 Zustand oauthError → 弹窗显示错误
   useEffect(() => {
@@ -1347,14 +1347,14 @@ git commit -m "feat(ui): replace WelcomeScreen with LoginDialog for BigModel OAu
 
 - [ ] **Step 1.5: 修改 store/index.ts — 新增 oauthError 字段**
 
-在 `packages/ui/src/store/index.ts` 的 `ZCodeState` 接口中添加：
+在 `packages/ui/src/store/index.ts` 的 `McodeState` 接口中添加：
 ```ts
   /** OAuth 回调错误（Root 层写入，LoginDialog 读取） */
   oauthError: string | null;
   setOAuthError: (error: string | null) => void;
 ```
 
-在 `create<ZCodeState>()` 的初始值中添加：
+在 `create<McodeState>()` 的初始值中添加：
 ```ts
     oauthError: null,
     setOAuthError: (error: string | null) => set({ oauthError: error }),
@@ -1369,8 +1369,8 @@ git commit -m "feat(ui): replace WelcomeScreen with LoginDialog for BigModel OAu
 3. RootProps 中删除 `skipAuth`
 4. 将 `const [user, setUser] = useState<UserInfo | null>(skipAuth ? MOCK_USER : null)` 改为：
    ```ts
-   const user = useZCodeStore((s) => s.user);
-   const setUser = useZCodeStore((s) => s.setUser);
+   const user = useMcodeStore((s) => s.user);
+   const setUser = useMcodeStore((s) => s.setUser);
    ```
 5. 删除 `const [checked, setChecked] = useState(!!skipAuth)` — 改为根据 token 加载状态控制
 6. 启动时的 token 检查改为：
@@ -1398,7 +1398,7 @@ git commit -m "feat(ui): replace WelcomeScreen with LoginDialog for BigModel OAu
 7. 添加常驻的 OAuth 回调监听（在 RootInner 的 useEffect 中）：
    ```ts
    // 在组件顶层通过 hook 获取 setter
-   const setOAuthError = useZCodeStore((s) => s.setOAuthError);
+   const setOAuthError = useMcodeStore((s) => s.setOAuthError);
 
    useEffect(() => {
      const dispose = platform.onOAuthCallback(async (url) => {
@@ -1590,7 +1590,7 @@ git commit -m "chore(desktop): remove login window, old login e2e tests, fix see
   // OAuth deep link 协议注册（macOS 打包后需要 Info.plist 中声明 CFBundleURLTypes）
   protocols: [
     {
-      name: "zcode",
+      name: "mcode",
       schemes: ["zcode"],
     },
   ],

@@ -14,15 +14,15 @@ import {
   genUiTweakMessageSchema,
   genUiTweakResultSchema,
   genUiTweakAnnotationSchema,
-} from "@zcode/shared/gen-ui";
+} from "@mcode/shared/gen-ui";
 import { installGenUiTweakRuntime } from "./genUiTweakRuntime.js";
 
 const initial = JSON.parse(
-  document.getElementById("zcode-gen-ui-initial-state")?.textContent ?? "null",
+  document.getElementById("mcode-gen-ui-initial-state")?.textContent ?? "null",
 ) as unknown;
 let state: GenUiWidgetState | null =
   initial === null ? null : genUiWidgetStateSchema.parse(initial);
-const app = new App({ name: "zcode-gen-ui", version: "1" }, {}, { autoResize: false });
+const app = new App({ name: "mcode-gen-ui", version: "1" }, {}, { autoResize: false });
 
 function observeContentSize() {
   const body = document.body;
@@ -63,7 +63,7 @@ function observeContentSize() {
     void app
       .sendSizeChanged({ width: next.width, height: Math.ceil(next.height) })
       .catch((error) =>
-        window.dispatchEvent(new CustomEvent("zcode:error", { detail: String(error) })),
+        window.dispatchEvent(new CustomEvent("mcode:error", { detail: String(error) })),
       );
   };
   const schedule = () => {
@@ -143,7 +143,7 @@ const ready = app.connect(new PostMessageTransport(window.parent, window.parent)
   else observeContentSize();
 });
 void ready.catch((error) =>
-  window.dispatchEvent(new CustomEvent("zcode:error", { detail: String(error) })),
+  window.dispatchEvent(new CustomEvent("mcode:error", { detail: String(error) })),
 );
 let saves = Promise.resolve();
 const api = Object.freeze({
@@ -188,7 +188,7 @@ const openAnchor = (event: MouseEvent) => {
   void api
     .openExternal({ href })
     .catch((error) =>
-      window.dispatchEvent(new CustomEvent("zcode:error", { detail: String(error) })),
+      window.dispatchEvent(new CustomEvent("mcode:error", { detail: String(error) })),
     );
 };
 window.addEventListener("click", openAnchor);

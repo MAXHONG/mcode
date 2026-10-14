@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { VSBuffer, type ConnectionFlowControl } from "@zcode/rpc";
+import { VSBuffer, type ConnectionFlowControl } from "@mcode/rpc";
 import {
   WEB_REMOTE_CONTROL_RPC_TRANSPORT_LIMITS,
   encodeWebRemoteControlRpcTransportMessage,
@@ -8,7 +8,7 @@ import {
   type WebRemoteControlRpcFramePayload,
   type WebRemoteControlRpcTransportFramePayload,
   type WebRemoteControlRpcTransportPayload,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import {
   createAcknowledgedWebRemoteControlRelayProtocol,
   createWebRemoteControlRelayProtocol,

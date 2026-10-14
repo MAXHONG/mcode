@@ -20,7 +20,7 @@ SDK 入口为：
 const { join } = await import("node:path");
 const { pathToFileURL } = await import("node:url");
 const computerUseRoot =
-  process.env.ZCODE_CUA_PLUGIN_ROOT ??
+  process.env.MCODE_CUA_PLUGIN_ROOT ??
   process.env.ZCODE_PLUGIN_ROOT ??
   process.env.CLAUDE_PLUGIN_ROOT;
 const { setupComputerUseRuntime } = await import(
@@ -36,7 +36,7 @@ await app.getAXState();
 `requestAccess` / `stop`，加 Target 上的 `getAXState` / `click` / `setValue` / `elements` 等
 camelCase 方法）；原来那批 snake_case 工具收敛为逃逸口
 `agent.computerUse.computer.<tool>`，方法名由 SDK 的固定 union `COMPUTER_METHOD_NAMES` 冻结
-（现存 14 个，事实来源是 zcode-cua `src/tools/manifest.ts` 的 `TOOL_NAMES`；`open_application`
+（现存 14 个，事实来源是 mcode-cua `src/tools/manifest.ts` 的 `TOOL_NAMES`；`open_application`
 等 16 个已在 producer 侧删除，启动/激活并入 `get_app_state` 的透明拉起）。参数 schema 与
 producer `.strict()` 的 zod 逐字一致，不再把内部 runtime 的 MCP envelope 暴露给
 Worker。私有 bridge 使用 `{ method, input, context }`，bridge 内部再适配当前 staging
@@ -53,7 +53,7 @@ socket、token 或 native module。
 
 Browser Use 与 Computer Use 可以在同一个 Worker 共存；两者共享
 `agent.documentation.get`，分别路由自己的文档名，不互相覆盖文档 loader。
-共享的是 `node_repl` 通道，不是插件运行时目录：CUA 的 `ZCODE_CUA_PLUGIN_ROOT`
+共享的是 `node_repl` 通道，不是插件运行时目录：CUA 的 `MCODE_CUA_PLUGIN_ROOT`
 优先提供 `sharp` 等 native closure 与 CUA 文档，Browser Use 的 root 只负责 browser
 bridge 和 host server。截图、缩放和带截图的状态读取不依赖 Browser Use 的 `node_modules`。
 

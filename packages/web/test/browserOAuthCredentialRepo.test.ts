@@ -42,7 +42,7 @@ describe("BrowserOAuthCredentialRepo", () => {
 
     repo.saveTokenSet(
       {
-        zcodeJwtToken: "jwt-token",
+        mcodeJwtToken: "jwt-token",
         zaiAccessToken: "zai-token",
       },
       "zai",
@@ -90,7 +90,7 @@ describe("BrowserOAuthCredentialRepo", () => {
     const sessionStorage = new MemoryStorage();
     const repo = new BrowserOAuthCredentialRepo({ localStorage, sessionStorage });
 
-    repo.saveTokenSet({ zcodeJwtToken: "jwt-token", accessToken: "bigmodel-token" }, "bigmodel");
+    repo.saveTokenSet({ mcodeJwtToken: "jwt-token", accessToken: "bigmodel-token" }, "bigmodel");
     repo.saveUserInfo({ user_id: "53291785835589288", name: "Ada" }, "bigmodel");
     repo.setActiveProvider("bigmodel");
 
@@ -99,7 +99,7 @@ describe("BrowserOAuthCredentialRepo", () => {
       username: "Ada",
       displayName: "Ada",
     });
-    expect(repo.loadZCodeJwtToken()).toBe("jwt-token");
+    expect(repo.loadMcodeJwtToken()).toBe("jwt-token");
     expect(localStorage.getItem("oauth:bigmodel:access_token")).toBe("bigmodel-token");
     // 不能污染 zai 的 key 段
     expect(localStorage.getItem("oauth:zai:access_token")).toBeNull();
@@ -110,12 +110,12 @@ describe("BrowserOAuthCredentialRepo", () => {
     const sessionStorage = new MemoryStorage();
     const repo = new BrowserOAuthCredentialRepo({ localStorage, sessionStorage });
 
-    repo.saveTokenSet({ zcodeJwtToken: "jwt-zai", zaiAccessToken: "zai-token" }, "zai");
+    repo.saveTokenSet({ mcodeJwtToken: "jwt-zai", zaiAccessToken: "zai-token" }, "zai");
     repo.saveUserInfo({ user_id: "uuid-1", name: "Ada" }, "zai");
     repo.setActiveProvider("zai");
 
     repo.clearAll();
-    repo.saveTokenSet({ zcodeJwtToken: "jwt-bm", accessToken: "bm-token" }, "bigmodel");
+    repo.saveTokenSet({ mcodeJwtToken: "jwt-bm", accessToken: "bm-token" }, "bigmodel");
     repo.saveUserInfo({ user_id: "53291785835589288", name: "Ada" }, "bigmodel");
     repo.setActiveProvider("bigmodel");
 

@@ -5,7 +5,7 @@ import {
   TID_LOGOUT_BUTTON,
   TID_LOGIN_USE_API_KEY_BUTTON,
   TID_LOGIN_API_KEY_SKIP_BUTTON,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import {
   clearAppData,
   getE2EAppDataPaths,
@@ -14,7 +14,7 @@ import {
 
 const byId = (id: string) => $(`[data-testid="${id}"]`);
 function origin() {
-  const value = process.env.ZCODE_CODING_PLAN_UPGRADE_MOCK_BASE_URL;
+  const value = process.env.MCODE_CODING_PLAN_UPGRADE_MOCK_BASE_URL;
   if (!value) throw new Error("Missing isolated marketing fixture");
   return value;
 }

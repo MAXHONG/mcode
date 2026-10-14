@@ -1,6 +1,6 @@
 import { createStore } from "zustand/vanilla";
-import type { IMarketingTouchService } from "@zcode/services";
-import type { MarketingAction, MarketingDelivery } from "@zcode/shared";
+import type { IMarketingTouchService } from "@mcode/services";
+import type { MarketingAction, MarketingDelivery } from "@mcode/shared";
 import type { CloudDialogHero } from "@/components/cloud-content-dialog/cloudContentDialogTypes.js";
 import type { PreparedMarketingHero } from "@/components/marketing-touch/marketingResources.js";
 import { logger } from "@/logger.js";

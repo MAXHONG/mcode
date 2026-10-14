@@ -3,9 +3,9 @@ import {
   type AppSettings,
   type Locale,
   type ProviderFamilyDomain,
-} from "@zcode/shared";
-import type { ModelSelectionView } from "@zcode/services";
-import { encodeCustomModelValue } from "@/lib/zcodeCustomModelValue.js";
+} from "@mcode/shared";
+import type { ModelSelectionView } from "@mcode/services";
+import { encodeCustomModelValue } from "@/lib/mcodeCustomModelValue.js";
 
 export type ApiKeyProviderChoice = "zai" | "bigmodel";
 

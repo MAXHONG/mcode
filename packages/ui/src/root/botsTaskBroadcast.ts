@@ -1,9 +1,9 @@
 import {
   BOT_TASK_BROADCAST_CHANNEL,
-  type ZCodeTaskRuntimeStatus,
+  type McodeTaskRuntimeStatus,
   type BotTaskBroadcastPayload,
-} from "@zcode/shared";
-import type { BroadcastMessage } from "@zcode/services";
+} from "@mcode/shared";
+import type { BroadcastMessage } from "@mcode/services";
 import { buildTaskWorkspaceKey } from "@/lib/taskQueryCache.js";
 import type { WindowTabState } from "@/store/tabStore.js";
 import { isWorkspaceTab } from "@/store/tabStore.js";
@@ -83,7 +83,7 @@ export function resolveBotTaskBroadcastRefresh(
 
 export function resolveBotTaskBroadcastRuntimeStatus(
   event: BotTaskBroadcastPayload["event"],
-): ZCodeTaskRuntimeStatus {
+): McodeTaskRuntimeStatus {
   switch (event) {
     case "created":
       return "creating";

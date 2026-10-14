@@ -16,12 +16,12 @@ import type {
   McpUiToolInputNotification,
   McpUiToolResultNotification,
 } from "@modelcontextprotocol/ext-apps";
-import type { McpAppsDownloadFileItem } from "@zcode/shared/mcp-apps";
+import type { McpAppsDownloadFileItem } from "@mcode/shared/mcp-apps";
 import {
   MCP_APPS_SET_WIDGET_STATE_METHOD,
   MCP_APPS_WIDGET_STATE_CONTEXT_KEY,
-} from "@zcode/shared/mcp-apps";
-import type { OpenAiCompatApi, ZcodeAliasApi } from "./aliasApi.js";
+} from "@mcode/shared/mcp-apps";
+import type { OpenAiCompatApi, McodeAliasApi } from "./aliasApi.js";
 import { createOpenAiCompatApi, readOpenAiGlobals } from "./openaiAlias.js";
 
 /**
@@ -46,7 +46,7 @@ export interface AliasAppLike {
   }): Promise<CallToolResult>;
   readServerResource(params: { uri: string }): Promise<ReadResourceResult>;
   listServerResources(params?: { cursor?: string }): Promise<ListResourcesResult>;
-  /** 规范方法（resources/templates/list、resources/subscribe…）与 ZCode 扩展方法走基类 request。 */
+  /** 规范方法（resources/templates/list、resources/subscribe…）与 Mcode 扩展方法走基类 request。 */
   request(
     request: { method: string; params?: Record<string, unknown> },
     resultSchema: unknown,
@@ -70,10 +70,10 @@ export interface AliasAppLike {
   downloadFile(params: { contents: McpAppsDownloadFileItem[] }): Promise<{ isError?: boolean }>;
 }
 
-export const ZCODE_GLOBALS_EVENT = "zcode:globals";
+export const MCODE_GLOBALS_EVENT = "mcode:globals";
 
 export interface PluginSandboxAliasRuntime {
-  zcode: ZcodeAliasApi;
+  mcode: McodeAliasApi;
   openai: OpenAiCompatApi;
   /** 是否已经（或正在）握手；诊断用。 */
   readonly connecting: boolean;
@@ -165,7 +165,7 @@ export function createPluginSandboxAliasRuntime(options: {
   const whenReady = <T>(run: () => Promise<T>): Promise<T> => ready().then(run);
 
   const hostContext = () => app.getHostContext() ?? null;
-  const zcodeTarget: ZcodeAliasApi = {
+  const mcodeTarget: McodeAliasApi = {
     get toolInput() {
       return toolInput;
     },
@@ -294,11 +294,11 @@ export function createPluginSandboxAliasRuntime(options: {
         return Reflect.get(object, key, receiver);
       },
     });
-  const zcode = lazy(zcodeTarget);
-  const openai = lazy(createOpenAiCompatApi(zcodeTarget));
+  const mcode = lazy(mcodeTarget);
+  const openai = lazy(createOpenAiCompatApi(mcodeTarget));
 
   return {
-    zcode,
+    mcode,
     openai,
     get connecting() {
       return connectPromise !== null;

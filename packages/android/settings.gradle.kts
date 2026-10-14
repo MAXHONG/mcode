@@ -22,5 +22,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "zcode-android"
+rootProject.name = "mcode-android"
 include(":app")

@@ -5,8 +5,8 @@ import type {
   WebRemoteControlAppPayload,
   WebRemoteControlTaskTarget,
   WebRemoteControlWorkspaceTarget,
-} from "@zcode/shared";
-import { buildZCodeEndpointUrls, encodeWebRemoteControlRpcTransportMessage } from "@zcode/shared";
+} from "@mcode/shared";
+import { buildMcodeEndpointUrls, encodeWebRemoteControlRpcTransportMessage } from "@mcode/shared";
 import { createWebRemoteControlManager } from "../src/main/webRemoteControlManager.js";
 import { createWebRemoteControlFeatureGate } from "../src/main/webRemoteControlFeatureGate.js";
 
@@ -521,7 +521,7 @@ describe("createWebRemoteControlManager external relay", () => {
 
   it("uses the current endpoint resolver for relay and QR URL on each start", async () => {
     const { getLatestTransportOptions, manager } = createManagerHarness({
-      getEndpointUrls: () => buildZCodeEndpointUrls("http://localhost:3030"),
+      getEndpointUrls: () => buildMcodeEndpointUrls("http://localhost:3030"),
     });
 
     await manager.start(1, { workspacePath: "/workspace/demo" });
@@ -1636,9 +1636,9 @@ describe("createWebRemoteControlManager external relay", () => {
   it("keeps the dialog status target on the window workspace after mobile opens another workspace bridge", async () => {
     const { deliverPayload, manager, sentPayloads } = createManagerHarness();
 
-    await manager.start(1, { workspacePath: "/workspace/z-code" });
+    await manager.start(1, { workspacePath: "/workspace/mcode" });
     manager.syncAvailableWorkspaces(1, [
-      { workspacePath: "/workspace/z-code", label: "z-code", kind: "local" },
+      { workspacePath: "/workspace/mcode", label: "mcode", kind: "local" },
       { workspacePath: "/workspace/cgx-dev-web", label: "cgx-dev-web", kind: "local" },
     ]);
 
@@ -1660,7 +1660,7 @@ describe("createWebRemoteControlManager external relay", () => {
 
     expect(manager.getStatus(1)).toMatchObject({
       status: "active",
-      workspacePath: "/workspace/z-code",
+      workspacePath: "/workspace/mcode",
     });
   });
 

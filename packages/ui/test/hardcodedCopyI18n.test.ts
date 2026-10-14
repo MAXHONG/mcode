@@ -3,7 +3,7 @@
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import type { GoalState } from "@zcode/shared/zcode-protocol-v4";
+import type { GoalState } from "@mcode/shared/mcode-protocol-v4";
 import {
   CodeBlockCopyButton,
   CodeBlockWrapButton,
@@ -20,7 +20,7 @@ const labels: Record<string, string> = {
 };
 
 vi.mock("@/i18n/IntlProvider.js", () => ({
-  useZCodeIntl: () => ({
+  useMcodeIntl: () => ({
     intl: {
       formatMessage: (descriptor: { id: string }) => labels[descriptor.id] ?? descriptor.id,
     },

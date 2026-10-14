@@ -2,7 +2,7 @@ import { mkdtempSync, rmSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PlatformChannels } from "@zcode/shared";
+import { PlatformChannels } from "@mcode/shared";
 
 const electronMocks = vi.hoisted(() => ({
   appShow: vi.fn(),
@@ -70,7 +70,7 @@ describe("desktopOAuthDeepLink workspace open routing", () => {
     const enCopy = resolveExternalWorkspaceOpenDialogCopy("en-US");
 
     expect(zhCopy.buttons).toEqual(["打开文件夹", "取消"]);
-    expect(zhCopy.title).toBe("打开外部 ZCode 链接？");
+    expect(zhCopy.title).toBe("打开外部 Mcode 链接？");
     expect(zhCopy.detail("/tmp/project")).toContain("只打开你信任来源的文件夹");
     expect(enCopy.buttons).toEqual(["Open folder", "Cancel"]);
   });
@@ -172,7 +172,7 @@ describe("desktopOAuthDeepLink workspace open routing", () => {
       targetWindow,
       expect.objectContaining({
         buttons: ["打开文件夹", "取消"],
-        title: "打开外部 ZCode 链接？",
+        title: "打开外部 Mcode 链接？",
       }),
     );
     expect(targetWindow.webContents.send).toHaveBeenCalledWith(
@@ -196,7 +196,7 @@ describe("desktopOAuthDeepLink workspace open routing", () => {
     expect(electronMocks.showMessageBoxSync).toHaveBeenCalledWith(
       expect.objectContaining({
         buttons: ["Open folder", "Cancel"],
-        title: "Open external ZCode link?",
+        title: "Open external Mcode link?",
       }),
     );
     expect(logger.warn).toHaveBeenCalledWith(
@@ -381,7 +381,7 @@ describe("desktopOAuthDeepLink OAuth routing", () => {
 });
 
 function createTempWorkspace(): string {
-  const dir = mkdtempSync(join(tmpdir(), "zcode-workspace-open-"));
+  const dir = mkdtempSync(join(tmpdir(), "mcode-workspace-open-"));
   tempDirs.push(dir);
   return dir;
 }

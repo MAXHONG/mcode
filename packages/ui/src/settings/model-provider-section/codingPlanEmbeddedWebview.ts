@@ -1,15 +1,15 @@
 import {
   BIGMODEL_PROVIDER_ID,
   BUILTIN_MODEL_PROVIDER_IDS,
-  DEFAULT_ZCODE_ENDPOINT_ORIGIN,
+  DEFAULT_MCODE_ENDPOINT_ORIGIN,
   isTrustedCodingPlanWebviewOrigin,
   isZaiCodingPlanProviderId,
-  normalizeZCodeEndpointOrigin,
-  type ZCodeEnv,
-  ZCODE_ENV,
+  normalizeMcodeEndpointOrigin,
+  type McodeEnv,
+  MCODE_ENV,
   ZAI_PROVIDER_ID,
-} from "@zcode/shared";
-import type { CodingPlanWebviewLocale } from "@zcode/shared";
+} from "@mcode/shared";
+import type { CodingPlanWebviewLocale } from "@mcode/shared";
 import type { CodingPlanFunnelContext } from "@/lib/codingPlanFunnelTelemetry.js";
 import type { CodingPlanProviderId } from "@/settings/model-provider-section/constants.js";
 
@@ -18,7 +18,7 @@ export type CodingPlanPurchaseAudience = "personal" | "team";
 
 export interface CodingPlanEmbeddedCredentials {
   zaiAccessToken?: string | null;
-  zcodeJwtToken?: string | null;
+  mcodeJwtToken?: string | null;
   bigmodelAccessToken?: string | null;
 }
 
@@ -56,7 +56,7 @@ export interface ResolveCodingPlanEmbeddedOriginOptions {
   endpointOrigin: string;
   e2eStoreBridgeEnabled?: boolean;
   overrideOrigin?: string | null;
-  zcodeEnv?: ZCodeEnv;
+  mcodeEnv?: McodeEnv;
 }
 
 export const CODING_PLAN_WEBVIEW_OVERRIDE_ENV_KEY = "VITE_CODING_PLAN_WEBVIEW_ORIGIN";
@@ -65,7 +65,7 @@ const CODING_PLAN_WEBVIEW_CREDENTIAL_LOCAL_STORAGE_KEYS = [
   "zcodejwttoken",
   "oauth:bigmodel:access_token",
 ] as const;
-const CODING_PLAN_REPORT_CONTEXT_STORAGE_KEY = "zcode:coding-plan:report-context";
+const CODING_PLAN_REPORT_CONTEXT_STORAGE_KEY = "mcode:coding-plan:report-context";
 
 export function resolveCodingPlanWebsiteProvider(
   providerId: CodingPlanProviderId,
@@ -81,23 +81,23 @@ export function resolveCodingPlanEmbeddedOrigin({
   endpointOrigin,
   e2eStoreBridgeEnabled,
   overrideOrigin,
-  zcodeEnv = ZCODE_ENV,
+  mcodeEnv = MCODE_ENV,
 }: ResolveCodingPlanEmbeddedOriginOptions): string {
   const normalizedOverride = overrideOrigin?.trim();
   if (
     normalizedOverride &&
     isTrustedCodingPlanWebviewOrigin(normalizedOverride, { e2eStoreBridgeEnabled })
   ) {
-    return normalizeZCodeEndpointOrigin(normalizedOverride);
+    return normalizeMcodeEndpointOrigin(normalizedOverride);
   }
-  // Bug 原因：本地开发默认注入 ZCODE_ENV=production，不能仅凭 Vite DEV 就打开未启动的官网本地页。
-  if (dev && zcodeEnv === "test") {
+  // Bug 原因：本地开发默认注入 MCODE_ENV=production，不能仅凭 Vite DEV 就打开未启动的官网本地页。
+  if (dev && mcodeEnv === "test") {
     return "http://localhost:3000";
   }
-  const normalizedEndpointOrigin = normalizeZCodeEndpointOrigin(endpointOrigin);
+  const normalizedEndpointOrigin = normalizeMcodeEndpointOrigin(endpointOrigin);
   return isTrustedCodingPlanWebviewOrigin(normalizedEndpointOrigin, { e2eStoreBridgeEnabled })
     ? normalizedEndpointOrigin
-    : DEFAULT_ZCODE_ENDPOINT_ORIGIN;
+    : DEFAULT_MCODE_ENDPOINT_ORIGIN;
 }
 
 export function buildCodingPlanEmbeddedWebviewUrl({
@@ -118,7 +118,7 @@ export function buildCodingPlanEmbeddedWebviewUrl({
   audience?: CodingPlanPurchaseAudience;
   teamPlanKey?: string | null;
 }): string {
-  const url = new URL("/coding-plan", normalizeZCodeEndpointOrigin(origin));
+  const url = new URL("/coding-plan", normalizeMcodeEndpointOrigin(origin));
   url.searchParams.set("provider", provider);
   url.searchParams.set("embedded", "app");
   url.searchParams.set("lang", codingPlanLocaleToWebsiteLang(locale));
@@ -189,7 +189,7 @@ export function createCodingPlanAuthInjectionScript({
     provider === "zai"
       ? {
           "oauth:zai:access_token": credentials.zaiAccessToken?.trim() || null,
-          zcodejwttoken: credentials.zcodeJwtToken?.trim() || null,
+          zcodejwttoken: credentials.mcodeJwtToken?.trim() || null,
           "oauth:bigmodel:access_token": null,
         }
       : {
@@ -198,7 +198,7 @@ export function createCodingPlanAuthInjectionScript({
           // 官网用它查 billing/balance 判定 Start Plan 是否使用中；BigModel 分支缺失注入
           // 会导致官网 Start Plan 卡因查不到权益而误显示「已过期」。业务接口仍走
           // oauth:bigmodel:access_token，互不污染。
-          zcodejwttoken: credentials.zcodeJwtToken?.trim() || null,
+          zcodejwttoken: credentials.mcodeJwtToken?.trim() || null,
           "oauth:bigmodel:access_token": credentials.bigmodelAccessToken?.trim() || null,
         };
   const storageUpdates = Object.entries(values)
@@ -213,20 +213,20 @@ export function createCodingPlanAuthInjectionScript({
 
   return `(() => {
   ${storageUpdates}
-  const zcodeTheme = ${JSON.stringify(theme)};
-  document.documentElement.classList.toggle("dark", zcodeTheme === "zai-dark");
-  document.documentElement.classList.toggle("theme-zai-light", zcodeTheme === "zai-light");
-  document.documentElement.classList.toggle("theme-zai-dark", zcodeTheme === "zai-dark");
-  localStorage.setItem("zcode-theme", zcodeTheme);
-  localStorage.setItem("zcode:coding-plan:embedded", "app");
+  const mcodeTheme = ${JSON.stringify(theme)};
+  document.documentElement.classList.toggle("dark", mcodeTheme === "zai-dark");
+  document.documentElement.classList.toggle("theme-zai-light", mcodeTheme === "zai-light");
+  document.documentElement.classList.toggle("theme-zai-dark", mcodeTheme === "zai-dark");
+  localStorage.setItem("mcode-theme", mcodeTheme);
+  localStorage.setItem("mcode:coding-plan:embedded", "app");
   // 写入当前 App locale，供官网 zcodeBridge.getLang() 读取。
   // 注意：这是注入 webview 执行的原始 JS，不能用 TS 语法（如 as any）。
   window.__zcodeLang__ = ${JSON.stringify(resolvedLocale)};
-  const zcodeReportContext = ${JSON.stringify(normalizedReportContext)};
-  window.__zcodeReportContext__ = zcodeReportContext;
-  localStorage.setItem(${JSON.stringify(CODING_PLAN_REPORT_CONTEXT_STORAGE_KEY)}, JSON.stringify(zcodeReportContext));
-  window.dispatchEvent(new CustomEvent("zcode-coding-plan-auth-ready", {
-    detail: { ...${JSON.stringify({ provider, locale: resolvedLocale })}, reportContext: zcodeReportContext },
+  const mcodeReportContext = ${JSON.stringify(normalizedReportContext)};
+  window.__zcodeReportContext__ = mcodeReportContext;
+  localStorage.setItem(${JSON.stringify(CODING_PLAN_REPORT_CONTEXT_STORAGE_KEY)}, JSON.stringify(mcodeReportContext));
+  window.dispatchEvent(new CustomEvent("mcode-coding-plan-auth-ready", {
+    detail: { ...${JSON.stringify({ provider, locale: resolvedLocale })}, reportContext: mcodeReportContext },
   }));
 })()`;
 }
@@ -287,7 +287,7 @@ export function createCodingPlanCredentialClearScript(): string {
 
 export function createCodingPlanScrollbarHideScript(): string {
   return `(() => {
-  const styleId = "zcode-coding-plan-hide-scrollbar";
+  const styleId = "mcode-coding-plan-hide-scrollbar";
   if (document.getElementById(styleId)) return;
   const style = document.createElement("style");
   style.id = styleId;
@@ -329,7 +329,7 @@ export function createCodingPlanLangInjectionScript(locale: CodingPlanWebviewLoc
 
 export function getCodingPlanCredentialKeys(provider: CodingPlanWebsiteProvider): string[] {
   // zcodejwttoken 对两个 provider 都加载：它是 zcode-plan 域通用凭证，
-  // BigModel OAuth callback 同样落盘（见 resolveBigModelStartPlanZcodeJwt）。
+  // BigModel OAuth callback 同样落盘（见 resolveBigModelStartPlanMcodeJwt）。
   return provider === "zai"
     ? [`oauth:${ZAI_PROVIDER_ID}:access_token`, "zcodejwttoken"]
     : [`oauth:${BIGMODEL_PROVIDER_ID}:access_token`, "zcodejwttoken"];

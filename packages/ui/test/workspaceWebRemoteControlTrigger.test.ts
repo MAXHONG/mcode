@@ -44,7 +44,7 @@ vi.mock("@/components/ui/lucide.js", () => ({
 }));
 
 vi.mock("@/i18n/IntlProvider.js", () => ({
-  useZCodeIntl: () => ({
+  useMcodeIntl: () => ({
     intl: {
       formatMessage: ({ id }: { id: string }) => id,
     },
@@ -92,7 +92,7 @@ async function renderTriggerWithEnv(
   },
 ) {
   vi.resetModules();
-  vi.doMock("@zcode/shared", () => ({ ZCODE_ENV: env }));
+  vi.doMock("@mcode/shared", () => ({ MCODE_ENV: env }));
 
   const { WorkspaceWebRemoteControlTrigger } =
     await import("../src/WorkspaceWebRemoteControlTrigger.js");

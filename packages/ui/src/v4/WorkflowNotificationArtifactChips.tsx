@@ -1,5 +1,5 @@
-import { TID_CHAT_WORKFLOW_ARTIFACT_CHIP } from "@zcode/shared";
-import type { WorkflowNotificationMeta } from "@zcode/shared/zcode-protocol-v4";
+import { TID_CHAT_WORKFLOW_ARTIFACT_CHIP } from "@mcode/shared";
+import type { WorkflowNotificationMeta } from "@mcode/shared/mcode-protocol-v4";
 import { WorkflowArtifactStrip } from "@/components/workflow-timeline/WorkflowArtifactStrip.js";
 
 /**

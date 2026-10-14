@@ -17,7 +17,7 @@ import {
   decodeCustomModelValue,
   encodeCustomModelValue,
   testId,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import {
   DEFAULT_WORKSPACE,
   clearAppData,

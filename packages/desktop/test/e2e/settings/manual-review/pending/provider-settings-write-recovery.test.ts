@@ -1,12 +1,12 @@
-import { ModelConfig, ModelPropertiesConfig } from "@zcode/provider";
-import { NodePersonalProviderConfigRepository } from "@zcode/provider-node";
+import { ModelConfig, ModelPropertiesConfig } from "@mcode/provider";
+import { NodePersonalProviderConfigRepository } from "@mcode/provider-node";
 import {
   TID_MODEL_PROVIDER_NAV_ITEM,
   TID_MODEL_PROVIDER_ADD_MODEL_BUTTON,
   TID_SETTINGS_SECTION_NAV,
   TID_TASK_SETTINGS_BUTTON,
   testId,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import {
   clearAppData,
   clickTestIdByDom,

@@ -284,60 +284,60 @@
   "spanCount": 532,
   "uniqueSpanCount": 532,
   "histograms": {
-    "zcode.local_ttft.stage.observation.duration": {
+    "mcode.local_ttft.stage.observation.duration": {
       "count": 48,
       "sumMs": 42298.5849609375
     },
-    "zcode.local_ttft.preparation.observation.duration": {
+    "mcode.local_ttft.preparation.observation.duration": {
       "count": 84,
       "sumMs": 13853.34033203125
     },
-    "zcode.local_ttft.duration": {
+    "mcode.local_ttft.duration": {
       "count": 6,
       "sumMs": 40642.099609375
     },
-    "zcode.local_ttft.stage.duration": {
+    "mcode.local_ttft.stage.duration": {
       "count": 36,
       "sumMs": 40642.099609375
     },
-    "zcode.local_ttft.system.duration": {
+    "mcode.local_ttft.system.duration": {
       "count": 6,
       "sumMs": 40232.49951171875
     },
-    "zcode.local_ttft.preparation.duration": {
+    "mcode.local_ttft.preparation.duration": {
       "count": 62,
       "sumMs": 10153.557373046875
     },
-    "zcode.local_ttft.attempt.duration": {
+    "mcode.local_ttft.attempt.duration": {
       "count": 8,
       "sumMs": 13929.37646484375
     },
-    "zcode.local_ttft.execution.duration": {
+    "mcode.local_ttft.execution.duration": {
       "count": 6,
       "sumMs": 24799.61572265625
     },
-    "zcode.local_ttft.first_text.duration": {
+    "mcode.local_ttft.first_text.duration": {
       "count": 6,
       "sumMs": 40935.599609375
     },
-    "zcode.local_ttft.no_output.wait": {
+    "mcode.local_ttft.no_output.wait": {
       "count": 3,
       "sumMs": 4124.699951171875
     }
   },
   "observedAttributeCombinations": {
-    "zcode.local_ttft.stage.observation.duration": 23,
-    "zcode.local_ttft.records": 29,
-    "zcode.local_ttft.dropped": 1,
-    "zcode.local_ttft.preparation.observation.duration": 29,
-    "zcode.local_ttft.duration": 4,
-    "zcode.local_ttft.stage.duration": 24,
-    "zcode.local_ttft.system.duration": 4,
-    "zcode.local_ttft.preparation.duration": 26,
-    "zcode.local_ttft.attempt.duration": 5,
-    "zcode.local_ttft.execution.duration": 4,
-    "zcode.local_ttft.first_text.duration": 4,
-    "zcode.local_ttft.no_output.wait": 3
+    "mcode.local_ttft.stage.observation.duration": 23,
+    "mcode.local_ttft.records": 29,
+    "mcode.local_ttft.dropped": 1,
+    "mcode.local_ttft.preparation.observation.duration": 29,
+    "mcode.local_ttft.duration": 4,
+    "mcode.local_ttft.stage.duration": 24,
+    "mcode.local_ttft.system.duration": 4,
+    "mcode.local_ttft.preparation.duration": 26,
+    "mcode.local_ttft.attempt.duration": 5,
+    "mcode.local_ttft.execution.duration": 4,
+    "mcode.local_ttft.first_text.duration": 4,
+    "mcode.local_ttft.no_output.wait": 3
   },
   "clockErrorMaxMs": 3.3792724609375,
   "rendererPerformance": [
@@ -927,7 +927,7 @@
     "Windows/Linux device E2E and ARMS ingestion/waterfall/retention/cost validation remain open."
   ],
   "arms": {
-    "query": "\"zcode-local-ttft\" | select count(1) as samples",
+    "query": "\"mcode-local-ttft\" | select count(1) as samples",
     "range": "now-1h..now",
     "sampleCount": 0,
     "verified": "read-only logstore access; no new service samples"
@@ -936,27 +936,27 @@
     "baseCommit": "a77a09bb3eaa9d147f6878b83ab10ec064690532",
     "sha256": "1d6b342e73d58493a9bb50dbfda7c37efd2272af8ae4fbe35e7f0189cea4bd30",
     "files": [
-      "apps/zcode-cli/packages/bootstrap/src/zcode-protocol-v4/local-ttft-clock.ts",
-      "apps/zcode-cli/packages/bootstrap/src/zcode-protocol-v4/local-ttft-compaction.ts",
-      "apps/zcode-cli/packages/bootstrap/src/zcode-protocol-v4/local-ttft.ts",
-      "apps/zcode-cli/packages/bootstrap/src/zcode-protocol-v4/v4-gateway.ts",
-      "apps/zcode-cli/packages/bootstrap/src/zcode-protocol/v4-bridge.ts",
-      "apps/zcode-cli/packages/contracts/src/index.ts",
-      "apps/zcode-cli/packages/contracts/src/tracing/local-turn-preparation.ts",
-      "apps/zcode-cli/packages/core/src/runtime/methods/model.ts",
-      "apps/zcode-cli/packages/core/src/runtime/methods/turn-loop.ts",
-      "apps/zcode-cli/packages/core/src/runtime/methods/turn-model-step.ts",
-      "apps/zcode-cli/packages/core/src/runtime/methods/turn.ts",
+      "apps/mcode-cli/packages/bootstrap/src/mcode-protocol-v4/local-ttft-clock.ts",
+      "apps/mcode-cli/packages/bootstrap/src/mcode-protocol-v4/local-ttft-compaction.ts",
+      "apps/mcode-cli/packages/bootstrap/src/mcode-protocol-v4/local-ttft.ts",
+      "apps/mcode-cli/packages/bootstrap/src/mcode-protocol-v4/v4-gateway.ts",
+      "apps/mcode-cli/packages/bootstrap/src/mcode-protocol/v4-bridge.ts",
+      "apps/mcode-cli/packages/contracts/src/index.ts",
+      "apps/mcode-cli/packages/contracts/src/tracing/local-turn-preparation.ts",
+      "apps/mcode-cli/packages/core/src/runtime/methods/model.ts",
+      "apps/mcode-cli/packages/core/src/runtime/methods/turn-loop.ts",
+      "apps/mcode-cli/packages/core/src/runtime/methods/turn-model-step.ts",
+      "apps/mcode-cli/packages/core/src/runtime/methods/turn.ts",
       "packages/desktop/src/main/localTtftExportDedupe.ts",
       "packages/desktop/src/main/localTtftExporter.ts",
       "packages/desktop/src/main/localTtftSpans.ts",
       "packages/desktop/src/renderer/src/localTtftBootstrap.ts",
-      "packages/services/src/zcode-agent/zcodeAgent.ts",
-      "packages/services/src/zcode-agent/zcodeAgentConnectionScope.ts",
-      "packages/services/src/zcode-agent/zcodeAgentService.ts",
+      "packages/services/src/mcode-agent/mcodeAgent.ts",
+      "packages/services/src/mcode-agent/mcodeAgentConnectionScope.ts",
+      "packages/services/src/mcode-agent/mcodeAgentService.ts",
       "packages/shared/src/localTtft.ts",
-      "packages/shared/src/zcode-protocol-v4/transport.ts",
-      "packages/shared/src/zcode-protocol/index.ts",
+      "packages/shared/src/mcode-protocol-v4/transport.ts",
+      "packages/shared/src/mcode-protocol/index.ts",
       "packages/ui/src/v4/ConversationComposer.tsx",
       "packages/ui/src/v4/SessionPane.tsx",
       "packages/ui/src/v4/agentConversationTransport.ts",

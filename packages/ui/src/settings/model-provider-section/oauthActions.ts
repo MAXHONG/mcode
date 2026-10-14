@@ -1,5 +1,5 @@
-import type { BuiltinModelProviderId, IPlatformService } from "@zcode/shared";
-import type { IOAuthService } from "@zcode/services";
+import type { BuiltinModelProviderId, IPlatformService } from "@mcode/shared";
+import type { IOAuthService } from "@mcode/services";
 import { resolveOAuthProviderIdByPreset } from "./utils.js";
 import {
   reportAppTelemetryEvent,

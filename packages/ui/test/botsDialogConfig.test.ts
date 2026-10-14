@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { BotConfig } from "@zcode/shared";
-import { ALL_BOT_WORKSPACES } from "@zcode/shared";
+import type { BotConfig } from "@mcode/shared";
+import { ALL_BOT_WORKSPACES } from "@mcode/shared";
 import {
   BOT_PROVIDERS,
   BOT_REPLY_GRANULARITIES,

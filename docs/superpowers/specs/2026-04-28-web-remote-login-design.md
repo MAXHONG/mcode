@@ -266,13 +266,13 @@ Service 模块，对应桌面端 `OAuthService` 在 Web runtime 的等价物，�
 
 ### `packages/web/src/auth/WebLoginPage.tsx`
 
-全屏登录 UI 组件，显示 ZCode logo 和“用 ZAI 登录”按钮。
+全屏登录 UI 组件，显示 Mcode logo 和“用 ZAI 登录”按钮。
 
 UI 约束：
 
 - 修改或新增 UI 前必须遵守根目录 `DESIGN.md`。
 - 使用语义颜色 token（如 `bg-background`、`text-foreground`、`bg-card`、`border-border`），兼容由 Zai 接管的 Light Theme / Dark Theme。
-- 文案必须兼容 `zh-CN` / `en-US`；因为登录页发生在完整 `ZCodeIntlProvider` 之前，需要提供轻量 locale resolver 或复用已有 i18n 字典。
+- 文案必须兼容 `zh-CN` / `en-US`；因为登录页发生在完整 `McodeIntlProvider` 之前，需要提供轻量 locale resolver 或复用已有 i18n 字典。
 - 按现有按钮体系实现主按钮，不写死临时颜色、圆角、字号。
 - 布局需要适配手机竖屏、桌面宽屏和较长英文文案。
 
@@ -376,7 +376,7 @@ async function bootstrapWebApp() {
 |--------------------|-----|------|
 | `oauth_pending_nonce` | UUID | CSRF 防护 |
 
-> 存储 key 与 `OAuthCredentialRepo` 现有命名一致。前端展示使用 `@zcode/shared` 的 `UserInfo` 类型，不从 `@zcode/ui` 反向导入类型。
+> 存储 key 与 `OAuthCredentialRepo` 现有命名一致。前端展示使用 `@mcode/shared` 的 `UserInfo` 类型，不从 `@mcode/ui` 反向导入类型。
 
 ## Token 交换接口
 

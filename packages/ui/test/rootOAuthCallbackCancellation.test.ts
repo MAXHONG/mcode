@@ -11,7 +11,7 @@ vi.mock("react", async (original) => ({
 }));
 vi.mock("@/hooks/useAlertDialog.js", () => ({ useAlertDialog: () => vi.fn() }));
 vi.mock("@/i18n/IntlProvider.js", () => ({
-  useZCodeIntl: () => ({ intl: { formatMessage: () => "登录失败" } }),
+  useMcodeIntl: () => ({ intl: { formatMessage: () => "登录失败" } }),
 }));
 vi.mock("@/root/useAccountConnectionLossNotification.js", () => ({
   useAccountConnectionLossNotification: vi.fn(),

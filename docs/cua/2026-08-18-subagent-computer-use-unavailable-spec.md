@@ -2,7 +2,7 @@
 
 ## 目标
 
-子 Agent 不得使用官方 `zcode-cua` Computer Use。限制只绑定已经由 Host authority
+子 Agent 不得使用官方 `mcode-cua` Computer Use。限制只绑定已经由 Host authority
 验证的官方 CUA server，不按工具名称或 display name 猜测，因此第三方 MCP 不受影响。
 
 主 Agent 继续使用 canonical `mcp__computer-use__*` 及兼容 alias；桌面
@@ -18,7 +18,7 @@ child spawn
   └─ child SkillPort -> 隐藏官方 computer-use
 
 child MCP call (runtime_scope=subagent)
-  └─ zcode-cua preflight -> 返回错误，不进入 kill-switch/Broker/handler
+  └─ mcode-cua preflight -> 返回错误，不进入 kill-switch/Broker/handler
 ```
 
 错误码为 `SUBAGENT_COMPUTER_USE_UNAVAILABLE`，错误文本为
@@ -37,7 +37,7 @@ child MCP call (runtime_scope=subagent)
 
 ## Producer 语义
 
-`zcode-cua` 的 30 个工具共享同一个 preflight。`runtime_scope=subagent` 时在 kill-switch
+`mcode-cua` 的 30 个工具共享同一个 preflight。`runtime_scope=subagent` 时在 kill-switch
 检查、Broker 访问和 handler 之前返回 `isError`；request access、stop、wait、clipboard 等
 工具也不能绕过该边界。工具名称、schema、annotations、权限组和结果协议不变。
 
@@ -46,4 +46,4 @@ child MCP call (runtime_scope=subagent)
 - 子 Agent provider-visible tool/Skill surface 不含官方 CUA，非官方 MCP/Skill 仍可用。
 - 直接绕过 surface 的 CUA 调用不会触发 Broker。
 - 主 Agent 官方 CUA 调用行为保持不变。
-- 覆盖 z-code 单元测试、zcode-cua producer 单元测试及一条 conversation manual-review/replay case。
+- 覆盖 mcode 单元测试、mcode-cua producer 单元测试及一条 conversation manual-review/replay case。

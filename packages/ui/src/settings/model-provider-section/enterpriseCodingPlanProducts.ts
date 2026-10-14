@@ -11,7 +11,7 @@ import type {
   EnterpriseCodingPlanPricingProduct,
   EnterpriseCodingPlanSubscribePeriod,
   ProviderFamilyDomain,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import {
   normalizeCodingPlanCardCopyItems,
   type CodingPlanPriceUnit,

@@ -8,7 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu.js";
 import { usePluginCreator } from "@/hooks/usePluginCreator.js";
-import { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import { useMcodeIntl } from "@/i18n/IntlProvider.js";
 
 export function PluginAddMenu({
   onCreateTask,
@@ -21,7 +21,7 @@ export function PluginAddMenu({
   testId: string;
   isWebRemoteControl?: boolean;
 }) {
-  const { intl } = useZCodeIntl();
+  const { intl } = useMcodeIntl();
   const creator = usePluginCreator(onCreateTask, isWebRemoteControl);
   return (
     <DropdownMenu>

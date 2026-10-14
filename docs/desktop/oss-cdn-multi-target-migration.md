@@ -57,7 +57,7 @@ OSS_CONFIG_FILE=/etc/ossutil/new
 
 ```text
 oss://<bucket>/<pathPrefix>/<version>/
-  ZCode-...
+  Mcode-...
   latest.yml
   manifest-*.json
 

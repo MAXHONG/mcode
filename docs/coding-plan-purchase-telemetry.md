@@ -210,7 +210,7 @@ Desktop/Web 使用相同聚合；不改变 continuous/replayable
 
 - 16 个相关单测通过，覆盖跨 family 汇总、未启用连接、过期过滤、团队登录切换和点击快照冻结。
 - 桌面 CPUW-01 / CPUW-03 两例通过；CPUW-01 在 App `net.fetch` 边界断言
-  `coding_plan__personal_pro,start_plan__zcode_v3_start_plan`，并核对 WebView 上下文完全一致。
+  `coding_plan__personal_pro,start_plan__mcode_v3_start_plan`，并核对 WebView 上下文完全一致。
   预置 Start 连接为 disabled，证明已购但未激活连接也被统计；网关响应仍为 mock。
 - CUA 点击当前开发账号个人 Pro 的升级入口，通过只读 CDP 检查 WebView 上下文，
   得到 `coding_plan__personal_pro,coding_plan__team_pro`，包含未点击的团队套餐。

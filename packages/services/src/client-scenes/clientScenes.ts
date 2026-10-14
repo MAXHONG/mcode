@@ -1,4 +1,4 @@
-import { ServiceChannels } from "@zcode/shared";
+import { ServiceChannels } from "@mcode/shared";
 import { createServiceDescriptor } from "../descriptors.js";
 
 export interface ClientSceneResponseBody<T> {

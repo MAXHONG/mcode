@@ -12,8 +12,8 @@ import type {
   MigrateLegacyCommonMcpResult,
   SaveCliMcpToUserDirectoryRequest,
 } from "./mcp.js";
-import type { ZCodeProvider } from "./zcode-task-types-core.js";
-import type { SessionWorkflowActivity } from "./zcode-protocol-v4/sessions-index-workflow-activity.js";
+import type { McodeProvider } from "./mcode-task-types-core.js";
+import type { SessionWorkflowActivity } from "./mcode-protocol-v4/sessions-index-workflow-activity.js";
 import type { WebRemoteControlRpcTransportPayload } from "./web-remote-control-rpc-transport.js";
 import type { WorkspacePurpose } from "./workspacePurpose.js";
 
@@ -97,7 +97,7 @@ export interface WebRemoteControlMobileDeviceInfo extends WebRemoteControlRelayD
 }
 
 export type WebRemoteControlRelayRole = "device" | "terminal";
-// Bugfix: zcode-remote-hub 当前只会把配对状态表示为 waiting/matched；
+// Bugfix: mcode-remote-hub 当前只会把配对状态表示为 waiting/matched；
 // KICKED、WRONG_PARAM 等是 error code，不是 pair_status。这里收窄共享类型，
 // 避免客户端把不存在的 rejected/kicked 配对状态误判成桌面端 WS 需要关闭。
 export type WebRemoteControlRelayPairStatus = "waiting" | "matched";
@@ -250,7 +250,7 @@ export function resolveWebRemoteControlRoutePathFromBaseUrl(baseUrl: string): st
   let pathname = "/";
 
   try {
-    pathname = new URL(rawBaseUrl, "https://zcode.invalid").pathname;
+    pathname = new URL(rawBaseUrl, "https://mcode.invalid").pathname;
   } catch {
     pathname = rawBaseUrl.startsWith("/") ? rawBaseUrl : `/${rawBaseUrl}`;
   }
@@ -754,7 +754,7 @@ export interface WebRemoteControlTaskTarget {
   workspaceKind: "local" | "remote";
   createdAt: number;
   updatedAt: number;
-  provider?: ZCodeProvider;
+  provider?: McodeProvider;
   unreadAt?: number;
   displayStatus?: WebRemoteControlTaskDisplayStatus;
   // 会话挂着后台工作（动态工作流 run / 后台 bash / 分离子代理）。只参与列表运行层排序，

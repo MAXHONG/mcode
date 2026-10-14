@@ -12,7 +12,7 @@ Host/relay 转发连接与 topic；renderer/web 订阅 projection、发送 comma
   只代表当时状态。
 
 产品语义优先读 [Conversation Product Protocol](../conversation-product-protocol.md)，系统总览优先读
-[ZCode Protocol](../zcode-protocol.md) 与 [Message Flow](../architecture/message-flow.md)。
+[Mcode Protocol](../mcode-protocol.md) 与 [Message Flow](../architecture/message-flow.md)。
 
 ## 当前拓扑
 
@@ -22,7 +22,7 @@ Electron / Web / mobile remote
   |-- command(commandId, clientId, baseRevision, payload)
   `-- local draft / scroll / focus / optimistic overlay
           |
-          | @zcode/rpc MessagePort / remote attachment
+          | @mcode/rpc MessagePort / remote attachment
           v
 Host connection scope
   |-- trusted clientMode / connectionId
@@ -30,9 +30,9 @@ Host connection scope
   |-- runtime generation / stale subscription cleanup
   `-- no conversation reducer or second queue
           |
-          | @zcode/shared/zcode-protocol-v4 over stdio
+          | @mcode/shared/mcode-protocol-v4 over stdio
           v
-ZCode CLI
+Mcode CLI
   |-- transcript + session metadata + goal facts
   |-- V4 command inbox / durable input admission
   |-- ProductProjection + SessionsIndexProjection
@@ -63,13 +63,13 @@ projection。
 
 | 层 | 入口 |
 | --- | --- |
-| V4 schema | `packages/shared/src/zcode-protocol-v4/` |
+| V4 schema | `packages/shared/src/mcode-protocol-v4/` |
 | UI transport/store | `packages/ui/src/v4/agentConversationTransport.ts`、`conversationProjectionStore.ts`、`sessionDataLayer.ts` |
 | UI pane/commands | `packages/ui/src/v4/SessionPane.tsx`、`ConversationComposer.tsx` |
-| Host/service route | `packages/services/src/zcode-agent/zcodeAgentConnectionScope.ts`、`zcodeAgentService.ts` |
-| CLI gateway | `apps/zcode-cli/packages/bootstrap/src/zcode-protocol-v4/v4-gateway.ts` |
+| Host/service route | `packages/services/src/mcode-agent/mcodeAgentConnectionScope.ts`、`mcodeAgentService.ts` |
+| CLI gateway | `apps/mcode-cli/packages/bootstrap/src/mcode-protocol-v4/v4-gateway.ts` |
 | CLI projection | `product-projection.ts`、`sessions-index-projection.ts` |
-| CLI commands | `apps/zcode-cli/packages/bootstrap/src/zcode-protocol-v4/commands/` |
+| CLI commands | `apps/mcode-cli/packages/bootstrap/src/mcode-protocol-v4/commands/` |
 
 ## 文档索引
 

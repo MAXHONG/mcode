@@ -47,6 +47,8 @@ PROTECT_PATTERNS = [
     r"zcode\.ai/schema[^\s\"'`]*",
     r"zcode/electron/releases",
     r"zcode/official-plugin",
+    # 官方 CDN 上内置插件图标目录仍为 zcode-guide / zcode-cua
+    r"OFFICIAL_PLUGIN_ASSETS_BASE_URL\}/zcode-(?:guide|cua)/",
     # 上游仓库引用
     r"zai-org/[\w.-]+",
     # --- OAuth deep link ---

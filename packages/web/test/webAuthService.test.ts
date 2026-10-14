@@ -35,7 +35,7 @@ class MemoryStorage implements Storage {
 
 function createProductionWebZaiOAuthConfig() {
   return createWebZaiOAuthConfig({
-    VITE_ZCODE_BASE_URL: "https://zcode.z.ai",
+    VITE_MCODE_BASE_URL: "https://zcode.z.ai",
     VITE_ZAI_OAUTH_CLIENT_ID: "client_P8X5CMWmlaRO9gyO-KSqtg",
     VITE_ZAI_OAUTH_ORIGIN: "https://chat.z.ai",
   });
@@ -80,7 +80,7 @@ describe("WebAuthService", () => {
 
   it("uses VITE_ZAI_OAUTH_ORIGIN and VITE_ZAI_OAUTH_CLIENT_ID to build test environment authorize URL", async () => {
     const testConfig = createWebZaiOAuthConfig({
-      VITE_ZCODE_BASE_URL: "https://zcode.z.ai",
+      VITE_MCODE_BASE_URL: "https://zcode.z.ai",
       VITE_ZAI_OAUTH_CLIENT_ID: "client_P8X5CMWmlaRO9gyO-KSqtg",
       VITE_ZAI_OAUTH_ORIGIN: "https://chat.z.ai/",
     });
@@ -283,7 +283,7 @@ describe("WebAuthService BigModel provider", () => {
     const url = new URL(assigned[0]!);
     expect(url.pathname).toBe("/login");
     expect(url.searchParams.get("redirect")).toBe("https://zcode.z.ai/cn/share/callback");
-    expect(url.searchParams.get("appId")).toBe("zcode");
+    expect(url.searchParams.get("appId")).toBe("mcode");
     // ZAI 专用参数不能出现，否则 BigModel 侧会忽略 redirect 直接回默认地址
     expect(url.searchParams.get("redirect_uri")).toBeNull();
     expect(url.searchParams.get("client_id")).toBeNull();

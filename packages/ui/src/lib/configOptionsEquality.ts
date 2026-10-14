@@ -1,12 +1,12 @@
-import type { ZCodeConfigOption } from "@zcode/shared";
+import type { McodeConfigOption } from "@mcode/shared";
 
 function areJsonEquivalent(left: unknown, right: unknown): boolean {
   return JSON.stringify(left) === JSON.stringify(right);
 }
 
 export function areConfigOptionsEquivalent(
-  left: readonly ZCodeConfigOption[] | null | undefined,
-  right: readonly ZCodeConfigOption[] | null | undefined,
+  left: readonly McodeConfigOption[] | null | undefined,
+  right: readonly McodeConfigOption[] | null | undefined,
 ): boolean {
   if (left === right) {
     return true;

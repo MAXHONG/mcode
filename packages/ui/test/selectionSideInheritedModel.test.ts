@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type { ModelSelectionView } from "@zcode/provider";
-import type { SessionConfigState } from "@zcode/shared/zcode-protocol-v4";
+import type { ModelSelectionView } from "@mcode/provider";
+import type { SessionConfigState } from "@mcode/shared/mcode-protocol-v4";
 import { resolveSelectionSideInheritedModel } from "@/lib/selectionSideInheritedModel.js";
 const view = {
   revision: 1,

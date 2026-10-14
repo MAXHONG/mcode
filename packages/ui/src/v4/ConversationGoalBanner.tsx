@@ -1,7 +1,7 @@
 import { memo } from "react";
-import { TID_V4_GOAL_BANNER } from "@zcode/shared";
-import type { GoalState } from "@zcode/shared/zcode-protocol-v4";
-import { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import { TID_V4_GOAL_BANNER } from "@mcode/shared";
+import type { GoalState } from "@mcode/shared/mcode-protocol-v4";
+import { useMcodeIntl } from "@/i18n/IntlProvider.js";
 
 export interface ConversationGoalBannerProps {
   goal: GoalState;
@@ -12,7 +12,7 @@ export interface ConversationGoalBannerProps {
  * memo：goal 不变时不随 SessionPane 其他状态重渲染。
  */
 function ConversationGoalBannerImpl({ goal }: ConversationGoalBannerProps) {
-  const { intl } = useZCodeIntl();
+  const { intl } = useMcodeIntl();
   return (
     <div
       data-testid={TID_V4_GOAL_BANNER}

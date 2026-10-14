@@ -1,5 +1,5 @@
 import type { ModelSelectGroup } from "@/ModelConfigSelect.js";
-import { decodeCustomModelValue } from "@/lib/zcodeCustomModelValue.js";
+import { decodeCustomModelValue } from "@/lib/mcodeCustomModelValue.js";
 
 export function shouldShowManageModelsAction(
   onManageModels?: () => void,

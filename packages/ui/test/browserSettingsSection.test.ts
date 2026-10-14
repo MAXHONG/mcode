@@ -54,17 +54,17 @@ vi.mock("@/hooks/useServices.js", () => ({
     skillsService: {},
   }),
 }));
-vi.mock("@/hooks/useZCodeSessionService.js", () => ({
-  useZCodeSessionService: () => ({}),
+vi.mock("@/hooks/useMcodeSessionService.js", () => ({
+  useMcodeSessionService: () => ({}),
 }));
 vi.mock("@/i18n/IntlProvider.js", () => ({
-  useZCodeIntl: () => ({
+  useMcodeIntl: () => ({
     intl: {
       formatMessage: ({ id }: { id: string }) => id,
     },
   }),
 }));
-vi.mock("@/lib/zcodeDraftSkillInvalidation.js", () => ({
+vi.mock("@/lib/mcodeDraftSkillInvalidation.js", () => ({
   invalidateDeferredDraftSessionForSkillChange: vi.fn(async () => {}),
 }));
 vi.mock("@/store/pluginManagementStore.js", () => ({

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   ConversationRow,
   SessionPhase,
-} from "@zcode/shared/zcode-protocol-v4";
+} from "@mcode/shared/mcode-protocol-v4";
 import {
   applyConversationFindHighlights,
   applySearchResultHighlight,

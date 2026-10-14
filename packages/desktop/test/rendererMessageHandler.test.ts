@@ -17,16 +17,16 @@ vi.mock("react-dom/client", () => ({
   createRoot: createRootMock,
 }));
 
-vi.mock("@zcode/ui", () => ({
+vi.mock("@mcode/ui", () => ({
   AppErrorBoundary: ({ children }: { children: unknown }) => children,
   Root: () => null,
-  ZCodeIntlProvider: ({ children }: { children: unknown }) => children,
+  McodeIntlProvider: ({ children }: { children: unknown }) => children,
   registerBaseWorkspaceServices: vi.fn(),
   registerRemoteWorkspaceSession: vi.fn(),
   playTaskNotificationSound: vi.fn(() => Promise.resolve()),
 }));
 
-vi.mock("@zcode/client", () => ({
+vi.mock("@mcode/client", () => ({
   connectViaMessagePort: vi.fn(() => ({
     settingService: {},
   })),
@@ -37,7 +37,7 @@ vi.stubGlobal("window", {
   ...globalThis.window,
   location: { search: "" },
   matchMedia: () => ({ matches: true }),
-  zcode: {
+  mcode: {
     selectDirectory: vi.fn(),
     activateOrSetWorkspace: vi.fn(),
     connectRemote: vi.fn(),

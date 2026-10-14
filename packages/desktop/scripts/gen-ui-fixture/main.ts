@@ -101,7 +101,7 @@ void app
       "new Promise(resolve => document.readyState === 'loading' ? document.addEventListener('DOMContentLoaded', resolve, {once:true}) : resolve())",
     );
     await read(
-      "new Promise(resolve => globalThis.lucide ? resolve() : document.getElementById('zcode-visualization-lucide').addEventListener('load', resolve, {once:true}))",
+      "new Promise(resolve => globalThis.lucide ? resolve() : document.getElementById('mcode-visualization-lucide').addEventListener('load', resolve, {once:true}))",
     );
     assert.equal(await read("typeof window.openai"), "undefined");
     assert.equal(await read("typeof window.require"), "undefined");

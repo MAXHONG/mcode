@@ -6,7 +6,7 @@ import {
   WEB_REMOTE_CONTROL_WORKSPACE_RECONNECT_TIMEOUT_MS,
   encodeWebRemoteControlRpcTransportMessage,
   type WebRemoteControlAppPayload,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import {
   WebRemoteControlTerminalTransport,
   createWebRemoteControlAppPayloadRequester,

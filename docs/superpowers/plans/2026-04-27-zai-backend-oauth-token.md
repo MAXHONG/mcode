@@ -60,7 +60,7 @@ fetchMock.mockResolvedValueOnce(
       code: 0,
       msg: "",
       data: {
-        token: "zcode_backend_jwt",
+        token: "mcode_backend_jwt",
         expires_in: 86400,
         user: {
           user_id: "zai-u-001",
@@ -109,7 +109,7 @@ expect(result).toEqual({
   },
 });
 
-expect(await credentialServiceStub.load("oauth:zai:access_token")).toBe("zcode_backend_jwt");
+expect(await credentialServiceStub.load("oauth:zai:access_token")).toBe("mcode_backend_jwt");
 expect(await credentialServiceStub.load("oauth:zai:refresh_token")).toBeNull();
 expect(await credentialServiceStub.load("oauth:zai:user_info")).toBe(
   JSON.stringify(result.userInfo),
@@ -215,7 +215,7 @@ it("maps zai backend expires_in into OAuthTokenSet expiresAt", async () => {
         code: 0,
         msg: "",
         data: {
-          token: "zcode_backend_jwt",
+          token: "mcode_backend_jwt",
           expires_in: 86400,
         },
       }),
@@ -234,7 +234,7 @@ it("maps zai backend expires_in into OAuthTokenSet expiresAt", async () => {
       },
     ),
   ).resolves.toEqual({
-    accessToken: "zcode_backend_jwt",
+    accessToken: "mcode_backend_jwt",
     expiresAt: now + 86400 * 1000,
   });
 });

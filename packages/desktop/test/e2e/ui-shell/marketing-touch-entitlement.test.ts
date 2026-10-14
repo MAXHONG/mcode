@@ -13,7 +13,7 @@ import {
   TID_TASK_SETTINGS_BUTTON,
   encodeCustomModelValue,
   testId,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import {
   clearAppData,
   waitForDefaultWorkspaceReady,
@@ -60,15 +60,15 @@ describe("Marketing Touch 领取后的权益与模型连接", () => {
     expect((await readSettings()).providerFamilyConnectionSelections?.bigmodel).toEqual({
       kind: "start-plan",
     });
-    await waitForPlanRefreshAction("ZCode Weekend Build", true);
-    await waitForPlanRefreshAction("ZCode V3 Start Plan", false);
+    await waitForPlanRefreshAction("Mcode Weekend Build", true);
+    await waitForPlanRefreshAction("Mcode V3 Start Plan", false);
     const balanceRequestCountBeforeRefresh = countMockRequestsEndingWith(
       await readMockRequests(),
       "/api/v1/zcode-plan/billing/balance",
     );
     await markManualClaimBucketReady();
-    await clickPlanRefreshAction("ZCode Weekend Build");
-    await waitForPlanRefreshAction("ZCode Weekend Build", false, "GLM-5.3-Flash");
+    await clickPlanRefreshAction("Mcode Weekend Build");
+    await waitForPlanRefreshAction("Mcode Weekend Build", false, "GLM-5.3-Flash");
     await browser.waitUntil(
       async () =>
         countMockRequestsEndingWith(
@@ -105,7 +105,7 @@ describe("Marketing Touch 领取后的权益与模型连接", () => {
   });
 });
 
-const MANUAL_CLAIM_MOCK_BASE_URL_ENV = "ZCODE_CODING_PLAN_UPGRADE_MOCK_BASE_URL";
+const MANUAL_CLAIM_MOCK_BASE_URL_ENV = "MCODE_CODING_PLAN_UPGRADE_MOCK_BASE_URL";
 const BIGMODEL_FAMILY_GROUP_TEST_ID = testId(
   TID_CHAT_MODEL_SELECT_GROUP,
   `registry-provider:${BUILTIN_MODEL_PROVIDER_IDS.bigmodelStartPlan}`,

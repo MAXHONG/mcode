@@ -1,25 +1,25 @@
 import {
-  ZCODE_AGENT_PROVIDER,
-  ZCODE_COMMAND_AGENT_SOURCES,
-  type ZCodeProvider,
+  MCODE_AGENT_PROVIDER,
+  MCODE_COMMAND_AGENT_SOURCES,
+  type McodeProvider,
   type CommandAgentSource,
-} from "@zcode/shared";
+} from "@mcode/shared";
 
 export const COMMAND_AGENT_SOURCES = [
-  ...ZCODE_COMMAND_AGENT_SOURCES,
+  ...MCODE_COMMAND_AGENT_SOURCES,
 ] as const satisfies readonly CommandAgentSource[];
 
 export const COMMAND_AGENT_SOURCE_META: Record<
   CommandAgentSource,
   {
     labelId: string;
-    provider: ZCodeProvider;
+    provider: McodeProvider;
     pathHint: string;
   }
 > = {
-  zcodeAgent: {
-    labelId: "settings.commands.source.zcodeAgent",
-    pathHint: "~/.zcode/commands",
-    provider: ZCODE_AGENT_PROVIDER,
+  mcodeAgent: {
+    labelId: "settings.commands.source.mcodeAgent",
+    pathHint: "~/.mcode/commands",
+    provider: MCODE_AGENT_PROVIDER,
   },
 };

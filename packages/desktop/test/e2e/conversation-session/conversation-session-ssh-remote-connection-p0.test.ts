@@ -1,4 +1,4 @@
-import { buildRemoteWorkspaceIdentity, type RemoteTarget } from "@zcode/shared";
+import { buildRemoteWorkspaceIdentity, type RemoteTarget } from "@mcode/shared";
 import {
   clearAppData,
   waitForWorkspaceApp,

@@ -3,7 +3,7 @@ import {
   WEB_REMOTE_CONTROL_RPC_TRANSPORT_LIMITS,
   encodeWebRemoteControlRpcTransportMessage,
   type WebRemoteControlAppPayload,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import { WebRemoteControlRelayPayloadSerializer } from "../src/webRemoteControlRelayPayloadSerializer.js";
 
 describe("WebRemoteControlRelayPayloadSerializer", () => {

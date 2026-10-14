@@ -6,7 +6,7 @@ import {
   persistPromptHistoryEntries,
   readPromptHistoryEntries,
 } from "@/lib/promptHistoryStorage.js";
-import { ZCodeIntlProvider } from "@/i18n/IntlProvider.js";
+import { McodeIntlProvider } from "@/i18n/IntlProvider.js";
 import {
   ConversationComposer,
   type ConversationComposerSendResult,
@@ -314,7 +314,7 @@ function renderComposerElement(
       persistV4ComposerDraft("/workspace", undefined, scopeId, ownedDraft);
     });
   return createElement(
-    ZCodeIntlProvider,
+    McodeIntlProvider,
     { initialLocale: "zh-CN" },
     createElement(ConversationComposer, {
       draftMode: sessionId === null,

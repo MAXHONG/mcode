@@ -8,9 +8,9 @@ import {
   updateBotReplyToolCalls,
   type BotReplyToolCallState,
 } from "../src/bots/replyFormatter.js";
-import type { ZCodeStreamEvent, ZCodeTaskChangeSummary } from "@zcode/shared";
+import type { McodeStreamEvent, McodeTaskChangeSummary } from "@mcode/shared";
 
-const changeSummary: ZCodeTaskChangeSummary = {
+const changeSummary: McodeTaskChangeSummary = {
   fileCount: 2,
   added: 12,
   removed: 4,
@@ -128,7 +128,7 @@ describe("bot reply formatter", () => {
       kind: "execute",
       input: { command: "pnpm test" },
       raw: {},
-    } as ZCodeStreamEvent);
+    } as McodeStreamEvent);
     updateBotReplyToolCalls(toolCalls, {
       type: "tool_call_update",
       taskId: "task-1",
@@ -137,7 +137,7 @@ describe("bot reply formatter", () => {
       status: "completed",
       content: "ok",
       raw: {},
-    } as ZCodeStreamEvent);
+    } as McodeStreamEvent);
 
     expect([...toolCalls.values()]).toMatchObject([
       {
@@ -200,26 +200,26 @@ describe("bot reply formatter", () => {
   it("uses edit kind labels in permission request titles", () => {
     const text = formatBotPermissionRequestSummary(
       {
-        title: "Edit /Users/dev/ZCodeProject/Gomoku/index.html",
+        title: "Edit /Users/dev/McodeProject/Gomoku/index.html",
         kind: "edit",
-        raw: { rawInput: { file_path: "/Users/dev/ZCodeProject/Gomoku/index.html" } },
+        raw: { rawInput: { file_path: "/Users/dev/McodeProject/Gomoku/index.html" } },
       },
       { locale: "en-US" },
     );
 
     expect(text).toBe(
-      "Permission required:\nEditing /Users/dev/ZCodeProject/Gomoku/index.html\n`/Users/dev/ZCodeProject/Gomoku/index.html`",
+      "Permission required:\nEditing /Users/dev/McodeProject/Gomoku/index.html\n`/Users/dev/McodeProject/Gomoku/index.html`",
     );
   });
 
   it("specializes edit permission kind labels from file changes", () => {
     const text = formatBotPermissionRequestSummary(
       {
-        title: "Edit /Users/dev/ZCodeProject/Gomoku/index.html",
+        title: "Edit /Users/dev/McodeProject/Gomoku/index.html",
         kind: "edit",
         raw: {
           changes: {
-            "/Users/dev/ZCodeProject/Gomoku/index.html": {
+            "/Users/dev/McodeProject/Gomoku/index.html": {
               type: "add",
               content: "<html></html>",
             },
@@ -230,18 +230,18 @@ describe("bot reply formatter", () => {
     );
 
     expect(text).toBe(
-      "Permission required:\nWriting /Users/dev/ZCodeProject/Gomoku/index.html\n`/Users/dev/ZCodeProject/Gomoku/index.html`",
+      "Permission required:\nWriting /Users/dev/McodeProject/Gomoku/index.html\n`/Users/dev/McodeProject/Gomoku/index.html`",
     );
   });
 
   it("uses editing for update file change permission labels", () => {
     const text = formatBotPermissionRequestSummary(
       {
-        title: "Edit /Users/dev/ZCodeProject/Gomoku/index.html",
+        title: "Edit /Users/dev/McodeProject/Gomoku/index.html",
         kind: "edit",
         raw: {
           changes: {
-            "/Users/dev/ZCodeProject/Gomoku/index.html": {
+            "/Users/dev/McodeProject/Gomoku/index.html": {
               type: "update",
               content: "<html></html>",
             },
@@ -252,7 +252,7 @@ describe("bot reply formatter", () => {
     );
 
     expect(text).toBe(
-      "Permission required:\nEditing /Users/dev/ZCodeProject/Gomoku/index.html\n`/Users/dev/ZCodeProject/Gomoku/index.html`",
+      "Permission required:\nEditing /Users/dev/McodeProject/Gomoku/index.html\n`/Users/dev/McodeProject/Gomoku/index.html`",
     );
   });
 

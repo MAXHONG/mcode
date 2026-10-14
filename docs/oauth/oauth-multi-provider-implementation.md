@@ -43,21 +43,21 @@
 不再通过全局 `LEGACY_PROVIDER_ID` 推断或迁移某个 provider。
 
 BigModel `oauth:bigmodel:user_info` 当前保存归一化 profile，并通过
-`rawProfile.zcodeProfileSchemaVersion = 2` 标记已按 `customerName -> nickName -> "user"`
+`rawProfile.mcodeProfileSchemaVersion = 2` 标记已按 `customerName -> nickName -> "user"`
 展示名优先级生成。启动 `restoreCachedSession()` 时，如果检测到 BigModel 旧缓存缺少
 该版本标记或版本低于 2，会先立即返回本地缓存展示态，再在后台尝试用 BigModel
 provider 命名空间下的 access token 做一次 best-effort userinfo 刷新；已高于 2 的缓存
 视为未来版本数据，不请求、不改写、不降级。成功后写回 schema version 2 与新展示名。
 401/403、缺少 token，或命中 `unknown/User` 哨兵 profile 时，继续保留旧缓存展示字段并
 写入 schema version 2，避免之后每次启动重复触发确定失败的迁移。超时、离线或 5xx
-这类暂时性失败只写入 `rawProfile.zcodeProfileMigrationRetryAfter` 退避时间，不写
+这类暂时性失败只写入 `rawProfile.mcodeProfileMigrationRetryAfter` 退避时间，不写
 schema version 2；退避窗口过后仍可再次尝试迁移。后台迁移写入必须固定到
 `oauth:bigmodel:user_info`，且保存前确认当前 active provider 与 BigModel 缓存仍是启动时
 捕获的旧状态；用户已 logout、切到 ZAI 或重新登录 BigModel 时，旧迁移结果必须失效。
 
 ### 2.5 BigModel fallback secret 移除
 
-BigModel 不再内置历史 fallback secret；未显式配置 `BIGMODEL_OAUTH_APP_SECRET` 时运行时配置保持 `undefined`。当前 BigModel callback 只通过 zcode OAuth token 路由消费一次性 code。
+BigModel 不再内置历史 fallback secret；未显式配置 `BIGMODEL_OAUTH_APP_SECRET` 时运行时配置保持 `undefined`。当前 BigModel callback 只通过 mcode OAuth token 路由消费一次性 code。
 
 ### 2.6 OAuth callback 收敛
 
@@ -91,10 +91,10 @@ ZAI 环境变量：
 - `ZAI_BUSINESS_BASE_URL`：派生 `POST /api/auth/z/login`，用于把 ZAI OAuth access token 换成业务 token；测试环境为 `https://api.z.ai`
 - `ZAI_BUSINESS_LOGIN_URL`：完整业务 token 交换 URL override，优先级高于 `ZAI_BUSINESS_BASE_URL`
 
-ZAI 默认登录链路已切换为后端 JWT token 交换，授权入口和业务 token 交换入口按 `ZCODE_ENV=test|production` 选择：
+ZAI 默认登录链路已切换为后端 JWT token 交换，授权入口和业务 token 交换入口按 `MCODE_ENV=test|production` 选择：
 
 - 授权页：由 `ZAI_<ENV>_OAUTH_ORIGIN` 派生 `/api/oauth/authorize`，生产默认为 `https://chat.z.ai/api/oauth/authorize`
-- token 交换：由 `ZCODE_<ENV>_BASE_URL` 派生 `/api/v1/oauth/token`
+- token 交换：由 `MCODE_<ENV>_BASE_URL` 派生 `/api/v1/oauth/token`
 - 桌面端请求体：`{ code, redirect_uri, state }`
 - 本地保存的 `oauth:zai:access_token` 是后端返回的 `data.token`
 
@@ -124,13 +124,13 @@ ZAI OAuth 登录不再由桌面端直接请求三方 ZAI token 接口。桌面�
 
 行为说明：
 
-1. `credentialService.save` 自动加密后写入 `~/.zcode/v2/credentials.json`
+1. `credentialService.save` 自动加密后写入 `~/.mcode/v2/credentials.json`
 2. `credentialService.load` 自动解密并返回明文给上层业务
 3. 历史明文值（无 `enc:v1:` 前缀）保持兼容读取，避免升级后登录态失效
 
 密钥说明：
 
-- 优先使用环境变量 `ZCODE_CREDENTIAL_SECRET`
+- 优先使用环境变量 `MCODE_CREDENTIAL_SECRET`
 - 未配置时使用本机上下文生成 fallback key（用于本地/远程模式下的最小可用加密）
 
 测试：

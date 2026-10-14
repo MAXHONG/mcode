@@ -1,7 +1,7 @@
 import { createHash } from "node:crypto";
 import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
-import { DEFAULT_PLUGIN_MARKETPLACES } from "@zcode/shared";
+import { DEFAULT_PLUGIN_MARKETPLACES } from "@mcode/shared";
 import { getE2EAppDataPaths } from "./desktop-app.js";
 
 export const PLUGIN_RUNTIME_ENV_MARKETPLACE_ID =
@@ -86,7 +86,7 @@ export async function createPluginRuntimeEnvFixture(
 async function primeDefaultPluginMarketplacesForE2E(homeDir: string): Promise<void> {
   const path = join(
     homeDir,
-    ".zcode",
+    ".mcode",
     "cli",
     "plugins",
     "known_marketplaces.json",

@@ -1,6 +1,6 @@
-import type { ZCodeConfigOption, ZCodeProvider, ZCodeTaskMode } from "@zcode/shared";
+import type { McodeConfigOption, McodeProvider, McodeTaskMode } from "@mcode/shared";
 
-const ZCODE_TASK_MODE_VALUES: readonly ZCodeTaskMode[] = [
+const MCODE_TASK_MODE_VALUES: readonly McodeTaskMode[] = [
   "default",
   "yolo",
   "guarded",
@@ -14,14 +14,14 @@ const ZCODE_TASK_MODE_VALUES: readonly ZCodeTaskMode[] = [
   "build",
 ];
 
-const ZCODE_TASK_MODE_SET = new Set<string>(ZCODE_TASK_MODE_VALUES);
+const MCODE_TASK_MODE_SET = new Set<string>(MCODE_TASK_MODE_VALUES);
 
-function normalizeZCodeModeForTaskCreation(
+function normalizeMcodeModeForTaskCreation(
   modeId: string,
-  _provider?: ZCodeProvider,
-): ZCodeTaskMode | undefined {
-  if (ZCODE_TASK_MODE_SET.has(modeId)) {
-    return modeId as ZCodeTaskMode;
+  _provider?: McodeProvider,
+): McodeTaskMode | undefined {
+  if (MCODE_TASK_MODE_SET.has(modeId)) {
+    return modeId as McodeTaskMode;
   }
 
   switch (modeId) {
@@ -70,7 +70,7 @@ function stringifyUnknownValue(value: unknown): string {
   return String(value);
 }
 
-// Bugfix: ZCode Agent 调用失败时不一定抛 Error，某些实现会直接抛普通对象。
+// Bugfix: Mcode Agent 调用失败时不一定抛 Error，某些实现会直接抛普通对象。
 // 直接 String(err) 只会得到 [object Object]，用户提示和日志都会丢掉真实错误信息。
 export function getErrorMessage(err: unknown): string {
   if (err instanceof Error) {
@@ -88,10 +88,10 @@ export function getErrorMessage(err: unknown): string {
   return stringifyUnknownValue(err);
 }
 
-export function readCurrentZCodeMode(
-  options: readonly ZCodeConfigOption[],
-  provider?: ZCodeProvider,
-): ZCodeTaskMode | undefined {
+export function readCurrentMcodeMode(
+  options: readonly McodeConfigOption[],
+  provider?: McodeProvider,
+): McodeTaskMode | undefined {
   const modeOption = options.find(
     (option) => option.category === "mode" && option.type === "select",
   );
@@ -100,7 +100,7 @@ export function readCurrentZCodeMode(
     return undefined;
   }
 
-  // Bugfix: 之前只白名单了本地 ZCodeTaskMode，导致 provider 原生模式
-  // 在首发建 session 时被丢弃。这里先归一化，避免 UI 已选模式和真实 ZCode Agent session 模式不一致。
-  return normalizeZCodeModeForTaskCreation(currentValue, provider);
+  // Bugfix: 之前只白名单了本地 McodeTaskMode，导致 provider 原生模式
+  // 在首发建 session 时被丢弃。这里先归一化，避免 UI 已选模式和真实 Mcode Agent session 模式不一致。
+  return normalizeMcodeModeForTaskCreation(currentValue, provider);
 }

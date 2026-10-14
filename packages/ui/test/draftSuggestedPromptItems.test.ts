@@ -1,4 +1,4 @@
-import type { ClientSceneConfig, ClientSceneItem } from "@zcode/services";
+import type { ClientSceneConfig, ClientSceneItem } from "@mcode/services";
 import { describe, expect, it } from "vitest";
 import {
   mapClientScenesToDraftSuggestedPromptItems,
@@ -23,7 +23,7 @@ function createItem(
 
 function createScene(promptItems: ClientSceneItem[]): ClientSceneConfig {
   return {
-    namespace: "zcode",
+    namespace: "mcode",
     scene: "draft-suggestion",
     options: {
       prompts: {

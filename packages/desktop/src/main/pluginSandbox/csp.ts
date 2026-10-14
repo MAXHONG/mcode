@@ -2,8 +2,8 @@ import type {
   McpAppCspRelaxations,
   McpAppsResourcePermission,
   McpToolUiCsp,
-} from "@zcode/shared/mcp-apps";
-import { normalizeCspOrigin } from "@zcode/shared/mcp-apps";
+} from "@mcode/shared/mcp-apps";
+import { normalizeCspOrigin } from "@mcode/shared/mcp-apps";
 import { buildPluginSandboxShellUrl } from "./contract.js";
 
 /**
@@ -69,7 +69,7 @@ export const PLUGIN_SANDBOX_SHELL_CSP = [
   "script-src 'self'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' data:",
-  "frame-src zcode-sandbox:",
+  "frame-src mcode-sandbox:",
   "connect-src 'none'",
   "form-action 'none'",
   "base-uri 'self'",

@@ -1,4 +1,4 @@
-import type { UsageEntitlementSnapshot, UsageQuotaLimit } from "@zcode/shared";
+import type { UsageEntitlementSnapshot, UsageQuotaLimit } from "@mcode/shared";
 
 export function normalizeQuotaModel(value: string): string {
   return value

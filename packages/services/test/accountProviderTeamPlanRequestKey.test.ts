@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { BIGMODEL_PROVIDER_ID, ZAI_PROVIDER_ID, type ApiClient } from "@zcode/shared";
+import { BIGMODEL_PROVIDER_ID, ZAI_PROVIDER_ID, type ApiClient } from "@mcode/shared";
 import { resolveAccountTeamPlanRuntimeApiKey } from "../src/model-provider/accountProviderTeamPlanRequestKey.js";
 
 describe("accountProviderTeamPlanRequestKey", () => {

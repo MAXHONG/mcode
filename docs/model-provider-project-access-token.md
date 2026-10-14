@@ -8,7 +8,7 @@
 
 - 个人/团队/Standalone 查找专用 Key；不存在时创建。个人名称 zcode-api-key；团队名称 zcode-team-api-key，保留 keyType=2；创建显式 usageScene=1。查询不增加 usageScene 过滤。
 - 返回的 apiKey 是非 Secret 的 Key ID，作为签发路径参数。组织、项目和 Key ID 分别编码，不跨项目挑选 Key。
-- POST /api/biz/v1/organization/{org}/projects/{project}/api_keys/{id}/access_tokens，使用 Bearer 登录 JWT，body 包含 clientType=zcode 与真实 clientVersion。
+- POST /api/biz/v1/organization/{org}/projects/{project}/api_keys/{id}/access_tokens，使用 Bearer 登录 JWT，body 包含 clientType=mcode 与真实 clientVersion。
 - 所有原先使用 API Key 的业务接口可使用 Token；通过逐接口测试表复测，不继续把兼容性作为实施前置阻塞。
 - 新客户端只走 Token；没有旧 Key 回退。明确 enable=false、无可用 PAT 时签发失败或畸形响应时记录脱敏日志并失败；已有未过期 PAT 的提前刷新仅按下文的临时故障规则容错；省略 enable 时按默认开启处理，但仍严格校验 Token 和有效期。
 - Project Access Token 由平台签发，仍遵守官方版本的请求安全校验准入规则，不能因使用 Token 而跳过；用户手工 Key 的既有安全校验行为保留。

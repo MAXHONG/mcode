@@ -3,14 +3,14 @@ import {
   ApiError,
   BIGMODEL_PROVIDER_ID,
   CREDENTIAL_DECRYPT_ERROR_CODE,
-  ZCODE_VERSION,
+  MCODE_VERSION,
   ZAI_PROVIDER_ID,
   type ApiClient,
   type OAuthProviderId,
   type OAuthProviderMeta,
   type OAuthTokenSet,
   type OAuthUserProfile,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import { BIGMODEL_OAUTH_PROVIDER_CONFIG } from "../src/oauth/providers/bigmodelProviderConfig.js";
 import { ZAI_OAUTH_PROVIDER_CONFIG } from "../src/oauth/providers/zaiProviderConfig.js";
 import { ZaiProviderAdapter } from "../src/oauth/providers/zaiProviderAdapter.js";
@@ -28,7 +28,7 @@ const DESKTOP_OAUTH_CALLBACK_URI = "zcode://oauth/callback";
 function buildDesktopOAuthLoginRedirectUri(origin: string): string {
   const url = new URL("/app/oauth/login", origin);
   url.searchParams.set("redirect", DESKTOP_OAUTH_CALLBACK_URI);
-  url.searchParams.set("app_version", ZCODE_VERSION);
+  url.searchParams.set("app_version", MCODE_VERSION);
   return url.toString();
 }
 
@@ -41,8 +41,8 @@ const TEST_DESKTOP_OAUTH_LOGIN_REDIRECT_URI = buildDesktopOAuthLoginRedirectUri(
 // Windows 机器上设置了 ZAI_TEST_OAUTH_ORIGIN 等环境变量，会覆盖测试预期的 test 端点值
 // 过滤掉这些可能污染测试的环境变量
 const OAUTH_ENV_KEYS_TO_OMIT = new Set([
-  "ZCODE_ENV",
-  "ZCODE_ENDPOINT_ORIGIN",
+  "MCODE_ENV",
+  "MCODE_ENDPOINT_ORIGIN",
   "ZAI_TEST_OAUTH_ORIGIN",
   "ZAI_PRODUCTION_OAUTH_ORIGIN",
   "ZAI_OAUTH_ORIGIN",
@@ -55,9 +55,9 @@ const OAUTH_ENV_KEYS_TO_OMIT = new Set([
   "ZAI_TEST_BUSINESS_BASE_URL",
   "ZAI_PRODUCTION_BUSINESS_BASE_URL",
   "ZAI_BUSINESS_BASE_URL",
-  "ZCODE_TEST_BASE_URL",
-  "ZCODE_PRODUCTION_BASE_URL",
-  "ZCODE_BASE_URL",
+  "MCODE_TEST_BASE_URL",
+  "MCODE_PRODUCTION_BASE_URL",
+  "MCODE_BASE_URL",
 ]);
 const cleanProcessEnv = Object.fromEntries(
   Object.entries(process.env).filter(([key]) => !OAUTH_ENV_KEYS_TO_OMIT.has(key)),
@@ -149,8 +149,8 @@ function createUnsignedJwt(payload: Record<string, unknown>): string {
   return `${encode({ alg: "none", typ: "JWT" })}.${encode(payload)}.`;
 }
 
-function createBigModelZcodeTokenResponse(
-  token = "bigmodel-zcode-jwt",
+function createBigModelMcodeTokenResponse(
+  token = "bigmodel-mcode-jwt",
   accessToken = "bigmodel-business-access-token",
 ): Response {
   return new Response(
@@ -221,7 +221,7 @@ describe("oauthService", () => {
             msg: "",
             data: {
               status: "ready",
-              token: "zcode-jwt",
+              token: "mcode-jwt",
               user: {
                 user_id: "user-1",
                 name: "Edward",
@@ -287,7 +287,7 @@ describe("oauthService", () => {
     expect(authorizeUrl.searchParams.get("state")).toBe(started.state);
     expect(redirectUrl.origin + redirectUrl.pathname).toBe("https://zcode.z.ai/app/oauth/login");
     expect(redirectUrl.searchParams.get("redirect")).toBe("zcode://oauth/callback");
-    expect(redirectUrl.searchParams.get("app_version")).toBe(ZCODE_VERSION);
+    expect(redirectUrl.searchParams.get("app_version")).toBe(MCODE_VERSION);
     expect(result).toEqual({
       kind: "session",
       provider: ZAI_PROVIDER_ID,
@@ -305,7 +305,7 @@ describe("oauthService", () => {
       Authorization: initAuthorization,
     });
     expect(credentialStore.get("oauth:zai:access_token")).toBe("zai-business-token");
-    expect(credentialStore.get("zcodejwttoken")).toBe("zcode-jwt");
+    expect(credentialStore.get("zcodejwttoken")).toBe("mcode-jwt");
     const apiClient = createMockApiClient(mockFetch);
     const tokenClient = createAccountProjectTokenClient(apiClient, credentialServiceStub);
     const persistedToken = (await credentialServiceStub.load("oauth:zai:access_token"))!;
@@ -380,7 +380,7 @@ describe("oauthService", () => {
             code: 0,
             data: {
               status: "ready",
-              token: "bigmodel-zcode-jwt",
+              token: "bigmodel-mcode-jwt",
               user: { user_id: "bigmodel-user", name: "BigModel User" },
               bigmodel: bigmodelTokenData,
             },
@@ -404,7 +404,7 @@ describe("oauthService", () => {
       expect(authorizeUrl.origin + authorizeUrl.pathname).toBe("https://bigmodel.cn/login");
       expect(redirectUrl.origin + redirectUrl.pathname).toBe("https://zcode.z.ai/app/oauth/login");
       expect(redirectUrl.searchParams.get("redirect")).toBe("zcode://oauth/callback");
-      expect(redirectUrl.searchParams.get("app_version")).toBe(ZCODE_VERSION);
+      expect(redirectUrl.searchParams.get("app_version")).toBe(MCODE_VERSION);
       expect(result).toEqual({
         kind: "session",
         provider: BIGMODEL_PROVIDER_ID,
@@ -416,7 +416,7 @@ describe("oauthService", () => {
       });
       expect(credentialStore.get("oauth:bigmodel:access_token")).toBe("bigmodel-business-token");
       expect(credentialStore.get("oauth:bigmodel:refresh_token")).toBe("bigmodel-refresh");
-      expect(credentialStore.get("zcodejwttoken")).toBe("bigmodel-zcode-jwt");
+      expect(credentialStore.get("zcodejwttoken")).toBe("bigmodel-mcode-jwt");
       expect(started.provider).toBe(BIGMODEL_PROVIDER_ID);
     },
   );
@@ -794,7 +794,7 @@ describe("oauthService", () => {
               code: 0,
               data: {
                 status: "ready",
-                token: "zcode-jwt",
+                token: "mcode-jwt",
                 user: { user_id: "user-1", name: "Edward" },
                 zai: { access_token: "zai-oauth-token" },
               },
@@ -846,7 +846,7 @@ describe("oauthService", () => {
             code: 0,
             data: {
               status: "ready",
-              token: "zcode-jwt",
+              token: "mcode-jwt",
               user: { user_id: "user-1", name: "Edward" },
               zai: { access_token: "zai-oauth-token" },
             },
@@ -1000,7 +1000,7 @@ describe("oauthService", () => {
       env: {
         ...cleanProcessEnv,
         BIGMODEL_OAUTH_APP_SECRET: "unit-test-secret",
-        ZCODE_ENV: "test",
+        MCODE_ENV: "test",
         ZAI_OAUTH_CLIENT_ID: "client_P8X5CMWmlaRO9gyO-KSqtg",
         ZAI_OAUTH_ORIGIN: "https://chat.z.ai/",
       },
@@ -1016,12 +1016,12 @@ describe("oauthService", () => {
     expect(parsed.searchParams.get("client_id")).toBe("client_P8X5CMWmlaRO9gyO-KSqtg");
   });
 
-  it("uses test zcode website OAuth login redirect for BigModel in test environment", async () => {
+  it("uses test mcode website OAuth login redirect for BigModel in test environment", async () => {
     const service = createBigModelService({
       env: {
         ...cleanProcessEnv,
         BIGMODEL_OAUTH_APP_SECRET: "unit-test-secret",
-        ZCODE_ENV: "test",
+        MCODE_ENV: "test",
       },
     });
 
@@ -1031,12 +1031,12 @@ describe("oauthService", () => {
     expect(parsed.searchParams.get("redirect")).toBe(TEST_DESKTOP_OAUTH_LOGIN_REDIRECT_URI);
   });
 
-  it("uses bigmodel.cn to build BigModel authorize URL when ZCODE_ENV=test", async () => {
+  it("uses bigmodel.cn to build BigModel authorize URL when MCODE_ENV=test", async () => {
     const service = createBigModelService({
       env: {
         ...cleanProcessEnv,
         BIGMODEL_OAUTH_APP_SECRET: "unit-test-secret",
-        ZCODE_ENV: "test",
+        MCODE_ENV: "test",
       },
     });
 
@@ -1046,12 +1046,12 @@ describe("oauthService", () => {
     expect(parsed.origin + parsed.pathname).toBe("https://bigmodel.cn/login");
   });
 
-  it("uses production bigmodel.cn to build BigModel authorize URL when ZCODE_ENV=production", async () => {
+  it("uses production bigmodel.cn to build BigModel authorize URL when MCODE_ENV=production", async () => {
     const service = createBigModelService({
       env: {
         ...process.env,
         BIGMODEL_OAUTH_APP_SECRET: "unit-test-secret",
-        ZCODE_ENV: "production",
+        MCODE_ENV: "production",
       },
     });
 
@@ -1093,7 +1093,7 @@ describe("oauthService", () => {
       JSON.stringify({ channel_id: "google_ads", utm_source: "google" }),
     );
 
-    fetchMock.mockResolvedValueOnce(createBigModelZcodeTokenResponse());
+    fetchMock.mockResolvedValueOnce(createBigModelMcodeTokenResponse());
     fetchMock.mockResolvedValueOnce(createBigModelUserInfoResponse());
 
     await expect(
@@ -1138,12 +1138,12 @@ describe("oauthService", () => {
   });
 
   // Windows 机器上设置了 ZAI_TEST_OAUTH_ORIGIN 等环境变量，会覆盖测试预期的 test 端点值
-  it("uses testZAI endpoints from runtime ZCODE_ENV without explicit origin overrides", async () => {
+  it("uses testZAI endpoints from runtime MCODE_ENV without explicit origin overrides", async () => {
     const service = createBigModelService({
       env: {
         ...cleanProcessEnv,
         BIGMODEL_OAUTH_APP_SECRET: "unit-test-secret",
-        ZCODE_ENV: "test",
+        MCODE_ENV: "test",
       },
     });
 
@@ -1169,7 +1169,7 @@ describe("oauthService", () => {
           code: 0,
           msg: "",
           data: {
-            token: "zcode_backend_jwt",
+            token: "mcode_backend_jwt",
             zai: {
               access_token: "zai_oauth_access_token",
             },
@@ -1227,7 +1227,7 @@ describe("oauthService", () => {
       "zai_business_access_token",
     );
     expect(await credentialServiceStub.load("oauth:zai:refresh_token")).toBeNull();
-    expect(await credentialServiceStub.load("zcodejwttoken")).toBe("zcode_backend_jwt");
+    expect(await credentialServiceStub.load("zcodejwttoken")).toBe("mcode_backend_jwt");
     expect(await credentialServiceStub.load("oauth:login_attribution")).toBe(
       JSON.stringify({
         channel_id: "google_ads",
@@ -1246,14 +1246,14 @@ describe("oauthService", () => {
     expect(await credentialServiceStub.load("oauth:active_provider")).toBe(ZAI_PROVIDER_ID);
   });
 
-  it("uses ZCODE_BASE_URL for zai backend token exchange", async () => {
+  it("uses MCODE_BASE_URL for zai backend token exchange", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const service = createBigModelService({
       apiClient: createMockApiClient(fetchMock),
       env: {
         ...process.env,
         BIGMODEL_OAUTH_APP_SECRET: "unit-test-secret",
-        ZCODE_BASE_URL: "https://zcode.z.ai",
+        MCODE_BASE_URL: "https://zcode.z.ai",
       },
     });
     const { state } = await service.startOAuth(ZAI_PROVIDER_ID);
@@ -1264,7 +1264,7 @@ describe("oauthService", () => {
           code: 0,
           msg: "",
           data: {
-            token: "zcode_backend_jwt",
+            token: "mcode_backend_jwt",
             zai: { access_token: "zai_oauth_access_token" },
             user: { user_id: "zai-u-001", email: "user@example.com" },
           },
@@ -1301,7 +1301,7 @@ describe("oauthService", () => {
           code: 0,
           msg: "",
           data: {
-            token: "zcode_backend_jwt",
+            token: "mcode_backend_jwt",
             zai: { access_token: "zai_oauth_access_token" },
             user: { user_id: "zai-u-001", email: "user@example.com" },
           },
@@ -1333,7 +1333,7 @@ describe("oauthService", () => {
           code: 0,
           msg: "",
           data: {
-            token: "zcode_backend_jwt",
+            token: "mcode_backend_jwt",
             zai: {
               access_token: "zai_oauth_access_token",
             },
@@ -1379,7 +1379,7 @@ describe("oauthService", () => {
           code: 0,
           msg: "",
           data: {
-            token: "zcode_backend_jwt",
+            token: "mcode_backend_jwt",
             zai: {
               access_token: "zai_oauth_access_token",
             },
@@ -1449,7 +1449,7 @@ describe("oauthService", () => {
           code: 0,
           msg: "",
           data: {
-            token: "zcode_backend_jwt",
+            token: "mcode_backend_jwt",
             zai: {},
             expires_in: 86400,
             user: {
@@ -1519,7 +1519,7 @@ describe("oauthService", () => {
           code: 0,
           msg: "",
           data: {
-            token: "zcode_backend_jwt",
+            token: "mcode_backend_jwt",
             zai: {
               access_token: "zai_oauth_access_token",
             },
@@ -1584,7 +1584,7 @@ describe("oauthService", () => {
           code: 0,
           msg: "",
           data: {
-            token: "zcode_backend_jwt",
+            token: "mcode_backend_jwt",
             zai: {
               access_token: "zai_oauth_access_token",
             },
@@ -1608,7 +1608,7 @@ describe("oauthService", () => {
       ),
     ).resolves.toEqual({
       accessToken: "zai_business_access_token",
-      zcodeJwtToken: "zcode_backend_jwt",
+      mcodeJwtToken: "mcode_backend_jwt",
       expiresAt: now + 86400 * 1000,
     });
   });
@@ -1631,7 +1631,7 @@ describe("oauthService", () => {
           code: 0,
           msg: "",
           data: {
-            token: "zcode_backend_jwt",
+            token: "mcode_backend_jwt",
             zai: {
               access_token: "zai_oauth_access_token",
             },
@@ -1812,7 +1812,7 @@ describe("oauthService", () => {
     });
     const { state } = await service.startOAuth(BIGMODEL_PROVIDER_ID);
 
-    fetchMock.mockResolvedValueOnce(createBigModelZcodeTokenResponse());
+    fetchMock.mockResolvedValueOnce(createBigModelMcodeTokenResponse());
     fetchMock.mockResolvedValueOnce(createBigModelUserInfoResponse());
     const result = await service.handleCallback(
       `zcode://oauth/callback?authCode=auth-code-001&state=${state}&utm_source=google`,
@@ -1823,12 +1823,12 @@ describe("oauthService", () => {
       "https://zcode.z.ai/api/v1/oauth/token",
       expect.objectContaining({ method: "POST", headers: { "Content-Type": "application/json" } }),
     );
-    const zcodeTokenCall = fetchMock.mock.calls[0];
-    if (!zcodeTokenCall) {
-      throw new Error("missing zcode token call");
+    const mcodeTokenCall = fetchMock.mock.calls[0];
+    if (!mcodeTokenCall) {
+      throw new Error("missing mcode token call");
     }
-    const zcodeTokenInit = zcodeTokenCall[1] as RequestInit;
-    expect(JSON.parse(String(zcodeTokenInit.body))).toEqual({
+    const mcodeTokenInit = mcodeTokenCall[1] as RequestInit;
+    expect(JSON.parse(String(mcodeTokenInit.body))).toEqual({
       provider: BIGMODEL_PROVIDER_ID,
       code: "auth-code-001",
       redirect_uri: PRODUCTION_DESKTOP_OAUTH_LOGIN_REDIRECT_URI,
@@ -1861,14 +1861,14 @@ describe("oauthService", () => {
       "bigmodel-business-access-token",
     );
     expect(await credentialServiceStub.load("oauth:bigmodel:refresh_token")).toBeNull();
-    expect(await credentialServiceStub.load("zcodejwttoken")).toBe("bigmodel-zcode-jwt");
+    expect(await credentialServiceStub.load("zcodejwttoken")).toBe("bigmodel-mcode-jwt");
     expect(await credentialServiceStub.load("oauth:login_attribution")).toBe(
       JSON.stringify({ utm_source: "google" }),
     );
     expect(await credentialServiceStub.load("oauth:bigmodel:user_info")).toBe(
       JSON.stringify({
         ...result.userInfo,
-        rawProfile: { zcodeProfileSchemaVersion: 2 },
+        rawProfile: { mcodeProfileSchemaVersion: 2 },
       }),
     );
     expect(await credentialServiceStub.load("oauth:active_provider")).toBe(BIGMODEL_PROVIDER_ID);
@@ -1884,7 +1884,7 @@ describe("oauthService", () => {
     });
     const { state } = await service.startOAuth(BIGMODEL_PROVIDER_ID);
 
-    fetchMock.mockResolvedValueOnce(createBigModelZcodeTokenResponse());
+    fetchMock.mockResolvedValueOnce(createBigModelMcodeTokenResponse());
     fetchMock.mockResolvedValueOnce(
       createBigModelUserInfoResponse("Nickname User", "bigmodel-u-001", "Customer User"),
     );
@@ -1901,7 +1901,7 @@ describe("oauthService", () => {
     expect(await credentialServiceStub.load("oauth:bigmodel:user_info")).toBe(
       JSON.stringify({
         ...result.userInfo,
-        rawProfile: { zcodeProfileSchemaVersion: 2 },
+        rawProfile: { mcodeProfileSchemaVersion: 2 },
       }),
     );
   });
@@ -1916,7 +1916,7 @@ describe("oauthService", () => {
     });
     const { state } = await service.startOAuth(BIGMODEL_PROVIDER_ID);
 
-    fetchMock.mockResolvedValueOnce(createBigModelZcodeTokenResponse());
+    fetchMock.mockResolvedValueOnce(createBigModelMcodeTokenResponse());
     fetchMock.mockResolvedValueOnce(
       createBigModelUserInfoResponse("Nickname User", "bigmodel-u-001", customerName),
     );
@@ -1939,7 +1939,7 @@ describe("oauthService", () => {
     });
     const { state } = await service.startOAuth(BIGMODEL_PROVIDER_ID);
 
-    fetchMock.mockResolvedValueOnce(createBigModelZcodeTokenResponse());
+    fetchMock.mockResolvedValueOnce(createBigModelMcodeTokenResponse());
     fetchMock.mockResolvedValueOnce(
       createBigModelUserInfoResponse("Nickname User", "bigmodel-u-001", 123),
     );
@@ -1962,7 +1962,7 @@ describe("oauthService", () => {
     });
     const { state } = await service.startOAuth(BIGMODEL_PROVIDER_ID);
 
-    fetchMock.mockResolvedValueOnce(createBigModelZcodeTokenResponse());
+    fetchMock.mockResolvedValueOnce(createBigModelMcodeTokenResponse());
     fetchMock.mockResolvedValueOnce(
       createBigModelUserInfoResponse({ value: "Nickname User" }, "bigmodel-u-001", 123),
     );
@@ -1978,19 +1978,19 @@ describe("oauthService", () => {
     });
   });
 
-  it("uses ZCODE_BASE_URL for bigmodel backend token exchange", async () => {
+  it("uses MCODE_BASE_URL for bigmodel backend token exchange", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const service = createBigModelService({
       apiClient: createMockApiClient(fetchMock),
       env: {
         ...process.env,
         BIGMODEL_OAUTH_APP_SECRET: "unit-test-secret",
-        ZCODE_BASE_URL: "https://zcode.z.ai",
+        MCODE_BASE_URL: "https://zcode.z.ai",
       },
     });
     const { state } = await service.startOAuth(BIGMODEL_PROVIDER_ID);
 
-    fetchMock.mockResolvedValueOnce(createBigModelZcodeTokenResponse());
+    fetchMock.mockResolvedValueOnce(createBigModelMcodeTokenResponse());
     fetchMock.mockResolvedValueOnce(createBigModelUserInfoResponse());
 
     await service.handleCallback(`zcode://oauth/callback?authCode=auth-code-001&state=${state}`);
@@ -2002,7 +2002,7 @@ describe("oauthService", () => {
     );
   });
 
-  // Windows 机器上设置了 ZCODE_TEST_BASE_URL 等环境变量，会覆盖测试预期的 test 端点值
+  // Windows 机器上设置了 MCODE_TEST_BASE_URL 等环境变量，会覆盖测试预期的 test 端点值
   it("uses test product endpoints for bigmodel token exchange and userinfo", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const service = createBigModelService({
@@ -2010,12 +2010,12 @@ describe("oauthService", () => {
       env: {
         ...cleanProcessEnv,
         BIGMODEL_OAUTH_APP_SECRET: "unit-test-secret",
-        ZCODE_ENV: "test",
+        MCODE_ENV: "test",
       },
     });
     const { state } = await service.startOAuth(BIGMODEL_PROVIDER_ID);
 
-    fetchMock.mockResolvedValueOnce(createBigModelZcodeTokenResponse());
+    fetchMock.mockResolvedValueOnce(createBigModelMcodeTokenResponse());
     fetchMock.mockResolvedValueOnce(createBigModelUserInfoResponse());
 
     await service.handleCallback(`zcode://oauth/callback?authCode=auth-code-001&state=${state}`);
@@ -2032,7 +2032,7 @@ describe("oauthService", () => {
     );
   });
 
-  it("bigmodel zcode token 非 2xx 时中止登录并记录后端 msg", async () => {
+  it("bigmodel mcode token 非 2xx 时中止登录并记录后端 msg", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const consoleWarnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     const service = createBigModelService({
@@ -2045,7 +2045,7 @@ describe("oauthService", () => {
         status: 500,
         headers: {
           "Content-Type": "application/json",
-          "x-request-id": "req-zcode-500",
+          "x-request-id": "req-mcode-500",
         },
       }),
     );
@@ -2063,7 +2063,7 @@ describe("oauthService", () => {
     expect(await credentialServiceStub.load("oauth:bigmodel:access_token")).toBeNull();
     expect(await credentialServiceStub.load("zcodejwttoken")).toBeNull();
     expect(JSON.stringify(consoleWarnSpy.mock.calls)).toContain("http error");
-    expect(JSON.stringify(consoleWarnSpy.mock.calls)).toContain("req-zcode-500");
+    expect(JSON.stringify(consoleWarnSpy.mock.calls)).toContain("req-mcode-500");
   });
 
   it("keeps polling available when deep-link token exchange fails", async () => {
@@ -2117,9 +2117,9 @@ describe("oauthService", () => {
             state: new URL(url).searchParams.get("state") ?? "",
           }),
           exchangeToken: async () => exchangeStarted,
-          normalizePolledTokenSet: async ({ accessToken, zcodeJwtToken }) => ({
+          normalizePolledTokenSet: async ({ accessToken, mcodeJwtToken }) => ({
             accessToken,
-            zcodeJwtToken,
+            mcodeJwtToken,
           }),
           normalizeError: (error: unknown) => (error instanceof Error ? error : new Error(String(error))),
         },
@@ -2191,11 +2191,11 @@ describe("oauthService", () => {
         displayName: "ZAI Old",
       }),
     );
-    await credentialServiceStub.save("zcodejwttoken", "old-zcode-jwt");
+    await credentialServiceStub.save("zcodejwttoken", "old-mcode-jwt");
 
     const { state } = await service.startOAuth(BIGMODEL_PROVIDER_ID);
     fetchMock.mockResolvedValueOnce(
-      createBigModelZcodeTokenResponse("new-bigmodel-zcode-jwt", "new-bigmodel-business-token"),
+      createBigModelMcodeTokenResponse("new-bigmodel-mcode-jwt", "new-bigmodel-business-token"),
     );
     fetchMock.mockResolvedValueOnce(createBigModelUserInfoResponse());
 
@@ -2207,10 +2207,10 @@ describe("oauthService", () => {
     );
     expect(await credentialServiceStub.load("oauth:zai:access_token")).toBeNull();
     expect(await credentialServiceStub.load("oauth:zai:user_info")).toBeNull();
-    expect(await credentialServiceStub.load("zcodejwttoken")).toBe("new-bigmodel-zcode-jwt");
+    expect(await credentialServiceStub.load("zcodejwttoken")).toBe("new-bigmodel-mcode-jwt");
   });
 
-  it("BigModel zcode token 响应缺少 token 时中止登录", async () => {
+  it("BigModel mcode token 响应缺少 token 时中止登录", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const service = createBigModelService({
       apiClient: createMockApiClient(fetchMock),
@@ -2234,7 +2234,7 @@ describe("oauthService", () => {
     expect(await credentialServiceStub.load("zcodejwttoken")).toBeNull();
   });
 
-  it("BigModel zcode token 业务失败时透出 msg", async () => {
+  it("BigModel mcode token 业务失败时透出 msg", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const service = createBigModelService({
       apiClient: createMockApiClient(fetchMock),
@@ -2265,7 +2265,7 @@ describe("oauthService", () => {
     });
     const { state } = await service.startOAuth(BIGMODEL_PROVIDER_ID);
 
-    fetchMock.mockResolvedValueOnce(createBigModelZcodeTokenResponse("code-field-zcode-jwt"));
+    fetchMock.mockResolvedValueOnce(createBigModelMcodeTokenResponse("code-field-mcode-jwt"));
     fetchMock.mockResolvedValueOnce(createBigModelUserInfoResponse());
 
     await service.handleCallback(`zcode://oauth/callback?code=oauth-code-002&state=${state}`);
@@ -2287,7 +2287,7 @@ describe("oauthService", () => {
       redirect_uri: PRODUCTION_DESKTOP_OAUTH_LOGIN_REDIRECT_URI,
       state,
     });
-    expect(await credentialServiceStub.load("zcodejwttoken")).toBe("code-field-zcode-jwt");
+    expect(await credentialServiceStub.load("zcodejwttoken")).toBe("code-field-mcode-jwt");
   });
 
   it("App OAuth 入口切换 active provider", async () => {
@@ -2309,8 +2309,8 @@ describe("oauthService", () => {
     const { state } = await service.startOAuth(BIGMODEL_PROVIDER_ID);
 
     fetchMock.mockResolvedValueOnce(
-      createBigModelZcodeTokenResponse(
-        "subscription-zcode-jwt",
+      createBigModelMcodeTokenResponse(
+        "subscription-mcode-jwt",
         "subscription-business-access-token",
       ),
     );
@@ -2334,20 +2334,20 @@ describe("oauthService", () => {
       "subscription-business-access-token",
     );
     expect(await credentialServiceStub.load("oauth:bigmodel:refresh_token")).toBeNull();
-    expect(await credentialServiceStub.load("zcodejwttoken")).toBe("subscription-zcode-jwt");
+    expect(await credentialServiceStub.load("zcodejwttoken")).toBe("subscription-mcode-jwt");
     expect(await credentialServiceStub.load("oauth:bigmodel:user_info")).toBe(
       JSON.stringify({
         id: "bigmodel-u-001",
         username: "BigModel User",
         displayName: "BigModel User",
-        rawProfile: { zcodeProfileSchemaVersion: 2 },
+        rawProfile: { mcodeProfileSchemaVersion: 2 },
       }),
     );
     expect(await credentialServiceStub.load("oauth:active_provider")).toBe(BIGMODEL_PROVIDER_ID);
     expect(await credentialServiceStub.load("oauth:zai:user_info")).toBeNull();
   });
 
-  it("BigModel zcode token body 不携带 appSecret", async () => {
+  it("BigModel mcode token body 不携带 appSecret", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const service = createBigModelService({
       apiClient: createMockApiClient(fetchMock),
@@ -2355,7 +2355,7 @@ describe("oauthService", () => {
     });
     const { state } = await service.startOAuth(BIGMODEL_PROVIDER_ID);
 
-    fetchMock.mockResolvedValueOnce(createBigModelZcodeTokenResponse());
+    fetchMock.mockResolvedValueOnce(createBigModelMcodeTokenResponse());
     fetchMock.mockResolvedValueOnce(createBigModelUserInfoResponse());
     await service.handleCallback(`zcode://oauth/callback?authCode=auth-code-004&state=${state}`);
 
@@ -2381,7 +2381,7 @@ describe("oauthService", () => {
       service.handleCallback(`zcode://oauth/callback?authCode=first&state=${first.state}`),
     ).rejects.toThrow(/state/);
 
-    fetchMock.mockResolvedValueOnce(createBigModelZcodeTokenResponse("token-2"));
+    fetchMock.mockResolvedValueOnce(createBigModelMcodeTokenResponse("token-2"));
     fetchMock.mockResolvedValueOnce(createBigModelUserInfoResponse());
     await expect(
       service.handleCallback(`zcode://oauth/callback?authCode=second&state=${second.state}`),
@@ -2610,7 +2610,7 @@ describe("oauthService", () => {
       id: "u-cached-001",
       username: "CachedNick",
       displayName: "CachedNick",
-      rawProfile: { zcodeProfileSchemaVersion: 2 },
+      rawProfile: { mcodeProfileSchemaVersion: 2 },
     };
 
     await credentialServiceStub.save("oauth:active_provider", BIGMODEL_PROVIDER_ID);
@@ -2635,7 +2635,7 @@ describe("oauthService", () => {
       id: "u-cached-001",
       username: "FutureName",
       displayName: "FutureName",
-      rawProfile: { zcodeProfileSchemaVersion: 3, futureField: "keep" },
+      rawProfile: { mcodeProfileSchemaVersion: 3, futureField: "keep" },
     };
 
     await credentialServiceStub.save("oauth:active_provider", BIGMODEL_PROVIDER_ID);
@@ -2695,7 +2695,7 @@ describe("oauthService", () => {
           id: "bigmodel-u-001",
           username: "Account Center Name",
           displayName: "Account Center Name",
-          rawProfile: { zcodeProfileSchemaVersion: 2 },
+          rawProfile: { mcodeProfileSchemaVersion: 2 },
         }),
       );
     });
@@ -2732,7 +2732,7 @@ describe("oauthService", () => {
       expect(await credentialServiceStub.load("oauth:bigmodel:user_info")).toBe(
         JSON.stringify({
           ...cachedUser,
-          rawProfile: { zcodeProfileSchemaVersion: 2 },
+          rawProfile: { mcodeProfileSchemaVersion: 2 },
         }),
       );
     });
@@ -2742,7 +2742,7 @@ describe("oauthService", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("keeps legacy cached bigmodel profile when access token is polluted by zcode jwt", async () => {
+  it("keeps legacy cached bigmodel profile when access token is polluted by mcode jwt", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const service = createBigModelService({
       apiClient: createMockApiClient(fetchMock),
@@ -2755,8 +2755,8 @@ describe("oauthService", () => {
     };
 
     await credentialServiceStub.save("oauth:active_provider", BIGMODEL_PROVIDER_ID);
-    await credentialServiceStub.save("oauth:bigmodel:access_token", "polluted-zcode-jwt");
-    await credentialServiceStub.save("zcodejwttoken", "polluted-zcode-jwt");
+    await credentialServiceStub.save("oauth:bigmodel:access_token", "polluted-mcode-jwt");
+    await credentialServiceStub.save("zcodejwttoken", "polluted-mcode-jwt");
     await credentialServiceStub.save("oauth:bigmodel:user_info", JSON.stringify(cachedUser));
 
     await expect(service.restoreCachedSession()).resolves.toEqual(cachedUser);
@@ -2767,7 +2767,7 @@ describe("oauthService", () => {
       expect(await credentialServiceStub.load("oauth:bigmodel:user_info")).toBe(
         JSON.stringify({
           ...cachedUser,
-          rawProfile: { zcodeProfileSchemaVersion: 2 },
+          rawProfile: { mcodeProfileSchemaVersion: 2 },
         }),
       );
     });
@@ -2806,11 +2806,11 @@ describe("oauthService", () => {
         (await credentialServiceStub.load("oauth:bigmodel:user_info")) ?? "{}",
       ) as OAuthUserProfile;
       retryAfter =
-        typeof stored.rawProfile?.zcodeProfileMigrationRetryAfter === "number"
-          ? stored.rawProfile.zcodeProfileMigrationRetryAfter
+        typeof stored.rawProfile?.mcodeProfileMigrationRetryAfter === "number"
+          ? stored.rawProfile.mcodeProfileMigrationRetryAfter
           : 0;
       expect(retryAfter).toBeGreaterThan(now);
-      expect(stored.rawProfile?.zcodeProfileSchemaVersion).toBeUndefined();
+      expect(stored.rawProfile?.mcodeProfileSchemaVersion).toBeUndefined();
     });
 
     fetchMock.mockClear();
@@ -2829,7 +2829,7 @@ describe("oauthService", () => {
           id: "bigmodel-u-001",
           username: "Account Center Name",
           displayName: "Account Center Name",
-          rawProfile: { zcodeProfileSchemaVersion: 2 },
+          rawProfile: { mcodeProfileSchemaVersion: 2 },
         }),
       );
     });
@@ -2898,7 +2898,7 @@ describe("oauthService", () => {
     await credentialServiceStub.delete("oauth:bigmodel:user_info");
     await credentialServiceStub.save("oauth:active_provider", ZAI_PROVIDER_ID);
     await credentialServiceStub.save("oauth:zai:access_token", "zai-session-token");
-    await credentialServiceStub.save("zcodejwttoken", "zai-zcode-jwt");
+    await credentialServiceStub.save("zcodejwttoken", "zai-mcode-jwt");
     await credentialServiceStub.save("oauth:zai:user_info", JSON.stringify(zaiUserInfo));
 
     const loadSpy = vi.spyOn(credentialServiceStub, "load");
@@ -3000,7 +3000,7 @@ describe("oauthService", () => {
           code: 0,
           msg: "",
           data: {
-            token: "zai-zcode-jwt",
+            token: "zai-mcode-jwt",
             zai: { access_token: "zai-oauth-token" },
             user: { user_id: "zai-u-001", email: "zai@example.com" },
           },
@@ -3083,7 +3083,7 @@ describe("oauthService", () => {
 
     await credentialServiceStub.save("oauth:active_provider", ZAI_PROVIDER_ID);
     await credentialServiceStub.save("oauth:zai:access_token", "zai-session-token");
-    await credentialServiceStub.save("zcodejwttoken", "zcode_backend_jwt");
+    await credentialServiceStub.save("zcodejwttoken", "mcode_backend_jwt");
     await credentialServiceStub.save(
       "oauth:zai:user_info",
       JSON.stringify({
@@ -3103,7 +3103,7 @@ describe("oauthService", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("invalidates an expired zcode JWT and requests reauthentication", async () => {
+  it("invalidates an expired mcode JWT and requests reauthentication", async () => {
     const onProviderLogout = vi.fn(async () => {
       throw new Error("derived provider cleanup failed");
     });
@@ -3167,7 +3167,7 @@ describe("oauthService", () => {
     const restorePromise = service.restoreCachedSessionState();
     await expiredJwtReadStarted;
     const { state } = await service.startOAuth(BIGMODEL_PROVIDER_ID);
-    fetchMock.mockResolvedValueOnce(createBigModelZcodeTokenResponse("new-zcode-jwt", "new-token"));
+    fetchMock.mockResolvedValueOnce(createBigModelMcodeTokenResponse("new-mcode-jwt", "new-token"));
     fetchMock.mockResolvedValueOnce(createBigModelUserInfoResponse());
     await service.handleCallback(`zcode://oauth/callback?authCode=new-login&state=${state}`);
     releaseExpiredJwtRead();
@@ -3175,7 +3175,7 @@ describe("oauthService", () => {
     await expect(restorePromise).resolves.toMatchObject({ status: "authenticated" });
     expect(await credentialServiceStub.load("oauth:active_provider")).toBe(BIGMODEL_PROVIDER_ID);
     expect(await credentialServiceStub.load("oauth:bigmodel:access_token")).toBe("new-token");
-    expect(await credentialServiceStub.load("zcodejwttoken")).toBe("new-zcode-jwt");
+    expect(await credentialServiceStub.load("zcodejwttoken")).toBe("new-mcode-jwt");
   });
 
   it("does not clear a newly selected provider while another provider restore is expiring", async () => {
@@ -3215,7 +3215,7 @@ describe("oauthService", () => {
     await expiredJwtReadStarted;
     const { state } = await service.startOAuth(BIGMODEL_PROVIDER_ID);
     fetchMock.mockResolvedValueOnce(
-      createBigModelZcodeTokenResponse("new-bigmodel-jwt", "new-bigmodel-token"),
+      createBigModelMcodeTokenResponse("new-bigmodel-jwt", "new-bigmodel-token"),
     );
     fetchMock.mockResolvedValueOnce(createBigModelUserInfoResponse());
     await service.handleCallback(`zcode://oauth/callback?authCode=switch-login&state=${state}`);
@@ -3229,7 +3229,7 @@ describe("oauthService", () => {
     expect(await credentialServiceStub.load("zcodejwttoken")).toBe("new-bigmodel-jwt");
   });
 
-  it("restores an authenticated cached session when zcode JWT is not expired", async () => {
+  it("restores an authenticated cached session when mcode JWT is not expired", async () => {
     const service = createBigModelService({ now: () => 1_000_000 });
 
     await credentialServiceStub.save("oauth:active_provider", ZAI_PROVIDER_ID);
@@ -3250,7 +3250,7 @@ describe("oauthService", () => {
     });
   });
 
-  it("invalidates an expired BigModel zcode JWT before cached profile migration", async () => {
+  it("invalidates an expired BigModel mcode JWT before cached profile migration", async () => {
     const service = createBigModelService({ now: () => 2_000_000 });
 
     await credentialServiceStub.save("oauth:active_provider", BIGMODEL_PROVIDER_ID);
@@ -3480,7 +3480,7 @@ describe("oauthService", () => {
     await expect(service.refreshToken()).rejects.toThrow(/请重新登录/);
   });
 
-  it("bigmodel zcode token 非 2xx 时会抛出统一的 ApiError", async () => {
+  it("bigmodel mcode token 非 2xx 时会抛出统一的 ApiError", async () => {
     const fetchMock = vi.fn<typeof fetch>();
     const service = createBigModelService({
       apiClient: createMockApiClient(fetchMock),

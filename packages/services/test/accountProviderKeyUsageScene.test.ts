@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { type ApiClient } from "@zcode/shared";
+import { type ApiClient } from "@mcode/shared";
 import { AccountProviderApiClient } from "#src/model-provider/accountProviderApiClient.js";
 import { AccountProviderApiKeyResolver } from "#src/model-provider/accountProviderApiKeyResolver.js";
 import { resolveAccountTeamPlanRuntimeMaterial } from "#src/model-provider/accountProviderTeamPlanRequestKey.js";

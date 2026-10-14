@@ -3,8 +3,8 @@ import {
   buildCustomSupplierKey,
   buildGhostSupplierKey,
   encodeCustomModelValue,
-  type ZCodePersistedFileChange,
-} from "@zcode/shared";
+  type McodePersistedFileChange,
+} from "@mcode/shared";
 
 import {
   activatePromptTelemetry,
@@ -49,7 +49,7 @@ describe("messageTelemetry", () => {
   });
 
   it("builds message completion metrics from the active prompt lifecycle", () => {
-    const fileChanges: ZCodePersistedFileChange[] = [
+    const fileChanges: McodePersistedFileChange[] = [
       {
         turnIndex: 0,
         snapshots: [

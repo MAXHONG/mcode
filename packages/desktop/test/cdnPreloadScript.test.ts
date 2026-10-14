@@ -128,7 +128,7 @@ process.stdout.write("\\n");
     const describeCalls = aliyunCalls.filter((line) => line.includes("DescribeRefreshTaskById"));
     expect(pushCalls).toHaveLength(2);
     expect(pushCalls.some((line) => line.includes("latest-mac.yml"))).toBe(true);
-    expect(pushCalls.some((line) => line.includes("ZCode-1.3.0-mac-arm64.dmg"))).toBe(true);
+    expect(pushCalls.some((line) => line.includes("Mcode-1.3.0-mac-arm64.dmg"))).toBe(true);
     expect(pushCalls.every((line) => !line.includes("--Area"))).toBe(true);
     expect(output).not.toContain("--Area");
     expect(describeCalls).toHaveLength(2);
@@ -168,8 +168,8 @@ done
 if [[ "$2" == "PushObjectCache" ]]; then
   if [[ "$profile" == "z-ai-account" ]]; then
     printf '%s\\n' '{"PushTaskId":"task-z-ai"}'
-  elif [[ "$profile" == "zcode-ai-account" ]]; then
-    printf '%s\\n' '{"PushTaskId":"task-zcode-ai"}'
+  elif [[ "$profile" == "mcode-ai-account" ]]; then
+    printf '%s\\n' '{"PushTaskId":"task-mcode-ai"}'
   else
     echo "unexpected profile: $profile" >&2
     exit 1
@@ -208,7 +208,7 @@ else process.stdout.write("\\n");
         PATH: `${binDir}:${process.env.PATH ?? ""}`,
         CDN_URLS_IN: cdnUrlsIn,
         CDN_DOMAIN: "cdn-zcode.z.ai,cdn.zcode-ai.com",
-        CDN_PRELOAD_PROFILE: "z-ai-account,zcode-ai-account",
+        CDN_PRELOAD_PROFILE: "z-ai-account,mcode-ai-account",
         POLL_INTERVAL: "0",
       },
       timeout: 25_000,
@@ -234,7 +234,7 @@ else process.stdout.write("\\n");
     ).toBe(true);
     expect(
       pushCalls.some(
-        (line) => line.includes("cdn.zcode-ai.com") && line.includes("--profile zcode-ai-account"),
+        (line) => line.includes("cdn.zcode-ai.com") && line.includes("--profile mcode-ai-account"),
       ),
     ).toBe(true);
     expect(pushCalls.every((line) => !line.includes("--region"))).toBe(true);
@@ -246,7 +246,7 @@ else process.stdout.write("\\n");
     ).toBe(true);
     expect(
       describeCalls.some(
-        (line) => line.includes("task-zcode-ai") && line.includes("--profile zcode-ai-account"),
+        (line) => line.includes("task-mcode-ai") && line.includes("--profile mcode-ai-account"),
       ),
     ).toBe(true);
     expect(describeCalls.every((line) => !line.includes("--region"))).toBe(true);
@@ -327,7 +327,7 @@ else process.stdout.write("\\n");
 
     expect(aliyunCalls).toHaveLength(2);
     expect(aliyunCalls[0]).toContain("PushObjectCache");
-    expect(aliyunCalls[0]).toContain("ZCode-1.3.0-mac-arm64.dmg");
+    expect(aliyunCalls[0]).toContain("Mcode-1.3.0-mac-arm64.dmg");
     expect(aliyunCalls[1]).toContain("DescribeRefreshTaskById");
   }, 30_000);
 

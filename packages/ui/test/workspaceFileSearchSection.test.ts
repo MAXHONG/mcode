@@ -1,11 +1,11 @@
-import type { IFileService } from "@zcode/services";
+import type { IFileService } from "@mcode/services";
 import type { IServiceAccessor } from "@/hooks/useServices.js";
 import { readFileSync } from "node:fs";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ServiceProvider } from "@/hooks/useServices.js";
-import { ZCodeIntlProvider } from "@/i18n/IntlProvider.js";
+import { McodeIntlProvider } from "@/i18n/IntlProvider.js";
 import { WorkspaceFileSearchSection } from "@/settings/WorkspaceFileSearchSection.js";
 
 // 组件顶层 hook 链（useWorkspaceServicesResolution → useServices）要求 context 存在；
@@ -18,7 +18,7 @@ function renderSection(props: { workspacePath?: string | null }): string {
       ServiceProvider,
       { services: emptyAccessor },
       createElement(
-        ZCodeIntlProvider,
+        McodeIntlProvider,
         { initialLocale: "zh-CN" },
         createElement(WorkspaceFileSearchSection, props),
       ),
@@ -59,7 +59,7 @@ describe("WorkspaceFileSearch settings section", () => {
     );
 
     // 保存语义是"落盘编辑框内容"：template 态（文件未创建）即使未编辑也可保存，
-    // 用户第一次进页面不改任何内容也能创建 .zcodeignore；已落盘态才有修改才可保存。
+    // 用户第一次进页面不改任何内容也能创建 .mcodeignore；已落盘态才有修改才可保存。
     expect(source).toContain(
       'const canSave = loaded === null || loaded.source === "template" || draft !== loaded.content;',
     );

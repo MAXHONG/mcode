@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { ZCodeConfigOption } from "@zcode/shared";
+import type { McodeConfigOption } from "@mcode/shared";
 import {
   getNextThoughtLevelValue,
   getThoughtLevelLabel,
@@ -8,7 +8,7 @@ import {
 import zhCN from "@/i18n/locales/zh-CN.js";
 import enUS from "@/i18n/locales/en-US.js";
 
-const option: ZCodeConfigOption = {
+const option: McodeConfigOption = {
   id: "thought_level",
   category: "thought_level",
   type: "select",

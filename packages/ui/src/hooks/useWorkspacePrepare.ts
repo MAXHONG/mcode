@@ -1,1 +1,1 @@
-export { prepareWorkspaceWithZCodeSessionService } from "@/hooks/workspacePrepareRpc.js";
+export { prepareWorkspaceWithMcodeSessionService } from "@/hooks/workspacePrepareRpc.js";

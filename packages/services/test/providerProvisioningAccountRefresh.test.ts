@@ -6,9 +6,9 @@ import {
   ProviderConfigMap,
   type ProviderConfigSnapshot,
   type ProviderSource,
-} from "@zcode/provider";
-import { NodePersonalProviderConfigRepository } from "@zcode/provider-node";
-import { BUILTIN_MODEL_PROVIDER_IDS } from "@zcode/shared";
+} from "@mcode/provider";
+import { NodePersonalProviderConfigRepository } from "@mcode/provider-node";
+import { BUILTIN_MODEL_PROVIDER_IDS } from "@mcode/shared";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { bindAccountProviderInvalidation } from "../src/model-provider/accountProviderInvalidation.js";
 import { createAccountProviderConfigSource } from "../src/model-provider/accountProviderConnectionResolver.js";
@@ -26,9 +26,9 @@ class StaticConfigSource implements ProviderSource<ProviderConfigSnapshot> {
   async read(): Promise<ProviderConfigSnapshot> {
     return {
       revision: "config-1",
-      zcodeBuiltinRevision: "builtin-1",
+      mcodeBuiltinRevision: "builtin-1",
       personalRevision: "personal-1",
-      zcodeBuiltinProviders: new ProviderConfigMap([
+      mcodeBuiltinProviders: new ProviderConfigMap([
         [
           BUILTIN_MODEL_PROVIDER_IDS.zaiIndividualCodingPlan,
           createAccountProviderConfig({
@@ -47,7 +47,7 @@ class StaticConfigSource implements ProviderSource<ProviderConfigSnapshot> {
         ],
       ]),
       personalProviders: ProviderConfigMap.empty(),
-      zcodeBuiltinModelRules: ModelConfigRules.empty(),
+      mcodeBuiltinModelRules: ModelConfigRules.empty(),
       personalModels: ModelConfigRules.empty(),
     };
   }

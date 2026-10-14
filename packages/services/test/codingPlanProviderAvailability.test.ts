@@ -1,4 +1,4 @@
-import { BUILTIN_MODEL_PROVIDER_IDS, type ApiClient } from "@zcode/shared";
+import { BUILTIN_MODEL_PROVIDER_IDS, type ApiClient } from "@mcode/shared";
 import { describe, expect, it, vi } from "vitest";
 import {
   validateBigModelAccountProviderAvailability,

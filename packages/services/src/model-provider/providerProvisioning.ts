@@ -1,5 +1,5 @@
-import type { ProviderProvisioningEnvelope, ProviderProvisioningResult } from "@zcode/shared";
-import { ServiceChannels } from "@zcode/shared";
+import type { ProviderProvisioningEnvelope, ProviderProvisioningResult } from "@mcode/shared";
+import { ServiceChannels } from "@mcode/shared";
 import { createServiceDescriptor } from "../descriptors.js";
 
 /** 仅供 Window Host 调用的远端 Environment target，不加入 IServiceAccessor。 */

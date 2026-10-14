@@ -3,8 +3,8 @@ import { formatWorkspaceContextPath } from "@/WorkspaceHeaderSections/workspaceC
 
 describe("workspace context path", () => {
   it("abbreviates only the supplied host home and its descendants", () => {
-    expect(formatWorkspaceContextPath("/Users/a/Projects/z-code", "/Users/a")).toBe(
-      "~/Projects/z-code",
+    expect(formatWorkspaceContextPath("/Users/a/Projects/mcode", "/Users/a")).toBe(
+      "~/Projects/mcode",
     );
     expect(formatWorkspaceContextPath("/Users/a", "/Users/a/")).toBe("~");
     expect(formatWorkspaceContextPath("/Users/another/project", "/Users/a")).toBe(

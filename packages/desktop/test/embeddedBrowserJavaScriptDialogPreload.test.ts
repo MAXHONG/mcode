@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { PlatformChannels } from "@zcode/shared";
+import { PlatformChannels } from "@mcode/shared";
 
 const h = vi.hoisted(() => ({
   executeInMainWorld: vi.fn(),

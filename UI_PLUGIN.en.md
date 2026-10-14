@@ -11,13 +11,13 @@ Start with Excalidraw to see how UI Plugins let the Agent and the user edit and 
 - [Add a UI to your plugin](#adding-a-ui-to-your-plugin)
 - [Explore the other examples](#other-example-plugins)
 
-This guide focuses on testing plugins with the host in the main repository. Plugin development and builds take place in the separate `zcode-plugins` repository.
+This guide focuses on testing plugins with the host in the main repository. Plugin development and builds take place in the separate `mcode-plugins` repository.
 
 ## What UI Plugins Can Do
 
 A UI Plugin adds an interactive page to an ordinary plugin. The Agent can call tools to create or modify content, while users work directly with canvases, forms, or file lists and send selections or results back to the conversation. The page communicates with the host through MCP Apps; the plugin's MCP server manages application data.
 
-Registration, installation, enabling, and updates follow the ordinary plugin workflow. Pages use the official `@modelcontextprotocol/ext-apps` SDK. They do not need a separate ZCode Plugin SDK or a development guide plugin. The current plugin repository pins the page SDK to `2.0.0` and the MCP server SDK to `1.29.0`. Check the SDK major version when reading upstream examples; the repository lockfile determines the installed versions.
+Registration, installation, enabling, and updates follow the ordinary plugin workflow. Pages use the official `@modelcontextprotocol/ext-apps` SDK. They do not need a separate Mcode Plugin SDK or a development guide plugin. The current plugin repository pins the page SDK to `2.0.0` and the MCP server SDK to `1.29.0`. Check the SDK major version when reading upstream examples; the repository lockfile determines the installed versions.
 
 | Capability                               | User experience                                                                                  | Development entry point                                      |
 | ---------------------------------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------------------------------ |
@@ -29,7 +29,7 @@ Registration, installation, enabling, and updates follow the ordinary plugin wor
 | Model calls to page tools                | Work with editor state owned by a live page                                                      | `registerTool()` or `onlisttools` + `oncalltool`             |
 | Page state and resource updates          | Retain a page when moving it, restore its view after recreation, and subscribe to server changes | Live page retention, widgetState, and resource subscriptions |
 
-Interactive pages currently run in **local workspaces in ZCode Desktop**. Web, mobile, and remote workspaces retain ordinary MCP tool records; interactive panels are not supported on those paths yet. Plugin pages and Gen UI use different loading and communication protocols, so their APIs are not interchangeable.
+Interactive pages currently run in **local workspaces in Mcode Desktop**. Web, mobile, and remote workspaces retain ordinary MCP tool records; interactive panels are not supported on those paths yet. Plugin pages and Gen UI use different loading and communication protocols, so their APIs are not interchangeable.
 
 ## Featured Example: Excalidraw
 
@@ -125,7 +125,7 @@ These screenshots show a generated capability demo in Chinese. Its tabs and cont
 | <a href="docs/images/gen-ui/state.png"><img src="docs/images/gen-ui/state.png" alt="Preference, parameter, and restore controls with a pending modelContent and privateContent snapshot" width="420" /></a> | <a href="docs/images/gen-ui/design.png"><img src="docs/images/gen-ui/design.png" alt="A music-player design in a carousel, showing the minimal option among three variants" width="420" /></a> |
 | Organize preferences and parameters into a `modelContent` / `privateContent` snapshot. The view shows unsaved state; the page can save it and provide a button to ask a follow-up.                          | Use `viz-carousel` to compare player designs and Tweak to adjust styles. This is a UI prototype.                                                                                               |
 
-In a ZCode Desktop session that supports Gen UI, try requests like these. The Agent generates the controls and interactions for the task:
+In a Mcode Desktop session that supports Gen UI, try requests like these. The Agent generates the controls and interactions for the task:
 
 | Scenario             | Example prompt                                                                                                                                   | How to interact                                                                                 |
 | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
@@ -173,7 +173,7 @@ The desktop host supplies the Agent with a dedicated output directory for the cu
 
 The Excalidraw screenshots above show a **UI Plugin**. Use **Gen UI** for a page with adjustable parameters generated around the current question. Develop a UI Plugin to distribute a reusable tool with server operations and document management. Both may expose `window.zcode`, but their methods and state structures differ and are not interchangeable. See [Development and Debugging](#development-and-debugging) and the [Page API Reference](#page-api-reference) for UI Plugin details.
 
-Implementation and page examples: [Gen UI contract](packages/ui/src/gen-ui/CONTRACT.md), [page API examples](apps/zcode-cli/packages/visualize-plugin/skills/visualize/references/api.md), and [Tweak guide](apps/zcode-cli/packages/visualize-plugin/skills/visualize/tweak.md). The desktop integration entry is `node packages/desktop/scripts/gen-ui-e2e.mjs`.
+Implementation and page examples: [Gen UI contract](packages/ui/src/gen-ui/CONTRACT.md), [page API examples](apps/mcode-cli/packages/visualize-plugin/skills/visualize/references/api.md), and [Tweak guide](apps/mcode-cli/packages/visualize-plugin/skills/visualize/tweak.md). The desktop integration entry is `node packages/desktop/scripts/gen-ui-e2e.mjs`.
 
 ## Other Example Plugins
 
@@ -194,21 +194,21 @@ Implementation and page examples: [Gen UI contract](packages/ui/src/gen-ui/CONTR
 | [zai-org/ZCode](https://github.com/zai-org/ZCode)                 | `feat/ui-plugin` | Host protocol, side panels and inline views, sandbox, approvals, and lifecycle | `pnpm dev:desktop`                                                        |
 | [zai-org/zcode-plugins](https://github.com/zai-org/zcode-plugins) | `feat/ui-plugin` | Plugin manifests, MCP servers, pages, application data, and resource packaging | Sources in `ui-plugins/<name>`; installable artifacts in `plugins/<name>` |
 
-The development and debugging steps in this guide target the `feat/ui-plugin` branch in each repository. **This branch is not yet available in the public ZCode repository.** Once it is ready, check it out from the repository above to test plugins with the host.
+The development and debugging steps in this guide target the `feat/ui-plugin` branch in each repository. **This branch is not yet available in the public Mcode repository.** Once it is ready, check it out from the repository above to test plugins with the host.
 
 The shell examples below target macOS / Linux. Replace both paths with your own checkouts. Use Node.js `24.14.0` and pnpm `10.33.2`. On Windows, set the same environment variables in PowerShell, then run the corresponding `pnpm` / `node` commands in each repository.
 
 ### First Run: Install Only the Plugins You Want to Test
 
 ```sh
-ZCODE_REPO=/path/to/z-code
-PLUGINS_REPO=/path/to/zcode-plugins
+MCODE_REPO=/path/to/mcode
+PLUGINS_REPO=/path/to/mcode-plugins
 
 # Optional isolated development profile; use the same value for the CLI and desktop.
-export ZCODE_DATA_BASE_DIR="$HOME/.zcode-ui-plugin-dev"
+export MCODE_DATA_BASE_DIR="$HOME/.mcode-ui-plugin-dev"
 
 # Initialize the main repository once; skip if already done.
-cd "$ZCODE_REPO"
+cd "$MCODE_REPO"
 pnpm bootstrap
 
 # Build plugins and generate the local catalogue; this does not register or install them.
@@ -217,26 +217,26 @@ pnpm install --frozen-lockfile
 pnpm build
 
 # Use the freshly built CLI to install into the same development profile.
-cd "$ZCODE_REPO"
-node apps/zcode-cli/packages/cli/dist/zcode.cjs plugins marketplace add "$PLUGINS_REPO/dist/local-marketplace" --scope user
-node apps/zcode-cli/packages/cli/dist/zcode.cjs plugins install excalidraw@zcode-plugins-local --scope user
-node apps/zcode-cli/packages/cli/dist/zcode.cjs plugins enable excalidraw@zcode-plugins-local --scope user
-node apps/zcode-cli/packages/cli/dist/zcode.cjs plugins list --json
+cd "$MCODE_REPO"
+node apps/mcode-cli/packages/cli/dist/mcode.cjs plugins marketplace add "$PLUGINS_REPO/dist/local-marketplace" --scope user
+node apps/mcode-cli/packages/cli/dist/mcode.cjs plugins install excalidraw@zcode-plugins-local --scope user
+node apps/mcode-cli/packages/cli/dist/mcode.cjs plugins enable excalidraw@zcode-plugins-local --scope user
+node apps/mcode-cli/packages/cli/dist/mcode.cjs plugins list --json
 pnpm dev:desktop
 ```
 
 Alternatively, open **Plugin Marketplace → Add** in the same desktop instance, add the absolute path to `dist/local-marketplace`, and choose the plugins to install and enable. The default local source name is `zcode-plugins-local`. The official name in the root manifest is reserved, so do not add the repository root directly. `pnpm dev:desktop` starts the host; it does not register plugins automatically.
 
-If you are using an existing desktop client, build the plugin repository and install through the UI as described above. That client must support the features in this guide. When using an installed `zcode` CLI, ensure it uses the same data profile as the desktop app. A new isolated profile also needs its own login or model setup.
+If you are using an existing desktop client, build the plugin repository and install through the UI as described above. That client must support the features in this guide. When using an installed `mcode` CLI, ensure it uses the same data profile as the desktop app. A new isolated profile also needs its own login or model setup.
 
 ### Update Loop After Changes
 
 ```sh
 cd "$PLUGINS_REPO"
 pnpm build
-cd "$ZCODE_REPO"
-node apps/zcode-cli/packages/cli/dist/zcode.cjs plugins marketplace update zcode-plugins-local
-node apps/zcode-cli/packages/cli/dist/zcode.cjs plugins install excalidraw@zcode-plugins-local --scope user
+cd "$MCODE_REPO"
+node apps/mcode-cli/packages/cli/dist/mcode.cjs plugins marketplace update zcode-plugins-local
+node apps/mcode-cli/packages/cli/dist/mcode.cjs plugins install excalidraw@zcode-plugins-local --scope user
 ```
 
 Restart the corresponding desktop instance and verify in a new session. Source watching does not automatically copy plugin repository changes into installed plugins. Refreshing a source updates the catalogue; reinstalling updates the installed code. During development, reinstalling the same version copies the files again. Changes to distributed content still require version bumps in the plugin manifest, marketplace entry, and source package.
@@ -251,15 +251,15 @@ If you already use another local source name, preserve that identity with `pnpm 
 | Communication and application unit tests  | Plugin repository | `pnpm test`                                                  | Automated regressions for connection order, revision conflicts, cancellation, and related behavior                        |
 | Standalone installable artifacts          | Plugin repository | `pnpm test:artifacts`                                        | Starting built artifacts outside the repository, reading pages/resources, and checking runtime dependencies               |
 | Official App/AppBridge page communication | Plugin repository | `pnpm test:pages`                                            | Real SDK handshakes, initial results, themes, and cancellation for Blender, Excalidraw, and OpenPencil                    |
-| Excalidraw smoke test                     | Plugin repository | `pnpm --filter @zcode/plugin-excalidraw smoke`               | The actual stdio server and resource interfaces                                                                           |
-| Excalidraw browser interactions           | Plugin repository | `pnpm --filter @zcode/plugin-excalidraw test:e2e`            | Real canvas interactions, saving, undo/redo, and cold starts; the test host bridge does not exercise the Electron sandbox |
+| Excalidraw smoke test                     | Plugin repository | `pnpm --filter @mcode/plugin-excalidraw smoke`               | The actual stdio server and resource interfaces                                                                           |
+| Excalidraw browser interactions           | Plugin repository | `pnpm --filter @mcode/plugin-excalidraw test:e2e`            | Real canvas interactions, saving, undo/redo, and cold starts; the test host bridge does not exercise the Electron sandbox |
 | Showcase desktop integration              | Main repository   | The `--showcase-only` command below                          | The Agent, sandbox, real page, and session communication in the current source                                            |
 
 Run `pnpm build` before testing pages. Browser tests require Chrome, or Chromium selected through `CHROME_PATH`. Excalidraw browser screenshots default to `excalidraw-e2e` under the system temporary directory; set `EXCALIDRAW_E2E_ARTIFACTS` to choose an output path.
 
 ```sh
-cd "$ZCODE_REPO"
-ZCODE_SHOWCASE_SERVER="$PLUGINS_REPO/plugins/showcase/dist/server.mjs" \
+cd "$MCODE_REPO"
+MCODE_SHOWCASE_SERVER="$PLUGINS_REPO/plugins/showcase/dist/server.mjs" \
   node packages/desktop/scripts/mcp-apps-host-e2e.mjs --showcase-only
 ```
 
@@ -283,7 +283,7 @@ A stdio MCP server must write only protocol messages to stdout and send debug lo
 
 ### Declare the Plugin Type in Pull Requests
 
-**Before requesting review of a PR in `zcode-plugins`, you must declare the plugin type in the PR template and list the affected manifest `name` values.** Select exactly one option:
+**Before requesting review of a PR in `mcode-plugins`, you must declare the plugin type in the PR template and list the affected manifest `name` values.** Select exactly one option:
 
 | Option              | Classification rule                                                                                                           |
 | ------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
@@ -338,7 +338,7 @@ The current host implementation and pinned SDK types define the supported behavi
 
 ### Official MCP Apps API
 
-| API / event                                                     | Purpose                                                              | ZCode behavior and usage notes                                                                                                                        |
+| API / event                                                     | Purpose                                                              | Mcode behavior and usage notes                                                                                                                        |
 | --------------------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `new App(info, capabilities, options)`, `connect()`             | Create the page connection and complete the handshake                | Create one App per live page; do not also access `window.zcode`, which can trigger another connection                                                 |
 | `getHostVersion()`, `getHostCapabilities()`, `getHostContext()` | Read host information, capabilities, theme, locale, and display mode | Use after connecting; do not infer capabilities from the host version alone                                                                           |
@@ -358,11 +358,11 @@ The current host implementation and pinned SDK types define the supported behavi
 | `downloadFile({ contents })`                                    | Open a native save dialog                                            | Requires `downloadFile`; accepts embedded resources or resource links from the current server; cancellation or write failure returns `isError: true`  |
 | `sendLog({ level, data })`                                      | Send observable page diagnostics                                     | Keep debug logs out of a stdio server's stdout; do not log secrets or user content                                                                    |
 | `onteardown`                                                    | Release page listeners and other resources                           | Host teardown has a time limit; do not leave the only save operation until teardown                                                                   |
-| `requestTeardown()`                                             | Ask the host to release the page                                     | ZCode currently only logs the request; actual lifecycle follows the card/panel, so this is not a close button                                         |
+| `requestTeardown()`                                             | Ask the host to release the page                                     | Mcode currently only logs the request; actual lifecycle follows the card/panel, so this is not a close button                                         |
 
 Sampling uses the task model selected when the request is accepted. It does not read the main conversation history; only history explicitly supplied by the App enters the request. Unsupported parameters such as `temperature`, `tools`, and native audio are rejected, and `includeContext` only supports `none`. Responses and cancellations should not automatically be appended as main conversation turns.
 
-### ZCode Extensions and Low-Level MCP Requests
+### Mcode Extensions and Low-Level MCP Requests
 
 The `app.request()` calls below use the official App's low-level interface. Validate results with the corresponding schema from `@modelcontextprotocol/core`.
 
@@ -458,4 +458,4 @@ See the [MCP Apps API](https://apps.extensions.modelcontextprotocol.io/api/) and
 | API limits, sampling parameters, and alias types | [MCP Apps contract](packages/shared/src/mcp-apps/contract.ts), [sampling.ts](packages/shared/src/mcp-apps/sampling.ts), [aliasApi.ts](packages/desktop/src/renderer/src/plugin-sandbox/aliasApi.ts) |
 | Desktop integration tests                        | [mcp-apps-host-e2e.mjs](packages/desktop/scripts/mcp-apps-host-e2e.mjs)                                                                                                                             |
 
-The five plugins' application source lives in the separate `zcode-plugins` repository, which also provides a root `UI_PLUGIN.en.md`. This repository owns the host and does not copy plugin products into its tree. When host APIs change, update the capability and API tables in both repositories and both languages.
+The five plugins' application source lives in the separate `mcode-plugins` repository, which also provides a root `UI_PLUGIN.en.md`. This repository owns the host and does not copy plugin products into its tree. When host APIs change, update the capability and API tables in both repositories and both languages.

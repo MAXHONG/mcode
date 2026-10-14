@@ -23,12 +23,12 @@ import {
 } from "@/mentions/nodes/PromptMentionNode.js";
 
 const TRY_NOW_MENTION = {
-  id: "plugin:commit-commands@zcode-official",
+  id: "plugin:commit-commands@mcode-official",
   category: "plugins" as const,
   label: "commit-commands",
-  value: "commit-commands@zcode-official",
-  markdown: "[@commit-commands](plugin://commit-commands@zcode-official)",
-  data: { pluginId: "commit-commands@zcode-official" },
+  value: "commit-commands@mcode-official",
+  markdown: "[@commit-commands](plugin://commit-commands@mcode-official)",
+  data: { pluginId: "commit-commands@mcode-official" },
 };
 
 const SECOND_PLUGIN_MENTION = {

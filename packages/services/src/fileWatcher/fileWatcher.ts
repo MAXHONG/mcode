@@ -1,6 +1,6 @@
-import type { Event } from "@zcode/rpc";
-import type { FileWatchEvent } from "@zcode/shared";
-import { ServiceChannels } from "@zcode/shared";
+import type { Event } from "@mcode/rpc";
+import type { FileWatchEvent } from "@mcode/shared";
+import { ServiceChannels } from "@mcode/shared";
 import { createServiceDescriptor } from "../descriptors.js";
 
 /**

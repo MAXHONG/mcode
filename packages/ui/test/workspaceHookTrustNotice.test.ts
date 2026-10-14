@@ -1,8 +1,8 @@
-import type { Hook, WorkspaceHookReviewTrustState } from "@zcode/shared";
+import type { Hook, WorkspaceHookReviewTrustState } from "@mcode/shared";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { ZCodeIntlProvider } from "@/i18n/IntlProvider.js";
+import { McodeIntlProvider } from "@/i18n/IntlProvider.js";
 import {
   hasWorkspaceHooksRequiringReview,
   requiresWorkspaceHookTrust,
@@ -19,9 +19,9 @@ function workspaceHook(trustState: WorkspaceHookReviewTrustState): Hook {
     enabled: true,
     editable: false,
     location: {
-      source: "zcode",
+      source: "mcode",
       scope: "project",
-      directoryPath: "/workspace/.zcode",
+      directoryPath: "/workspace/.mcode",
       projectPath: "/workspace",
     },
     workspaceHook: {
@@ -29,7 +29,7 @@ function workspaceHook(trustState: WorkspaceHookReviewTrustState): Hook {
       declarationEnabled: true,
       runtimeHooksEnabled: true,
       configuredEnabled: true,
-      sourcePath: "/workspace/.zcode/config.json",
+      sourcePath: "/workspace/.mcode/config.json",
       reviewItemId: `review-${trustState}`,
       workspaceIdentity: "/workspace",
       bundleDigest: "a".repeat(64),
@@ -43,7 +43,7 @@ function workspaceHook(trustState: WorkspaceHookReviewTrustState): Hook {
 function renderNotice(locale: "en-US" | "zh-CN", hooks: Hook[]): string {
   return renderToStaticMarkup(
     createElement(
-      ZCodeIntlProvider,
+      McodeIntlProvider,
       { initialLocale: locale },
       createElement(WorkspaceHookTrustNotice, { hooks }),
     ),

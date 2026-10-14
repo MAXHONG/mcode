@@ -75,7 +75,7 @@ export async function checkExternalLinks(
     window.linkErrors=[];
     window.linkEvents=[];
     for(const type of ['pointerdown','pointerup','click','auxclick'])document.addEventListener(type,event=>window.linkEvents.push({type,trusted:event.isTrusted,target:event.target.outerHTML,x:event.clientX,y:event.clientY}),true);
-    window.addEventListener('zcode:error',event=>window.linkErrors.push(String(event.detail)));
+    window.addEventListener('mcode:error',event=>window.linkErrors.push(String(event.detail)));
   })()`);
   const originalUrl = await read("location.href");
   let expected = 0;

@@ -1,14 +1,14 @@
 import { describe, expect, it } from "vitest";
-import type { ZCodeMcpServer } from "@zcode/shared";
+import type { McodeMcpServer } from "@mcode/shared";
 import { mergeMcpServerStatusSnapshots } from "../src/store/mcpStoreStatusList.js";
 
-const server: ZCodeMcpServer = {
+const server: McodeMcpServer = {
   config: { command: "node" },
   enabled: true,
-  id: "zcodeagentmcp:demo",
+  id: "mcodeagentmcp:demo",
   name: "demo",
   scope: "user",
-  source: "zcodeagentmcp",
+  source: "mcodeagentmcp",
   status: "connecting",
 };
 
@@ -43,7 +43,7 @@ describe("MCP store status diagnostics", () => {
   });
 
   it("clears stale diagnostics when a later snapshot is connected", () => {
-    const failedServer: ZCodeMcpServer = {
+    const failedServer: McodeMcpServer = {
       ...server,
       error: "old error",
       failureKind: "server_unavailable",

@@ -12,14 +12,14 @@ import {
   createRegistryProviderConfig,
   type ModelSelection,
   type ProviderRegistryServiceSnapshot,
-} from "@zcode/provider";
-import { NodeZCodeBuiltinProviderConfigSource } from "../src/index.js";
+} from "@mcode/provider";
+import { NodeMcodeBuiltinProviderConfigSource } from "../src/index.js";
 import { createNodeModelSelectionFacade } from "../src/model-selection-facade.js";
 import { legacyReasoningLevelRenames } from "../src/legacy-reasoning-level-renames.js";
 
-const source = new NodeZCodeBuiltinProviderConfigSource({
+const source = new NodeMcodeBuiltinProviderConfigSource({
   bundledFilePath: fileURLToPath(
-    new URL("../../../config/provider/zcode-builtin.json", import.meta.url),
+    new URL("../../../config/provider/mcode-builtin.json", import.meta.url),
   ),
   watch: false,
 });
@@ -32,17 +32,17 @@ afterAll(() => source.dispose());
 function view(modelId: string, level: string, personalModels = ModelConfigRules.empty()) {
   const config = {
     revision: "c",
-    zcodeBuiltinRevision: "b",
+    mcodeBuiltinRevision: "b",
     personalRevision: "p",
-    zcodeBuiltinProviders: builtin.providers,
-    zcodeBuiltinProviderTemplates: builtin.templates,
+    mcodeBuiltinProviders: builtin.providers,
+    mcodeBuiltinProviderTemplates: builtin.templates,
     personalProviders: ProviderConfigMap.empty(),
-    zcodeBuiltinModelRules: builtin.models,
+    mcodeBuiltinModelRules: builtin.models,
     personalModels,
   };
   const account = {
     revision: "a",
-    basedOnZCodeBuiltinRevision: "b",
+    basedOnMcodeBuiltinRevision: "b",
     providers: new ProviderConfigMap([
       [
         "account:bigmodel-individual-coding-plan",

@@ -1,5 +1,5 @@
-import { recordArmsCustomEventForE2E } from "@zcode/ui";
-import { DesktopCommandIds, buildLocalMediaPreviewUrl, type IPlatformService } from "@zcode/shared";
+import { recordArmsCustomEventForE2E } from "@mcode/ui";
+import { DesktopCommandIds, buildLocalMediaPreviewUrl, type IPlatformService } from "@mcode/shared";
 
 import { desktopBrowserPlatformBridge } from "./desktopBrowserPlatformBridge.js";
 import { createDesktopPluginSandboxPlatform } from "./plugin-sandbox/desktopPluginSandboxPlatform.js";
@@ -170,8 +170,8 @@ export function createDesktopPlatform(options: {
     getDesktopSessionActivity: () =>
       window.zcode.getDesktopSessionActivity?.() ??
       Promise.resolve({ runningAgentSessionCount: 0 }),
-    getZCodeStdioTapDevState: () =>
-      window.zcode.getZCodeStdioTapDevState?.() ??
+    getMcodeStdioTapDevState: () =>
+      window.zcode.getMcodeStdioTapDevState?.() ??
       Promise.resolve({ enabled: false, visible: false, logDir: "", statePath: "" }),
     onSettingsChanged: (callback) => window.zcode.onSettingsChanged?.(callback) ?? (() => {}),
     onApplicationLocaleChanged: (callback) =>
@@ -193,6 +193,6 @@ export function createDesktopPlatform(options: {
       Promise.resolve(navigator.language.toLowerCase().startsWith("zh") ? "zh-CN" : "en-US"),
     setTitleBarTheme: (theme) => window.zcode.setTitleBarTheme(theme),
     getDeviceId: () =>
-      (window as Window & { __ZCODE_DEVICE_ID__?: string }).__ZCODE_DEVICE_ID__ ?? "",
+      (window as Window & { __MCODE_DEVICE_ID__?: string }).__MCODE_DEVICE_ID__ ?? "",
   };
 }

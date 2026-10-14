@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-export const REWARDS_PARTITION = "persist:zcode-rewards";
+export const REWARDS_PARTITION = "persist:mcode-rewards";
 export const REWARDS_CONTEXT_EVENT = "zcode-rewards-context";
 export const rewardsContextSchema = z.object({
   theme: z.enum(["zai-light", "zai-dark"]),

@@ -2,9 +2,9 @@ export const SSH_FORMAL_SPEC_GLOB =
   "./test/e2e/conversation-session/conversation-session-ssh-remote*.test.ts";
 
 const REQUIRED_SSH_E2E_ENV = [
-  "ZCODE_E2E_SSH_HOST",
-  "ZCODE_E2E_SSH_USERNAME",
-  "ZCODE_E2E_SSH_PASSWORD",
+  "MCODE_E2E_SSH_HOST",
+  "MCODE_E2E_SSH_USERNAME",
+  "MCODE_E2E_SSH_PASSWORD",
 ];
 
 export function hasRequiredSshE2EEnvironment(env) {

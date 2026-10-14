@@ -3,7 +3,7 @@ import {
   encodeWebRemoteControlRpcTransportMessage,
   type WebRemoteControlAppPayload,
   type WebRemoteControlRpcTransportPayload,
-} from "@zcode/shared";
+} from "@mcode/shared";
 
 const testState = vi.hoisted(() => ({
   relayProtocolOptions: [] as Array<{
@@ -46,10 +46,10 @@ vi.mock("react-dom/client", () => ({
   createRoot: () => ({ render: renderMock }),
 }));
 
-vi.mock("@zcode/ui", () => ({
+vi.mock("@mcode/ui", () => ({
   AppErrorBoundary: ({ children }: { children: unknown }) => children,
   Root: () => null,
-  ZCodeIntlProvider: ({ children }: { children: unknown }) => children,
+  McodeIntlProvider: ({ children }: { children: unknown }) => children,
   generateMobileDeviceFingerprint: vi.fn(() => "test-mobile-fingerprint"),
   installDocumentHiddenMotionPause: vi.fn(),
   playTaskNotificationSound: vi.fn(),
@@ -57,7 +57,7 @@ vi.mock("@zcode/ui", () => ({
   setWebRemoteControlTerminalTransportState: vi.fn(),
 }));
 
-vi.mock("@zcode/client", () => ({
+vi.mock("@mcode/client", () => ({
   connectViaProtocol: vi.fn(() => ({ settingService: {} })),
   connectViaWebSocket: vi.fn(),
   createAcknowledgedWebRemoteControlRelayProtocol: vi.fn((options) => {

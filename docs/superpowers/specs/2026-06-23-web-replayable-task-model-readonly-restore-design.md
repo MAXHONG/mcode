@@ -23,7 +23,7 @@
   `resumeModelPolicy: "task-index" | "ui-resolved-only"`。
 - 默认策略为 `"task-index"`，保持现有行为。
 - 只有 `clientMode === "web-remote-replayable"` 且策略为
-  `"ui-resolved-only"` 时，`zcodeTaskServiceAdapter.getTaskSnapshot` 不再从 task index
+  `"ui-resolved-only"` 时，`mcodeTaskServiceAdapter.getTaskSnapshot` 不再从 task index
   回填历史模型。
 - `useTaskRestore` 在手机 replayable 分支中，如果恢复前模型解析结果表明历史模型不可用，
   且没有可见模型 fallback，则首屏 snapshot 使用 `"ui-resolved-only"`。
@@ -46,7 +46,7 @@
 
 ## Boundaries
 
-- 不修改 `zcodeAgentService.resolveRuntimeModelConfig` 的历史 session 硬校验。
+- 不修改 `mcodeAgentService.resolveRuntimeModelConfig` 的历史 session 硬校验。
 - 不让历史 session 静默切到 registry 第一个模型。
 - 不改变桌面 `desktop-continuous` 的 snapshot、resume、queue 或 stream 语义。
 - 不在 relay 或 desktop main 下沉 task/model 业务状态。

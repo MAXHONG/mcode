@@ -1,9 +1,9 @@
-import type { ZCodeConfigOption } from "@zcode/shared";
-import type { SessionConfigState } from "@zcode/shared/zcode-protocol-v4";
-import { parseModelPickerValue } from "@/lib/zcodeSessionProjection.js";
+import type { McodeConfigOption } from "@mcode/shared";
+import type { SessionConfigState } from "@mcode/shared/mcode-protocol-v4";
+import { parseModelPickerValue } from "@/lib/mcodeSessionProjection.js";
 
 function resolveModelDisplayValue(
-  options: readonly ZCodeConfigOption[],
+  options: readonly McodeConfigOption[],
   config: Pick<SessionConfigState, "provider" | "model">,
 ): string {
   const provider = config.provider.trim();
@@ -31,9 +31,9 @@ function resolveModelDisplayValue(
  * 目录项和候选列表保持原引用语义，仅替换 model/mode/thought 的 currentValue。
  */
 export function projectSessionConfigToTaskConfigOptions(
-  options: readonly ZCodeConfigOption[],
+  options: readonly McodeConfigOption[],
   config: Pick<SessionConfigState, "provider" | "model" | "mode" | "thought">,
-): ZCodeConfigOption[] {
+): McodeConfigOption[] {
   const modelValue = resolveModelDisplayValue(options, config);
   return options.map((option) => {
     if (option.type !== "select") {

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { SkillSummary } from "@zcode/shared";
+import type { SkillSummary } from "@mcode/shared";
 import { buildPluginCreatorPrefill } from "@/settings/pluginCreatorPrefill.js";
 
 const creator: SkillSummary = {

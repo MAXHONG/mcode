@@ -51,7 +51,7 @@ describe("ChunkStream", () => {
   });
 });
 
-// ── PersistentProtocol 两个补丁（docs/v4-refactor/05 §@zcode/rpc）──
+// ── PersistentProtocol 两个补丁（docs/v4-refactor/05 §@mcode/rpc）──
 
 /** 可注入数据的假 socket：write 收集出站帧，emitData 模拟对端来包。 */
 class FakeSocket implements ISocket {

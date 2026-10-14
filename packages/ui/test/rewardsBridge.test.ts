@@ -1,6 +1,6 @@
 import { runInNewContext } from "node:vm";
 import { expect, it } from "vitest";
-import { installRewardsPageBridge, createRewardsInjectionScript } from "@zcode/shared";
+import { installRewardsPageBridge, createRewardsInjectionScript } from "@mcode/shared";
 
 it("bridge 保留当前快照、通知及退订，凭据不出现在事件中", () => {
   const window = new EventTarget() as EventTarget & { zcodeBridge: any };
@@ -24,7 +24,7 @@ it("bridge 保留当前快照、通知及退订，凭据不出现在事件中", 
     locale: "en-US" as const,
     auth: { status: "ready" as const, provider: "zai" as const, revision: 1 },
   };
-  window.dispatchEvent(new CustomEvent("zcode-referrals-context", { detail: snapshot }));
+  window.dispatchEvent(new CustomEvent("mcode-referrals-context", { detail: snapshot }));
   expect(bridge.getTheme()).toBeNull();
   expect(bridge.getAuthState()).toBeNull();
   runInNewContext(

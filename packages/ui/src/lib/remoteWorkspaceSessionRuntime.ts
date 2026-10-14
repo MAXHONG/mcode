@@ -1,6 +1,6 @@
-import type { ZCodeTaskRuntimeStatus } from "@zcode/shared";
-import { getWorkspaceDisplayedTaskState } from "@/store/zcodeSessionStore.js";
-import type { ZCodeSessionStoreState, WorkspaceZCodeUIState } from "@/store/zcodeSessionStore.js";
+import type { McodeTaskRuntimeStatus } from "@mcode/shared";
+import { getWorkspaceDisplayedTaskState } from "@/store/mcodeSessionStore.js";
+import type { McodeSessionStoreState, WorkspaceMcodeUIState } from "@/store/mcodeSessionStore.js";
 
 interface RemoteWorkspaceRuntimeTab {
   workspacePath: string;
@@ -9,17 +9,17 @@ interface RemoteWorkspaceRuntimeTab {
 
 interface MarkRemoteWorkspaceRunningTasksFailedParams {
   tabs: RemoteWorkspaceRuntimeTab[];
-  getWorkspaceState: ZCodeSessionStoreState["getWorkspaceState"];
-  setTaskRuntimeState: ZCodeSessionStoreState["setTaskRuntimeState"];
+  getWorkspaceState: McodeSessionStoreState["getWorkspaceState"];
+  setTaskRuntimeState: McodeSessionStoreState["setTaskRuntimeState"];
   reason: string;
 }
 
-function isRunningRuntimeStatus(status: ZCodeTaskRuntimeStatus): boolean {
+function isRunningRuntimeStatus(status: McodeTaskRuntimeStatus): boolean {
   return status === "creating" || status === "restoring" || status === "streaming";
 }
 
 function shouldTreatPersistedRunningTaskAsRunning(
-  workspaceState: WorkspaceZCodeUIState,
+  workspaceState: WorkspaceMcodeUIState,
   taskId: string,
 ): boolean {
   const runtimeState = workspaceState.taskRuntimeByTaskId[taskId];
@@ -32,7 +32,7 @@ function shouldTreatPersistedRunningTaskAsRunning(
   return isRunningRuntimeStatus(runtimeState.status);
 }
 
-function collectRemoteWorkspaceRunningTaskIds(workspaceState: WorkspaceZCodeUIState): string[] {
+function collectRemoteWorkspaceRunningTaskIds(workspaceState: WorkspaceMcodeUIState): string[] {
   const taskIds = new Set<string>();
 
   if (

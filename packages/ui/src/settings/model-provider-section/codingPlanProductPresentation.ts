@@ -1,7 +1,7 @@
 import type {
   CodingPlanCardCopyItem,
   CodingPlanProductPreviewPayment,
-} from "@zcode/shared";
+} from "@mcode/shared";
 
 export function normalizeCodingPlanCardCopyItems(
   items: unknown,

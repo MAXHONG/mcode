@@ -1,5 +1,5 @@
-import { useZCodeStoreWithDefault } from "@/store/StoreProvider.js";
+import { useMcodeStoreWithDefault } from "@/store/StoreProvider.js";
 
 export function useIsOfficeMode(): boolean {
-  return useZCodeStoreWithDefault((state) => state.interfaceMode === "office", false);
+  return useMcodeStoreWithDefault((state) => state.interfaceMode === "office", false);
 }

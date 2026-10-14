@@ -59,30 +59,30 @@ import {
   captureLoginShellEnvSnapshot,
   getConversationWorkspaceDir,
   getDataBaseDir,
-  getZCodeDataRootDir,
+  getMcodeDataRootDir,
   normalizeRuntimeProcessEnv,
   setDataBaseDir,
-} from "@zcode/services/node";
+} from "@mcode/services/node";
 import {
   desktopMenuMessageIds,
   type Locale,
   type AppSettings,
   PlatformChannels,
-  ZCODE_ENV,
-  ZCODE_PRODUCT_FLAVOR,
-  ZCODE_AUTO_UPDATE_ENABLED,
-  DEFAULT_ZCODE_ENDPOINT_ORIGIN,
+  MCODE_ENV,
+  MCODE_PRODUCT_FLAVOR,
+  MCODE_AUTO_UPDATE_ENABLED,
+  DEFAULT_MCODE_ENDPOINT_ORIGIN,
   DEFAULT_LOCALE,
-  TEST_ZCODE_ENDPOINT_ORIGIN,
-  ZCODE_VERSION,
-  buildZCodeEndpointUrls,
+  TEST_MCODE_ENDPOINT_ORIGIN,
+  MCODE_VERSION,
+  buildMcodeEndpointUrls,
   resolveWebRemoteControlRelayWsUrl,
-  resolveZCodeEndpointOrigin,
+  resolveMcodeEndpointOrigin,
   shouldEnableE2ETestBridge,
   type UpdateStatePayload,
   type TelemetryEventPayload,
   HostMessageTypes,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import { logger, webRemoteControlRelayLogger } from "./logger.js";
 import { markMainLaunchAppReady } from "./desktopLaunchMarks.js";
 import { createCuaPipFocusRouter, resolveCuaPipWindowKey } from "./cuaPipFocusRouter.js";
@@ -134,7 +134,7 @@ import {
   getDesktopMenuLabel as getDesktopMenuLabelByLocale,
   rebuildApplicationMenu,
   resolveSystemApplicationLocale,
-  updateZCodeStdioTapDevMenuState,
+  updateMcodeStdioTapDevMenuState,
 } from "./desktopApplicationMenu.js";
 import { applyAppIcon } from "./desktopWindowChrome.js";
 import { resolveWindowsAppUserModelIdForFlavor } from "../../scripts/desktop-product-identity.mjs";
@@ -157,7 +157,7 @@ import {
   syncApplicationUnreadBadge,
   handleDesktopWindowCloseRequest,
 } from "./desktopWindowLifecycle.js";
-import { resolveZCodeBuiltinProviderConfigFilePath } from "./desktopProviderConfig.js";
+import { resolveMcodeBuiltinProviderConfigFilePath } from "./desktopProviderConfig.js";
 import {
   getCredentialsDir,
   isDockerDaemonAvailable,
@@ -167,7 +167,7 @@ import {
   loadHostProcessEnvFromLocalFiles,
   resolveBundledGlmBinaryPath,
   resolveRemoteAssetDirs,
-  resolveZCodeEndpointEnvBaseOrigin,
+  resolveMcodeEndpointEnvBaseOrigin,
   desktopRuntimeEnv,
   runtimeApplicationName,
   runtimeHomePath,
@@ -242,9 +242,9 @@ import {
 } from "./desktopResourceTelemetry.js";
 import { registerRendererHeapSampleIpc } from "./processResourceRendererHeapSource.js";
 import {
-  registerDesktopZCodeDataSizeTelemetry,
-  stopDesktopZCodeDataSizeTelemetry,
-} from "./desktopZCodeDataSizeTelemetry.js";
+  registerDesktopMcodeDataSizeTelemetry,
+  stopDesktopMcodeDataSizeTelemetry,
+} from "./desktopMcodeDataSizeTelemetry.js";
 import { configureDesktopMcpTelemetry, reportMcpTelemetryToArms } from "./desktopMcpTelemetry.js";
 import {
   configureDesktopNetworkTelemetry,
@@ -258,7 +258,7 @@ import {
   createEmbeddedBrowserPermissionUiBridge,
   setActiveEmbeddedBrowserPermissionUiBridge,
 } from "./embeddedBrowserPermissionUiBridge.js";
-import { mapZCodeEnvToArmsRumEnv } from "@zcode/shared";
+import { mapMcodeEnvToArmsRumEnv } from "@mcode/shared";
 import {
   findWindowsProcessesReferencingResourceMarkers,
   probeWindowsPackagedResourceWritable,
@@ -278,9 +278,9 @@ registerLocalMediaPreviewScheme(protocol, [PLUGIN_SANDBOX_PRIVILEGED_SCHEME]);
 const localMediaPreviewPathRegistry = createLocalMediaPreviewPathRegistry();
 
 // e2e 由 Chromedriver 管理远程调试端口；如果这里继续固定到 9229，
-// 会和开发态已打开的 ZCode Dev 抢端口，导致 WebDriver session 创建前白屏超时。
+// 会和开发态已打开的 Mcode Dev 抢端口，导致 WebDriver session 创建前白屏超时。
 // 仅本地开发运行默认开启远程调试端口，并允许 e2e 通过环境变量交给 Chromedriver 接管。
-if (!app.isPackaged && process.env.ZCODE_DISABLE_FIXED_REMOTE_DEBUGGING_PORT !== "1") {
+if (!app.isPackaged && process.env.MCODE_DISABLE_FIXED_REMOTE_DEBUGGING_PORT !== "1") {
   app.commandLine.appendSwitch("remote-debugging-port", "9229");
 }
 
@@ -563,7 +563,7 @@ async function runBrowserCommandOnView(params: {
 let currentDesktopZoomLevel = 0;
 let currentDesktopWindowSize: DesktopWindowSize | undefined;
 const preloadPath = join(import.meta.dirname, "../preload/index.cjs");
-const settingsFile = join(homedir(), ".zcode", "v2", "setting.json");
+const settingsFile = join(homedir(), ".mcode", "v2", "setting.json");
 let activeAppShutdownPolicy = resolveAppShutdownPolicy("normal", process.platform);
 let activeAppShutdownKind: AppShutdownKind | null = null;
 const WINDOWS_AGENT_FORCE_KILL_TIMEOUT_MS = 2_000;
@@ -710,11 +710,11 @@ const webRemoteControlCredentialService = createCredentialService();
 const appLaunchGate = createAppLaunchGate();
 const appLaunchCoordinator = createAppLaunchCoordinator(appLaunchGate);
 const appTelemetryCredentialService = createCredentialService();
-async function resolveCurrentZCodeEndpointOrigin() {
-  return resolveZCodeEndpointOrigin({
-    env: ZCODE_ENV,
-    envBaseOrigin: resolveZCodeEndpointEnvBaseOrigin(hostProcessLocalEnv),
-    overrideOrigin: (await mainSettingService.get()).zcodeEndpointOrigin,
+async function resolveCurrentMcodeEndpointOrigin() {
+  return resolveMcodeEndpointOrigin({
+    env: MCODE_ENV,
+    envBaseOrigin: resolveMcodeEndpointEnvBaseOrigin(hostProcessLocalEnv),
+    overrideOrigin: (await mainSettingService.get()).mcodeEndpointOrigin,
   });
 }
 let desktopContextPromptRollout: ReturnType<typeof createDesktopContextPromptRollout> | undefined;
@@ -767,7 +767,7 @@ const appTelemetryCore = createTelemetryCore({
   loadUserId: createTelemetryUserIdLoader(appTelemetryCredentialService),
   loadAuthorization: createTelemetryAuthorizationLoader(appTelemetryCredentialService),
   loadMarketingParams: createTelemetryMarketingParamsLoader(appTelemetryCredentialService),
-  resolveZCodeEndpointOrigin: resolveCurrentZCodeEndpointOrigin,
+  resolveMcodeEndpointOrigin: resolveCurrentMcodeEndpointOrigin,
   fetchImpl: createDesktopTelemetryFetch(net),
 });
 const appTelemetryRuntime = createAppTelemetryRuntime({
@@ -803,7 +803,7 @@ function syncAppTelemetryInteractiveState(): void {
 app.on("browser-window-focus", (_event, win) => {
   syncAppTelemetryInteractiveState();
   rebuildMenu();
-  // 设置/更新等无 Host 的 ZCode 窗口也算前台：router 会先把旧 workspace Host 清成 null，
+  // 设置/更新等无 Host 的 Mcode 窗口也算前台：router 会先把旧 workspace Host 清成 null，
   // 再把无 Host 的新窗口事实静默丢弃，避免旧会话 PiP 继续显示。
   cuaPipFocusRouter.focusWindow(resolveCuaPipWindowKey(win));
 });
@@ -836,16 +836,16 @@ const webRemoteControlSharedHostAttachments = createWebRemoteControlSharedHostAt
 const deviceMid = ensureDesktopDeviceMidSync();
 // 帮助配置是公开读取，不能复用下面附带账号鉴权的灰度响应缓存。
 const readHelpConfig = createDesktopHelpConfigReader({
-  appVersion: ZCODE_VERSION || app.getVersion(),
+  appVersion: MCODE_VERSION || app.getVersion(),
   deviceMid,
-  resolveEndpointOrigin: resolveCurrentZCodeEndpointOrigin,
+  resolveEndpointOrigin: resolveCurrentMcodeEndpointOrigin,
 });
 // 同一个 /api/v1/client/configs fetcher 供两个灰度 rollout 共用（请求参数与鉴权完全一致，
 // 各自独立缓存/去重，服务端按 data.configs.<key> 区分功能）。
 const electronClientConfigsFetcher = createElectronDesktopContextPromptConfigFetcher({
-  appVersion: ZCODE_VERSION || app.getVersion(),
+  appVersion: MCODE_VERSION || app.getVersion(),
   deviceMid,
-  resolveEndpointOrigin: resolveCurrentZCodeEndpointOrigin,
+  resolveEndpointOrigin: resolveCurrentMcodeEndpointOrigin,
 });
 desktopContextPromptRollout = createDesktopContextPromptRollout({
   fetchConfig: electronClientConfigsFetcher,
@@ -857,7 +857,7 @@ const rendererActionTraceRollout = createRendererActionTraceRollout({
 });
 const localTtftExporter = createLocalTtftExporter({
   env: { ...hostProcessLocalEnv, ...process.env },
-  version: ZCODE_VERSION || app.getVersion(),
+  version: MCODE_VERSION || app.getVersion(),
   logger,
 });
 ipcMain.on(PlatformChannels.ReportLocalTtftBatch, (_event, batch: unknown) =>
@@ -875,13 +875,13 @@ const armsUserIdentitySync = createArmsUserIdentitySync({
   deviceMid,
   setUser: (user) => armsRum.setConfig("user", user),
 });
-const webRemoteControlAppVersion = ZCODE_VERSION || app.getVersion();
-const defaultZCodeEndpointUrls = buildZCodeEndpointUrls(DEFAULT_ZCODE_ENDPOINT_ORIGIN, {
+const webRemoteControlAppVersion = MCODE_VERSION || app.getVersion();
+const defaultMcodeEndpointUrls = buildMcodeEndpointUrls(DEFAULT_MCODE_ENDPOINT_ORIGIN, {
   appVersion: webRemoteControlAppVersion,
 });
 const webRemoteControlRelayWsEnvOverride =
-  process.env["ZCODE_WEB_REMOTE_CONTROL_RELAY_WS_URL"]?.trim();
-const webRemoteControlUrlEnvOverride = process.env["ZCODE_WEB_REMOTE_CONTROL_URL"]?.trim();
+  process.env["MCODE_WEB_REMOTE_CONTROL_RELAY_WS_URL"]?.trim();
+const webRemoteControlUrlEnvOverride = process.env["MCODE_WEB_REMOTE_CONTROL_URL"]?.trim();
 
 function extractOpenWorkspacePathFromDeepLinkUrl(url: string): string | null {
   try {
@@ -907,7 +907,7 @@ let startupOpenWorkspaceRequest: ExplicitStartupWorkspaceRequest | null =
 
 const webRemoteControlManager = createWebRemoteControlManager({
   getEndpointUrls: async () => {
-    const derived = buildZCodeEndpointUrls(await resolveCurrentZCodeEndpointOrigin(), {
+    const derived = buildMcodeEndpointUrls(await resolveCurrentMcodeEndpointOrigin(), {
       appVersion: webRemoteControlAppVersion,
     });
     return {
@@ -920,10 +920,10 @@ const webRemoteControlManager = createWebRemoteControlManager({
     };
   },
   relayWsUrl: resolveWebRemoteControlRelayWsUrl({
-    endpointOrigin: DEFAULT_ZCODE_ENDPOINT_ORIGIN,
+    endpointOrigin: DEFAULT_MCODE_ENDPOINT_ORIGIN,
     overrideUrl: webRemoteControlRelayWsEnvOverride,
   }),
-  mobileRemoteControlUrl: webRemoteControlUrlEnvOverride || defaultZCodeEndpointUrls.remoteUrl,
+  mobileRemoteControlUrl: webRemoteControlUrlEnvOverride || defaultMcodeEndpointUrls.remoteUrl,
   deviceMid,
   deviceName: hostname(),
   appVersion: webRemoteControlAppVersion,
@@ -1160,7 +1160,7 @@ async function prepareAppQuit(reason: string, kind: AppShutdownKind = "normal"):
   // Bug 根因：资源样本改为 5 分钟窗口后，退出仍直接 stop 会清空未满窗口的数据。
   // 退出时只排空已存在的角色 / Agent 内存窗口，不启动新采样、目录扫描或外部探针。
   stopDesktopResourceTelemetry({ flushPendingWindows: true });
-  stopDesktopZCodeDataSizeTelemetry();
+  stopDesktopMcodeDataSizeTelemetry();
   stopDesktopNetworkTelemetry();
   stopRemoteUsageArmsPeriodicSampling();
   disposeRendererActionTraceIpc?.();
@@ -1224,7 +1224,7 @@ async function prepareAppQuit(reason: string, kind: AppShutdownKind = "normal"):
     })
     .finally(() => {
       // before-quit 是同步事件。只发 Dispose 就继续退出 main 的话，
-      // host 还没等到 agent 进程树的 SIGTERM/SIGKILL 兜底完成就被带走，zcode-cli 会被 init 接管成残留进程。
+      // host 还没等到 agent 进程树的 SIGTERM/SIGKILL 兜底完成就被带走，mcode-cli 会被 init 接管成残留进程。
       // 这里先拦截第一次退出，等待 host 清理完成后再放行第二次 app.quit。
       hasPreparedAppQuit = true;
       appQuitPreparationInFlight = null;
@@ -1235,7 +1235,7 @@ async function prepareAppQuit(reason: string, kind: AppShutdownKind = "normal"):
 
 function exitPreparedApp(reason: string): never | void {
   logger.info(`[app-quit] exiting prepared app (${reason})`);
-  if (process.env.ZCODE_E2E_RUN_ID?.trim()) {
+  if (process.env.MCODE_E2E_RUN_ID?.trim()) {
     flushMainE2ECoverage((error) => {
       logger.warn("[e2e-coverage] main coverage flush failed", error);
     });
@@ -1444,12 +1444,12 @@ async function prepareWindowsProcessesForUpdateInstall() {
 
 function shouldConfirmAppQuit() {
   // 开发环境里的普通会话经常需要重启 Electron，只在 production 下拦截，避免打断调试。
-  return ZCODE_ENV === "production" && getRunningAgentSessionCount() > 0;
+  return MCODE_ENV === "production" && getRunningAgentSessionCount() > 0;
 }
 
 function confirmAppQuit(originWindow?: BrowserWindow | null) {
   if (!shouldConfirmAppQuit()) {
-    logger.info(`[app-quit] quit confirmation skipped in ${ZCODE_ENV}`);
+    logger.info(`[app-quit] quit confirmation skipped in ${MCODE_ENV}`);
     return true;
   }
 
@@ -1474,7 +1474,7 @@ function confirmAppQuit(originWindow?: BrowserWindow | null) {
     defaultId: 1,
     cancelId: 1,
     title: isZh ? "退出确认" : "Confirm Quit",
-    message: isZh ? "确认退出 Z Code?" : "Quit Z Code?",
+    message: isZh ? "确认退出 Mcode?" : "Quit Mcode?",
     detail: detailLines.join("\n"),
     icon: nativeImage.createFromPath(iconPath),
   };
@@ -1494,14 +1494,14 @@ async function executeDesktopCommandForApp(
     command,
     senderWindow,
     logger,
-    updateZCodeStdioTapDevMenuState,
+    updateMcodeStdioTapDevMenuState,
     onDesktopZoomChanged: (zoomLevel) => {
       currentDesktopZoomLevel = clampDesktopZoomLevel(zoomLevel);
       rebuildMenu();
     },
     settingService: mainSettingService,
-    onZCodeEndpointChanged: handleZCodeEndpointChanged,
-    zcodeEndpointEnvBaseOrigin: resolveZCodeEndpointEnvBaseOrigin(hostProcessLocalEnv),
+    onMcodeEndpointChanged: handleMcodeEndpointChanged,
+    mcodeEndpointEnvBaseOrigin: resolveMcodeEndpointEnvBaseOrigin(hostProcessLocalEnv),
     onRelaunchApp: async () => {
       await prepareAppQuit("desktop-command-relaunch");
       app.relaunch();
@@ -1512,21 +1512,21 @@ async function executeDesktopCommandForApp(
   });
 }
 
-async function resolveZCodeEndpointSelection(): Promise<"production" | "test" | "custom"> {
-  if (ZCODE_ENV === "production") {
+async function resolveMcodeEndpointSelection(): Promise<"production" | "test" | "custom"> {
+  if (MCODE_ENV === "production") {
     return "production";
   }
-  const origin = await resolveCurrentZCodeEndpointOrigin();
-  if (origin === DEFAULT_ZCODE_ENDPOINT_ORIGIN) {
+  const origin = await resolveCurrentMcodeEndpointOrigin();
+  if (origin === DEFAULT_MCODE_ENDPOINT_ORIGIN) {
     return "production";
   }
-  if (origin === TEST_ZCODE_ENDPOINT_ORIGIN) {
+  if (origin === TEST_MCODE_ENDPOINT_ORIGIN) {
     return "test";
   }
   return "custom";
 }
 
-async function handleZCodeEndpointChanged() {
+async function handleMcodeEndpointChanged() {
   rebuildMenu();
   for (const win of getApplicationWindowsExcludingCuaIndicator()) {
     await webRemoteControlManagerRef.current?.suspend(win.id, "endpoint-changed");
@@ -1568,11 +1568,11 @@ function resetShortcutRecordingForWebContents(webContentsId: number) {
 }
 
 function rebuildMenu() {
-  void Promise.all([resolveZCodeEndpointSelection(), mainSettingService.get()]).then(
-    ([zcodeEndpointSelection, settings]) => {
+  void Promise.all([resolveMcodeEndpointSelection(), mainSettingService.get()]).then(
+    ([mcodeEndpointSelection, settings]) => {
       rebuildApplicationMenu({
         currentApplicationLocale,
-        zcodeEndpointSelection,
+        mcodeEndpointSelection,
         executeDesktopCommand: executeDesktopCommandForApp,
         currentZoomLevel: resolveFocusedDesktopZoomLevel(),
         // 菜单 accelerator 跟随用户快捷键设置（shortcutBindings 用户覆盖）
@@ -1854,7 +1854,7 @@ function createWindowInstance(startupBootstrap: StartupWindowBootstrap = {}) {
         label,
         {
           ...initMessage,
-          zcodeBuiltinProviderConfigFilePath: resolveZCodeBuiltinProviderConfigFilePath(),
+          mcodeBuiltinProviderConfigFilePath: resolveMcodeBuiltinProviderConfigFilePath(),
         },
         {
           hostProcessLocalEnv,
@@ -2086,7 +2086,7 @@ app.whenReady().then(async () => {
   installLocalMediaPreviewProtocol(session.defaultSession.protocol, {
     isPathAuthorized: localMediaPreviewPathRegistry.isAuthorized,
   });
-  // 插件 UI 沙箱：注册表 + renderer 可调 IPC；scheme 的 privileged 注册已随 zcode-media 在 ready 前完成。
+  // 插件 UI 沙箱：注册表 + renderer 可调 IPC；scheme 的 privileged 注册已随 mcode-media 在 ready 前完成。
   installPluginSandboxHost({
     preloadPath: join(import.meta.dirname, "../preload/pluginSandbox.cjs"),
     rendererDir: join(import.meta.dirname, "../renderer"),
@@ -2097,10 +2097,10 @@ app.whenReady().then(async () => {
       : {}),
     logger: console,
     // e2e L05（配额）：只在 e2e run 里允许缩小注册表容量。
-    ...(process.env.ZCODE_E2E_RUN_ID?.trim() &&
-    Number.isInteger(Number(process.env.ZCODE_E2E_PLUGIN_SANDBOX_MAX_ENTRIES)) &&
-    Number(process.env.ZCODE_E2E_PLUGIN_SANDBOX_MAX_ENTRIES) > 0
-      ? { registryMaxEntries: Number(process.env.ZCODE_E2E_PLUGIN_SANDBOX_MAX_ENTRIES) }
+    ...(process.env.MCODE_E2E_RUN_ID?.trim() &&
+    Number.isInteger(Number(process.env.MCODE_E2E_PLUGIN_SANDBOX_MAX_ENTRIES)) &&
+    Number(process.env.MCODE_E2E_PLUGIN_SANDBOX_MAX_ENTRIES) > 0
+      ? { registryMaxEntries: Number(process.env.MCODE_E2E_PLUGIN_SANDBOX_MAX_ENTRIES) }
       : {}),
   });
   // Electron 的 net.request 只能在 app ready 后使用；灰度请求仍是旁路预热，不阻塞首个 Host。
@@ -2182,7 +2182,7 @@ app.whenReady().then(async () => {
     // 打包态必须与 NSIS 快捷方式使用同一 AUMID，否则 Shell 把它们当成不同应用。
     // 使用构建期产品身份，不依赖用户机器环境；开发态继续保持独立身份。
     app.setAppUserModelId(
-      resolveWindowsAppUserModelIdForFlavor(ZCODE_PRODUCT_FLAVOR, { isPackaged: app.isPackaged }),
+      resolveWindowsAppUserModelIdForFlavor(MCODE_PRODUCT_FLAVOR, { isPackaged: app.isPackaged }),
     );
   }
 
@@ -2233,11 +2233,11 @@ app.whenReady().then(async () => {
   logWindowsBundledRuntimeIntegrityDiagnostic();
 
   // 启动自动更新检查（后台执行，不阻塞主界面）
-  // Preview 身份无论连接哪个后端都不自动更新：stable feed 上只分发正式 ZCode 安装包，
+  // Preview 身份无论连接哪个后端都不自动更新：stable feed 上只分发正式 Mcode 安装包，
   // 不向 Preview 渠道提供更新。构建期未启用自动更新时同样不更新
   // （见 docs/desktop/build-time-optional-capabilities.md）。
   void initAutoUpdater({
-    enabled: ZCODE_PRODUCT_FLAVOR === "production" && ZCODE_AUTO_UPDATE_ENABLED,
+    enabled: MCODE_PRODUCT_FLAVOR === "production" && MCODE_AUTO_UPDATE_ENABLED,
     onBeforeQuitAndInstall: async () => {
       notifyStabilityLifecycle("update_install");
       await prepareAppQuit("auto-update quitAndInstall", "update-install");
@@ -2248,7 +2248,7 @@ app.whenReady().then(async () => {
     settingService: mainSettingService,
     locale: currentApplicationLocale,
     deviceMid,
-    resolveEndpointOrigin: resolveCurrentZCodeEndpointOrigin,
+    resolveEndpointOrigin: resolveCurrentMcodeEndpointOrigin,
     updateFeedSource: resolveUpdateFeedSourceFromStartupConfig({
       argv: process.argv,
       env: process.env,
@@ -2448,8 +2448,8 @@ app.whenReady().then(async () => {
     armsCustomContext: {
       deviceMid,
       platform: process.platform,
-      appVersion: ZCODE_VERSION,
-      armsEnv: mapZCodeEnvToArmsRumEnv(desktopRuntimeEnv),
+      appVersion: MCODE_VERSION,
+      armsEnv: mapMcodeEnvToArmsRumEnv(desktopRuntimeEnv),
     },
     finalArmsCustomEventE2EEnabled: shouldEnableE2ETestBridge(process.env),
     webRemoteControlManager,
@@ -2475,35 +2475,35 @@ app.whenReady().then(async () => {
   configureDesktopStabilityTelemetry({
     deviceMid,
     platform: process.platform,
-    appVersion: ZCODE_VERSION,
-    armsEnv: mapZCodeEnvToArmsRumEnv(desktopRuntimeEnv),
+    appVersion: MCODE_VERSION,
+    armsEnv: mapMcodeEnvToArmsRumEnv(desktopRuntimeEnv),
   });
   configureDesktopResourceTelemetry({
     deviceMid,
     platform: process.platform,
-    appVersion: ZCODE_VERSION,
-    armsEnv: mapZCodeEnvToArmsRumEnv(desktopRuntimeEnv),
+    appVersion: MCODE_VERSION,
+    armsEnv: mapMcodeEnvToArmsRumEnv(desktopRuntimeEnv),
   });
   configureDesktopMcpTelemetry({
     deviceMid,
-    appVersion: ZCODE_VERSION,
-    armsEnv: mapZCodeEnvToArmsRumEnv(desktopRuntimeEnv),
+    appVersion: MCODE_VERSION,
+    armsEnv: mapMcodeEnvToArmsRumEnv(desktopRuntimeEnv),
   });
   configureDesktopNetworkTelemetry({
     deviceMid,
     platform: process.platform,
-    appVersion: ZCODE_VERSION,
-    armsEnv: mapZCodeEnvToArmsRumEnv(desktopRuntimeEnv),
+    appVersion: MCODE_VERSION,
+    armsEnv: mapMcodeEnvToArmsRumEnv(desktopRuntimeEnv),
   });
   registerDesktopStabilityMonitors(logger, crashCapturePaths);
   registerDesktopResourceTelemetry(logger);
   // 主窗口 renderer 的 60 秒 heap 样本入口；随 App 生命周期常驻，只注册一次。
   registerRendererHeapSampleIpc();
   const defaultDataBaseDir = process.env.HOME?.trim() || homedir();
-  registerDesktopZCodeDataSizeTelemetry({
+  registerDesktopMcodeDataSizeTelemetry({
     context: {
-      appVersion: ZCODE_VERSION,
-      armsEnv: mapZCodeEnvToArmsRumEnv(desktopRuntimeEnv),
+      appVersion: MCODE_VERSION,
+      armsEnv: mapMcodeEnvToArmsRumEnv(desktopRuntimeEnv),
       dataRootKind:
         resolve(getDataBaseDir()) === resolve(defaultDataBaseDir) ? "default" : "custom",
       deviceMid,
@@ -2511,32 +2511,32 @@ app.whenReady().then(async () => {
     },
     getSystemIdleTimeSeconds: () => powerMonitor.getSystemIdleTime(),
     isAppBackground: () => resolveResourceUsageScene() === "background",
-    isZCodeBusy: () => getRunningAgentSessionCount() > 0,
+    isMcodeBusy: () => getRunningAgentSessionCount() > 0,
     logger,
-    rootPath: getZCodeDataRootDir(),
-    stateFile: join(app.getPath("userData"), "zcode-data-size-telemetry.json"),
+    rootPath: getMcodeDataRootDir(),
+    stateFile: join(app.getPath("userData"), "mcode-data-size-telemetry.json"),
   });
   registerDesktopNetworkTelemetry(logger);
 
   // 本地未打包 dev 构建（app.isPackaged === false）必须跳过远端强制升级 gate。
-  // 原因：force-update gate 只看 ZCODE_ENV === "production"，但 dev 构建（如 dev:desktop:cua
+  // 原因：force-update gate 只看 MCODE_ENV === "production"，但 dev 构建（如 dev:desktop:cua
   // 连真实后端测 computer use）虽指向 production 后端，版本号却滞后于线上 release（feature
   // 分支不 bump 版本），会被 release minimalVersion 误判为"需强制升级"而启动秒退。force-update
   // 是面向打包发布客户端的安全门，对未打包 dev 运行时无意义。打包版 app.isPackaged === true，
   // gate 照常生效，对真实用户零影响。
   const skipForceUpdateForLocalDevRuntime = !app.isPackaged;
   const forceUpdateGuardResult =
-    ZCODE_PRODUCT_FLAVOR === "production" && !skipForceUpdateForLocalDevRuntime
+    MCODE_PRODUCT_FLAVOR === "production" && !skipForceUpdateForLocalDevRuntime
       ? await maybeBlockStartupForForceUpdate({
           locale: currentApplicationLocale,
           logger,
-          endpointOrigin: await resolveCurrentZCodeEndpointOrigin(),
+          endpointOrigin: await resolveCurrentMcodeEndpointOrigin(),
           onBlocked: () => {
             forceUpdateMainWindowCreationBlocked = true;
           },
         })
       : { blocked: false };
-  if (ZCODE_PRODUCT_FLAVOR !== "production") {
+  if (MCODE_PRODUCT_FLAVOR !== "production") {
     logger.info("[force-update] Preview 跳过远端强制升级检查");
   } else if (skipForceUpdateForLocalDevRuntime) {
     logger.info("[force-update] 本地 dev 构建（未打包）跳过远端强制升级检查");

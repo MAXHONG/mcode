@@ -1,4 +1,4 @@
-import type { IPlatformService, UpdateStatePayload } from "@zcode/shared";
+import type { IPlatformService, UpdateStatePayload } from "@mcode/shared";
 import { cn } from "@/components/lib/utils.js";
 import {
   ArrowLeftIcon,
@@ -7,7 +7,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
 } from "lucide-react";
-import { useZCodeIntl } from "@/i18n/IntlProvider.js";
+import { useMcodeIntl } from "@/i18n/IntlProvider.js";
 import { UpdateStatusButton } from "@/UpdateStatusButton.js";
 import { DesktopTopOverlayActionButton } from "@/DesktopTopOverlayActionButton.js";
 import {
@@ -74,7 +74,7 @@ export function DesktopTopOverlay({
   hideTaskNavigationButtons = false,
   newTaskDisabledReason,
 }: DesktopTopOverlayProps) {
-  const { intl } = useZCodeIntl();
+  const { intl } = useMcodeIntl();
   const SidebarToggleIcon = isSidebarVisible ? PanelLeftClose : PanelLeftOpen;
   const isLinuxDesktop = Boolean(isDesktop && !isMacDesktop && !isWindowsDesktop);
   const usesCustomCaptionArea = isWindowsDesktop || isLinuxDesktop;
@@ -141,7 +141,7 @@ export function DesktopTopOverlay({
             >
               <img
                 src={appLogoUrl}
-                alt="ZCode"
+                alt="Mcode"
                 className="size-5 transition-opacity duration-150 group-hover:opacity-0"
                 draggable={false}
               />

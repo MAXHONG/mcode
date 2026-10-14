@@ -1,0 +1,173 @@
+import assert from "node:assert/strict";
+import { access, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { basename, dirname, join } from "node:path";
+import test from "node:test";
+import {
+  MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV,
+  MCODE_PERSONAL_PROVIDER_CONFIG_FILE_ENV,
+} from "@mcode/provider-node";
+import {
+  SEA_MCODE_BUILTIN_PROVIDER_CONFIG_ASSET_KEY,
+  prepareCliProviderRuntimeEnv,
+} from "../src/provider-runtime-env.js";
+
+const temporaryDirectories: string[] = [];
+
+test.afterEach(async () => {
+  await Promise.all(
+    temporaryDirectories
+      .splice(0)
+      .map((directory) => rm(directory, { force: true, recursive: true })),
+  );
+});
+
+test("preserves explicitly injected provider runtime paths", async () => {
+  const prepared = await prepareCliProviderRuntimeEnv({
+    argv: ["--prompt", "hello"],
+    env: {
+      [MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]: "/injected/mcode-builtin.json",
+      [MCODE_PERSONAL_PROVIDER_CONFIG_FILE_ENV]: "/injected/personal.json",
+    },
+  });
+
+  assert.deepEqual(prepared, {
+    [MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]: "/injected/mcode-builtin.json",
+    [MCODE_PERSONAL_PROVIDER_CONFIG_FILE_ENV]: "/injected/personal.json",
+  });
+});
+
+test("resolves the development Mcode Built-in Config and shared Personal Config", async () => {
+  const root = await temporaryDirectory();
+  const entrypoint = join(root, "apps/mcode-cli/packages/cli/src/main.ts");
+  const mcodeBuiltinFilePath = join(root, "config/provider/mcode-builtin.json");
+  await mkdir(dirname(entrypoint), { recursive: true });
+  await mkdir(dirname(mcodeBuiltinFilePath), { recursive: true });
+  // 随包配置按入口真实路径（解析软链接后）定位，入口文件必须真实存在。
+  await writeFile(entrypoint, "");
+  await writeFile(mcodeBuiltinFilePath, EMPTY_RELEASE);
+
+  const prepared = await prepareCliProviderRuntimeEnv({
+    argv: ["tui"],
+    dataBaseDir: join(root, "home"),
+    entrypoint,
+    env: {},
+    appVersion: "test-version",
+    platform: "test-platform",
+  });
+
+  assertActiveConfigPath(prepared[MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV], join(root, "home"));
+  assert.equal(
+    prepared[MCODE_PERSONAL_PROVIDER_CONFIG_FILE_ENV],
+    join(root, "home/.mcode/v2/provider_config.json"),
+  );
+  const activeFilePath = prepared[MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV];
+
+  const loginPrepared = await prepareCliProviderRuntimeEnv({
+    argv: ["login"],
+    dataBaseDir: join(root, "home"),
+    entrypoint,
+    env: {},
+    appVersion: "test-version",
+    platform: "test-platform",
+  });
+  assert.equal(loginPrepared[MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV], activeFilePath);
+  const logoutPrepared = await prepareCliProviderRuntimeEnv({
+    argv: ["logout"],
+    dataBaseDir: join(root, "home"),
+    entrypoint,
+    env: {},
+    appVersion: "test-version",
+    platform: "test-platform",
+  });
+  assert.equal(logoutPrepared[MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV], activeFilePath);
+  // 临时目录本身可能经过软链接（macOS 的 /tmp、/var），随包配置报告的是真实路径。
+  assert.equal(
+    prepared.MCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE,
+    await realpath(mcodeBuiltinFilePath),
+  );
+  await assert.rejects(access(join(dirname(activeFilePath!), "mcode-builtin-refresh.json")));
+});
+
+test("materializes the SEA config in the fixed environment resource path, separate from downloads", async () => {
+  const root = await temporaryDirectory();
+  const mcodeBuiltinContent = EMPTY_RELEASE;
+  let reads = 0;
+  const prepared = await prepareCliProviderRuntimeEnv({
+    argv: ["--prompt", "hello"],
+    dataBaseDir: root,
+    env: {},
+    sea: {
+      getAsset(key, encoding) {
+        assert.equal(key, SEA_MCODE_BUILTIN_PROVIDER_CONFIG_ASSET_KEY);
+        assert.equal(encoding, "utf8");
+        reads += 1;
+        return mcodeBuiltinContent;
+      },
+      isSea: () => true,
+    },
+    appVersion: "test-version",
+    platform: "test-platform",
+  });
+
+  const mcodeBuiltinFilePath = prepared[MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV];
+  assert.ok(mcodeBuiltinFilePath);
+  assertActiveConfigPath(mcodeBuiltinFilePath, root);
+  assert.deepEqual(
+    JSON.parse(await readFile(mcodeBuiltinFilePath, "utf8")),
+    JSON.parse(mcodeBuiltinContent),
+  );
+  assert.equal(reads, 1);
+  const resource = join(
+    root,
+    ".mcode",
+    "v2",
+    "runtime",
+    "provider",
+    "bundled",
+    "mcode-builtin.json",
+  );
+  assert.notEqual(resource, mcodeBuiltinFilePath);
+  assert.deepEqual(JSON.parse(await readFile(resource, "utf8")), JSON.parse(mcodeBuiltinContent));
+  assert.equal(prepared.MCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE, resource);
+  await assert.rejects(access(join(dirname(mcodeBuiltinFilePath), "mcode-builtin-refresh.json")));
+});
+
+test("does not resolve provider assets for commands that do not run Core", async () => {
+  assert.deepEqual(
+    await prepareCliProviderRuntimeEnv({
+      argv: ["doctor", "--json"],
+      env: {},
+    }),
+    {},
+  );
+  for (const flag of ["--help", "-h", "--version", "-v"]) {
+    assert.deepEqual(
+      await prepareCliProviderRuntimeEnv({
+        argv: [flag],
+        env: {},
+      }),
+      {},
+    );
+  }
+});
+
+async function temporaryDirectory(): Promise<string> {
+  const directory = await mkdtemp(join(tmpdir(), "mcode-cli-provider-runtime-"));
+  temporaryDirectories.push(directory);
+  return directory;
+}
+
+function assertActiveConfigPath(filePath: string | undefined, dataBaseDir: string): void {
+  assert.ok(filePath);
+  // 不能用斜杠正则误拒绝 Windows；逐层校验仍包含环境、平台、版本和 Endpoint。
+  assert.equal(
+    dirname(dirname(filePath)),
+    join(dataBaseDir, ".mcode", "v2", "runtime", "provider", "test-platform", "test-version"),
+  );
+  assert.match(basename(dirname(filePath)), /^endpoint-[a-f0-9]{32}$/u);
+  assert.equal(basename(filePath), "mcode-builtin.json");
+}
+
+const EMPTY_RELEASE =
+  '{"schemaVersion":1,"revision":1,"config":{"providerConfigRules":{"templateRules":[],"providerRules":[]},"modelConfigRules":{"modelRules":[],"modelApiRules":[],"providerSiteRules":[],"templateModelRules":[],"builtinProviderModelRules":[]}}}';

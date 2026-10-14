@@ -1,10 +1,10 @@
-import { sessionCreateTelemetrySchema, type RendererTelemetryEventPayload } from "@zcode/shared";
+import { sessionCreateTelemetrySchema, type RendererTelemetryEventPayload } from "@mcode/shared";
 /* eslint-disable max-lines -- Web 远程控制启动、错误页和 web 平台桥接暂时集中在入口编排。 */
 import { createRoot } from "react-dom/client";
 import {
   AppErrorBoundary,
   Root,
-  ZCodeIntlProvider,
+  McodeIntlProvider,
   generateMobileDeviceFingerprint,
   installDocumentHiddenMotionPause,
   playTaskNotificationSound,
@@ -12,18 +12,18 @@ import {
   setWebRemoteControlTerminalTransportState,
   type Theme,
   type WebRemoteControlTerminalTransportState as UiWebRemoteControlTerminalTransportState,
-} from "@zcode/ui";
-import "@zcode/ui/styles.css";
+} from "@mcode/ui";
+import "@mcode/ui/styles.css";
 import {
   connectViaProtocol,
   connectViaWebSocket,
   createAcknowledgedWebRemoteControlRelayProtocol,
   type WebSocketConnectionCloseEvent,
-} from "@zcode/client";
+} from "@mcode/client";
 import {
   WEB_REMOTE_CONTROL_WORKSPACE_RECONNECT_TIMEOUT_MS,
   resolveWebRemoteControlRelayWsUrl,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import { WebCallbackPage } from "./auth/WebCallbackPage.js";
 import { WebLoggedInWaitingPage } from "./auth/WebLoggedInWaitingPage.js";
 import { WebLoginPage } from "./auth/WebLoginPage.js";
@@ -66,14 +66,14 @@ import type {
   RemoteTarget,
   ServerRemoteInfo,
   UserInfo,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import {
   matchesWebRemoteControlRoutePath,
   parseWebRemoteControlExternalQrParams,
   resolveWebRemoteControlFailureReasonFromCloseCode,
   resolveWebRemoteControlInitialWorkspaceSelection,
   resolveWebRemoteControlWorkspaceKey,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import { createBrowserWebRemoteControlRelayAuthProvider } from "./webRemoteControlRelayAuthProvider.js";
 import {
   WebRemoteControlTerminalTransport,
@@ -142,7 +142,7 @@ async function markCurrentWebRemoteControlBridgeTaskRead({
   }
 
   const result = await markWebRemoteControlTaskRead({
-    service: services.zcodeTaskService,
+    service: services.mcodeTaskService,
     target: {
       taskId: task.taskId,
       workspacePath: task.workspacePath,
@@ -170,7 +170,7 @@ async function markOpenedWebRemoteControlBridgeTaskRead({
   const result = await markWebRemoteControlBridgeTaskRead({
     bridge,
     expectedUnreadAt,
-    service: services.zcodeTaskService,
+    service: services.mcodeTaskService,
   });
   if (!result.ok) {
     logWebRemoteControlTaskReadFailure(result.error, {
@@ -181,7 +181,7 @@ async function markOpenedWebRemoteControlBridgeTaskRead({
 }
 
 function resolveWebThemePreference(defaultTheme: Theme = WEB_REMOTE_CONTROL_DEFAULT_THEME): Theme {
-  const saved = localStorage.getItem("zcode-theme");
+  const saved = localStorage.getItem("mcode-theme");
   return resolveWebRemoteControlInitialTheme({ storedTheme: saved, defaultTheme });
 }
 
@@ -305,7 +305,7 @@ function resolveWebRemoteAppReturnTo(params: URLSearchParams): string {
 }
 
 function renderWebAuthCallbackPage(): void {
-  document.title = "ZCode - Web Remote Control Sign In";
+  document.title = "Mcode - Web Remote Control Sign In";
   const callbackState = parseOAuthState(
     new URLSearchParams(window.location.search).get("state") ?? "",
   );
@@ -330,7 +330,7 @@ async function renderConversationSharePage(): Promise<void> {
   document.documentElement.lang = routeLocale;
   // 分享页必须设置 title：否则浏览器标签只显示 index.html 的通用标题。
   // 会话标题要等 preview 加载完，先给一个语言正确的兜底。
-  document.title = routeLocale === "zh-CN" ? "ZCode 会话分享" : "ZCode Conversation Share";
+  document.title = routeLocale === "zh-CN" ? "Mcode 会话分享" : "Mcode Conversation Share";
   const shareCode = resolveConversationShareCodeFromPath(window.location.pathname);
   if (!shareCode) {
     root.render(
@@ -343,7 +343,7 @@ async function renderConversationSharePage(): Promise<void> {
   }
 
   const endpointOrigin =
-    import.meta.env.VITE_ZCODE_BASE_URL?.trim().replace(/\/+$/u, "") || window.location.origin;
+    import.meta.env.VITE_MCODE_BASE_URL?.trim().replace(/\/+$/u, "") || window.location.origin;
   const mockMode =
     import.meta.env.DEV && import.meta.env.VITE_CONVERSATION_SHARE_PREVIEW_MOCK === "true";
   // Share 加载失败不能只有通用 network 文案：需要区分 mock、endpoint 配置或跨域 fetch。
@@ -360,12 +360,12 @@ async function renderConversationSharePage(): Promise<void> {
       ).MockConversationSharePreviewClient()
     : new ConversationSharePreviewClient({ baseUrl: `${endpointOrigin}/api/v1` });
   const getMockToken = () =>
-    mockMode && window.sessionStorage.getItem("zcode:share:mock-auth") === "owner"
+    mockMode && window.sessionStorage.getItem("mcode:share:mock-auth") === "owner"
       ? "mock-owner-token"
       : null;
   const onLogout = () => {
     if (mockMode) {
-      window.sessionStorage.removeItem("zcode:share:mock-auth");
+      window.sessionStorage.removeItem("mcode:share:mock-auth");
       window.location.reload();
       return;
     }
@@ -375,10 +375,10 @@ async function renderConversationSharePage(): Promise<void> {
     <ConversationShareLandingLoader
       shareCode={shareCode}
       client={client}
-      getAccessToken={() => getMockToken() ?? webAuthService.getZCodeJwtToken()}
+      getAccessToken={() => getMockToken() ?? webAuthService.getMcodeJwtToken()}
       onLogin={(provider) => {
         if (mockMode) {
-          window.sessionStorage.setItem("zcode:share:mock-auth", "owner");
+          window.sessionStorage.setItem("mcode:share:mock-auth", "owner");
           window.location.reload();
           return;
         }
@@ -397,7 +397,7 @@ async function renderConversationSharePage(): Promise<void> {
 }
 
 function renderWebLoginPage(): void {
-  document.title = "ZCode - Web Remote Control Sign In";
+  document.title = "Mcode - Web Remote Control Sign In";
   root.render(
     <WebLoginPage
       onLogin={() => {
@@ -412,7 +412,7 @@ function renderWebLoginPage(): void {
 }
 
 function renderWebLoggedInWaitingPage(user: UserInfo): void {
-  document.title = "ZCode - Web Remote Control";
+  document.title = "Mcode - Web Remote Control";
   root.render(
     <WebLoggedInWaitingPage
       user={user}
@@ -648,7 +648,7 @@ function createWebPlatform(options?: {
       _context?: {
         workspacePath: string;
         workspaceIdentity?: string;
-        connectTrigger?: import("@zcode/shared").RemoteWorkspaceConnectTrigger;
+        connectTrigger?: import("@mcode/shared").RemoteWorkspaceConnectTrigger;
       },
     ) {
       if (webRemoteControlProxy || platformProxy) {
@@ -1035,7 +1035,7 @@ function createWebRemoteControlRequestId(prefix: string): string {
 }
 
 function seedStableWebRemoteControlClientId(deviceSid: string): void {
-  const storageKey = `zcode-web-remote-client-id:${deviceSid}`;
+  const storageKey = `mcode-web-remote-client-id:${deviceSid}`;
   try {
     const existing = globalThis.localStorage?.getItem(storageKey)?.trim();
     if (existing) {
@@ -1109,7 +1109,7 @@ export function createHomeOnlyWebRemoteControlServices(): RootServices {
   // Bugfix: 手机端只有断开的远程 workspace 时，不能为了进入任务首页强行创建 bridge。
   // 这里提供只读/空结果服务，吸收 Root 首屏 OAuth、模型供应商、Git、技能等后台初始化，
   // 避免断连这种预期状态被误报成未处理异常；真正聊天能力仍需重连成功后切到 bridge services。
-  const homeOnlyZCodeTaskService = createEmptyHomeOnlyService<RootServices["zcodeTaskService"]>({
+  const homeOnlyMcodeTaskService = createEmptyHomeOnlyService<RootServices["mcodeTaskService"]>({
     initialize: async () => ({ available: false }),
     releaseWorkspacePreparation: async () => {},
     checkCodexConnectivity: async () => ({ ok: true }),
@@ -1201,23 +1201,23 @@ export function createHomeOnlyWebRemoteControlServices(): RootServices {
       send: async () => {},
       onMessage: () => ({ dispose: () => {} }),
     }),
-    zcodeTaskService: homeOnlyZCodeTaskService,
-    zcodeAgentService: createEmptyHomeOnlyService<RootServices["zcodeAgentService"]>({
+    mcodeTaskService: homeOnlyMcodeTaskService,
+    mcodeAgentService: createEmptyHomeOnlyService<RootServices["mcodeAgentService"]>({
       initialize: async (params: { workspacePath: string; workspaceIdentity?: string }) => ({
         available: false,
         workspaceKey: params.workspaceIdentity?.trim() || params.workspacePath,
-        reason: "ZCode agent service is not available before workspace bridge is connected.",
+        reason: "Mcode agent service is not available before workspace bridge is connected.",
       }),
       disposeAll: () => {},
     }),
-    zcodeSessionService: createEmptyHomeOnlyService<RootServices["zcodeSessionService"]>({
+    mcodeSessionService: createEmptyHomeOnlyService<RootServices["mcodeSessionService"]>({
       initializeWorkspace: async (params: {
         workspacePath: string;
         workspaceIdentity?: string;
       }) => ({
         available: false,
         workspaceKey: params.workspaceIdentity?.trim() || params.workspacePath,
-        reason: "ZCode session service is not available before workspace bridge is connected.",
+        reason: "Mcode session service is not available before workspace bridge is connected.",
       }),
     }),
     // 分享发布首期只属于 desktop local host；Web 首页和 /remote 不建立独立发布权威。
@@ -1337,11 +1337,11 @@ export function createHomeOnlyWebRemoteControlServices(): RootServices {
 
 function resolveExternalRelayWsUrl(): string {
   const endpointOrigin =
-    import.meta.env.VITE_ZCODE_BASE_URL?.trim() ||
-    import.meta.env.VITE_ZCODE_ENDPOINT_ORIGIN?.trim();
+    import.meta.env.VITE_MCODE_BASE_URL?.trim() ||
+    import.meta.env.VITE_MCODE_ENDPOINT_ORIGIN?.trim();
   return resolveWebRemoteControlRelayWsUrl({
     endpointOrigin,
-    overrideUrl: import.meta.env.VITE_ZCODE_WEB_REMOTE_CONTROL_RELAY_WS_URL,
+    overrideUrl: import.meta.env.VITE_MCODE_WEB_REMOTE_CONTROL_RELAY_WS_URL,
   });
 }
 
@@ -1456,7 +1456,7 @@ function WebRemoteControlLoadingScreen({
 }
 
 function renderWebRemoteControlLoading(state: WebRemoteControlTerminalTransportState): void {
-  document.title = "ZCode - Web Remote Control";
+  document.title = "Mcode - Web Remote Control";
   root.render(<WebRemoteControlLoadingScreen state={state} />);
 }
 
@@ -2041,10 +2041,10 @@ async function bootstrapExternalRelayWebRemoteControl(params: URLSearchParams): 
   ) => {
     if (terminated || versionGuard.isBlocked()) return;
     ready = true;
-    document.title = "ZCode - Web Remote Control";
+    document.title = "Mcode - Web Remote Control";
     root.render(
       <AppErrorBoundary key={bridge.bridgeSessionId}>
-        <ZCodeIntlProvider
+        <McodeIntlProvider
           settingService={services.settingService}
           broadcastService={services.broadcastService}
           preferSettingServiceLocale
@@ -2102,7 +2102,7 @@ async function bootstrapExternalRelayWebRemoteControl(params: URLSearchParams): 
             supportsEmbeddedBrowser={false}
             allowRemoteWorkspace={false}
           />
-        </ZCodeIntlProvider>
+        </McodeIntlProvider>
       </AppErrorBoundary>,
     );
   };
@@ -2115,13 +2115,13 @@ async function bootstrapExternalRelayWebRemoteControl(params: URLSearchParams): 
     currentWorkspaceKey = workspaceKey;
     currentTaskId = taskId;
     await updateMobileViewState(workspaceKey, taskId);
-    document.title = "ZCode - Web Remote Control";
+    document.title = "Mcode - Web Remote Control";
     const initialResult = await listWorkspaces();
     if (terminated || versionGuard.isBlocked()) return;
     ready = true;
     root.render(
       <AppErrorBoundary key={`home-only-${workspaceKey}`}>
-        <ZCodeIntlProvider>
+        <McodeIntlProvider>
           <Root
             services={createHomeOnlyWebRemoteControlServices()}
             platform={createWebPlatform({
@@ -2167,7 +2167,7 @@ async function bootstrapExternalRelayWebRemoteControl(params: URLSearchParams): 
             allowRemoteWorkspace={false}
             initialWebRemoteControlWorkspaceList={initialResult}
           />
-        </ZCodeIntlProvider>
+        </McodeIntlProvider>
       </AppErrorBoundary>,
     );
   };
@@ -2286,10 +2286,10 @@ async function bootstrapWebRemoteControlByToken(params: URLSearchParams): Promis
   ) => {
     const initialWorkspaceIdentity =
       bridge.kind === "remote" ? bridge.workspaceIdentity : undefined;
-    document.title = "ZCode - Web Remote Control";
+    document.title = "Mcode - Web Remote Control";
     root.render(
       <AppErrorBoundary key={bridge.bridgeSessionId}>
-        <ZCodeIntlProvider
+        <McodeIntlProvider
           settingService={services.settingService}
           broadcastService={services.broadcastService}
           preferSettingServiceLocale
@@ -2336,7 +2336,7 @@ async function bootstrapWebRemoteControlByToken(params: URLSearchParams): Promis
             supportsEmbeddedBrowser={false}
             allowRemoteWorkspace={false}
           />
-        </ZCodeIntlProvider>
+        </McodeIntlProvider>
       </AppErrorBoundary>,
     );
   };
@@ -2481,11 +2481,11 @@ async function bootstrapWebApp() {
       onClose: () => {},
     });
     const platform = createWebPlatform();
-    document.title = "ZCode - Web + Server";
+    document.title = "Mcode - Web + Server";
 
     root.render(
       <AppErrorBoundary>
-        <ZCodeIntlProvider
+        <McodeIntlProvider
           settingService={services.settingService}
           broadcastService={services.broadcastService}
         >
@@ -2501,7 +2501,7 @@ async function bootstrapWebApp() {
             supportsEmbeddedBrowser={false}
             allowRemoteWorkspace={false}
           />
-        </ZCodeIntlProvider>
+        </McodeIntlProvider>
       </AppErrorBoundary>,
     );
   } catch (error) {

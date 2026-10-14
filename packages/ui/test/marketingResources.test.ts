@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { prepareMarketingHero } from "@/components/marketing-touch/marketingResources.js";
-import type { ICloudContentService } from "@zcode/services";
+import type { ICloudContentService } from "@mcode/services";
 afterEach(() => vi.unstubAllGlobals());
 
 describe("marketing resource preparation", () => {

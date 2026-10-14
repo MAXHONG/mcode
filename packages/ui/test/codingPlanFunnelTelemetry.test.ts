@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
-import type { ProviderSettingsProviderView, ProviderSettingsView } from "@zcode/services";
-import { BUILTIN_MODEL_PROVIDER_IDS, type IPlatformService } from "@zcode/shared";
+import type { ProviderSettingsProviderView, ProviderSettingsView } from "@mcode/services";
+import { BUILTIN_MODEL_PROVIDER_IDS, type IPlatformService } from "@mcode/shared";
 import { reportPresetSubscriptionSuccess } from "@/settings/model-provider-section/oauthActions.js";
 import { buildCodingPlanEmbeddedReportContext } from "@/settings/model-provider-section/codingPlanEmbeddedWebview.js";
 import {

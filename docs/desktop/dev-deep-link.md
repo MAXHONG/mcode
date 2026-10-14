@@ -3,7 +3,7 @@
 ## 状态
 
 - 当前事实 spec，日期：2026-09-09。
-- 目标场景：先执行 `pnpm dev:desktop:test`，再从线上测试 Share 页面点击“去 ZCode 继续”。
+- 目标场景：先执行 `pnpm dev:desktop:test`，再从线上测试 Share 页面点击“去 Mcode 继续”。
 - 线上 Share 页面和 `zcode://share/import` 协议保持不变。
 
 ## 问题边界
@@ -17,17 +17,17 @@ Electron bundle 的 `Info.plist` 没有 `CFBundleURLTypes`，系统登记后得�
 
 ## 方案
 
-仅在 macOS Dev 启动脚本中准备一个本地 `ZCode Dev.app` bundle：
+仅在 macOS Dev 启动脚本中准备一个本地 `Mcode Dev.app` bundle：
 
 1. 以当前 checkout 的 Electron runtime 为源，在 `.codex-runtime/desktop-dev/` 下准备副本。
 2. 只修改副本的 `Info.plist`，写入：
-   - `CFBundleIdentifier=dev.zcode.app.development`；
-   - `CFBundleName/CFBundleDisplayName=ZCode Dev`；
-   - `CFBundleURLTypes` 中的 `zcode` scheme。
+   - `CFBundleIdentifier=dev.mcode.app.development`；
+   - `CFBundleName/CFBundleDisplayName=Mcode Dev`；
+   - `CFBundleURLTypes` 中的 `mcode` scheme。
 3. 仍以 `packages/desktop` 目录作为 Electron 的开发入口启动副本，保留 Vite、HMR、
-   `ELECTRON_RENDERER_URL`、`ZCODE_ENV` 和现有单实例锁语义。
+   `ELECTRON_RENDERER_URL`、`MCODE_ENV` 和现有单实例锁语义。
 4. 现有 main process 继续调用 `registerDeepLinkProtocol`；由于当前进程已经来自带
-   `zcode` 声明的 Dev bundle，LaunchServices 注册的是 Dev bundle，而不是 raw Electron。
+   `mcode` 声明的 Dev bundle，LaunchServices 注册的是 Dev bundle，而不是 raw Electron。
 5. `open-url`、`second-instance`、ShareImport 投递和导入持久化逻辑不变。
 
 ## 事件顺序
@@ -35,9 +35,9 @@ Electron bundle 的 `Info.plist` 没有 `CFBundleURLTypes`，系统登记后得�
 ```text
 pnpm dev:desktop:test
   -> dev.mjs 等待 main/host/preload/Vite 就绪
-  -> 准备 ZCode Dev.app + Info.plist(zcode)
+  -> 准备 Mcode Dev.app + Info.plist(mcode)
   -> 从 Dev.app 启动 Electron packages/desktop
-  -> main 注册 zcode 默认 handler
+  -> main 注册 mcode 默认 handler
   -> 浏览器点击 zcode://share/import?code=...
   -> macOS open-url / second-instance
   -> 现有 Desktop ShareImport 路由
@@ -54,8 +54,8 @@ pnpm dev:desktop:test
 
 ## 验收标准
 
-1. `pnpm dev:desktop:test` 启动日志记录 Dev bundle 路径和 `zcode` 注册成功。
-2. macOS LaunchServices 的 `zcode` handler 指向 `dev.zcode.app.development`，而不是
+1. `pnpm dev:desktop:test` 启动日志记录 Dev bundle 路径和 `mcode` 注册成功。
+2. macOS LaunchServices 的 `mcode` handler 指向 `dev.mcode.app.development`，而不是
    `com.github.electron`。
 3. 线上 Share 页面仍显示原 CTA 和原 `zcode://share/import` href。
 4. Dev 已运行时点击 CTA，不出现 Electron 默认页，现有 Dev 窗口收到 `ShareImport`。

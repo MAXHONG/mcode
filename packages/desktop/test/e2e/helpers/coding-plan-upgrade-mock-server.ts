@@ -1,9 +1,9 @@
 import { requestSecurityClientConfig } from "./request-security-edition/index.js";
-/* eslint-disable max-lines -- E2E fixture server 需要集中维护 ZCode client config 与 BigModel 购买接口响应 */
+/* eslint-disable max-lines -- E2E fixture server 需要集中维护 Mcode client config 与 BigModel 购买接口响应 */
 import { createServer, type IncomingMessage, type ServerResponse } from "node:http";
 import { once } from "node:events";
 import { readFile } from "node:fs/promises";
-import { BUILTIN_MODEL_PROVIDER_IDS } from "@zcode/shared";
+import { BUILTIN_MODEL_PROVIDER_IDS } from "@mcode/shared";
 import { createMarketingTouchFixture } from "./marketing-touch-fixture.js";
 import { rewardsWebsiteFixture } from "./rewards-website-fixture.js";
 
@@ -271,7 +271,7 @@ async function handleRequest(
           : [
               {
                 plan_id: "weekend-plan-e2e",
-                name: "ZCode Weekend Build",
+                name: "Mcode Weekend Build",
                 description: "Deterministic manual claim fixture",
                 priority: 100,
                 entitlements: [
@@ -432,7 +432,7 @@ async function handleRequest(
           plans: [
             {
               plan_id: "weekend-plan-e2e",
-              name: "ZCode Weekend Build",
+              name: "Mcode Weekend Build",
               status: "active",
               starts_at: nowSeconds,
               ends_at: nowSeconds + 86_400,
@@ -527,11 +527,11 @@ async function handleRequest(
       code: 200,
       data: !state.purchaseCompleted
         ? request.method === "GET"
-          ? [{ name: "zcode", apiKey: "bigmodel-personal-api-key" }]
-          : { name: "zcode", apiKey: "bigmodel-personal-api-key" }
+          ? [{ name: "mcode", apiKey: "bigmodel-personal-api-key" }]
+          : { name: "mcode", apiKey: "bigmodel-personal-api-key" }
         : request.method === "GET"
-          ? [{ name: "zcode", apiKey: "bigmodel-webview-refreshed-key" }]
-          : { name: "zcode", apiKey: "bigmodel-webview-refreshed-key" },
+          ? [{ name: "mcode", apiKey: "bigmodel-webview-refreshed-key" }]
+          : { name: "mcode", apiKey: "bigmodel-webview-refreshed-key" },
     });
     return;
   }
@@ -543,7 +543,7 @@ async function handleRequest(
     )
   ) {
     const body = await readJsonBody<{ clientType?: string }>(request);
-    if (body.clientType !== "zcode" || !request.headers.authorization?.startsWith("Bearer ")) {
+    if (body.clientType !== "mcode" || !request.headers.authorization?.startsWith("Bearer ")) {
       sendJson(response, { code: 400, msg: "invalid_token_request" });
       return;
     }
@@ -646,7 +646,7 @@ function buildManualClaimStartPlanBalance(claimed: boolean, newBucketReady: bool
         show_name: "GLM-5-Turbo",
       },
     ],
-    name: "ZCode V3 Start Plan",
+    name: "Mcode V3 Start Plan",
     plan_id: oldPlanId,
     starts_at: nowSeconds - 86_400,
     status: "active",
@@ -672,7 +672,7 @@ function buildManualClaimStartPlanBalance(claimed: boolean, newBucketReady: bool
         show_name: "GLM-5.3-Flash",
       },
     ],
-    name: "ZCode Weekend Build",
+    name: "Mcode Weekend Build",
     plan_id: newPlanId,
     starts_at: nowSeconds - 60,
     status: "active",

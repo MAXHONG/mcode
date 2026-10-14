@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import type { ZCodeConfigOption } from "@zcode/shared";
-import { readCurrentZCodeMode } from "../src/hooks/chatActionHelpers.js";
+import type { McodeConfigOption } from "@mcode/shared";
+import { readCurrentMcodeMode } from "../src/hooks/chatActionHelpers.js";
 
-function createModeOption(currentValue: string | boolean): ZCodeConfigOption {
+function createModeOption(currentValue: string | boolean): McodeConfigOption {
   return {
     id: "mode",
     name: "Mode",
@@ -13,29 +13,29 @@ function createModeOption(currentValue: string | boolean): ZCodeConfigOption {
 }
 
 describe("chatActionHelpers", () => {
-  it("reads yolo from ZCode Agent mode config options", () => {
-    expect(readCurrentZCodeMode([createModeOption("yolo")])).toBe("yolo");
+  it("reads yolo from Mcode Agent mode config options", () => {
+    expect(readCurrentMcodeMode([createModeOption("yolo")])).toBe("yolo");
   });
 
-  it("reads edit from ZCode Agent mode config options", () => {
-    expect(readCurrentZCodeMode([createModeOption("edit")])).toBe("edit");
+  it("reads edit from Mcode Agent mode config options", () => {
+    expect(readCurrentMcodeMode([createModeOption("edit")])).toBe("edit");
   });
 
-  it("keeps provider-native ZCode Agent modes", () => {
-    expect(readCurrentZCodeMode([createModeOption("bypassPermissions")])).toBe("bypassPermissions");
+  it("keeps provider-native Mcode Agent modes", () => {
+    expect(readCurrentMcodeMode([createModeOption("bypassPermissions")])).toBe("bypassPermissions");
   });
 
   it("does not normalize retired provider-native agent mode ids", () => {
-    const readMode = readCurrentZCodeMode as (
-      options: readonly ZCodeConfigOption[],
+    const readMode = readCurrentMcodeMode as (
+      options: readonly McodeConfigOption[],
       provider?: string,
     ) => unknown;
-    expect(readCurrentZCodeMode([createModeOption("agent")])).toBeUndefined();
+    expect(readCurrentMcodeMode([createModeOption("agent")])).toBeUndefined();
     expect(readMode([createModeOption("agent-full-access")], "gemini")).toBeUndefined();
   });
 
   it("ignores invalid mode values", () => {
-    expect(readCurrentZCodeMode([createModeOption("unknown")])).toBeUndefined();
-    expect(readCurrentZCodeMode([createModeOption(true)])).toBeUndefined();
+    expect(readCurrentMcodeMode([createModeOption("unknown")])).toBeUndefined();
+    expect(readCurrentMcodeMode([createModeOption(true)])).toBeUndefined();
   });
 });

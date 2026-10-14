@@ -11,7 +11,7 @@ import {
   TID_MODEL_PROVIDER_ADD_MODEL_BUTTON,
   TID_MODEL_PROVIDER_MODEL_DELETE_BUTTON,
   type UsageEntitlementSnapshot,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import {
   resolveCodingPlanProviderSyncAttemptKey,
   shouldRetryUnchangedCodingPlanProviderSync,
@@ -82,7 +82,7 @@ import {
 } from "@/settings/model-provider-section/useStartPlanPreview.js";
 import { type ModelProviderNavGroup } from "@/settings/model-provider-section/constants.js";
 import type { ModelProviderNavItem } from "@/settings/model-provider-section/constants.js";
-import type { ProviderSettingsView } from "@zcode/services";
+import type { ProviderSettingsView } from "@mcode/services";
 
 it("Start 独立后移除套餐数量快捷入口与切换按钮", () => {
   const item = (
@@ -214,7 +214,7 @@ function renderWithTooltipProvider(element: ReactElement) {
 }
 
 vi.mock("@/i18n/IntlProvider.js", () => ({
-  useZCodeIntl: () => ({
+  useMcodeIntl: () => ({
     locale: intlMockState.locale,
     intl: {
       formatMessage: (descriptor: { id: string }, values?: Record<string, string>) => {
@@ -2535,7 +2535,7 @@ describe("model provider coding plan", () => {
       createElement(StartPlanCard, {
         preview: {
           planId: "zcode-v3-start-plan",
-          name: "ZCode V3 Start Plan",
+          name: "Mcode V3 Start Plan",
           entitlements: [
             {
               grantUnits: 3_000_000,
@@ -2557,7 +2557,7 @@ describe("model provider coding plan", () => {
     );
 
     expect(html).toContain("settings.modelProvider.startPlan.quotaSectionTitle");
-    expect(html).toContain("ZCode V3 Start Plan");
+    expect(html).toContain("Mcode V3 Start Plan");
     expect(html).toContain("7 Million");
     expect(html).toContain("tokens per day");
     expect(html).toContain("GLM-5.2");
@@ -2576,7 +2576,7 @@ describe("model provider coding plan", () => {
       createElement(StartPlanCard, {
         preview: {
           planId: "zcode-v3-start-plan",
-          name: "ZCode V3 Start Plan",
+          name: "Mcode V3 Start Plan",
           entitlements: [
             {
               grantUnits: 10_000_000,
@@ -2607,7 +2607,7 @@ describe("model provider coding plan", () => {
       createElement(StartPlanCard, {
         preview: {
           planId: "zcode-v3-start-plan",
-          name: "ZCode V3 Start Plan",
+          name: "Mcode V3 Start Plan",
           entitlements: [
             {
               grantUnits: 5_000_000,
@@ -2632,7 +2632,7 @@ describe("model provider coding plan", () => {
       createElement(StartPlanCard, {
         preview: {
           planId: "zcode-v3-start-plan",
-          name: "ZCode V3 Start Plan",
+          name: "Mcode V3 Start Plan",
           entitlements: [],
         },
       }),
@@ -2651,7 +2651,7 @@ describe("model provider coding plan", () => {
         createElement(StartPlanCard, {
           preview: {
             planId: "zcode-v3-start-plan",
-            name: "ZCode V3 Start Plan",
+            name: "Mcode V3 Start Plan",
             entitlements: [
               {
                 grantUnits: 30_000_000,
@@ -2689,7 +2689,7 @@ describe("model provider coding plan", () => {
         createElement(StartPlanCard, {
           preview: {
             planId: "zcode-v3-start-plan",
-            name: "ZCode V3 Start Plan",
+            name: "Mcode V3 Start Plan",
             entitlements: [
               {
                 grantUnits: 5_000_000,
@@ -2765,7 +2765,7 @@ describe("model provider coding plan", () => {
   it("Z.ai Start 详情不显示体验套餐推广横幅", () => {
     primeStartPlanPreviewCacheForTest({
       planId: "zcode-v3-start-plan",
-      name: "ZCode V3 Start Plan",
+      name: "Mcode V3 Start Plan",
       entitlements: [
         {
           grantUnits: 5_000_000,
@@ -2790,7 +2790,7 @@ describe("model provider coding plan", () => {
       statusActive: false,
     });
 
-    expect(html).not.toContain("ZCode V3 Start Plan");
+    expect(html).not.toContain("Mcode V3 Start Plan");
     expect(html).not.toContain("5 Million");
     expect(html).not.toContain("Daily quota · GLM-5.2 5M");
     expect(html).not.toContain("settings.modelProvider.codingPlan.purchaseBanner.personalTitle");
@@ -3376,7 +3376,7 @@ describe("model provider coding plan", () => {
           createProvider({
             id: BUILTIN_MODEL_PROVIDER_IDS.zaiStartPlan,
             name: "Z.ai - Coding Plan",
-            apiKey: "zcode-jwt",
+            apiKey: "mcode-jwt",
           }),
         ],
         entitledAccountProviderIds: new Set([
@@ -3410,7 +3410,7 @@ describe("model provider coding plan", () => {
                 details: [
                   {
                     productId: "zcode-v3-start-plan",
-                    productName: "ZCode V3 Start Plan",
+                    productName: "Mcode V3 Start Plan",
                     purchaseTime: null,
                     beginTime: null,
                     billingCycle: "daily",
@@ -3686,7 +3686,7 @@ describe("model provider coding plan", () => {
           providerName: "Z.ai",
           provider: createProvider({
             id: BUILTIN_MODEL_PROVIDER_IDS.zaiStartPlan,
-            apiKey: "zcode-jwt",
+            apiKey: "mcode-jwt",
           }),
           status: "purchased",
           planLevel: "Free",
@@ -3859,7 +3859,7 @@ describe("model provider coding plan", () => {
           providerName: "Z.ai",
           provider: createProvider({
             id: BUILTIN_MODEL_PROVIDER_IDS.zaiStartPlan,
-            apiKey: "zcode-jwt",
+            apiKey: "mcode-jwt",
           }),
           status: "purchased",
           planLevel: "Free",
@@ -4287,7 +4287,7 @@ describe("model provider coding plan", () => {
           createProvider({
             id: BUILTIN_MODEL_PROVIDER_IDS.zaiStartPlan,
             name: "Z.ai - Coding Plan",
-            apiKey: "zcode-jwt",
+            apiKey: "mcode-jwt",
           }),
         ],
         entitledAccountProviderIds: new Set([BUILTIN_MODEL_PROVIDER_IDS.zaiStartPlan]),
@@ -4304,7 +4304,7 @@ describe("model provider coding plan", () => {
                 details: [
                   {
                     productId: "zcode-v3-start-plan",
-                    productName: "ZCode V3 Start Plan",
+                    productName: "Mcode V3 Start Plan",
                     purchaseTime: null,
                     beginTime: null,
                     billingCycle: "daily",
@@ -5639,7 +5639,7 @@ describe("model provider coding plan", () => {
       subscriptionDetails: [
         {
           productId: "zcode-v3-start-plan",
-          productName: "ZCode V3 Start Plan",
+          productName: "Mcode V3 Start Plan",
           purchaseTime: null,
           beginTime: null,
           billingCycle: "daily",
@@ -5649,7 +5649,7 @@ describe("model provider coding plan", () => {
       ],
       quotaLimits: [
         {
-          type: "ent_zcode_v3_glm_52",
+          type: "ent_mcode_v3_glm_52",
           planId: "zcode-v3-start-plan",
           number: 3_000_000,
           usage: 500_000,
@@ -5658,7 +5658,7 @@ describe("model provider coding plan", () => {
           usageDetails: [{ modelCode: "glm-5.2", displayName: "GLM-5.2", usage: 500_000 }],
         },
         {
-          type: "ent_zcode_v3_glm_5turbo",
+          type: "ent_mcode_v3_glm_5turbo",
           planId: "zcode-v3-start-plan",
           number: 1_000_000,
           usage: 0,
@@ -5673,7 +5673,7 @@ describe("model provider coding plan", () => {
           ],
         },
         {
-          type: "ent_zcode_v3_glm_coding_lite",
+          type: "ent_mcode_v3_glm_coding_lite",
           planId: "zcode-v3-start-plan",
           number: 2_000_000,
           usage: 0,
@@ -5900,7 +5900,7 @@ describe("model provider coding plan", () => {
       subscriptionDetails: [
         {
           productId: "zcode-v3-start-plan",
-          productName: "ZCode V3 Start Plan",
+          productName: "Mcode V3 Start Plan",
           purchaseTime: null,
           beginTime: null,
           billingCycle: "daily",
@@ -5910,7 +5910,7 @@ describe("model provider coding plan", () => {
       ],
       quotaLimits: [
         {
-          type: "ent_zcode_v3_glm_52",
+          type: "ent_mcode_v3_glm_52",
           planId: "zcode-v3-start-plan",
           number: 3_000_000,
           remaining: 2_734_000,
@@ -5992,7 +5992,7 @@ describe("model provider coding plan", () => {
     // 否则违背 spec「无匹配 plan_id 的桶不得附着到任何卡片」。
     const quotaLimits = [
       {
-        type: "ent_zcode_v3_glm_52",
+        type: "ent_mcode_v3_glm_52",
         planId: "zcode-v3-start-plan",
         number: 3_000_000,
         remaining: 2_734_000,
@@ -6139,7 +6139,7 @@ describe("model provider coding plan", () => {
     (status) => {
       primeStartPlanPreviewCacheForTest({
         planId: "zcode-v3-start-plan",
-        name: "ZCode V3 Start Plan",
+        name: "Mcode V3 Start Plan",
         entitlements: [
           {
             grantUnits: 10_000_000,
@@ -6178,7 +6178,7 @@ describe("model provider coding plan", () => {
         statusActive: false,
       });
 
-      expect(html).not.toContain("ZCode V3 Start Plan");
+      expect(html).not.toContain("Mcode V3 Start Plan");
       expect(html).not.toContain("30 Million");
       expect(html).not.toContain("tokens per day");
       expect(html).not.toContain("Daily quota · GLM-5.2 / GLM-5.1 / GLM-5-Turbo 10M each");
@@ -6224,7 +6224,7 @@ describe("model provider coding plan", () => {
     intlMockState.locale = "zh-CN";
     primeStartPlanPreviewCacheForTest({
       planId: "zcode-v3-start-plan",
-      name: "ZCode V3 Start Plan",
+      name: "Mcode V3 Start Plan",
       entitlements: [
         {
           grantUnits: 5_000_000,
@@ -6249,7 +6249,7 @@ describe("model provider coding plan", () => {
       statusActive: false,
     });
 
-    expect(html).not.toContain("ZCode V3 Start Plan");
+    expect(html).not.toContain("Mcode V3 Start Plan");
     expect(html).not.toContain("500万");
     expect(html).not.toContain("tokens/日");
     expect(html).not.toContain("每日额度 · GLM-5.2 500万");
@@ -6350,8 +6350,8 @@ describe("model provider coding plan", () => {
       resolveCodingPlanStatusCardTitle({
         isPurchased: true,
         isStartPlanProvider: true,
-        rawPlanLevel: "ZCode V3 Start Plan",
-        displayPlanLevel: "ZCode V3 Start Plan",
+        rawPlanLevel: "Mcode V3 Start Plan",
+        displayPlanLevel: "Mcode V3 Start Plan",
         startPlanTitle: "Start Plan",
         codingPlanTitle: "Coding Plan",
       }),
@@ -6758,7 +6758,7 @@ describe("model provider coding plan", () => {
         subscriptionDetails: [
           {
             productId: "zcode-v3-start-plan",
-            productName: "ZCode V3 Start Plan",
+            productName: "Mcode V3 Start Plan",
             purchaseTime: null,
             beginTime: null,
             billingCycle: "daily",
@@ -6768,7 +6768,7 @@ describe("model provider coding plan", () => {
         ],
         quotaLimits: [
           {
-            type: "ent_zcode_v3_glm_52",
+            type: "ent_mcode_v3_glm_52",
             planId: "zcode-v3-start-plan",
             number: 3_000_000,
             usage: 500_000,

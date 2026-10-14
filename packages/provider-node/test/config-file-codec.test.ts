@@ -5,7 +5,7 @@ import {
   ProviderConfig,
   ProviderConfigMap,
   extractManualModelConfig,
-} from "@zcode/provider";
+} from "@mcode/provider";
 import {
   decodeProviderConfigFile,
   encodeProviderConfigFile,

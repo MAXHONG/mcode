@@ -1,6 +1,6 @@
 import { describe, expect, it, vi } from "vitest";
 import { createMarketingTouchController } from "@/components/marketing-touch/marketingTouchController.js";
-import type { MarketingDelivery } from "@zcode/shared";
+import type { MarketingDelivery } from "@mcode/shared";
 
 const text = { format: "plaintext" as const, content: "News" };
 const popup = {

@@ -1,4 +1,4 @@
-import { BUILTIN_MODEL_PROVIDER_IDS } from "@zcode/shared";
+import { BUILTIN_MODEL_PROVIDER_IDS } from "@mcode/shared";
 import {
   buildSessionQuotaBannerDismissKey,
   buildSessionQuotaBannerState,

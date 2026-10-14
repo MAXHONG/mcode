@@ -1,11 +1,11 @@
 import {
-  formatZCodeAgentProcessName,
-  formatZCodeGpuProcessName,
-  formatZCodeHostProcessName,
-  formatZCodeRendererProcessName,
-  formatZCodeUtilityProcessName,
+  formatMcodeAgentProcessName,
+  formatMcodeGpuProcessName,
+  formatMcodeHostProcessName,
+  formatMcodeRendererProcessName,
+  formatMcodeUtilityProcessName,
   HostMessageTypes,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const getAppMetrics = vi.fn();
@@ -87,7 +87,7 @@ describe("resourceManagerWindow", () => {
       createMetric(mainPid, "Browser", 1.2, 1024),
       createMetric(gpuPid, "GPU", 0.4, 2048),
       createMetric(rendererPid, "Tab", 18.8, 4096),
-      createMetric(hostPid, "Utility", 0.2, 512, "zcode-host-local-1"),
+      createMetric(hostPid, "Utility", 0.2, 512, "mcode-host-local-1"),
       createMetric(utilityPid, "Utility", 0.1, 256, "network-service"),
       createMetric(guestPid, "Tab", 3, 8192),
     ]);
@@ -95,7 +95,7 @@ describe("resourceManagerWindow", () => {
       {
         id: 1,
         isDestroyed: () => false,
-        getTitle: () => "ZCode",
+        getTitle: () => "Mcode",
         webContents: { getOSProcessId: () => rendererPid },
       },
     ]);
@@ -119,7 +119,7 @@ describe("resourceManagerWindow", () => {
       const snapshot = await module.buildResourceUsageSnapshot({ includeHosts: false });
       const byPid = new Map(snapshot.processes.map((row) => [row.pid, row]));
       expect(byPid.get(mainPid)).toMatchObject({
-        name: "zcode-main",
+        name: "mcode-main",
         category: "base",
         groupKey: "main",
         cpuPercent: 1.2,
@@ -127,19 +127,19 @@ describe("resourceManagerWindow", () => {
         sampled: true,
       });
       expect(byPid.get(gpuPid)).toMatchObject({
-        name: formatZCodeGpuProcessName(),
+        name: formatMcodeGpuProcessName(),
         groupKey: "gpu",
       });
       expect(byPid.get(rendererPid)).toMatchObject({
-        name: formatZCodeRendererProcessName("ZCode"),
+        name: formatMcodeRendererProcessName("Mcode"),
         groupKey: "renderer",
       });
       expect(byPid.get(hostPid)).toMatchObject({
-        name: formatZCodeHostProcessName("local-1"),
+        name: formatMcodeHostProcessName("local-1"),
         groupKey: "host",
       });
       expect(byPid.get(utilityPid)).toMatchObject({
-        name: formatZCodeUtilityProcessName("network-service"),
+        name: formatMcodeUtilityProcessName("network-service"),
         groupKey: "utility",
       });
       expect(byPid.get(guestPid)).toMatchObject({
@@ -181,7 +181,7 @@ describe("resourceManagerWindow", () => {
             processes: [
               {
                 pid: agentPid,
-                name: "zcode-agent-glm-demo",
+                name: "mcode-agent-glm-demo",
                 category: "base",
                 groupKey: "cli",
                 groupLabel: "cli",
@@ -232,7 +232,7 @@ describe("resourceManagerWindow", () => {
       expect(byPid.get(mcpPid)).toMatchObject({ category: "community-plugin", sampled: true });
       expect(byPid.get(unsampledAgentPid)).toEqual({
         pid: unsampledAgentPid,
-        name: formatZCodeAgentProcessName("glm", "/w/other"),
+        name: formatMcodeAgentProcessName("glm", "/w/other"),
         category: "base",
         groupKey: "cli",
         groupLabel: "cli",

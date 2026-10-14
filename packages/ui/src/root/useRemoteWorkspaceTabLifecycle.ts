@@ -1,5 +1,5 @@
 import { useEffect, useRef } from "react";
-import type { IPlatformService } from "@zcode/shared";
+import type { IPlatformService } from "@mcode/shared";
 import { logger } from "@/logger.js";
 import {
   bindRemoteWorkspaceIdentity,

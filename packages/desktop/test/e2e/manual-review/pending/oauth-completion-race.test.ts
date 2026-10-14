@@ -8,7 +8,7 @@ import {
   TID_OAUTH_CANCEL,
   TID_LOGIN_TRIGGER,
   TID_LOGIN_MENU_ITEM,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import {
   clearAppData,
   clickTestIdByDom,
@@ -23,7 +23,7 @@ describe("OAuth 双路径完成竞态", () => {
   });
   it("AUTH-07: 浏览器唤起兑换失败后使用已到达的 polling 结果，保留归因", async function () {
     this.timeout(120_000);
-    const baseUrl = process.env.ZCODE_E2E_OAUTH_RACE_URL;
+    const baseUrl = process.env.MCODE_E2E_OAUTH_RACE_URL;
     if (!baseUrl) throw new Error("缺少 OAuth race HTTP fixture");
     const openExternal = await browser.electron.mock("shell", "openExternal");
     await openExternal.mockResolvedValue(undefined);
@@ -90,7 +90,7 @@ describe("OAuth 双路径完成竞态", () => {
     await waitForTestIdByDom(TID_OAUTH_LOGIN_BUTTON);
     await fetch(`${baseUrl}/__e2e/complete-token`, { method: "POST" });
     // 等待真实 RPC 回调完成后再发起下一次登录，避免新登录掩盖取消的 UI 结果。
-    const logDir = await browser.electron.execute(() => process.env.ZCODE_E2E_RUNTIME_LOG_DIR);
+    const logDir = await browser.electron.execute(() => process.env.MCODE_E2E_RUNTIME_LOG_DIR);
     if (!logDir) throw new Error("缺少 E2E 日志目录");
     await browser.waitUntil(
       async () => {

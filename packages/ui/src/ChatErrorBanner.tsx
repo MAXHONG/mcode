@@ -2,7 +2,7 @@ import { CodingPlanEntryButton } from "@/settings/CodingPlanEntryButton.js";
 /**
  * ChatErrorBanner — 错误提示组件
  *
- * 显示 ZCode Agent 链路中的错误，带 traceId 方便排查。
+ * 显示 Mcode Agent 链路中的错误，带 traceId 方便排查。
  */
 import { useState } from "react";
 import {
@@ -12,9 +12,9 @@ import {
   TID_CHAT_ERROR_DETAILS_BUTTON,
   TID_CHAT_ERROR_BANNER,
   TID_CHAT_ERROR_HOOK_ICON,
-} from "@zcode/shared";
+} from "@mcode/shared";
 import { AnchorIcon, CopyIcon, InfoIcon, RocketIcon, SettingsIcon, X } from "lucide-react";
-import { useZCodeIntl } from "./i18n/IntlProvider.js";
+import { useMcodeIntl } from "./i18n/IntlProvider.js";
 import type { IntlInstance } from "./i18n/IntlProvider.js";
 import { Button } from "./components/ui/button.js";
 import {
@@ -34,7 +34,7 @@ import {
   resolveOffPeakTicketExpiredBusinessCode,
   resolveRequestVerificationBusinessCode,
 } from "@/lib/providerBusinessError.js";
-import type { ZCodeUiError } from "@/lib/zcodeUiError.js";
+import type { McodeUiError } from "@/lib/mcodeUiError.js";
 
 const HISTORICAL_MODEL_UNAVAILABLE_MESSAGES = [
   "历史任务使用的模型已不可用",
@@ -61,7 +61,7 @@ const MODEL_CONFIG_MISSING_CODES = new Set([
   "ModelConfigMissing",
 ]);
 
-function isModelConfigMissingError(error: Pick<ZCodeUiError, "code" | "message">): boolean {
+function isModelConfigMissingError(error: Pick<McodeUiError, "code" | "message">): boolean {
   // Bugfix: 桌面端发送前 registry 为空时，agent 会退回 CLI config 并抛 Model config is missing。
   // 真实原因是“当前没有可用模型”，不能把 CLI 配置路径直接暴露给桌面用户。
   // 这里只按结构化 code 识别，避免 UNKNOWN/SEND_FAILED 等包装错误的可读 message
@@ -85,7 +85,7 @@ function parseClaudeUnknownCommandMessage(message: string): {
 }
 
 export function resolveChatErrorBannerDisplayMessage(
-  error: ZCodeUiError,
+  error: McodeUiError,
   intl: IntlInstance,
 ): string {
   if (isModelConfigMissingError(error)) {
@@ -102,11 +102,11 @@ export function resolveChatErrorBannerDisplayMessage(
     // 重新本地化，否则英文界面会混入中文错误提示。
     return parsed.args
       ? intl.formatMessage(
-          { id: "zcode.error.CLAUDE_UNKNOWN_COMMAND_WITH_ARGS" },
+          { id: "mcode.error.CLAUDE_UNKNOWN_COMMAND_WITH_ARGS" },
           { command: parsed.command, args: parsed.args },
         )
       : intl.formatMessage(
-          { id: "zcode.error.CLAUDE_UNKNOWN_COMMAND" },
+          { id: "mcode.error.CLAUDE_UNKNOWN_COMMAND" },
           { command: parsed.command },
         );
   }
@@ -121,16 +121,16 @@ export function resolveChatErrorBannerDisplayMessage(
   }
 
   if (isSuspiciousEmptyModelResultMessage(error.message)) {
-    return intl.formatMessage({ id: "zcode.error.modelSuspiciousEmpty" });
+    return intl.formatMessage({ id: "mcode.error.modelSuspiciousEmpty" });
   }
 
   return error.code && LOCALIZED_ERROR_CODES.has(error.code)
-    ? intl.formatMessage({ id: `zcode.error.${error.code}` })
+    ? intl.formatMessage({ id: `mcode.error.${error.code}` })
     : error.message;
 }
 
 export function shouldSuppressChatErrorBanner(
-  error: Pick<ZCodeUiError, "code" | "message">,
+  error: Pick<McodeUiError, "code" | "message">,
 ): boolean {
   // 只有历史恢复残留的模型不可用提示才隐藏；当前发送/草稿报错需要展示，
   // 否则 registry 移除模型后用户会看到“请求没返回”而没有任何可操作反馈。
@@ -149,7 +149,7 @@ export function ChatErrorBanner({
   onOpenModelSettings,
   onOpenUpgrade,
 }: {
-  error: ZCodeUiError;
+  error: McodeUiError;
   onRetry?: () => void;
   retryLabel?: string;
   retryDisabled?: boolean;
@@ -157,7 +157,7 @@ export function ChatErrorBanner({
   onOpenModelSettings?: () => void;
   onOpenUpgrade?: () => void;
 }) {
-  const { intl } = useZCodeIntl();
+  const { intl } = useMcodeIntl();
   const openFeedbackSubmit = useFeedbackStore((state) => state.openSubmit);
   const [detailsDialogOpen, setDetailsDialogOpen] = useState(false);
   const actionButtonClassName = "shrink-0";

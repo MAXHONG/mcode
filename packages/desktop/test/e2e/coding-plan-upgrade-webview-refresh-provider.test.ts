@@ -1,4 +1,4 @@
-import { BUILTIN_MODEL_PROVIDER_IDS, TID_LOGIN_TRIGGER } from "@zcode/shared";
+import { BUILTIN_MODEL_PROVIDER_IDS, TID_LOGIN_TRIGGER } from "@mcode/shared";
 import {
   clearAppData,
   DEFAULT_WORKSPACE,
@@ -30,7 +30,7 @@ describe("BigModel Coding Plan 官网 webview 支付完成 E2E", () => {
 
     const setInventoryMode = async (mode: "hold" | "fail" | "ready") => {
       const base =
-        process.env.ZCODE_CODING_PLAN_UPGRADE_MOCK_BASE_URL ??
+        process.env.MCODE_CODING_PLAN_UPGRADE_MOCK_BASE_URL ??
         process.env.BIGMODEL_TEST_API_BASE_URL;
       if (!base) throw new Error("Missing mock URL");
       const response = await fetch(`${base}/__e2e/coding-plan/inventory-mode`, {
@@ -111,14 +111,14 @@ describe("BigModel Coding Plan 官网 webview 支付完成 E2E", () => {
     if (!entry) throw new Error("App 入口事件不存在");
     expect(entry.event_extra_detail.purchase_funnel_id).toBeTruthy();
     expect(entry.event_extra_detail.entry_plan_list).toBe(
-      "coding_plan__personal_pro,start_plan__zcode_v3_start_plan",
+      "coding_plan__personal_pro,start_plan__mcode_v3_start_plan",
     );
     await browser.waitUntil(
       async () => {
         const storage = await readCodingPlanWebviewLocalStorage([
-          "zcode:coding-plan:report-context",
+          "mcode:coding-plan:report-context",
         ]);
-        const context = JSON.parse(storage["zcode:coding-plan:report-context"] || "{}");
+        const context = JSON.parse(storage["mcode:coding-plan:report-context"] || "{}");
         return (
           context.purchase_funnel_id === entry.event_extra_detail.purchase_funnel_id &&
           context.purchase_entry_reporter === "app" &&
@@ -143,9 +143,9 @@ describe("BigModel Coding Plan 官网 webview 支付完成 E2E", () => {
     await browser.waitUntil(
       async () => {
         const storage = await readCodingPlanWebviewLocalStorage([
-          "zcode:coding-plan:report-context",
+          "mcode:coding-plan:report-context",
         ]);
-        const context = JSON.parse(storage["zcode:coding-plan:report-context"] || "{}");
+        const context = JSON.parse(storage["mcode:coding-plan:report-context"] || "{}");
         return (
           context.purchase_entry_reporter === "app" &&
           context.purchase_funnel_id === entry.event_extra_detail.purchase_funnel_id

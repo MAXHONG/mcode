@@ -633,8 +633,8 @@ async function searchHighlightSnapshot() {
         };
       }
     ).highlights;
-    const normalName = "zcode-model-trajectory-find";
-    const activeName = "zcode-model-trajectory-find-active";
+    const normalName = "mcode-model-trajectory-find";
+    const activeName = "mcode-model-trajectory-find-active";
     return {
       registered: Boolean(registry?.has(normalName) || registry?.has(activeName)),
       normal: registry?.get(normalName)?.size ?? 0,

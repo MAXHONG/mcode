@@ -1,6 +1,6 @@
 # Coding Plan WebView Bridge
 
-官网 `/coding-plan` 页面只允许 ZCode App WebView 内嵌访问，App 打开时必须携带 `embedded=app`，并通过 WebView 注入当前 provider 的购买凭据。
+官网 `/coding-plan` 页面只允许 Mcode App WebView 内嵌访问，App 打开时必须携带 `embedded=app`，并通过 WebView 注入当前 provider 的购买凭据。
 
 同步链路：
 
@@ -15,17 +15,17 @@
   -> WebView 打开 /coding-plan?provider={zai|bigmodel}&audience={personal|team}&teamPlanKey={可选}&embedded=app&lang={cn|en}&theme={zai-light|zai-dark}
   -> dom-ready 后从 credentialService 读取 token
   -> executeJavaScript 先清理旧 provider token，再写入 WebView origin 的 localStorage，并同步 App theme class
-  -> dispatch zcode-coding-plan-auth-ready
+  -> dispatch mcode-coding-plan-auth-ready
   -> 官网页重新拉取 batch-preview / preview / purchase
 ```
 
-`lang` 和 `theme` 都是首屏 hint：官网会在 App 注入脚本执行前先用它们渲染正确语言和主题。尤其是 `theme`，用于避免官网 SSR 默认深色和 App 浅色主题之间的首次打开闪烁；真实运行态主题仍以后续注入脚本写入的 `zcode-theme` 和 class 为准。
+`lang` 和 `theme` 都是首屏 hint：官网会在 App 注入脚本执行前先用它们渲染正确语言和主题。尤其是 `theme`，用于避免官网 SSR 默认深色和 App 浅色主题之间的首次打开闪烁；真实运行态主题仍以后续注入脚本写入的 `mcode-theme` 和 class 为准。
 
 `audience` 与 `teamPlanKey` 表达用户点击升级时的套餐意图。Z.ai/BigModel 只由 Provider ID 决定官网 family；个人套餐传 `audience=personal`，团队套餐传 `audience=team` 并携带当前团队连接 key。它们不参与鉴权，也不替代官网对实际套餐和团队权限的判断。
 
 WebView 外壳继续保留 App 购买页原有结构：全屏覆盖、顶部“升级套餐”标题栏、右侧关闭按钮，以及标题栏下方的 150% 配额活动提示。官网页面只承载套餐主体和后续支付流程。
 
-WebView 接入层隐藏宿主滚动容器和 guest 页面内的原生滚动条，但不禁用页面滚动。App 在每次 `dom-ready` 后注入 `zcode-coding-plan-hide-scrollbar` 样式，覆盖官网页和后续三方支付/回跳页，避免官网内容与 App 全局滚动条样式叠加后出现额外视觉噪音。
+WebView 接入层隐藏宿主滚动容器和 guest 页面内的原生滚动条，但不禁用页面滚动。App 在每次 `dom-ready` 后注入 `mcode-coding-plan-hide-scrollbar` 样式，覆盖官网页和后续三方支付/回跳页，避免官网内容与 App 全局滚动条样式叠加后出现额外视觉噪音。
 
 注入 key 与 App 购买接口保持一致：
 
@@ -60,7 +60,7 @@ token 不放入 URL query，避免被浏览器历史、日志、埋点和 Refere
     │ window.zcodeBridge?.notifyPurchaseComplete?.({ provider })   ← no-op guard
     ▼
 [preload: packages/desktop/src/preload/codingPlanWebview.ts]
-    │ ipcRenderer.sendToHost("zcode:coding-plan-purchase-complete", {
+    │ ipcRenderer.sendToHost("mcode:coding-plan-purchase-complete", {
     │   provider: "zai" | "bigmodel",
     │   timestamp: number,            ← 客户端时间戳，仅用于日志/去重
     │ })
@@ -86,7 +86,7 @@ token 不放入 URL query，避免被浏览器历史、日志、埋点和 Refere
 
 ### 频道与 payload
 
-- 频道名：`zcode:coding-plan-purchase-complete`（定义于 `packages/shared/src/channels.ts` 的 `CodingPlanWebviewChannels.PurchaseComplete`）
+- 频道名：`mcode:coding-plan-purchase-complete`（定义于 `packages/shared/src/channels.ts` 的 `CodingPlanWebviewChannels.PurchaseComplete`）
 - payload 类型：`CodingPlanPurchaseCompletePayload`
   - `provider`: `"zai" | "bigmodel"`，与 auth-ready 事件的 `detail.provider` 同构
   - `timestamp`: `number`，客户端时间戳，App 侧仅用于日志/去重，不参与判等
@@ -102,7 +102,7 @@ token 不放入 URL query，避免被浏览器历史、日志、埋点和 Refere
 
 ### 官网页调用点
 
-`components/coding-plan/coding-plan-page.tsx` 中 3 处（helper `notifyZcodeBridgePurchaseComplete(provider)` 内置 no-op guard，官网单独跑零影响）：
+`components/coding-plan/coding-plan-page.tsx` 中 3 处（helper `notifyMcodeBridgePurchaseComplete(provider)` 内置 no-op guard，官网单独跑零影响）：
 
 | 支付场景                                | 位置                        | provider   |
 | --------------------------------------- | --------------------------- | ---------- |
@@ -115,4 +115,4 @@ token 不放入 URL query，避免被浏览器历史、日志、埋点和 Refere
 - host renderer 收到 `ipc-message` 后校验 `provider` 字段，只接受 `zai`/`bigmodel`，忽略非法 payload。
 - 官网页是外部 https 站点；`will-attach-webview` 仍按 `isAllowedEmbeddedBrowserUrl` 做 protocol 白名单。
 - preload 暴露的 `window.zcodeBridge` 只包含业务最小面：`notifyPurchaseComplete`、`getLang`、`onLangChange`、`openExternal`，不暴露 `ipcRenderer` / Node 原语；`openExternal` 在 preload 和 main 进程都只允许 `http:` / `https:`。
-- WebView 使用 `persist:zcode-coding-plan` 独立持久 partition。App 注入凭据前和关闭购买页时会清理 `oauth:zai:access_token` / `zcodejwttoken` / `oauth:bigmodel:access_token`；退出登录或 Clear All Data 会通过桌面命令清理整个 partition，避免账号切换后官网首屏读到旧 token。
+- WebView 使用 `persist:mcode-coding-plan` 独立持久 partition。App 注入凭据前和关闭购买页时会清理 `oauth:zai:access_token` / `zcodejwttoken` / `oauth:bigmodel:access_token`；退出登录或 Clear All Data 会通过桌面命令清理整个 partition，避免账号切换后官网首屏读到旧 token。

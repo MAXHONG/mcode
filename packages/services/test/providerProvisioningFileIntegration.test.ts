@@ -13,13 +13,13 @@ import {
   type ModelSelection,
   type ModelSelectionValidation,
   type ProviderConfigLayerUpdate,
-} from "@zcode/provider";
+} from "@mcode/provider";
 import {
   NodePersonalProviderConfigRepository,
   NodeModelSelectionConfigRepository,
   encodeProviderConfigFile,
-} from "@zcode/provider-node";
-import { providerProvisioningEnvelopeSchema } from "@zcode/shared";
+} from "@mcode/provider-node";
+import { providerProvisioningEnvelopeSchema } from "@mcode/shared";
 import { createProviderProvisioningSource } from "../src/model-provider/providerProvisioningSource.js";
 import { createProviderProvisioningTarget } from "../src/model-provider/providerProvisioningTarget.js";
 
