@@ -4,21 +4,30 @@
   <img src="public/logo/icons/1024x1024.png" alt="Mcode" width="128" height="128" />
 </div>
 <p align="center">
-  <a href="https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=47ag983c-8fcb-4d6d-814b-5395193a712c&amp;qr_code=true">飞书社群</a> ·
-  <a href="https://discord.gg/z9aBcQXZQ3">Discord</a>
+  简体中文 | <a href="README.en.md">English</a> ·
+  <a href="https://github.com/MAXHONG/mcode/releases">下载安装包</a>
 </p>
-<p align="center">
-  简体中文 | <a href="README.en.md">English</a>
-</p>
-
-
 
 Mcode 是 AI 编程工作台，提供桌面应用、浏览器界面和终端 Agent。本仓库包含客户端、后端服务、共享 UI，以及 Agent CLI 与运行时源码。
 
+> Mcode 基于开源项目 [zai-org/ZCode](https://github.com/zai-org/ZCode)（Apache-2.0）改名构建，仅更换产品名称、品牌资源与核心标识，
+> 功能保持一致，并继续使用 Z.ai / BigModel 账号登录、Coding Plan 与官方插件市场。改名范围与保留项见 [REBRAND.md](REBRAND.md)。
+
+## 下载
+
+在 [Releases](https://github.com/MAXHONG/mcode/releases) 页面下载最新安装包：
+
+| 平台                  | 文件                       |
+| --------------------- | -------------------------- |
+| macOS（Apple Silicon） | `Mcode-<版本>-mac-arm64.dmg` |
+| macOS（Intel）         | `Mcode-<版本>-mac-x64.dmg`   |
+| Windows x64           | `Mcode-<版本>-win-x64.exe`   |
+
+安装包未签名：macOS 首次打开被拦截时执行 `sudo xattr -rd com.apple.quarantine /Applications/Mcode.app`；Windows SmartScreen 提示时选择「更多信息 → 仍要运行」。
+
 ## 更新
 
-- 2026-10-10：更新至 Mcode v3.15.1 版本。
-- 2026-9-23：更新至 Mcode v3.14.3 版本。
+- 2026-10-14：基于 ZCode v3.15.1 改名为 Mcode v3.15.1。
 
 ## 初始化
 

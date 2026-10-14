@@ -4,19 +4,31 @@
   <img src="public/logo/icons/1024x1024.png" alt="Mcode" width="128" height="128" />
 </div>
 <p align="center">
-  <a href="https://applink.feishu.cn/client/chat/chatter/add_by_link?link_token=47ag983c-8fcb-4d6d-814b-5395193a712c&amp;qr_code=true">Feishu community</a> ·
-  <a href="https://discord.gg/z9aBcQXZQ3">Discord</a>
-</p>
-<p align="center">
-  <a href="README.md">简体中文</a> | English
+  <a href="README.md">简体中文</a> | English ·
+  <a href="https://github.com/MAXHONG/mcode/releases">Download</a>
 </p>
 
 Mcode is an AI coding workspace with desktop, browser, and terminal interfaces. This repository contains the clients, backend services, shared UI, and Agent CLI and runtime source code.
 
+> Mcode is a renamed build of the open-source [zai-org/ZCode](https://github.com/zai-org/ZCode) project (Apache-2.0). Only the product
+> name, branding assets and core identifiers were changed; features are unchanged and Z.ai / BigModel sign-in, Coding Plan and the
+> official plugin marketplace keep working. See [REBRAND.md](REBRAND.md) for what was renamed and what was intentionally kept.
+
+## Download
+
+Get the latest installers from [Releases](https://github.com/MAXHONG/mcode/releases):
+
+| Platform              | File                          |
+| --------------------- | ----------------------------- |
+| macOS (Apple Silicon) | `Mcode-<version>-mac-arm64.dmg` |
+| macOS (Intel)         | `Mcode-<version>-mac-x64.dmg`   |
+| Windows x64           | `Mcode-<version>-win-x64.exe`   |
+
+The installers are unsigned. On macOS run `sudo xattr -rd com.apple.quarantine /Applications/Mcode.app` if Gatekeeper blocks the first launch; on Windows choose "More info → Run anyway" in SmartScreen.
+
 ## Updates
 
-- 2026-10-10: Updated to Mcode v3.15.1.
-- 2026-9-23: Updated to Mcode v3.14.3.
+- 2026-10-14: Renamed ZCode v3.15.1 to Mcode v3.15.1.
 
 ## Setup
 
