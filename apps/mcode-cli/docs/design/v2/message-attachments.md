@@ -48,7 +48,7 @@ path 是 request-local 的普通 user text，不持久化，也不进入 system 
 派生缓存只处理能够生成真实图片扩展名的 MIME；不支持的图片 MIME 继续沿原 image/base64
 provider 链路发送，但不生成 cache/path，也不因此中断请求。受支持 MIME 的真实读写或 durable
 artifact 故障仍在 provider 调用前明确失败，避免发送失效 path。
-只有带 `mcode-artifact://` URI 的 inline 图片，以及带真实 `path` 的 local-file 图片参与上述
+只有带 `zcode-artifact://` URI 的 inline 图片，以及带真实 `path` 的 local-file 图片参与上述
 path 投影；其他 provider-ready inline 图片（包括缺少 URI 或 URI 为 data URL）保留原 image block，
 仅继续走既有媒体能力投影，不尝试生成 path，也不因缺少 durable artifact 身份阻断模型请求。
 本次路径隔离不新增定期清理或旧路径迁移语义。
@@ -58,7 +58,7 @@ Status update as of 2026-08-20: user video 与 image 共用 request-local path �
 `<storageRoot>/cli/video-cache/<sessionId>/`。`properties.input_format.support_video=true` 时保留 video block 与
 `[Video: source: <path>]`，为 `false` 时 video block 替换为既有 omitted 文本并保留 path。
 video path 与 image 一样不持久化；冷恢复时从 durable artifact 重新 ensure。仅带
-`mcode-artifact://` URI 的 inline video 或带真实 path 的 local-file video 参与投影，不支持的 MIME
+`zcode-artifact://` URI 的 inline video 或带真实 path 的 local-file video 参与投影，不支持的 MIME
 保持原 base64/capability 链路且不生成 path。本次不新增缓存清理、迁移或其他媒体类型语义。
 
 Status update as of 2026-08-19: video 输入已作为独立 modality 接入当前主线。CLI、V4
@@ -66,7 +66,7 @@ Status update as of 2026-08-19: video 输入已作为独立 modality 接入当�
 能力与 provider wire 能力分别门控，不支持时 strip。模型能力由 Active Model 的
 `properties.input_format.support_video` 表达，30MiB 输入上限是与 image 同类的 Mcode 全局产品策略，不随 catalog、session 或
 turn model 配置。用户与 tool-result
-video 都以 `FilePart + mcode-artifact://` 作为跨 provider/cold-resume 的 durable 事实，当前 provider
+video 都以 `FilePart + zcode-artifact://` 作为跨 provider/cold-resume 的 durable 事实，当前 provider
 需要的 base64 只在请求期投影。core/Read 的 video 输入策略为 30MiB；V4 上传继续沿用既有 20MiB、
 64 chunks 与 64MiB staging 边界，desktop continuous、mobile replayable 和 shared-host 边界不变。
 Web/mobile 大视频传输不在本期范围。本文后续“第一阶段不做 video”仅描述最初阶段，不再代表当前实现状态。
@@ -170,7 +170,7 @@ Mcode 采用 durable part 模型作为持久化主线，因为当前仓库已经
 
 - `file://...`：用户提交时的本地文件引用，只能由 attachment resolver 读取。
 - `data:<mime>;base64,...`：小体积、provider-ready 的 inline 内容。
-- `mcode-artifact://<artifactId>`：已经进入附件 artifact store 的内容。
+- `zcode-artifact://<artifactId>`：已经进入附件 artifact store 的内容。
 - `mcp-resource://...` 或 `resource` source：来自 MCP/resource link 的内容。
 
 `FilePart.source.text` 保留 placeholder 在用户输入里的 byte range 和 value。TUI 删除 `[Image 1]` / `[PDF 1]` 时删除对应 `FilePart`，而不是靠重新扫描同名文本猜测。
@@ -182,7 +182,7 @@ Mcode 采用 durable part 模型作为持久化主线，因为当前仓库已经
 - `resource`：通过 MCP/resource adapter 读取；文本内容生成 synthetic `TextPart`，二进制内容生成 `[Binary content: <mime>]` fallback，同时保留 `FilePart`。
 - `file://` + `text/plain`：走统一 Read 能力或等价的 `FileSystemPort` 读取，支持 `start/end`、symbol range 和预算限制；模型看到的是 “Called Read...” 语义的 synthetic text + 文件内容，session 仍保留 `FilePart`。
 - `file://` + directory：第一阶段不把目录作为 file part 发给模型，走目录摘要/Read 结果或明确错误。
-- `image/*` / `application/pdf`：不转成 synthetic text；解析成媒体附件，按大小进入 `data:` 或 `mcode-artifact:`，provider 投影阶段再加载。
+- `image/*` / `application/pdf`：不转成 synthetic text；解析成媒体附件，按大小进入 `data:` 或 `zcode-artifact:`，provider 投影阶段再加载。
 - 空 base64、损坏图片、MIME 不匹配：生成稳定错误 text part，不把坏 payload 交给 provider。
 
 这里要注意模块边界：prompt expansion 只能调用受控 adapter/port，不能在 session/core 里直接调用 `fs.readFile`、`fetch` 或 shell。
@@ -239,7 +239,7 @@ wire 或 model-io 诊断中。
 - 小文本可以直接内联为 text part；超出预算只内联 preview，并把完整内容或可恢复引用放到 artifact store。
 - 媒体在提交时 snapshot 到 attachment artifact store，确保 resume/fork 不依赖用户本地文件之后是否被改名或删除。
 - 超过附件上限的文件只保存 metadata 和稳定错误，不做 snapshot，避免把不可用大文件偷偷占用本地存储。
-- 小 data URL 可以保存在 part 里；超过 `sqliteInlineDataUrlMaxBytes` 的 data URL 必须落 artifact，只在 part 里存 `mcode-artifact://...`。
+- 小 data URL 可以保存在 part 里；超过 `sqliteInlineDataUrlMaxBytes` 的 data URL 必须落 artifact，只在 part 里存 `zcode-artifact://...`。
 - provider-ready data URL 是投影结果，不是事实源；除非它足够小并且本身就是用户输入。
 - video provider payload 统一从 artifact 生成 data URL/base64；会话内切换和冷恢复都必须重新按
   当前 provider wire 投影，message DB 不能只保存某次请求的临时 payload。
@@ -660,7 +660,7 @@ npm test
 Composer PDF 使用独立的 `TurnAttachment.type = "pdf"` 和 shared
 `McodePromptPdfAttachment`。本地/远端路径与 Web V4 bytes 均在 admission 时校验 MIME、20MiB
 边界和 `%PDF` magic，并写入 durable artifact；session `part.data` 只保存 FilePart 的
-`mcode-artifact://` link、MIME、文件名和 metadata。`pdf-cache/<sessionId>/` 是请求与预览使用的
+`zcode-artifact://` link、MIME、文件名和 metadata。`pdf-cache/<sessionId>/` 是请求与预览使用的
 可重建派生 `.pdf` 路径，不写入 DB、snapshot 或 replayable event。
 
 冷恢复与模型切换按 artifact-first 重新物化 path；`supportsPdf=false` 时在 provider 请求前

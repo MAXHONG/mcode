@@ -157,7 +157,7 @@ describe("coding plan embedded webview bridge", () => {
 
   it("preserves entry ownership in window, storage and ready events on reinjection", () => {
     const ready = vi.fn();
-    window.addEventListener("mcode-coding-plan-auth-ready", ready);
+    window.addEventListener("zcode-coding-plan-auth-ready", ready);
     try {
       const reportContext = {
         purchase_funnel_id: "funnel-app",
@@ -173,7 +173,7 @@ describe("coding plan embedded webview bridge", () => {
       expect(
         (window as unknown as { __zcodeReportContext__: unknown }).__zcodeReportContext__,
       ).toEqual(reportContext);
-      expect(JSON.parse(localStorage.getItem("mcode:coding-plan:report-context") || "{}")).toEqual(
+      expect(JSON.parse(localStorage.getItem("zcode:coding-plan:report-context") || "{}")).toEqual(
         reportContext,
       );
       expect(ready).toHaveBeenCalledTimes(2);
@@ -181,7 +181,7 @@ describe("coding plan embedded webview bridge", () => {
         expect((event as CustomEvent).detail.reportContext).toEqual(reportContext);
       }
     } finally {
-      window.removeEventListener("mcode-coding-plan-auth-ready", ready);
+      window.removeEventListener("zcode-coding-plan-auth-ready", ready);
       window.eval(createCodingPlanCredentialClearScript());
     }
   });
@@ -299,10 +299,10 @@ describe("coding plan embedded webview bridge", () => {
 
     expect(script).toContain('localStorage.setItem("oauth:zai:access_token"');
     expect(script).toContain('localStorage.setItem("zcodejwttoken"');
-    expect(script).toContain("mcode-coding-plan-auth-ready");
+    expect(script).toContain("zcode-coding-plan-auth-ready");
     expect(script).toContain('"provider":"zai"');
     expect(script).toContain("window.__zcodeReportContext__");
-    expect(script).toContain("mcode:coding-plan:report-context");
+    expect(script).toContain("zcode:coding-plan:report-context");
     expect(script).toContain('"purchase_funnel_id":"funnel-app"');
     expect(script).toContain('"device_mid":"device-mid-test"');
     expect(script).toContain('"user_id":"user-1"');
@@ -349,7 +349,7 @@ describe("coding plan embedded webview bridge", () => {
     expect(script).toContain("zcodejwttoken");
     expect(script).toContain("oauth:bigmodel:access_token");
     expect(script).toContain("localStorage.removeItem(key)");
-    expect(script).toContain("mcode:coding-plan:report-context");
+    expect(script).toContain("zcode:coding-plan:report-context");
     expect(script).toContain("delete window.__zcodeReportContext__");
   });
 

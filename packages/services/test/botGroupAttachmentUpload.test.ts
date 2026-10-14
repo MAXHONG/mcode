@@ -37,9 +37,9 @@ describe("group attachment transaction", () => {
     expect(
       Buffer.from(agent.attachmentChunkV4.mock.calls[0]![0].dataBase64, "base64").toString(),
     ).toBe("北京\n历史原文");
-    complete({ ref: "mcode-artifact://history" });
+    complete({ ref: "zcode-artifact://history" });
     expect(await upload).toEqual([
-      expect.objectContaining({ ref: "mcode-artifact://history", sourceKind: "topic-history" }),
+      expect.objectContaining({ ref: "zcode-artifact://history", sourceKind: "topic-history" }),
     ]);
   });
 
@@ -77,7 +77,7 @@ describe("group attachment transaction", () => {
     const agent = {
       attachmentBeginV4: vi.fn(async () => ({ state: "uploading", nextChunkIndex: 0 })),
       attachmentChunkV4: vi.fn(async () => ({ nextChunkIndex: 1 })),
-      attachmentCommitV4: vi.fn(async () => ({ ref: "mcode-artifact://file" })),
+      attachmentCommitV4: vi.fn(async () => ({ ref: "zcode-artifact://file" })),
       attachmentAbortV4: vi.fn(async () => undefined),
     };
     const refs = await uploadBotGroupAttachments(
@@ -100,7 +100,7 @@ describe("group attachment transaction", () => {
         },
       ],
     );
-    expect(refs[0]?.ref).toBe("mcode-artifact://file");
+    expect(refs[0]?.ref).toBe("zcode-artifact://file");
     expect(refs[0]).toMatchObject({ sourceKind: "topic-history", messageCount: 2 });
     expect(agent.attachmentBeginV4).toHaveBeenCalledWith(
       expect.objectContaining({

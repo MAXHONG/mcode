@@ -450,7 +450,7 @@ describe("workflowRuns[].artifacts 状态键", () => {
     for (const extra of [
       { spec: { x: { field: "round" } } },
       { versions: [{ version: 1, publishedAt: 1 }] },
-      { uri: "mcode-artifact://s/a" },
+      { uri: "zcode-artifact://s/a" },
       { sourcePath: "out/book.pdf" },
       { description: "一本书" },
     ]) {
@@ -536,7 +536,7 @@ describe("v4 conversation workflowRunArtifacts query", () => {
     title: "注意力之书",
     contentType: "application/pdf",
     bytes: 4_194_304,
-    uri: "mcode-artifact://session-1/tool-result-abc",
+    uri: "zcode-artifact://session-1/tool-result-abc",
     sourcePath: "out/book.pdf",
     publishedAt: 1_756_100_000_000,
     ...overrides,

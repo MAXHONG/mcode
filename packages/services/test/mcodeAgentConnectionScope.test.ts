@@ -141,7 +141,7 @@ function setupBase() {
       uploadId: params.uploadId,
       nextChunkIndex: params.chunkIndex + 1,
     })),
-    attachmentCommitV4: vi.fn(async () => ({ ref: "mcode-artifact://attachment/test" })),
+    attachmentCommitV4: vi.fn(async () => ({ ref: "zcode-artifact://attachment/test" })),
     attachmentAbortV4: vi.fn(async () => {}),
     attachmentReadV4: vi.fn(async () => ({
       dataBase64: "",

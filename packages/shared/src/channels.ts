@@ -107,13 +107,13 @@ export const ServiceChannels = {
   /** 跨窗口广播 */
   Broadcast: "broadcast",
   /** Mcode task wrapper 服务 */
-  McodeTask: "mcode-task",
+  McodeTask: "zcode-task",
   /** 窗口 Host 聚合 workspace/task 投影与列表写路由 */
   WindowController: "window-controller",
   /** Mcode Protocol agent 服务 */
-  McodeAgent: "mcode-agent",
+  McodeAgent: "zcode-agent",
   /** Mcode session 应用服务 */
-  McodeSession: "mcode-session",
+  McodeSession: "zcode-session",
   /** 会话分享发布、预览与 continuation API 编排 */
   ConversationShare: "conversation-share",
   /** 文件系统监视服务 */

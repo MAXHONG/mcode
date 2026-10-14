@@ -4,7 +4,7 @@
 
 ## 当前实现
 
-Banner presentation 支持宿主视觉消息 `{channel:"mcode-cloud-hero-v1",type:"hover",instanceId,hovered:boolean}`，仅 ready 后发送，减少动态效果时为 false。不是业务 action；iframe 继续不可聚焦、不接收原生指针、忽略包内 action。弹窗 Hero 不接收该桥接，仍使用原生交互。详见 Marketing Touch 的 Banner hover 桥接规范。
+Banner presentation 支持宿主视觉消息 `{channel:"zcode-cloud-hero-v1",type:"hover",instanceId,hovered:boolean}`，仅 ready 后发送，减少动态效果时为 false。不是业务 action；iframe 继续不可聚焦、不接收原生指针、忽略包内 action。弹窗 Hero 不接收该桥接，仍使用原生交互。详见 Marketing Touch 的 Banner hover 桥接规范。
 
 关闭按钮采用与 Hero/App 主题无关的媒体覆盖层配色：黑色 50% 不透明度背景、白色 X，无边框；hover 背景加深到黑色 65%。保持圆形、原尺寸和焦点/关闭/上报路径，不新增服务端字段，不修改 Banner 或全局 Dialog。
 

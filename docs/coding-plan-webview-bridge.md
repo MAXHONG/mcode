@@ -15,7 +15,7 @@
   -> WebView 打开 /coding-plan?provider={zai|bigmodel}&audience={personal|team}&teamPlanKey={可选}&embedded=app&lang={cn|en}&theme={zai-light|zai-dark}
   -> dom-ready 后从 credentialService 读取 token
   -> executeJavaScript 先清理旧 provider token，再写入 WebView origin 的 localStorage，并同步 App theme class
-  -> dispatch mcode-coding-plan-auth-ready
+  -> dispatch zcode-coding-plan-auth-ready
   -> 官网页重新拉取 batch-preview / preview / purchase
 ```
 

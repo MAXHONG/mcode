@@ -23,7 +23,7 @@ function fixture() {
     window.dispatchEvent(
       new window.MessageEvent("message", {
         source: window,
-        data: { channel: "mcode-cloud-hero-v1", instanceId: "hero", type, ...extra },
+        data: { channel: "zcode-cloud-hero-v1", instanceId: "hero", type, ...extra },
       }),
     );
   return { dom, window, message, raf, cancel };
@@ -107,7 +107,7 @@ describe("Weekend Hero resource lifecycle", () => {
         new f.window.MessageEvent("message", {
           source: null,
           data: {
-            channel: "mcode-cloud-hero-v1",
+            channel: "zcode-cloud-hero-v1",
             instanceId: "fake",
             type: "init",
             data: { planName: "forged" },

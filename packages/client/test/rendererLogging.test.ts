@@ -30,7 +30,7 @@ describe("client renderer logging", () => {
     vi.stubEnv("PROD", false);
     const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const bridgeLog = vi.fn();
-    vi.stubGlobal("window", { mcode: { log: bridgeLog } });
+    vi.stubGlobal("window", { zcode: { log: bridgeLog } });
 
     const { logger } = await importClientLogger();
 
@@ -50,7 +50,7 @@ describe("client renderer logging", () => {
     const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     const bridgeLog = vi.fn();
-    vi.stubGlobal("window", { mcode: { log: bridgeLog } });
+    vi.stubGlobal("window", { zcode: { log: bridgeLog } });
 
     const { logger } = await importClientLogger();
 

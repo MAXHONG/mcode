@@ -42,7 +42,7 @@ Hero 权益明细行的单项额度按语言缩写（10亿 / 1B），顶部合�
   → destroy → 清理
 ```
 
-沿用 `mcode-cloud-hero-v1`。visibility/reducedMotion 无动画可暂停，保持静态。
+沿用 `zcode-cloud-hero-v1`。visibility/reducedMotion 无动画可暂停，保持静态。
 仅接受 parent 消息及当前 instanceId；所有可配置文字转义后绘制。
 args 支持 titleZh/titleEn、amountZh/amountEn、modelsZh/modelsEn、unit；旧 cta 字段忽略。
 未配置时使用原模板示例（100亿 / 10B）；这些是展示样例，不是用户实时权益。

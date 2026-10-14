@@ -459,7 +459,7 @@ class RecordingArtifactStore implements ToolArtifactStorePort {
     this.requests.push(request);
     return {
       id: "artifact-1",
-      uri: "mcode-artifact://test/artifact-1",
+      uri: "zcode-artifact://test/artifact-1",
       path: "/artifacts/artifact-1.json",
       bytes: Buffer.byteLength(request.content, "utf8"),
       contentType: request.contentType ?? "text/plain",

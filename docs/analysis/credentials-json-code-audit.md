@@ -289,7 +289,7 @@ Host credentials.json / CredentialService
      -> 校验 webview 当前 URL 是可信 coding-plan 页面
      -> 读取目标 provider 的凭据
      -> 先清 webview localStorage 中三个凭据 key
-     -> 写入当前 provider 对应值，派发 mcode-coding-plan-auth-ready
+     -> 写入当前 provider 对应值，派发 zcode-coding-plan-auth-ready
         ZAI:      zai access token + Mcode JWT；删 BigModel token
         BigModel: BigModel access token；删 ZAI token + Mcode JWT
      -> 官网使用当前分区凭据完成购买

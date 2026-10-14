@@ -126,13 +126,13 @@ describe("v4 chunked attachment protocol", () => {
         uploadId: "upload-1",
         state: "committed",
         nextChunkIndex: 2,
-        ref: "mcode-artifact://one",
+        ref: "zcode-artifact://one",
       }),
     ).toEqual({
       uploadId: "upload-1",
       state: "committed",
       nextChunkIndex: 2,
-      ref: "mcode-artifact://one",
+      ref: "zcode-artifact://one",
     });
     const terminal = {
       connectionId: "connection-1",

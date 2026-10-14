@@ -298,7 +298,7 @@ describe("agent V4 connection transports", () => {
     await expect(
       localTransport.attachmentRead({
         sessionId: "local",
-        ref: "mcode-artifact://video",
+        ref: "zcode-artifact://video",
         mediaType: "video/mp4",
       }),
     ).resolves.toEqual({ bytes: new Uint8Array(Buffer.from("local")), mediaType: "video/mp4" });
@@ -322,7 +322,7 @@ describe("agent V4 connection transports", () => {
     await expect(
       transport.attachmentRead({
         sessionId: "image",
-        ref: "mcode-artifact://image",
+        ref: "zcode-artifact://image",
         mediaType: "image/png",
       }),
     ).resolves.toEqual({ bytes: new Uint8Array(Buffer.from("image")), mediaType: "image/png" });
@@ -356,7 +356,7 @@ describe("agent V4 connection transports", () => {
     await expect(
       transport.attachmentRead({
         sessionId: "session-aborted-video",
-        ref: "mcode-artifact://aborted-video",
+        ref: "zcode-artifact://aborted-video",
         signal: abortController.signal,
       }),
     ).rejects.toMatchObject({ name: "AbortError" });
@@ -385,7 +385,7 @@ describe("agent V4 connection transports", () => {
     await expect(
       transport.attachmentRead({
         sessionId: "session-large-video",
-        ref: "mcode-artifact://large-video",
+        ref: "zcode-artifact://large-video",
       }),
     ).resolves.toEqual({
       bytes: new Uint8Array(Buffer.alloc(chunkCount, "x")),

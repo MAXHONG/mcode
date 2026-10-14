@@ -973,7 +973,7 @@ describe("mcodeSessionProjection", () => {
               },
               mime: "application/pdf; charset=binary",
               type: "file",
-              url: "mcode-artifact://sess_1/pdf-1",
+              url: "zcode-artifact://sess_1/pdf-1",
             } satisfies McodeMessagePart,
           ],
         },

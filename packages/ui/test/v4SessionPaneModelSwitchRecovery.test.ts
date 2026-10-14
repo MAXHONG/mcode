@@ -2855,7 +2855,7 @@ describe("SessionPane /plan shortcut", () => {
     await act(async () => {
       sendResult = await captured.composerProps?.onSendText("/plan 检查附件", {
         attachments: [
-          { ref: "mcode-artifact://a", fileName: "a.txt", mime: "text/plain", bytes: 1 },
+          { ref: "zcode-artifact://a", fileName: "a.txt", mime: "text/plain", bytes: 1 },
         ],
       });
       await flushMicrotasks();

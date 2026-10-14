@@ -172,12 +172,12 @@ describe("ConversationShareService import", () => {
       "operation-1",
     );
     expect(imported.sessionId).toBe("imported-session");
-    const shareRootEntries = await readdir(join(imported.workspacePath, ".mcode-share"));
+    const shareRootEntries = await readdir(join(imported.workspacePath, ".zcode-share"));
     expect(shareRootEntries).toHaveLength(1);
     expect(
       (
         await stat(
-          join(imported.workspacePath, ".mcode-share", shareRootEntries[0]!, "shared-artifacts"),
+          join(imported.workspacePath, ".zcode-share", shareRootEntries[0]!, "shared-artifacts"),
         )
       ).isDirectory(),
     ).toBe(true);
@@ -185,7 +185,7 @@ describe("ConversationShareService import", () => {
       readFile(
         join(
           imported.workspacePath,
-          ".mcode-share",
+          ".zcode-share",
           shareRootEntries[0]!,
           ".mcode-share-import.json",
         ),
@@ -550,8 +550,8 @@ describe("ConversationShareService import", () => {
     );
     const artifactDir = join(
       imported.workspacePath,
-      ".mcode-share",
-      (await readdir(join(imported.workspacePath, ".mcode-share")))[0]!,
+      ".zcode-share",
+      (await readdir(join(imported.workspacePath, ".zcode-share")))[0]!,
       "shared-artifacts",
     );
     expect(await readdir(artifactDir)).toHaveLength(1);
@@ -989,9 +989,9 @@ describe("ConversationShareService import", () => {
       subscription.dispose();
     }
 
-    const shareRootEntries = await readdir(join(root, ".mcode-share"));
+    const shareRootEntries = await readdir(join(root, ".zcode-share"));
     expect(shareRootEntries).toHaveLength(1);
-    const importRoot = join(root, ".mcode-share", shareRootEntries[0]!);
+    const importRoot = join(root, ".zcode-share", shareRootEntries[0]!);
     expect((await stat(join(importRoot, "shared-artifacts"))).isDirectory()).toBe(true);
     await expect(readFile(join(importRoot, "shared-conversation.json"), "utf8")).resolves.toContain(
       "formatVersion",
@@ -1202,10 +1202,10 @@ describe("ConversationShareService import", () => {
     expect(loaded?.unsupportedRowCount).toBe(1);
 
     // 落盘副本保存原始 rows：用户升级之后能看到当时认不出的内容，不被永久抹掉。
-    const shareDirs = await readdir(join(imported.workspacePath, ".mcode-share"));
+    const shareDirs = await readdir(join(imported.workspacePath, ".zcode-share"));
     const persistedCopy = JSON.parse(
       await readFile(
-        join(imported.workspacePath, ".mcode-share", shareDirs[0]!, "shared-conversation.json"),
+        join(imported.workspacePath, ".zcode-share", shareDirs[0]!, "shared-conversation.json"),
         "utf8",
       ),
     ) as { rows: unknown[] };

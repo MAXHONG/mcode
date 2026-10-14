@@ -65,7 +65,7 @@ const CODING_PLAN_WEBVIEW_CREDENTIAL_LOCAL_STORAGE_KEYS = [
   "zcodejwttoken",
   "oauth:bigmodel:access_token",
 ] as const;
-const CODING_PLAN_REPORT_CONTEXT_STORAGE_KEY = "mcode:coding-plan:report-context";
+const CODING_PLAN_REPORT_CONTEXT_STORAGE_KEY = "zcode:coding-plan:report-context";
 
 export function resolveCodingPlanWebsiteProvider(
   providerId: CodingPlanProviderId,
@@ -217,15 +217,15 @@ export function createCodingPlanAuthInjectionScript({
   document.documentElement.classList.toggle("dark", mcodeTheme === "zai-dark");
   document.documentElement.classList.toggle("theme-zai-light", mcodeTheme === "zai-light");
   document.documentElement.classList.toggle("theme-zai-dark", mcodeTheme === "zai-dark");
-  localStorage.setItem("mcode-theme", mcodeTheme);
-  localStorage.setItem("mcode:coding-plan:embedded", "app");
+  localStorage.setItem("zcode-theme", mcodeTheme);
+  localStorage.setItem("zcode:coding-plan:embedded", "app");
   // 写入当前 App locale，供官网 zcodeBridge.getLang() 读取。
   // 注意：这是注入 webview 执行的原始 JS，不能用 TS 语法（如 as any）。
   window.__zcodeLang__ = ${JSON.stringify(resolvedLocale)};
   const mcodeReportContext = ${JSON.stringify(normalizedReportContext)};
   window.__zcodeReportContext__ = mcodeReportContext;
   localStorage.setItem(${JSON.stringify(CODING_PLAN_REPORT_CONTEXT_STORAGE_KEY)}, JSON.stringify(mcodeReportContext));
-  window.dispatchEvent(new CustomEvent("mcode-coding-plan-auth-ready", {
+  window.dispatchEvent(new CustomEvent("zcode-coding-plan-auth-ready", {
     detail: { ...${JSON.stringify({ provider, locale: resolvedLocale })}, reportContext: mcodeReportContext },
   }));
 })()`;

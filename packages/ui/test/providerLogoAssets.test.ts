@@ -28,10 +28,9 @@ function readSvgSize(source: string): { width: number; height: number } {
 }
 
 describe("Provider built-in logo assets", () => {
-  it("Z.AI PNG 原样复用无额外留白的应用图标，不再误用同名旧 SVG", () => {
-    const source = readFileSync(new URL("../../desktop/build/icons/128x128.png", import.meta.url));
+  // Mcode 改名后应用图标改为 M 字形；Z.AI Provider Logo 仍保留 Z.AI 原始品牌图（128px 方形）。
+  it("Z.AI PNG 保持 128px 方形品牌图，不再误用同名旧 SVG", () => {
     const packaged = readFileSync(new URL("model-provider-zai-app.png", assetDirectory));
-    expect(packaged.equals(source)).toBe(true);
     expect(readPngSize(packaged)).toEqual({ width: 128, height: 128 });
   });
   it("来源清单中的每个内置 Logo 素材本身都是方形", () => {

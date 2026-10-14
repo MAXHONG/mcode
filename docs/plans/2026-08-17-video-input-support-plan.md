@@ -103,7 +103,7 @@ interface ModelVideoContentBlock {
 ### 2.4 Provider-neutral 持久化与模型切换
 
 session DB 只保存可跨 provider 重建的媒体事实：`FilePart` 的 MIME、文件名、大小/摘要等
-metadata，以及指向完整媒体 snapshot 的 `mcode-artifact://` URI。base64 wire 不是消息事实，
+metadata，以及指向完整媒体 snapshot 的 `zcode-artifact://` URI。base64 wire 不是消息事实，
 只能在当前请求投影时生成。
 
 ```text

@@ -83,7 +83,7 @@ export async function materializeInputHistoryEntry(
   if (!entry?.attachments || !artifactStore) return entry;
   const attachments = await Promise.all(
     entry.attachments.map(async (attachment): Promise<InputHistoryAttachment> => {
-      if (!attachment.content?.startsWith("mcode-artifact://")) return attachment;
+      if (!attachment.content?.startsWith("zcode-artifact://")) return attachment;
       try {
         const artifact = await artifactStore.readToolResultArtifact({ uri: attachment.content });
         return {

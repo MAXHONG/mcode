@@ -3411,7 +3411,7 @@ class RecordingArtifactStore implements ToolArtifactStorePort {
 
   async writeToolResultArtifact(request: ToolArtifactWriteRequest) {
     this.requests.push(request);
-    const uri = "mcode-artifact://test/artifact-1";
+    const uri = "zcode-artifact://test/artifact-1";
     this.contents.set(uri, {
       content: request.content,
       contentType: request.contentType ?? "application/json",

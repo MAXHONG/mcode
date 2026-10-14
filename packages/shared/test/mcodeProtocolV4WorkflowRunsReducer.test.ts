@@ -1690,7 +1690,7 @@ describe("reduceWorkflowRunsState：用户面产物", () => {
     title: "注意力之书",
     contentType: "application/pdf",
     bytes: 4_194_304,
-    uri: "mcode-artifact://session-1/tool-result-abc",
+    uri: "zcode-artifact://session-1/tool-result-abc",
     sourcePath: "out/book.pdf",
     publishedAt: PUBLISHED_AT,
     ...overrides,

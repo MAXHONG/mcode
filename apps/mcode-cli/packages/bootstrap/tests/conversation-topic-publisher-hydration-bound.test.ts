@@ -77,7 +77,7 @@ function checkpoint(sequenceNumber: number): SessionEvent {
     messageId: `message-${sequenceNumber}`,
     targetMessageId: `message-${sequenceNumber}`,
     scope: "workspace",
-    snapshotRef: `mcode-artifact://session-1/checkpoint-${sequenceNumber}`,
+    snapshotRef: `zcode-artifact://session-1/checkpoint-${sequenceNumber}`,
     fileCount: 1,
   });
 }

@@ -32,7 +32,7 @@ export type CloudContentDialogPayload = Omit<CloudContentPayload, "dialog"> & {
 };
 
 export interface CloudHeroHostInitMessage {
-  channel: "mcode-cloud-hero-v1";
+  channel: "zcode-cloud-hero-v1";
   type: "init";
   instanceId: string;
   theme: "light" | "dark";
@@ -44,49 +44,49 @@ export interface CloudHeroHostInitMessage {
 export type CloudHeroHostMessage =
   | CloudHeroHostInitMessage
   | {
-      channel: "mcode-cloud-hero-v1";
+      channel: "zcode-cloud-hero-v1";
       type: "hover";
       instanceId: string;
       hovered: boolean;
     }
   | {
-      channel: "mcode-cloud-hero-v1";
+      channel: "zcode-cloud-hero-v1";
       type: "theme";
       instanceId: string;
       theme: "light" | "dark";
     }
   | {
-      channel: "mcode-cloud-hero-v1";
+      channel: "zcode-cloud-hero-v1";
       type: "visibility";
       instanceId: string;
       visible: boolean;
     }
   | {
-      channel: "mcode-cloud-hero-v1";
+      channel: "zcode-cloud-hero-v1";
       type: "destroy";
       instanceId: string;
     };
 
 export type CloudHeroResourceMessage =
   | {
-      channel: "mcode-cloud-hero-v1";
+      channel: "zcode-cloud-hero-v1";
       type: "ready";
       instanceId: string;
     }
   | {
-      channel: "mcode-cloud-hero-v1";
+      channel: "zcode-cloud-hero-v1";
       type: "action";
       instanceId: string;
       id: string;
     }
   | {
-      channel: "mcode-cloud-hero-v1";
+      channel: "zcode-cloud-hero-v1";
       type: "resize";
       instanceId: string;
       height: number;
     }
   | {
-      channel: "mcode-cloud-hero-v1";
+      channel: "zcode-cloud-hero-v1";
       type: "error";
       instanceId: string;
       code: string;

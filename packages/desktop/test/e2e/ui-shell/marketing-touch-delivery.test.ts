@@ -474,7 +474,7 @@ describe("Marketing Touch delivery", () => {
     await browser.switchFrame(await frame);
     try {
       await browser.execute((instanceId) => {
-        const base = { channel: "mcode-cloud-hero-v1", instanceId };
+        const base = { channel: "zcode-cloud-hero-v1", instanceId };
         for (const message of [
           null,
           { ...base, type: "error", code: "wrong-instance", instanceId: `${instanceId}-other` },
@@ -508,7 +508,7 @@ describe("Marketing Touch delivery", () => {
     const instanceId = await frame.getAttribute("data-instance-id");
     await browser.executeAsync((instanceId, done) => {
       window.postMessage(
-        { channel: "mcode-cloud-hero-v1", instanceId, type: "error", code: "forged" },
+        { channel: "zcode-cloud-hero-v1", instanceId, type: "error", code: "forged" },
         "*",
       );
       // 等待浏览器消息派发后的绘制，不用固定延迟代替状态同步。

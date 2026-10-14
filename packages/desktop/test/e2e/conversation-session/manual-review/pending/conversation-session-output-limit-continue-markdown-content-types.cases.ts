@@ -44,7 +44,7 @@ export type MarkdownContinueCaseId =
   | "inline-math"
   | "display-math"
   | "mermaid"
-  | "mcode-file-citation";
+  | "zcode-file-citation";
 
 export interface MarkdownContinueCaseDefinition {
   finalAnchor: string;
@@ -211,8 +211,8 @@ export const MARKDOWN_CONTINUE_CASES: readonly MarkdownContinueCaseDefinition[] 
     finalAnchor: "MERMAID_DONE",
   },
   {
-    id: "mcode-file-citation",
-    partial: `::mcode-file-citation{path="${FIXTURE_DIR_RELATIVE}/cita`,
+    id: "zcode-file-citation",
+    partial: `::zcode-file-citation{path="${FIXTURE_DIR_RELATIVE}/cita`,
     continuation: 'tion.txt" purpose="output"}\n\nMCODE_FILE_CITATION_DONE',
     finalAnchor: "MCODE_FILE_CITATION_DONE",
   },

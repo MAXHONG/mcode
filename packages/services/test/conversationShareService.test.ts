@@ -583,7 +583,7 @@ describe("ConversationShareService", () => {
       ...rows[1]!,
       text: [
         "~/Code/vibe/shows/deliver/晨报.pdf",
-        '::mcode-file-citation{path="/workspace/晨报.pdf" purpose="output"}',
+        '::zcode-file-citation{path="/workspace/晨报.pdf" purpose="output"}',
         "build_mn/qa/layout-review.md",
         "out/one.mp4 out/two.mp4 out/three.mp4",
       ].join("\n"),
@@ -1165,8 +1165,8 @@ describe("ConversationShareService", () => {
     expect(userInput).toMatchObject({
       attachments: [
         expect.objectContaining({
-          ref: "mcode-artifact://share/share-input-artifact-1",
-          previewRef: "mcode-artifact://share/share-input-artifact-1",
+          ref: "zcode-artifact://share/share-input-artifact-1",
+          previewRef: "zcode-artifact://share/share-input-artifact-1",
         }),
       ],
     });
@@ -1750,7 +1750,7 @@ describe("ConversationShareService", () => {
     );
     expect(confirmRequests.at(-1)?.projection.rows.at(-1)).toMatchObject({
       kind: "artifact",
-      ref: "mcode-artifact://share/share-artifact-1",
+      ref: "zcode-artifact://share/share-artifact-1",
     });
   });
 
@@ -1956,7 +1956,7 @@ describe("ConversationShareService", () => {
   it.each([
     ["data:text/plain;base64,YQ==", "unsafe_structure"],
     ["file:///tmp/report.html", "unsafe_structure"],
-    ["mcode-artifact://share/report", "artifact_protocol_not_ready"],
+    ["zcode-artifact://share/report", "artifact_protocol_not_ready"],
   ] as const)("rejects unsupported local reference %s", async (text, kind) => {
     const rows = completedRows();
     rows[1] = { ...rows[1], kind: "assistantText", text, state: "complete" };

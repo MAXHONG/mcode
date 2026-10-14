@@ -116,9 +116,9 @@ describe("BigModel Coding Plan 官网 webview 支付完成 E2E", () => {
     await browser.waitUntil(
       async () => {
         const storage = await readCodingPlanWebviewLocalStorage([
-          "mcode:coding-plan:report-context",
+          "zcode:coding-plan:report-context",
         ]);
-        const context = JSON.parse(storage["mcode:coding-plan:report-context"] || "{}");
+        const context = JSON.parse(storage["zcode:coding-plan:report-context"] || "{}");
         return (
           context.purchase_funnel_id === entry.event_extra_detail.purchase_funnel_id &&
           context.purchase_entry_reporter === "app" &&
@@ -143,9 +143,9 @@ describe("BigModel Coding Plan 官网 webview 支付完成 E2E", () => {
     await browser.waitUntil(
       async () => {
         const storage = await readCodingPlanWebviewLocalStorage([
-          "mcode:coding-plan:report-context",
+          "zcode:coding-plan:report-context",
         ]);
-        const context = JSON.parse(storage["mcode:coding-plan:report-context"] || "{}");
+        const context = JSON.parse(storage["zcode:coding-plan:report-context"] || "{}");
         return (
           context.purchase_entry_reporter === "app" &&
           context.purchase_funnel_id === entry.event_extra_detail.purchase_funnel_id

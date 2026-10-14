@@ -425,8 +425,8 @@ describe("GetWorkflowRun handler — published artifacts", () => {
     version: 2,
     itemCount: 0,
     versions: [
-      { version: 1, publishedAt: 1, bytes: 10, uri: "mcode-artifact://one" },
-      { version: 2, publishedAt: 2, bytes: 4_096, uri: "mcode-artifact://two" },
+      { version: 1, publishedAt: 1, bytes: 10, uri: "zcode-artifact://one" },
+      { version: 2, publishedAt: 2, bytes: 4_096, uri: "zcode-artifact://two" },
     ],
   };
   const PERF = {
@@ -461,7 +461,7 @@ describe("GetWorkflowRun handler — published artifacts", () => {
       { id: "perf", kind: "chart", version: 1, itemCount: 12 },
     ]);
     // `uri` 刻意不出：模型读不了 tool-artifact store。`spec` / `versions` 也是 UI 的事。
-    expect(JSON.stringify(output.artifacts)).not.toContain("mcode-artifact://");
+    expect(JSON.stringify(output.artifacts)).not.toContain("zcode-artifact://");
     expect(JSON.stringify(output.artifacts)).not.toContain("round");
     expect(GetWorkflowRunOutputSchema.safeParse(output).success).toBe(true);
   });

@@ -23,7 +23,7 @@ export type ToolCallIdentitySource =
   | "kind"
   | "title"
   | "raw"
-  | "raw-mcode-meta"
+  | "raw-zcode-meta"
   | "raw-claude-meta"
   | "legacy-kind"
   | "legacy-title"
@@ -240,7 +240,7 @@ export function resolveToolCallIdentity(
     { value: toolCall.toolName, source: "toolName" as const },
     { value: toolCall.kind, source: "kind" as const },
     { value: rawNames.direct, source: "raw" as const },
-    { value: rawNames.mcode, source: "raw-mcode-meta" as const },
+    { value: rawNames.mcode, source: "raw-zcode-meta" as const },
   ]) {
     const identity = identityFromKnownToolName(
       candidate.value,

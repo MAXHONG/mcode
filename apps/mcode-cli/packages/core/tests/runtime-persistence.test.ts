@@ -1136,8 +1136,8 @@ describe("AgentRuntime session persistence", () => {
         messageId: createMessageId("checkpoint-mode-probe"),
         targetMessageId: createMessageId("checkpoint-mode-probe"),
         scope: RewindScope.Workspace,
-        snapshotRef: "mcode-artifact://test/checkpoint-mode-probe",
-        diffRef: "mcode-artifact://test/checkpoint-mode-probe",
+        snapshotRef: "zcode-artifact://test/checkpoint-mode-probe",
+        diffRef: "zcode-artifact://test/checkpoint-mode-probe",
         fileCount: 1,
       },
       { sequenceNumber: 1, turnId: createTurnId("checkpoint-mode-probe") },
@@ -2471,7 +2471,7 @@ describe("AgentRuntime session persistence", () => {
   it("projects a durable inline image as base64 followed by its derived path", async () => {
     const sessionId = createSessionId("runtime-persistence-inline-image-path");
     const artifactUri =
-      "mcode-artifact://runtime-persistence-inline-image-path/tool-result-inline-image";
+      "zcode-artifact://runtime-persistence-inline-image-path/tool-result-inline-image";
     const derivedPath = "/tmp/mcode-artifacts/inline-image.png";
     let capturedMessages: ModelInputMessage[] = [];
     const artifactStore = {
@@ -2538,7 +2538,7 @@ describe("AgentRuntime session persistence", () => {
   it("does not call the provider when a supported image path cannot be materialized", async () => {
     const sessionId = createSessionId("runtime-persistence-image-path-failure");
     const artifactUri =
-      "mcode-artifact://runtime-persistence-image-path-failure/tool-result-inline-image";
+      "zcode-artifact://runtime-persistence-image-path-failure/tool-result-inline-image";
     const generateText = vi.fn();
     const artifactStore = {
       async ensureMediaAttachmentPath() {

@@ -146,7 +146,7 @@ Mcode keeps the mapping at three levels:
 - Draft input: TUI owns `draftAttachments[]`, keyed by exact `placeholder`.
 - Prompt recall: `InputHistoryEntry.attachments` stores attachment references
   as JSON. Image bytes must not be stored in SQLite; `content` is a
-  `mcode-artifact://...` reference when a pasted image needs to be recoverable.
+  `zcode-artifact://...` reference when a pasted image needs to be recoverable.
 - Session transcript: runtime resolves submitted attachments and persists them
   as `file` parts whose `url` is an artifact reference for image resources.
   Resume and rewind hydrate image-capable `file` parts by reading the artifact

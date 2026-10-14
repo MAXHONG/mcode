@@ -234,7 +234,7 @@ process.stdin.on("data", (chunk) => {
       send({ id: msg.id, result: { uploadId: msg.params.uploadId, nextChunkIndex: msg.params.chunkIndex + 1 } });
     }
     if (msg.method === "v4/attachment/commit" && msg.id !== undefined) {
-      send({ id: msg.id, result: { ref: "mcode-artifact://upload/one" } });
+      send({ id: msg.id, result: { ref: "zcode-artifact://upload/one" } });
     }
     if (msg.method === "v4/attachment/abort" && msg.id !== undefined) {
       send({ id: msg.id, result: {} });
@@ -1082,7 +1082,7 @@ describe("mcodeAgentService v4 conversation channel", () => {
         dataBase64: Buffer.alloc(512 * 1024).toString("base64"),
       });
       await expect(scope.service.attachmentCommitV4(common)).resolves.toEqual({
-        ref: "mcode-artifact://upload/one",
+        ref: "zcode-artifact://upload/one",
       });
       await scope.service.attachmentAbortV4(common);
 

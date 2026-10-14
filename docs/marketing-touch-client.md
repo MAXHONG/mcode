@@ -2,7 +2,7 @@
 
 ## Banner hover 桥接（2026-09-15）
 
-Banner iframe 保留 pointer-events:none、inert、不可聚焦及忽略包内 action。App Banner 是 hover 唯一 owner：鼠标移入/移出整块 Banner，经已有 `mcode-cloud-hero-v1` 发送 `{type:"hover",instanceId,hovered:boolean}`；不发送坐标、点击或业务事件，不改服务端投放字段。
+Banner iframe 保留 pointer-events:none、inert、不可聚焦及忽略包内 action。App Banner 是 hover 唯一 owner：鼠标移入/移出整块 Banner，经已有 `zcode-cloud-hero-v1` 发送 `{type:"hover",instanceId,hovered:boolean}`；不发送坐标、点击或业务事件，不改服务端投放字段。
 
 ```text
 鼠标移入/移出 → App Banner hovered → ready 后发 hover → 资源包动画
@@ -232,7 +232,7 @@ GET -> shared Schema -> 资源授权 -> prepareMarketingHero(background)
 App 整图按钮/关闭 -> 原 Controller -> 安全校验/领取 -> confirm/cancel
 ```
 
-Banner bundle 展示比例为 236:100，宽度随侧栏自适应；包内画面应响应此 viewport。外层无卡片背景/边框/圆角/阴影，iframe 透明且不可聚焦、不接收指针；App 整图按钮接收点击和键盘，关闭与 loading 覆盖其上。包只负责画面与自主动画，包内 action 消息不执行业务，也不提供包内独立点击/拖拽交互。继续使用 `mcode-cloud-hero-v1` 的 init/theme/visibility/destroy/ready/error 消息；args 经现有套餐展示映射传入 data，原始 args 字段保留，不携带凭据。resize 不改变固定比例。
+Banner bundle 展示比例为 236:100，宽度随侧栏自适应；包内画面应响应此 viewport。外层无卡片背景/边框/圆角/阴影，iframe 透明且不可聚焦、不接收指针；App 整图按钮接收点击和键盘，关闭与 loading 覆盖其上。包只负责画面与自主动画，包内 action 消息不执行业务，也不提供包内独立点击/拖拽交互。继续使用 `zcode-cloud-hero-v1` 的 init/theme/visibility/destroy/ready/error 消息；args 经现有套餐展示映射传入 data，原始 args 字段保留，不携带凭据。resize 不改变固定比例。
 
 Controller 仍是投放/动作唯一 owner；组件仅持有 iframe 就绪状态。下载、解压完成后离屏裁切挂载 iframe，ready 前不展示或启用控件；错误使用已校验解码的 fallback，否则隐藏且不上报。替换/撤下/关闭/身份切换按既有 generation 丢弃迟到资源并释放 lease，success_popup 的资源与 Banner 资源分别持有、共同释放。相同下发不重挂载，资源按现有缓存复用；不新增 campaign 去重。Web 不请求桌面 loopback，只显示 fallback；无 fallback 隐藏。共享组件覆盖主题/语言/窄屏，task continuous/replayable、远控 attachment 不变。
 

@@ -28,7 +28,7 @@ describe("V4 attachment source across row transport", () => {
     "preserves %s on the executed user row",
     (sourceKind) => {
       const attachment = {
-        ref: "mcode-artifact://history",
+        ref: "zcode-artifact://history",
         fileName: "history.txt",
         mime: "text/plain",
         bytes: 84,

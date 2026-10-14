@@ -130,12 +130,12 @@ export function projectAssistantCodeComments(
     } else {
       const prefixStart = findAssistantDirectivePrefixStart(
         content,
-        [CODE_COMMENT_DIRECTIVE_NAME, "mcode-file-citation"],
+        [CODE_COMMENT_DIRECTIVE_NAME, "zcode-file-citation"],
         protectedRanges,
         {
           minimumSingleColonPrefixLength: ":mcode".length,
-          singleColonDirectiveNames: ["mcode-file-citation"],
-          tripleColonDirectiveNames: ["mcode-file-citation"],
+          singleColonDirectiveNames: ["zcode-file-citation"],
+          tripleColonDirectiveNames: ["zcode-file-citation"],
         },
       );
       if (prefixStart !== null) {

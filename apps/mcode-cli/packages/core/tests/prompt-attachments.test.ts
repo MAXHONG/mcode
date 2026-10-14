@@ -13,7 +13,7 @@ describe("prompt attachment provider content order", () => {
   it("resolves an inline PDF into a provider file block and durable artifact", async () => {
     const dataUrl = `data:application/pdf; charset=binary;base64,${Buffer.from("%PDF-1.7\\nbody").toString("base64")}`;
     const writeToolResultArtifact = vi.fn(async () => ({
-      uri: "mcode-artifact://pdf-inline-1",
+      uri: "zcode-artifact://pdf-inline-1",
       bytes: dataUrl.length,
       contentType: "text/plain",
       createdAt: new Date(),
@@ -36,14 +36,14 @@ describe("prompt attachment provider content order", () => {
         mediaType: "application/pdf",
         name: "report.pdf",
         dataUrl,
-        source: { uri: "mcode-artifact://pdf-inline-1" },
+        source: { uri: "zcode-artifact://pdf-inline-1" },
       },
       metadata: {
-        artifactUri: "mcode-artifact://pdf-inline-1",
+        artifactUri: "zcode-artifact://pdf-inline-1",
         storageKind: "artifact",
       },
       mime: "application/pdf",
-      url: "mcode-artifact://pdf-inline-1",
+      url: "zcode-artifact://pdf-inline-1",
     });
     expect(writeToolResultArtifact).toHaveBeenCalledOnce();
   });
@@ -59,7 +59,7 @@ describe("prompt attachment provider content order", () => {
       revision: { id: "rev-pdf", mtimeMs: 1, sizeBytes: pdfBytes.byteLength, hash: "hash-pdf" },
     }));
     const writeToolResultArtifact = vi.fn(async () => ({
-      uri: "mcode-artifact://pdf-local-1",
+      uri: "zcode-artifact://pdf-local-1",
       bytes: pdfBytes.byteLength,
       contentType: "text/plain",
       createdAt: new Date(),
@@ -94,7 +94,7 @@ describe("prompt attachment provider content order", () => {
         name: "report.pdf",
         source: { kind: "local_file", path },
       },
-      metadata: { artifactUri: "mcode-artifact://pdf-local-1", storageKind: "artifact" },
+      metadata: { artifactUri: "zcode-artifact://pdf-local-1", storageKind: "artifact" },
       mime: "application/pdf",
     });
   });
@@ -825,7 +825,7 @@ describe("prompt attachment provider content order", () => {
           storageKind: "metadata_only",
         },
         mime: "image/*",
-        url: "mcode-artifact://prompt-attachment",
+        url: "zcode-artifact://prompt-attachment",
       },
     ] satisfies ResolvedTurnAttachment[]);
 
@@ -1056,7 +1056,7 @@ describe("话题历史文本附件", () => {
       [
         {
           type: "file",
-          content: "mcode-artifact://history",
+          content: "zcode-artifact://history",
           filename: "topic-history.txt",
           mimeType: "text/plain",
           sourceKind: "topic-history",

@@ -224,7 +224,7 @@ artifact 只经 `window.open` 打开、不做 `<img src>`，因此不受 `img-sr
 - 每类 Row 使用 allow-list 新建对象，删除 actions、source/root command ID、client ID、approval ID、
   active progress 和本地 artifact 引用。
 - 确定性重建 public product-turn、turn、row、entity、tool-call、artifact ID；保持 Row 稳定顺序和引用闭包。
-- descriptor 不发送 `original_path`。artifact ref 固定为 `mcode-artifact://share/<artifact_id>`。
+- descriptor 不发送 `original_path`。artifact ref 固定为 `zcode-artifact://share/<artifact_id>`。
 
 选择至少包含一个 terminal product turn。每个被选 ID 必须只有一个 `turnHeader`，且状态不是
 `running`。任一分页 revision/log epoch 不一致时必须在 preparation 前失败。
@@ -267,7 +267,7 @@ PDF、Office、Markdown/HTML、视频和音频都可以成为预览候选，但 
 `~/.mcode/tmp/paste-attachments/<date>/<uuid>.txt` 路径处理，不在发送时重新内联正文；分享时
 复用同一读取链路。文件已被清理、读取失败或字节发生变化时，只跳过该附件并在发布成功态展示
 `input_attachment_unavailable` warning，不把失效路径写入公开 projection。可用附件统一改写为
-`mcode-artifact://share/<artifact_id>`，不额外插入 `artifact` Row，直接通过 manifest 闭合。
+`zcode-artifact://share/<artifact_id>`，不额外插入 `artifact` Row，直接通过 manifest 闭合。
 
 分享 artifact 类型增加 `text`，对应 `txt` / `text/plain`；服务端按 UTF-8 文本走与 Markdown/HTML
 一致的同步安全审核。`text` 类型与客户端、服务端和独立分享落地页同步升级后开启。
@@ -502,10 +502,10 @@ Web CTA 使用 `zcode://share/import?code=<share_code>`，deep link 只能携带
 必须走调用方注入的 `resolveApplicationWindow`（排除 CUA indicator 等辅助窗口）；窗口未就绪时
 缓存的 pending import 必须绑定目标窗口的 webContents id，只投递给目标窗口，目标窗口关闭时
 清理，不得投递给先 ready 的任意 renderer——导入会写入目标窗口激活 workspace 的
-`.mcode-share`，投递错窗口等于在错误 workspace 创建会话。
+`.zcode-share`，投递错窗口等于在错误 workspace 创建会话。
 
 导入在当前本地 workspace 下创建新的 conversation task/session；远程 workspace 回退到默认本地
-conversation workspace。产物固定写入 `<workspace>/.mcode-share/<share-id>/shared-artifacts/`，
+conversation workspace。产物固定写入 `<workspace>/.zcode-share/<share-id>/shared-artifacts/`，
 同一 `workspaceKey = workspaceIdentity?.trim() || workspacePath` 与分享码幂等复用，不同 workspace 各自创建 session。
 创建 import-owned pending marker 后：
 
@@ -549,7 +549,7 @@ V4 projection 会通过 additive 的 `sharedContextImport` snapshot 元数据携
 canonical Share URL 和 `pending/reserved/attached/discarded` 状态。删除会话不删除普通
 workspace 文件；导入完成后分享过期不影响本地副本。
 
-导入时把公开 rows 与结果物元数据一并落到 `<workspace>/.mcode-share/<share-id>/shared-conversation.json`；
+导入时把公开 rows 与结果物元数据一并落到 `<workspace>/.zcode-share/<share-id>/shared-conversation.json`；
 会话顶部据此渲染**只读块 + 分割线**（复用分享页的 `ConversationShareReadonlyTimeline`），
 分割线的可点击与静态形态统一使用 Lucide `SquareArrowRightEnter` 图标，避免与 Fork 的分支图标混淆；保持现有尺寸、主题色和多端布局。
 分割线之下是用户自己的实时对话。只读块不回源，因此分享过期或未上线也能离线打开；它不是
@@ -557,8 +557,8 @@ workspace 文件；导入完成后分享过期不影响本地副本。
 
 Desktop 导入块中的 artifact 卡片只在本地副本存在合法 `workspaceRelativePath` 时提供打开动作：
 主按钮复用正常预览卡片的 `OpenSplitButton` 打开 PreviewPane，下拉菜单复用同一套编辑器选择与
-复制绝对/相对路径能力。该路径必须仍位于 `.mcode-share/<share-id>/shared-artifacts/` 内；
-渲染侧校验为形状白名单（`.mcode-share/<dir>/shared-artifacts/<file>` 恰四段、无 `..`/`.`/绝对
+复制绝对/相对路径能力。该路径必须仍位于 `.zcode-share/<share-id>/shared-artifacts/` 内；
+渲染侧校验为形状白名单（`.zcode-share/<dir>/shared-artifacts/<file>` 恰四段、无 `..`/`.`/绝对
 路径），不与 shareId 交叉比对——元数据由导入服务自写自洽，复制 sanitize 规则到 UI 反而有漂移风险，
 取舍详见 `ConversationShareReadonlyTimeline.tsx` 的 `resolveImportedArtifactPath` 注释；
 缺失、绝对路径或包含 `..` 的元数据一律退回纯只读展示。公开 Share 落地页仍只使用服务端
@@ -581,7 +581,7 @@ Desktop 导入块中的 artifact 卡片只在本地副本存在合法 `workspace
 分享页改由用户点分割线主动打开。`discardSharedContext` 命令与 `discarded` 状态保留但暂无 UI 入口。
 会话标题在导入时定型为带前缀的形式（`来自分享：…` / `From Share: …`，`titleSource: "custom"`）。
 
-启动清理器只扫描 `.mcode-share/<share-id>/` 下具有匹配 import ID 的 marker。无 provenance 的
+启动清理器只扫描 `.zcode-share/<share-id>/` 下具有匹配 import ID 的 marker。无 provenance 的
 导入目录删除；已有事务记录但尚未激活的 session 补建索引并激活。失败清理只能删除本次
 importRoot/staging，禁止递归删除用户 workspace。
 
