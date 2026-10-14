@@ -51,8 +51,8 @@ describe("Windows Deep Link 启动参数边界", () => {
     registerDeepLinkProtocol(logger);
 
     expect(mocks.register.mock.calls).toEqual([
-      ["mcode", process.execPath, ["--"]],
-      ["mcode", process.execPath, ["--"]],
+      ["zcode", process.execPath, ["--"]],
+      ["zcode", process.execPath, ["--"]],
     ]);
   });
 
@@ -64,7 +64,7 @@ describe("Windows Deep Link 启动参数边界", () => {
 
     registerDeepLinkProtocol(logger);
 
-    expect(mocks.register).toHaveBeenCalledWith("mcode", process.execPath, [entry, "--"]);
+    expect(mocks.register).toHaveBeenCalledWith("zcode", process.execPath, [entry, "--"]);
   });
 
   it("安全注册失败仍记录警告", () => {
@@ -73,7 +73,7 @@ describe("Windows Deep Link 启动参数边界", () => {
 
     registerDeepLinkProtocol(logger);
 
-    expect(logger.warn).toHaveBeenCalledWith("[deep-link] 注册协议失败", { scheme: "mcode" });
+    expect(logger.warn).toHaveBeenCalledWith("[deep-link] 注册协议失败", { scheme: "zcode" });
     expect(logger.info).not.toHaveBeenCalled();
   });
 
@@ -97,7 +97,7 @@ describe("非 Windows 注册兼容性", () => {
 
     registerDeepLinkProtocol(logger);
 
-    expect(mocks.register).toHaveBeenCalledWith("mcode");
+    expect(mocks.register).toHaveBeenCalledWith("zcode");
     expect(mocks.registerLinux).toHaveBeenCalledTimes(platform === "linux" ? 1 : 0);
   });
 
@@ -109,7 +109,7 @@ describe("非 Windows 注册兼容性", () => {
 
     registerDeepLinkProtocol(logger);
 
-    expect(mocks.register).toHaveBeenCalledWith("mcode", process.execPath, [entry]);
+    expect(mocks.register).toHaveBeenCalledWith("zcode", process.execPath, [entry]);
     expect(mocks.registerLinux).not.toHaveBeenCalled();
   });
 });

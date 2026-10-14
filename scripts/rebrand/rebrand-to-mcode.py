@@ -54,6 +54,8 @@ PROTECT_PATTERNS = [
     # --- OAuth deep link ---
     rf"zcode://[^{URL_STOP}]*",
     r"zcode:/(?=[^/])",
+    r"zcode:(?=(?:oauth|payment|share|workspace)/)",
+    r"zcode(?=%(?:25)?3A%(?:25)?2F)",
     r"DEEP_LINK_SCHEME = \"zcode\"",
     r"\\bzcode:",
     r"const scheme = \"zcode\"",

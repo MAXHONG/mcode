@@ -18,9 +18,9 @@ describe("desktop deep link url helpers", () => {
       await import("../src/main/desktopDeepLinkUrl.js");
 
     expect(isOAuthCallbackUrl(new URL("zcode:/oauth/callback?code=1&state=s"))).toBe(true);
-    expect(isOAuthCallbackUrl(new URL("mcode:oauth/callback?code=1&state=s"))).toBe(true);
+    expect(isOAuthCallbackUrl(new URL("zcode:oauth/callback?code=1&state=s"))).toBe(true);
     expect(isPaymentCallbackUrl(new URL("zcode:/payment/callback?status=return"))).toBe(true);
-    expect(isPaymentCallbackUrl(new URL("mcode:payment/callback?status=cancel"))).toBe(true);
+    expect(isPaymentCallbackUrl(new URL("zcode:payment/callback?status=cancel"))).toBe(true);
   });
 
   it("recognizes payment callback urls separately from OAuth", async () => {
@@ -70,13 +70,13 @@ describe("desktop deep link url helpers", () => {
     expect(
       extractDeepLinkUrlFromArgs([
         "/opt/Mcode/mcode",
-        "mcode%3A%2F%2Foauth%2Fcallback%3Fcode%3D1%26state%3Ds",
+        "zcode%3A%2F%2Foauth%2Fcallback%3Fcode%3D1%26state%3Ds",
       ]),
     ).toBe("zcode://oauth/callback?code=1&state=s");
     expect(
       extractDeepLinkUrlFromArgs([
         "/opt/Mcode/mcode",
-        "mcode%253A%252F%252Foauth%252Fcallback%253Fcode%253D1%2526state%253Ds",
+        "zcode%253A%252F%252Foauth%252Fcallback%253Fcode%253D1%2526state%253Ds",
       ]),
     ).toBe("zcode://oauth/callback?code=1&state=s");
     expect(
@@ -139,7 +139,7 @@ describe("desktop deep link url helpers", () => {
 
     const additionalData = createDeepLinkSingleInstanceData([
       "/opt/Mcode/mcode",
-      "mcode%253A%252F%252Foauth%252Fcallback%253Fcode%253D1%2526state%253Ds",
+      "zcode%253A%252F%252Foauth%252Fcallback%253Fcode%253D1%2526state%253Ds",
       "--open-workspace=C:\\Users\\demo\\Project A",
     ]);
 
