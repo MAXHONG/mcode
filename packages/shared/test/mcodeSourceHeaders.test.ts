@@ -22,7 +22,7 @@ describe("buildMcodeSourceHeadersFromContext", () => {
     ).toEqual({
       ...MCODE_SOURCE_HEADERS,
       "HTTP-Referer": "https://zcode.z.ai",
-      "User-Agent": "Mcode/2.14.0",
+      "User-Agent": "ZCode/2.14.0",
       "X-ZCode-App-Version": "2.14.0",
       "X-Title": "Z Code@cli",
       "X-Platform": "darwin-arm64",
