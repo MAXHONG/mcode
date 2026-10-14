@@ -1,0 +1,188 @@
+name: Release Desktop
+
+# 构建 Mcode 桌面安装包（macOS DMG / Windows EXE），并上传到 GitHub Release。
+# - 推送 v* 标签：自动构建并发布对应 Release
+# - 手动触发：可指定 tag；未指定时使用 package.json 版本号 v<version>
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Release tag (default: v<package.json version>)"
+        required: false
+        type: string
+      prerelease:
+        description: "Mark the release as pre-release"
+        required: false
+        default: false
+        type: boolean
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-desktop-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  # 连接 Z.ai 正式后端（登录、Coding Plan 等），打正式 Mcode 身份安装包。
+  MCODE_ENV: production
+  NODE_ENV: production
+  HUSKY: "0"
+  # GitHub Runner 位于海外，使用官方源下载 Electron 与 electron-builder 二进制。
+  ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
+  ELECTRON_BUILDER_BINARIES_MIRROR: https://github.com/electron-userland/electron-builder-binaries/releases/download/
+  # 跳过远程（SSH/WSL）资源预构建；本机桌面包不依赖 mock-cdn。
+  MCODE_SKIP_REMOTE_ASSETS: "1"
+  CSC_IDENTITY_AUTO_DISCOVERY: "false"
+  NODE_OPTIONS: --max-old-space-size=6144
+
+jobs:
+  build:
+    name: Build ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS arm64
+            runner: macos-14
+            os: mac
+            arch: arm64
+          - name: macOS x64
+            runner: macos-15-intel
+            os: mac
+            arch: x64
+          - name: Windows x64
+            runner: windows-latest
+            os: win
+            arch: x64
+    env:
+      MCODE_TARGET_OS: ${{ matrix.os }}
+      MCODE_TARGET_ARCH: ${{ matrix.arch }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: pnpm
+
+      - name: Setup Python (node-gyp)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # 与 pnpm bootstrap 相同的顺序：先准备桌面本地运行资源，再构建各 workspace 包
+      - name: Prepare desktop runtime assets
+        run: pnpm prepare:desktop-runtime
+
+      - name: Build workspace packages
+        run: pnpm run build:bootstrap
+
+      - name: Bundle desktop installer
+        run: pnpm bundle:desktop -- --os ${{ matrix.os }} --arch ${{ matrix.arch }} --skip-prepare --skip-build
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          mkdir -p release-artifacts
+          cd packages/desktop/dist
+          ls -la
+          for f in *.dmg *.zip *.exe *.blockmap latest*.yml; do
+            [ -f "$f" ] || continue
+            # 发布资产名不带空格，便于下载链接使用
+            cp "$f" "../../../release-artifacts/${f// /-}"
+          done
+          ls -la ../../../release-artifacts
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcode-${{ matrix.os }}-${{ matrix.arch }}
+          path: release-artifacts/*
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve tag
+        id: tag
+        shell: bash
+        run: |
+          if [ "${{ github.ref_type }}" = "tag" ]; then
+            TAG="${{ github.ref_name }}"
+          elif [ -n "${{ inputs.tag }}" ]; then
+            TAG="${{ inputs.tag }}"
+          else
+            TAG="v$(node -p "require('./package.json').version")"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
+
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: dist-release
+          merge-multiple: true
+
+      - name: Generate checksums
+        working-directory: dist-release
+        run: |
+          rm -f latest*.yml
+          sha256sum * > SHA256SUMS.txt
+          cat SHA256SUMS.txt
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          PRERELEASE: ${{ inputs.prerelease }}
+        shell: bash
+        run: |
+          NOTES_FILE=$(mktemp)
+          cat > "$NOTES_FILE" <<EOF
+          Mcode ${TAG} — 基于 ZCode 开源项目改名构建的桌面版安装包（保留 Z.ai / BigModel 登录）。
+
+          ## 下载
+          - macOS Apple Silicon：\`Mcode-*-mac-arm64.dmg\`
+          - macOS Intel：\`Mcode-*-mac-x64.dmg\`
+          - Windows x64：\`Mcode-*-win-x64.exe\`
+
+          ## 安装提示
+          - 本构建未签名。macOS 首次打开若被拦截，执行：
+            \`sudo xattr -rd com.apple.quarantine /Applications/Mcode.app\`
+          - Windows SmartScreen 提示时选择「更多信息 → 仍要运行」。
+
+          校验值见 \`SHA256SUMS.txt\`。
+          EOF
+          FLAGS=()
+          if [ "$PRERELEASE" = "true" ]; then FLAGS+=(--prerelease); fi
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist-release/* --clobber
+            gh release edit "$TAG" --notes-file "$NOTES_FILE" "${FLAGS[@]}"
+          else
+            gh release create "$TAG" dist-release/* \
+              --title "Mcode ${TAG}" \
+              --notes-file "$NOTES_FILE" \
+              --target "${{ github.sha }}" \
+              "${FLAGS[@]}"
+          fi

@@ -2091,7 +2091,7 @@ describe("BigModelCodingPlanSubscriptionProvider", () => {
       productId: "product-1",
       ticket: "fixture-ticket",
       randstr: "fixture-randstr",
-      salesChannel: "mcode",
+      salesChannel: "zcode",
     });
   });
 
@@ -2139,7 +2139,7 @@ describe("BigModelCodingPlanSubscriptionProvider", () => {
       productId: "zai-product-pro",
       ticket: "fixture-ticket",
       randstr: "fixture-randstr",
-      salesChannel: "mcode",
+      salesChannel: "zcode",
     });
   });
 

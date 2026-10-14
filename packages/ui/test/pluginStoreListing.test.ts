@@ -107,7 +107,7 @@ describe("pluginStoreListing", () => {
 
   it("formats marketplace slugs as display names", () => {
     expect(formatCanonicalMarketplaceName("zcode-plugins-official", "en-US")).toBe(
-      "Mcode Plugins Official",
+      "Zcode Plugins Official",
     );
     expect(formatCanonicalMarketplaceName("claude-plugins-official", "en-US")).toBe(
       "Claude Plugins Official",
@@ -524,8 +524,8 @@ describe("pluginStoreListing", () => {
     );
     expect(sorted.map((group) => group.marketplace)).toEqual([
       // 最近刷新的在前；同刻（mcode-plugins-test / paid-demo-market）按显示名字母序。
-      "paid-demo-market",
       "mcode-plugins-test",
+      "paid-demo-market",
       "claude-plugins-official",
       "never-refreshed",
     ]);

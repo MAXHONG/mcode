@@ -200,7 +200,7 @@ describe("logger.logMemoryDiagnostics", () => {
   it("MEM-010 生产构建仍经桌面桥写 info", async () => {
     vi.stubEnv("NODE_ENV", "production");
     const bridgeLog = vi.fn();
-    vi.stubGlobal("window", { mcode: { log: bridgeLog } });
+    vi.stubGlobal("window", { zcode: { log: bridgeLog } });
     const consoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
 
     const { logMemoryDiagnostics } = await importLogger();
@@ -223,7 +223,7 @@ describe("logger.logMemoryDiagnostics", () => {
 
   it("全局禁用开关关闭时不输出", async () => {
     const bridgeLog = vi.fn();
-    vi.stubGlobal("window", { mcode: { log: bridgeLog } });
+    vi.stubGlobal("window", { zcode: { log: bridgeLog } });
     (
       globalThis as { __MCODE_RENDERER_DISABLE_LOGGING__?: boolean }
     ).__MCODE_RENDERER_DISABLE_LOGGING__ = true;

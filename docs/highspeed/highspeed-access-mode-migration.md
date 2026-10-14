@@ -98,7 +98,7 @@ Coding Plan 权益的抽取，因此**必须按账号 Family 拆分**，不跨 F
 
 | 匹配                                                | 属性                                                                     | 与哪个站点对齐                                                   |
 | --------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------- |
-| `https://mcode\.z\.ai/api/v1/highspeed/anthropic/?` | `inputFormat.supportsImage/supportsVideo = true`                         | 同 `zcode-plan`                                                  |
+| `https://zcode\.z\.ai/api/v1/highspeed/anthropic/?` | `inputFormat.supportsImage/supportsVideo = true`                         | 同 `zcode-plan`                                                  |
 | 同上 + `apiTypeMatch: anthropic-messages`           | `supportsMidConversationSystem = true`、`supportsNativeWebSearch = true` | 同 `zcode-plan`，**不同于 `off-peak`**（Todo140 只关闭闲时搜索） |
 
 理由是能力事实必须在同一会话内稳定，而不是随本轮是否加速抖动：

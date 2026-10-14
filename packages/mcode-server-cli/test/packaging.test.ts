@@ -398,9 +398,9 @@ describe("stageRelease", () => {
       "browser-use",
       "document-skills",
       "ios-simulator",
+      "mcode-guide",
       "restore-legacy-sessions",
       "skill-creator",
-      "mcode-guide",
     ]);
     expect(manifest.components?.some((component) => component.id === "official-plugins")).toBe(true);
   });

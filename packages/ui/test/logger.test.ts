@@ -17,7 +17,7 @@ describe("ui logger", () => {
     const consoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
     const consoleDebug = vi.spyOn(console, "debug").mockImplementation(() => {});
     const bridgeLog = vi.fn();
-    vi.stubGlobal("window", { mcode: { log: bridgeLog } });
+    vi.stubGlobal("window", { zcode: { log: bridgeLog } });
 
     const { isLoggerLevelEnabled, logger } = await importLogger();
 
@@ -41,7 +41,7 @@ describe("ui logger", () => {
     const consoleWarn = vi.spyOn(console, "warn").mockImplementation(() => {});
     const consoleError = vi.spyOn(console, "error").mockImplementation(() => {});
     const bridgeLog = vi.fn();
-    vi.stubGlobal("window", { mcode: { log: bridgeLog } });
+    vi.stubGlobal("window", { zcode: { log: bridgeLog } });
 
     const { isLoggerLevelEnabled, logger } = await importLogger();
 
@@ -64,7 +64,7 @@ describe("ui logger", () => {
     vi.stubEnv("NODE_ENV", "production");
     const consoleLog = vi.spyOn(console, "log").mockImplementation(() => {});
     const bridgeLog = vi.fn();
-    vi.stubGlobal("window", { mcode: { log: bridgeLog } });
+    vi.stubGlobal("window", { zcode: { log: bridgeLog } });
 
     const { logger } = await importLogger();
 

@@ -43,7 +43,7 @@ vi.mock("electron", () => ({
   contextBridge: {
     // preload 还会暴露插件 UI 沙箱的 mcodePluginSandbox；这里只截获 window.zcode 本身。
     exposeInMainWorld: (name: string, api: Record<string, unknown>) => {
-      if (name === "mcode") exposedApi = api as Record<string, (...args: unknown[]) => unknown>;
+      if (name === "zcode") exposedApi = api as Record<string, (...args: unknown[]) => unknown>;
     },
     executeInMainWorld: () => false,
   },

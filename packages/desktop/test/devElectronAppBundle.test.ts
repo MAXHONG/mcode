@@ -90,7 +90,7 @@ describe("dev Electron app bundle", () => {
     );
     const plist = await readFile(join(result.appPath, "Contents", "Info.plist"), "utf8");
     expect(plist).toContain("dev.mcode.app.development");
-    expect(plist).toContain("<string>mcode</string>");
+    expect(plist).toContain("<string>zcode</string>");
   });
 
   // Windows 普通用户无符号链接权限（需开发者模式），fs.symlink EPERM；覆盖由 CI Linux 承担。

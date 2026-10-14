@@ -43,6 +43,8 @@ PROTECT_PATTERNS = [
     rf"(?:https?|wss?)://[^{URL_STOP}]*(?:z\.ai|zcode-ai\.com|zcode\.ai|codegeex\.cn|bigmodel\.cn)[^{URL_STOP}]*",
     r"cdn-zcode\.z\.ai",
     r"zcode\.z\.ai",
+    # 正则 / JSON 中转义写法：zcode\.z\.ai、zcode\\.z\\.ai
+    r"zcode(?:\\+\.)z(?:\\+\.)ai",
     r"(?:cdn\.)?zcode-ai\.com",
     r"zcode\.ai/schema[^\s\"'`]*",
     r"zcode/electron/releases",

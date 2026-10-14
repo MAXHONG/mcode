@@ -58,7 +58,7 @@ async function getPatchedReadCrashProcessType(): Promise<
     new URL("../../../node_modules/@arms/rum-electron/dist/index.mjs", import.meta.url),
   );
   const source = await readFile(packageEntry, "utf8");
-  const parserStart = source.indexOf("const mcodeCrashpadInfoStreamType");
+  const parserStart = source.indexOf("const zcodeCrashpadInfoStreamType");
   const parserEnd = source.indexOf("\nclass ", parserStart);
 
   expect(parserStart).toBeGreaterThanOrEqual(0);
@@ -73,13 +73,13 @@ async function getPatchedFormatConsoleErrorArgs(): Promise<(args: unknown[]) => 
     new URL("../../../node_modules/@arms/rum-electron/dist/index.mjs", import.meta.url),
   );
   const source = await readFile(packageEntry, "utf8");
-  const formatterStart = source.indexOf("const mcodeConsoleErrorMaxLength");
+  const formatterStart = source.indexOf("const zcodeConsoleErrorMaxLength");
   const formatterEnd = source.indexOf("\nclass ", formatterStart);
 
   expect(formatterStart).toBeGreaterThanOrEqual(0);
   expect(formatterEnd).toBeGreaterThan(formatterStart);
   return runInNewContext(
-    `${source.slice(formatterStart, formatterEnd)}; mcodeFormatConsoleErrorArgs`,
+    `${source.slice(formatterStart, formatterEnd)}; zcodeFormatConsoleErrorArgs`,
   ) as (args: unknown[]) => string;
 }
 
