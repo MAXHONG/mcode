@@ -96,6 +96,9 @@ PROTECT_PATTERNS = [
     r"\.zcode-plugin(?![\w-])",
     r"\bZCODE_(?:PLUGIN_ROOT|PLUGIN_DATA|PROJECT_DIR|SKILL_DIR|SESSION_ID|WORKSPACE_ROOT)\b",
     r"window\.zcode(?![\w$])",
+    # `(window as X).zcode` 形式访问 preload 桥
+    r"(?<=\(window as )[^)]*\)\??\.zcode(?![\w$])",
+    r"\)\.zcode(?=[;.])",
     r"globalThis\.zcode(?![\w$])",
     r"exposeInMainWorld\(\"zcode\"",
     r"defineProperty\(window, \"zcode\"",

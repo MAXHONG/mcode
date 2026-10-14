@@ -37,7 +37,7 @@ vi.stubGlobal("window", {
   ...globalThis.window,
   location: { search: "" },
   matchMedia: () => ({ matches: true }),
-  mcode: {
+  zcode: {
     selectDirectory: vi.fn(),
     activateOrSetWorkspace: vi.fn(),
     connectRemote: vi.fn(),

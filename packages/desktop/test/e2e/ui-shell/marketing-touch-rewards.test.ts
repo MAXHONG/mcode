@@ -40,7 +40,7 @@ async function assertAppReportHeaders(authenticated: boolean) {
   await browser.execute(async (elementName) => {
     const api = (
       window as typeof window & {
-        mcode: {
+        zcode: {
           reportTelemetryEvent: (payload: {
             context: { clientLanguage: string; clientTimezone: string; screenResolution: string };
             elementName: string;
@@ -50,7 +50,7 @@ async function assertAppReportHeaders(authenticated: boolean) {
           }) => Promise<void>;
         };
       }
-    ).mcode;
+    ).zcode;
     await api.reportTelemetryEvent({
       context: {
         clientLanguage: "zh-CN",

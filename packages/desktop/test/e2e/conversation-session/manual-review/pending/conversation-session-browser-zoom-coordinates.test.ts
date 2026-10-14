@@ -178,8 +178,8 @@ describe("ZCT-2096856609784438784：缩放后的截图坐标与真实点击一�
       }
       const appliedZoom = await browser.execute(async () => {
         return (
-          window as unknown as { mcode: { getDesktopZoomLevel(): Promise<{ zoomLevel: number }> } }
-        ).mcode.getDesktopZoomLevel();
+          window as unknown as { zcode: { getDesktopZoomLevel(): Promise<{ zoomLevel: number }> } }
+        ).zcode.getDesktopZoomLevel();
       });
       expect(appliedZoom.zoomLevel).toBe(zoomLevel);
       if (round > 0) {
@@ -814,8 +814,8 @@ describe("ZCT-2096856609784438784：缩放后的截图坐标与真实点击一�
 async function desktopCommand(command: string): Promise<void> {
   await browser.execute(async (value) => {
     await (
-      window as unknown as { mcode: { executeDesktopCommand(command: string): Promise<void> } }
-    ).mcode.executeDesktopCommand(value);
+      window as unknown as { zcode: { executeDesktopCommand(command: string): Promise<void> } }
+    ).zcode.executeDesktopCommand(value);
   }, command);
 }
 

@@ -18,11 +18,11 @@ describe("Windows 本地文件定位 IPC", () => {
       const result = await browser.execute(async (path) => {
         const bridge = (
           window as unknown as {
-            mcode: {
+            zcode: {
               openInEditor(editorId: string, path: string): Promise<{ success: boolean }>;
             };
           }
-        ).mcode;
+        ).zcode;
         return bridge.openInEditor("explorer", path);
       }, filePath);
       expect(result).toEqual({ success: true });

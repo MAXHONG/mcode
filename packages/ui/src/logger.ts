@@ -55,7 +55,7 @@ function log(level: LogLevel, ...args: unknown[]) {
     // tabStore 等纯前端状态模块现在也会在 Vitest 的 Node 环境里打 info 日志。
     // 如果这里无条件访问 window，测试一触发日志就会直接抛 ReferenceError，
     // 结果变成“为了排查问题而引入新的测试噪音”。先确认运行在浏览器环境，再走桌面端 bridge。
-    (window as DesktopLogBridgeWindow).mcode?.log?.(level, args);
+    (window as DesktopLogBridgeWindow).zcode?.log?.(level, args);
   }
 }
 
@@ -67,7 +67,7 @@ function lifecycleLog(level: DesktopLogLevel, ...args: unknown[]) {
   }
   if (isRendererProductionBuild()) {
     if (typeof window !== "undefined") {
-      (window as DesktopLogBridgeWindow).mcode?.log?.(level, args);
+      (window as DesktopLogBridgeWindow).zcode?.log?.(level, args);
     }
     return;
   }
@@ -100,7 +100,7 @@ export function logMemoryDiagnostics(line: string): void {
     return;
   }
   if (typeof window !== "undefined") {
-    const bridge = (window as DesktopLogBridgeWindow).mcode?.log;
+    const bridge = (window as DesktopLogBridgeWindow).zcode?.log;
     if (bridge) {
       bridge("info", [line]);
       return;

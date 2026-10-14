@@ -216,7 +216,7 @@ async function prepareArmsCapture(): Promise<FinalArmsCaptureMode> {
           clear(): Promise<void>;
           configure(request: { suppressedEventNames: string[] }): Promise<void>;
         };
-        mcode?: {
+        zcode?: {
           reportArmsCustomEvent?: (payload: ArmsCustomEventPayload) => Promise<unknown>;
         };
       };

@@ -2524,7 +2524,9 @@ app.whenReady().then(async () => {
   // 分支不 bump 版本），会被 release minimalVersion 误判为"需强制升级"而启动秒退。force-update
   // 是面向打包发布客户端的安全门，对未打包 dev 运行时无意义。打包版 app.isPackaged === true，
   // gate 照常生效，对真实用户零影响。
-  const skipForceUpdateForLocalDevRuntime = !app.isPackaged;
+  // Mcode 改名分支：远端 client config 的 minimalVersion 与安装包均属上游 ZCode 发布流，
+  // Mcode 安装包不能被 ZCode 的强制升级引导到下载上游安装包，因此仅在构建期启用自动更新时才执行该 gate。
+  const skipForceUpdateForLocalDevRuntime = !app.isPackaged || !MCODE_AUTO_UPDATE_ENABLED;
   const forceUpdateGuardResult =
     MCODE_PRODUCT_FLAVOR === "production" && !skipForceUpdateForLocalDevRuntime
       ? await maybeBlockStartupForForceUpdate({
