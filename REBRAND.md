@@ -35,7 +35,7 @@ Mcode 基于 [zai-org/ZCode](https://github.com/zai-org/ZCode) v3.15.1（Apache-
 
 - 开源构建默认关闭自动更新与远端强制升级检查，避免 Mcode 被引导安装上游 ZCode 安装包。
 - 安装包未签名、未公证。
-- `.github/workflows/release-desktop.yml` 在 macOS（arm64 / x64）与 Windows（x64）Runner 上构建，推送 `v*` 标签或手动触发后发布到 GitHub Releases。
+- `scripts/ci/release-desktop.yml`（需复制到 `.github/workflows/` 启用）在 macOS（arm64 / x64）与 Windows（x64）Runner 上构建，推送 `v*` 标签或手动触发后发布到 GitHub Releases。
 
 ## 重新执行改名
 
