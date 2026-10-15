@@ -1,8 +1,11 @@
 name: Release Desktop
 
-# 构建 Mcode 桌面安装包（macOS DMG / Windows EXE），并上传到 GitHub Release。
+# 构建 Mcode 桌面安装包（macOS / Windows / Linux）与命令行 / Web 发行包（mcode --web），
+# 并发布到 GitHub Release。
 # - 推送 v* 标签：自动构建并发布对应 Release
 # - 手动触发：可指定 tag；未指定时使用 package.json 版本号 v<version>
+# 发布铁律（AGENTS.md「版本发布铁律」）：每个验证通过的版本都必须合并到 main、
+# 更新 README / 文档 / 版本号，并通过本工作流发布 Release。
 on:
   push:
     tags:
@@ -19,8 +22,10 @@ on:
         default: false
         type: boolean
 
+# 安全：默认只读。只有最后的 release job 需要写 Release；构建 job 会执行大量第三方
+# 依赖代码，不能拿到可写的 GITHUB_TOKEN（见各 job 的 permissions 与 persist-credentials）。
 permissions:
-  contents: write
+  contents: read
 
 concurrency:
   group: release-desktop-${{ github.ref }}
@@ -85,6 +90,8 @@ jobs:
 
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
@@ -149,24 +156,88 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
-  release:
-    name: Publish GitHub Release
-    needs: build
-    runs-on: ubuntu-latest
+  # 命令行 / Web 发行包（mcode --web）：纯 Node 运行包，一个 tar.gz 覆盖 macOS / Linux / Windows
+  # 的 x64 与 arm64（原生模块按平台分目录随包分发）。在 Linux 上构建并做发行包冒烟测试。
+  build-cli:
+    name: Build CLI / Web bundle
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: pnpm
+
+      - name: Setup Python (node-gyp)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Distribution unit tests
+        run: node --test scripts/mcode-distribution.test.mjs
+
+      - name: Build mcode bundle
+        run: pnpm build:mcode
+
+      - name: Smoke test bundle (TUI + Web + token + WebSocket origin)
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          node scripts/mcode-distribution-smoke.mjs "dist/mcode/releases/$VERSION/mcode-$VERSION.tar.gz"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcode-cli-bundle
+          path: dist/mcode/github-release/*
+          if-no-files-found: error
+          retention-days: 14
+
+  release:
+    name: Publish GitHub Release
+    needs: [build, build-cli]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Resolve tag
         id: tag
         shell: bash
+        env:
+          # 通过 env 中转，避免把 ${{ }} 表达式直接拼进 shell（脚本注入）。
+          REF_TYPE: ${{ github.ref_type }}
+          REF_NAME: ${{ github.ref_name }}
+          INPUT_TAG: ${{ inputs.tag }}
         run: |
-          if [ "${{ github.ref_type }}" = "tag" ]; then
-            TAG="${{ github.ref_name }}"
-          elif [ -n "${{ inputs.tag }}" ]; then
-            TAG="${{ inputs.tag }}"
+          if [ "$REF_TYPE" = "tag" ]; then
+            TAG="$REF_NAME"
+          elif [ -n "$INPUT_TAG" ]; then
+            TAG="$INPUT_TAG"
           else
             TAG="v$(node -p "require('./package.json').version")"
+          fi
+          if ! printf '%s' "$TAG" | grep -Eq '^v[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$'; then
+            echo "Invalid release tag: $TAG" >&2
+            exit 1
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
@@ -187,8 +258,27 @@ jobs:
       - name: Generate checksums
         working-directory: dist-release
         run: |
-          sha256sum $(ls | grep -v '^latest.*\.yml$') > SHA256SUMS.txt
+          sha256sum $(ls | grep -v '^latest.*\.yml$' | grep -v '^latest\.json$') > SHA256SUMS.txt
           cat SHA256SUMS.txt
+
+      # 发布前确认命令行发行包三件套齐全，并与 latest.json 中的版本、哈希一致。
+      - name: Verify CLI bundle assets
+        working-directory: dist-release
+        env:
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          VERSION="${TAG#v}"
+          test -f install.sh
+          test -f "mcode-$VERSION.tar.gz"
+          node -e '
+            const fs = require("node:fs"), crypto = require("node:crypto");
+            const meta = JSON.parse(fs.readFileSync("latest.json", "utf8"));
+            const version = process.argv[1];
+            if (meta.version !== version) throw new Error(`latest.json version ${meta.version} != ${version}`);
+            const sha = crypto.createHash("sha256").update(fs.readFileSync(meta.tarball)).digest("hex");
+            if (sha !== meta.sha256) throw new Error(`sha256 mismatch for ${meta.tarball}`);
+            console.log(`CLI bundle ${meta.tarball} ok (${sha})`);
+          ' "$VERSION"
 
       - name: Publish release
         env:
@@ -199,18 +289,28 @@ jobs:
         run: |
           NOTES_FILE=$(mktemp)
           cat > "$NOTES_FILE" <<EOF
-          Mcode ${TAG} — 基于 ZCode 开源项目改名构建的桌面版安装包（保留 Z.ai / BigModel 登录）。
+          Mcode ${TAG} — 基于 ZCode 开源项目改名构建（保留 Z.ai / BigModel 登录）。
 
-          ## 下载
+          本版本更新内容见仓库 README 的「更新」章节。
+
+          ## 桌面版下载
           - macOS Apple Silicon：\`Mcode-*-mac-arm64.dmg\`
           - macOS Intel：\`Mcode-*-mac-x64.dmg\`
           - Windows x64：\`Mcode-*-win-x64.exe\`
           - Windows ARM64：\`Mcode-*-win-arm64.exe\`
+          - Linux x64 / ARM64：\`.deb\`（Debian/Ubuntu）、\`.rpm\`（Fedora/RHEL）、\`.AppImage\`（通用）、\`.pkg.tar.zst\`（Arch）
+
+          ## 命令行 / Web 版（无界面 Linux 服务器可用）
+          - \`mcode-*.tar.gz\`：TUI + Web + Agent 运行包，需要 Node.js 24+；\`install.sh\` 自动校验 SHA-256 后安装 \`mcode\` 命令。
+          - 安装：\`curl -fsSL https://github.com/MAXHONG/mcode/releases/latest/download/install.sh | sh\`
+            （私有仓库请先下载 \`install.sh\` 与 \`mcode-*.tar.gz\`，再执行 \`MCODE_DIST_ARCHIVE=./mcode-<版本>.tar.gz sh install.sh\`）
+          - 启动：\`mcode --web --host 0.0.0.0 --port 3030 --no-open\`，浏览器打开终端打印的带 token 地址。
+          - 部署与 systemd 开机自启：仓库 \`docs/linux-headless-web.md\`。
 
           ## 自动更新
-          - Windows / Linux：应用内检测到新版本后可直接下载并在重启时安装。
+          - Windows / Linux 桌面版：应用内检测到新版本后可直接下载并在重启时安装。
           - macOS：安装包未签名，应用内提示新版本后会打开本页面，请下载新的 DMG 覆盖安装。
-          - Linux x64 / ARM64：\`.deb\`（Debian/Ubuntu）、\`.rpm\`（Fedora/RHEL）、\`.AppImage\`（通用）、\`.pkg.tar.zst\`（Arch）
+          - 命令行 / Web 版：重新执行 \`install.sh\` 即升级到最新版本，用户数据保留。
 
           ## 安装提示
           - 本构建未签名。macOS 首次打开若被拦截，执行：

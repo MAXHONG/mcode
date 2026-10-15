@@ -25,12 +25,32 @@ Get the latest installers from [Releases](https://github.com/MAXHONG/mcode/relea
 | macOS (Apple Silicon) | `Mcode-<version>-mac-arm64.dmg` |
 | macOS (Intel)         | `Mcode-<version>-mac-x64.dmg`   |
 | Windows x64           | `Mcode-<version>-win-x64.exe`   |
+| Windows ARM64         | `Mcode-<version>-win-arm64.exe` |
+| Linux x64 / ARM64     | `.deb`, `.rpm`, `.AppImage`, `.pkg.tar.zst` |
+| CLI / Web (headless)  | `mcode-<version>.tar.gz` + `install.sh` (Node.js 24+) |
 
 The installers are unsigned. On macOS run `sudo xattr -rd com.apple.quarantine /Applications/Mcode.app` if Gatekeeper blocks the first launch; on Windows choose "More info → Run anyway" in SmartScreen.
 
+### Headless Linux server (Web mode)
+
+```bash
+# Requires Node.js 24+
+curl -fsSL https://github.com/MAXHONG/mcode/releases/latest/download/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+mcode --web --host 0.0.0.0 --port 3030 --no-open --workspace ~/project
+```
+
+Open the token-bearing URL printed in the terminal from any browser on the same network. While the repository is private, download `install.sh` and `mcode-<version>.tar.gz` first, then run `MCODE_DIST_ARCHIVE=./mcode-<version>.tar.gz sh install.sh`. Model setup, systemd autostart and security notes: [docs/linux-headless-web.md](docs/linux-headless-web.md) (Chinese).
+
 ## Updates
 
+- 2026-10-16: v3.15.3 — New CLI / Web bundle (`mcode-<version>.tar.gz` + `install.sh`, published with each Release) so headless Linux machines can run `mcode --web` for LAN browser access, with a systemd example and deployment guide. The "connect your account" login screen no longer blocks startup when a personal model provider (e.g. an OpenAI-compatible gateway) is configured. Web mode now always enables an access token, accepts `Authorization: Bearer`, rejects cross-site WebSocket upgrades (CSWSH) and compares tokens in constant time. `install.sh` verifies SHA-256, checks Node.js ≥ 24, and supports GitHub Releases and offline installs. `pnpm build:mcode` builds out of the box. The release workflow is read-only by default and build jobs no longer hold a writable token.
+- 2026-10-15: v3.15.2 — In-app auto-update from GitHub Releases; Windows ARM64 and Linux x64/ARM64 installers; Mcode logo everywhere.
 - 2026-10-14: Renamed ZCode v3.15.1 to Mcode v3.15.1.
+
+## Releasing (maintainers)
+
+**Release rule:** every version that passes verification without serious issues must be merged into `main`, have README / docs / version updated, and be published as a GitHub Release. See [AGENTS.md](AGENTS.md) (section 版本发布铁律) for the full checklist: verify → bump `package.json` version → update both READMEs and docs → PR and merge to `main` → push tag `v<version>` → check the "Release Desktop" workflow and Release assets.
 
 ## Setup
 
@@ -109,9 +129,9 @@ mcode --help
 mcode --web --help
 ```
 
-In Web mode, it uses the current directory as the workspace, listens on `127.0.0.1` without token authentication by default, selects an available port, and opens a browser. Use the URL printed in the terminal and press `Ctrl+C` to stop the service. For LAN access, use `--host 0.0.0.0`; listening on a non-local address generates an access token by default. Use the token-bearing URL printed in the terminal. Set a token with `--token`, or disable token authentication with `--no-token`.
+In Web mode, it uses the current directory as the workspace, listens on `127.0.0.1`, selects an available port, and opens a browser. **Since v3.15.3 an access token is always enabled** (including localhost): open the `?token=` URL printed in the terminal and the browser keeps it in a cookie; press `Ctrl+C` to stop the service. For LAN access, use `--host 0.0.0.0`. Fix the token with `--token` or `MCODE_WEB_TOKEN`, or disable it with `--no-token` (trusted single-user machines only). Scripts can call the API with `Authorization: Bearer <token>`. Cross-site browser WebSocket upgrades are rejected; when a reverse proxy uses a different host name, allow it with `MCODE_SERVER_ALLOWED_ORIGINS`. Headless Linux deployment: [docs/linux-headless-web.md](docs/linux-headless-web.md).
 
-When starting the general Web service's HTTP entry directly, configure API/WebSocket authentication with `MCODE_SERVER_AUTH_TOKEN`. When creating the service programmatically, use the `authToken` option.
+When starting the general Web service's HTTP entry directly, configure API/WebSocket authentication with `MCODE_SERVER_AUTH_TOKEN`. When creating the service programmatically, use the `authToken` option (and `allowedOrigins` for extra WebSocket origins).
 
 See Packaging below for build instructions. `pnpm build:mcode` only creates the distribution; it does not replace an existing `mcode` on `PATH`. If the command still points to an older installation or another checkout, check it with `command -v mcode` on macOS / Linux or `where.exe mcode` on Windows.
 
@@ -146,6 +166,8 @@ The root [.env.example](.env.example) provides sample service URLs and build con
 | `MCODE_SERVER_WORKSPACE`             | Workspace path for the Web backend                                                      |
 | `MCODE_BUILTIN_PROVIDER_CONFIG_FILE` | Path to a local provider configuration file; uses the built-in configuration when unset |
 | `MCODE_DIST_BASE_URL`                | Download base URL used by the CLI distribution installer                                |
+| `MCODE_WEB_TOKEN`                    | Fixed access token for `mcode --web`                                                    |
+| `MCODE_SERVER_ALLOWED_ORIGINS`       | Extra browser origins allowed to open the Web server WebSocket (comma separated)        |
 
 Runtime variables can be set explicitly in the environment of the startup command. See [config/README.md](config/README.md) for the default configuration shipped with the client.
 
@@ -170,13 +192,13 @@ The default target is macOS arm64, and the default output directory is `packages
 
 Run `pnpm build:mcode` to build the CLI/TUI, backend, and Web client, collect the TUI native libraries, workers, and runtime dependencies, then assemble the distribution. Running the distribution still requires Node.js; use the version specified in `mise.toml`.
 
-Before packaging, set the download base URL with `MCODE_DIST_BASE_URL` in `.env`, `.env.local`, or the process environment, or pass it through `--base-url`. The URL below is a placeholder; replace it with your hosting URL when publishing:
+By default `install.sh` downloads from this repository's latest GitHub Release (`https://github.com/MAXHONG/mcode/releases/latest/download/`). To self-host, set `MCODE_DIST_BASE_URL` in `.env`, `.env.local`, or the process environment, or pass `--base-url`:
 
 ```bash
-pnpm build:mcode --base-url https://downloads.example.com/mcode/
-
-# When MCODE_DIST_BASE_URL is already configured
 pnpm build:mcode
+
+# Self-hosted download URL (placeholder)
+pnpm build:mcode --base-url https://downloads.example.com/mcode/
 
 # Repackage existing Agent, backend, and Web build outputs
 pnpm build:mcode --skip-build
@@ -189,9 +211,10 @@ The version defaults to the root `package.json` version. Output is written to `d
 
 - `releases/<version>/mcode-<version>.tar.gz`: runtime package.
 - `releases/<version>/sha256.txt`: checksum file.
-- `latest.json` and `install.sh`: version index and installer.
+- `latest.json` and `install.sh`: version index and installer (self-hosted layout).
+- `github-release/`: flat Release assets (runtime package, `latest.json`, `install.sh`) uploaded by the release workflow.
 
-Upload the entire directory to the configured download base URL. The installer downloads the runtime package from that URL, installs it to `~/.mcode/runtime` by default, and creates the `mcode` command in `~/.local/bin`. Override these directories with `MCODE_DIST_HOME` and `MCODE_DIST_BIN_DIR`, respectively.
+Upload the entire directory to the configured download base URL. The installer downloads the runtime package from that URL, verifies its SHA-256 against `latest.json`, requires Node.js ≥ 24, installs it to `~/.mcode/runtime` by default, and creates the `mcode` command in `~/.local/bin`. Override these directories with `MCODE_DIST_HOME` and `MCODE_DIST_BIN_DIR`, respectively; install offline with `MCODE_DIST_ARCHIVE=<path to tar.gz>` (optionally `MCODE_DIST_SHA256`).
 
 Existing Lite users should switch to the new build command, environment variables, and installer. Installation does not remove old Lite directories or migrate/delete session data.
 
@@ -208,9 +231,12 @@ node dist/mcode/debug/mcode/bin/mcode.mjs
 # Start Web mode
 node dist/mcode/debug/mcode/bin/mcode.mjs --web \
   --workspace "$PWD" --port 3030 --no-open
+
+# Release smoke test (extracts outside the repo; checks TUI, Web, token and WebSocket)
+node scripts/mcode-distribution-smoke.mjs "dist/mcode/releases/$mcode_version/mcode-$mcode_version.tar.gz"
 ```
 
-Open `http://127.0.0.1:3030` to validate the complete flow, with one backend serving the Web pages and running the Agent. The port must be available; if `pnpm dev:web` is already running, choose another `--port`.
+Open the printed `http://127.0.0.1:3030/?token=...` URL to validate the complete flow, with one backend serving the Web pages and running the Agent. The port must be available; if `pnpm dev:web` is already running, choose another `--port`.
 
 ## Repository Structure
 
@@ -226,6 +252,7 @@ Open `http://127.0.0.1:3030` to validate the complete flow, with one backend ser
 | `packages/provider`, `packages/provider-node`        | Common provider capabilities and Node implementations                                   |
 | `apps/mcode-cli`                                     | Agent CLI, TUI, runtime, and tools                                                      |
 | `scripts`, `config`, `third-party`                   | Build and maintenance scripts, built-in configuration, and third-party notice materials |
+| `deploy/linux`                                       | Headless Linux deployment: systemd unit and configuration templates                     |
 
 ## Project Notice
 

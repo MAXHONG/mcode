@@ -10,6 +10,27 @@ export interface ProviderAvailabilityLoginEntryGuardResult {
   shouldOpenLoginEntry: boolean;
 }
 
+/**
+ * 启动登录入口判定：已有可执行模型时永不打开；没有可执行模型时，未登录或尚未选定
+ * Z.ai / BigModel 运行域才打开。
+ *
+ * 修复原因：旧条件 `!providerFamilyDomain || (!user && !hasUsableProvider)` 在
+ * `providerFamilyDomain` 缺失时无条件打开登录页。全新安装（尤其是无头 Linux 上的
+ * `mcode --web`）只预置个人 Provider（例如 OpenAI 兼容网关）时，用户已经有可用模型，
+ * 却仍被强制停在 Z.ai / BigModel 账号门，必须点击“使用 API key → 跳过”才能进入工作区。
+ * `providerFamilyDomain` 只决定内置 family 的可见域（见 docs/model-provider-family-merge.md），
+ * 不代表模型是否可用；因此只在“没有可用模型”时才用它要求用户选择运行域，
+ * 其余组合（未登录 / 已登录且无模型）保持原有行为。
+ */
+export function shouldOpenStartupLoginEntry(params: {
+  hasUser: boolean;
+  hasUsableProvider: boolean;
+  hasProviderFamilyDomain: boolean;
+}): boolean {
+  if (params.hasUsableProvider) return false;
+  return !params.hasUser || !params.hasProviderFamilyDomain;
+}
+
 export function useProviderAvailabilityLoginEntryGuard({
   enabled = true,
   user,
@@ -54,7 +75,11 @@ export function useProviderAvailabilityLoginEntryGuard({
         : modelSelectionView;
       const availability = resolveProviderAvailabilityState({ modelSelectionView: refreshedView });
       const { hasUsableProvider, providerCount } = availability;
-      const shouldOpenLoginEntry = !providerFamilyDomain || (!user && !hasUsableProvider);
+      const shouldOpenLoginEntry = shouldOpenStartupLoginEntry({
+        hasUser: Boolean(user),
+        hasUsableProvider,
+        hasProviderFamilyDomain: Boolean(providerFamilyDomain),
+      });
 
       // 未登录且没有可用模型配置时必须引导用户连接账号或填写 API Key。
       // 启动检查、API Key 设置回流等入口统一走这里，避免各处复制判断后语义分叉。

@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { execFile, spawn } from "node:child_process";
+import { createHash } from "node:crypto";
 import { once } from "node:events";
-import { cp, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
+import { chmod, cp, mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setTimeout } from "node:timers/promises";
@@ -146,6 +147,141 @@ test("Web mode passes its runtime configuration and terminates its child on shut
   const exited = once(child, "exit");
   child.kill("SIGTERM");
   assert.deepEqual(await exited, [0, null]);
+});
+
+async function startWebAndReadConfig(t, extraArgs, extraEnv = {}) {
+  const { directory, runner } = await fixture(t);
+  const resultPath = join(directory, "web-result.json");
+  const child = spawn(
+    process.execPath,
+    [runner, "--web", "--workspace", directory, "--port", "3042", "--no-open", ...extraArgs],
+    {
+      env: { ...process.env, FIXTURE_WEB_RESULT: resultPath, ...extraEnv },
+      stdio: ["ignore", "pipe", "pipe"],
+    },
+  );
+  let stdout = "";
+  child.stdout.on("data", (chunk) => {
+    stdout += chunk;
+  });
+  t.after(() => {
+    if (child.exitCode === null) child.kill();
+  });
+  let result;
+  for (let attempt = 0; attempt < 100; attempt++) {
+    result = await readFile(resultPath, "utf8")
+      .then(JSON.parse)
+      .catch(() => undefined);
+    if (result) break;
+    await setTimeout(20);
+  }
+  const exited = once(child, "exit");
+  child.kill("SIGTERM");
+  await exited;
+  return { result, stdout };
+}
+
+test("Web mode generates an access token by default even on localhost", async (t) => {
+  const { result, stdout } = await startWebAndReadConfig(t, ["--host", "127.0.0.1"]);
+  assert.match(result.token, /^[A-Za-z0-9_-]{24,}$/);
+  assert.ok(stdout.includes(`?token=${encodeURIComponent(result.token)}`), stdout);
+});
+
+test("Web mode accepts a fixed token from MCODE_WEB_TOKEN", async (t) => {
+  const { result } = await startWebAndReadConfig(t, [], { MCODE_WEB_TOKEN: "fixed-token-123" });
+  assert.equal(result.token, "fixed-token-123");
+});
+
+async function makeInstallerFixture(t, { layout }) {
+  const { directory, root } = await fixture(t);
+  const downloads = join(directory, "downloads");
+  const tarballName = "mcode-1.2.3.tar.gz";
+  const releaseDir = layout === "github" ? downloads : join(downloads, "releases/1.2.3");
+  await mkdir(releaseDir, { recursive: true });
+  const tarball = join(releaseDir, tarballName);
+  await exec("tar", ["-czf", tarball, "-C", directory, "mcode"]);
+  const sha256 = createHash("sha256")
+    .update(await readFile(tarball))
+    .digest("hex");
+  const baseUrl =
+    layout === "github" ? `file://${downloads}/releases/latest/download/` : `file://${downloads}/`;
+  if (layout === "github") {
+    // 模拟 GitHub 的扁平资产路径 <repo>/releases/latest/download/<asset>
+    const flat = join(downloads, "releases/latest/download");
+    await mkdir(flat, { recursive: true });
+    await cp(tarball, join(flat, tarballName));
+  }
+  const latestDir = layout === "github" ? join(downloads, "releases/latest/download") : downloads;
+  await writeFile(
+    join(latestDir, "latest.json"),
+    JSON.stringify({ version: "1.2.3", tarball: tarballName, sha256 }),
+  );
+  return { directory, root, downloads, baseUrl, tarball, sha256, latestDir };
+}
+
+async function runInstaller(directory, baseUrl, env = {}) {
+  const installer = join(directory, "install.sh");
+  await writeFile(installer, installScriptSource(baseUrl));
+  const installRoot = join(directory, "installed");
+  const bin = join(directory, "bin");
+  const result = await exec("sh", [installer], {
+    env: {
+      ...process.env,
+      MCODE_DIST_BASE_URL: baseUrl,
+      MCODE_DIST_HOME: installRoot,
+      MCODE_DIST_BIN_DIR: bin,
+      ...env,
+    },
+  });
+  return { ...result, bin, installRoot };
+}
+
+test("installer verifies SHA-256 and supports the GitHub Releases flat layout", async (t) => {
+  const { directory, root, baseUrl } = await makeInstallerFixture(t, { layout: "github" });
+  const { stdout, bin } = await runInstaller(directory, baseUrl);
+  assert.match(stdout, /SHA-256 verified/);
+  await rm(root, { recursive: true });
+  const result = await exec(join(bin, "mcode"), [], { cwd: directory });
+  assert.deepEqual(JSON.parse(result.stdout).argv, []);
+});
+
+test("installer rejects an archive whose SHA-256 does not match latest.json", async (t) => {
+  const { directory, baseUrl, latestDir } = await makeInstallerFixture(t, { layout: "github" });
+  await writeFile(
+    join(latestDir, "latest.json"),
+    JSON.stringify({ version: "1.2.3", tarball: "mcode-1.2.3.tar.gz", sha256: "0".repeat(64) }),
+  );
+  await assert.rejects(runInstaller(directory, baseUrl), /SHA-256 mismatch/);
+});
+
+test("installer installs an offline archive via MCODE_DIST_ARCHIVE", async (t) => {
+  const { directory, root, tarball, sha256 } = await makeInstallerFixture(t, {
+    layout: "selfhosted",
+  });
+  const { stdout, bin } = await runInstaller(directory, "file:///nonexistent/", {
+    MCODE_DIST_ARCHIVE: tarball,
+    MCODE_DIST_SHA256: sha256,
+  });
+  assert.match(stdout, /Mcode 1\.2\.3 installed/);
+  assert.match(stdout, /SHA-256 verified/);
+  await rm(root, { recursive: true });
+  const result = await exec(join(bin, "mcode"), ["--web", "--help"]);
+  assert.match(result.stdout, /mcode --web/);
+});
+
+test("installer refuses Node.js older than 24", async (t) => {
+  const { directory, baseUrl } = await makeInstallerFixture(t, { layout: "github" });
+  const fakeBin = join(directory, "fake-node-bin");
+  await mkdir(fakeBin, { recursive: true });
+  await writeFile(
+    join(fakeBin, "node"),
+    `#!/bin/sh\nif [ "$1" = "-p" ]; then echo 22; exit 0; fi\nif [ "$1" = "-v" ]; then echo v22.0.0; exit 0; fi\nexec "${process.execPath}" "$@"\n`,
+  );
+  await chmod(join(fakeBin, "node"), 0o755);
+  await assert.rejects(
+    runInstaller(directory, baseUrl, { PATH: `${fakeBin}:${process.env.PATH}` }),
+    /Node\.js >= 24 is required/,
+  );
 });
 
 test("installer creates mcode and the installed command defaults to CLI", async (t) => {

@@ -13,11 +13,36 @@ const serverEntry = join(root, "server", "entry-http.js");
 const webRoot = join(root, "web");
 const agentEntry = join(root, "agent", "mcode.cjs");
 
+const MIN_NODE_MAJOR = 24;
+
 function usage() {
   return `Usage:
   mcode --web [--host <host>] [--port <port>] [--workspace <path>] [--open|--no-open] [--token <token>|--no-token]
   mcode --version
+
+Web options:
+  --host <host>       Listen address (default 127.0.0.1; use 0.0.0.0 for LAN access)
+  --port <port>       Listen port (default: a free port)
+  --workspace <path>  Project directory (default: current directory)
+  --open / --no-open  Open a browser (default: only when listening on localhost)
+  --token <token>     Use a fixed access token (env MCODE_WEB_TOKEN also works)
+  --no-token          Disable the access token (only safe on a trusted single-user machine)
+
+An access token is always generated unless --no-token is given. Open the printed
+URL that contains ?token=...; the browser keeps it in a cookie afterwards.
 `;
+}
+
+// 修复原因：Mcode 依赖 Node 24 的内置能力（node:sqlite 等），Ubuntu 24.04 默认的 Node 22
+// 会在启动深处以晦涩的模块错误失败。这里在入口给出明确提示。
+function assertNodeVersion() {
+  const major = Number(process.versions.node.split(".")[0]);
+  if (!Number.isInteger(major) || major < MIN_NODE_MAJOR) {
+    throw new Error(
+      `Mcode requires Node.js >= ${MIN_NODE_MAJOR} (current: ${process.versions.node}). ` +
+        "Install Node.js 24 from https://nodejs.org/ and try again.",
+    );
+  }
 }
 
 function readArgValue(argv, arg, index) {
@@ -102,8 +127,11 @@ function isLocalHost(host) {
   return host === "127.0.0.1" || host === "localhost" || host === "::1";
 }
 
-function shouldProtectHost(host) {
-  return !isLocalHost(host);
+// 修复原因：旧行为只在监听非回环地址时生成令牌。本机 127.0.0.1 无令牌时，任何本机进程
+// （以及在浏览器里运行的恶意网页，借助 DNS rebinding 等手段）都能直接调用 /api 与 /ws，
+// 而这些接口可以执行终端命令、读写文件。因此默认总是启用令牌，`--no-token` 显式关闭。
+function shouldProtectHost() {
+  return true;
 }
 
 function createToken() {
@@ -171,7 +199,13 @@ async function serve(options) {
   await assertRuntimeFiles();
   const port = options.port && options.port > 0 ? options.port : await pickPort(options.host);
   const protect = options.tokenEnabled ?? shouldProtectHost(options.host);
-  const token = protect ? (options.token ?? createToken()) : "";
+  const envToken = process.env.MCODE_WEB_TOKEN?.trim() || undefined;
+  const token = protect ? (options.token ?? envToken ?? createToken()) : "";
+  if (!protect && !isLocalHost(options.host)) {
+    console.warn(
+      `Warning: --no-token with --host ${options.host} lets anyone on the network run commands as this user.`,
+    );
+  }
   const open = options.open ?? isLocalHost(options.host);
   const localUrl = formatUrl(options.host, port, token);
 
@@ -251,6 +285,7 @@ async function serve(options) {
 
 try {
   const argv = process.argv.slice(2);
+  assertNodeVersion();
   if (argv.length === 1 && ["--version", "-v"].includes(argv[0])) {
     console.log(version);
   } else if (argv[0] === "--web") {
