@@ -5,7 +5,23 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { ServiceCollection } from "@mcode/services";
 import { SERVER_REMOTE_PROTOCOL_VERSION } from "@mcode/shared";
+import { WebSocket } from "ws";
 import { createHttpServer } from "../src/http.js";
+
+function probeWebSocket(url: string, origin?: string): Promise<"open" | number> {
+  return new Promise((resolve, reject) => {
+    const socket = new WebSocket(url, origin ? { headers: { origin } } : {});
+    socket.once("open", () => {
+      socket.close();
+      resolve("open");
+    });
+    socket.once("unexpected-response", (_request, response) => {
+      resolve(response.statusCode ?? 0);
+      socket.terminate();
+    });
+    socket.once("error", reject);
+  });
+}
 
 describe("server info HTTP endpoint", () => {
   const servers: Array<{ close(callback?: (err?: Error) => void): void }> = [];
@@ -103,6 +119,65 @@ describe("server info HTTP endpoint", () => {
       capability: expect.any(String),
       expiresAt: expect.any(Number),
     });
+  });
+
+  it("accepts the token via Authorization bearer header and URL-encoded cookie", async () => {
+    const token = "a+b/c=d";
+    const server = createHttpServer(new ServiceCollection(), 0, { authToken: token });
+    servers.push(server);
+    const address = server.address() as AddressInfo;
+    const baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const bearer = await fetch(`${baseUrl}/api/server-info`, {
+      headers: { authorization: `Bearer ${token}` },
+    });
+    expect(bearer.status).toBe(200);
+
+    const wrongBearer = await fetch(`${baseUrl}/api/server-info`, {
+      headers: { authorization: "Bearer a+b/c=X" },
+    });
+    expect(wrongBearer.status).toBe(401);
+
+    const viaQuery = await fetch(`${baseUrl}/api/server-info?token=${encodeURIComponent(token)}`);
+    expect(viaQuery.status).toBe(200);
+    const setCookie = viaQuery.headers.get("set-cookie") ?? "";
+    expect(setCookie).toContain("SameSite=Strict");
+    const cookie = setCookie.split(";")[0]!;
+    const viaCookie = await fetch(`${baseUrl}/api/server-info`, { headers: { cookie } });
+    expect(viaCookie.status).toBe(200);
+  });
+
+  it("rejects cross-origin browser WebSocket upgrades but allows same-origin and Origin-less clients", async () => {
+    const server = createHttpServer(new ServiceCollection(), 0, {
+      allowedOrigins: ["http://localhost:5173"],
+    });
+    servers.push(server);
+    const address = server.address() as AddressInfo;
+    const baseUrl = `http://127.0.0.1:${address.port}`;
+
+    const crossOriginStatus = await probeWebSocket(
+      `${baseUrl.replace("http", "ws")}/ws`,
+      "https://evil.example",
+    );
+    expect(crossOriginStatus).toBe(403);
+
+    const sameOriginStatus = await probeWebSocket(`${baseUrl.replace("http", "ws")}/ws`, baseUrl);
+    expect(sameOriginStatus).toBe("open");
+
+    const allowListedStatus = await probeWebSocket(
+      `${baseUrl.replace("http", "ws")}/ws`,
+      "http://localhost:5173",
+    );
+    expect(allowListedStatus).toBe("open");
+
+    const noOriginStatus = await probeWebSocket(`${baseUrl.replace("http", "ws")}/ws`);
+    expect(noOriginStatus).toBe("open");
+
+    const evilStatus = await probeWebSocket(
+      `${baseUrl.replace("http", "ws")}/ws`,
+      "http://attacker.localhost:9999",
+    );
+    expect(evilStatus).toBe(403);
   });
 
   it("serves static web files with SPA fallback", async () => {

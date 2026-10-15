@@ -1,5 +1,5 @@
 /* eslint-disable max-lines -- HTTP、WebSocket 与静态资源路由集中注册，保持同一鉴权顺序。 */
-import { randomUUID } from "node:crypto";
+import { randomUUID, timingSafeEqual } from "node:crypto";
 import { readFile, stat } from "node:fs/promises";
 import { basename, extname, relative, resolve, sep } from "node:path";
 import { hostname } from "node:os";
@@ -149,6 +149,8 @@ export interface HttpServerOptions {
   host?: string;
   authRequired?: boolean;
   authToken?: string;
+  /** 额外允许发起 WebSocket 的浏览器 Origin；默认只允许同源。也可用 MCODE_SERVER_ALLOWED_ORIGINS 配置。 */
+  allowedOrigins?: readonly string[];
   spaFallback?: boolean;
   staticRoot?: string;
   workspaces?: ServerRemoteWorkspaceInfo[];
@@ -236,20 +238,90 @@ function parseCookieHeader(header: string | undefined): Map<string, string> {
   return cookies;
 }
 
+// 修复原因：令牌比较原先使用 `===`，响应耗时会随公共前缀长度变化，局域网内可被逐字节
+// 计时探测。这里先比较长度再用 timingSafeEqual，长度不同直接拒绝（长度本身不是秘密）。
+function tokensEqual(candidate: string | null | undefined, token: string): boolean {
+  if (typeof candidate !== "string") return false;
+  const left = Buffer.from(candidate, "utf8");
+  const right = Buffer.from(token, "utf8");
+  return left.length === right.length && timingSafeEqual(left, right);
+}
+
+function readBearerToken(c: Context): string | undefined {
+  const header = c.req.header("authorization");
+  const match = header?.match(/^Bearer\s+(.+)$/i);
+  return match?.[1]?.trim() || undefined;
+}
+
+function readCookieToken(c: Context): string | undefined {
+  const raw = parseCookieHeader(c.req.header("cookie")).get(mcodeLiteTokenCookieName);
+  if (raw === undefined) return undefined;
+  try {
+    // Set-Cookie 写入时做了 encodeURIComponent，读取时必须对称解码，否则含特殊字符的
+    // 自定义 `--token` 只能在首个 `?token=` 请求里生效，之后的 Cookie 请求全部 401。
+    return decodeURIComponent(raw);
+  } catch {
+    return undefined;
+  }
+}
+
 function hasValidLiteToken(c: Context, token: string): boolean {
   const url = new URL(c.req.url);
-  if (url.searchParams.get("token") === token) {
+  if (tokensEqual(url.searchParams.get("token"), token)) {
     c.header(
       "Set-Cookie",
-      `${mcodeLiteTokenCookieName}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Lax`,
+      `${mcodeLiteTokenCookieName}=${encodeURIComponent(token)}; Path=/; HttpOnly; SameSite=Strict`,
     );
     return true;
   }
-  return parseCookieHeader(c.req.header("cookie")).get(mcodeLiteTokenCookieName) === token;
+  // 非浏览器客户端（curl、脚本、反向代理健康检查）可以用标准 Authorization 头传令牌，
+  // 不必先访问页面换取 Cookie。
+  if (tokensEqual(readBearerToken(c), token)) return true;
+  return tokensEqual(readCookieToken(c), token);
 }
 
 function isTokenProtectedPath(pathname: string): boolean {
   return pathname === "/ws" || pathname.startsWith("/ws/") || pathname.startsWith("/api/");
+}
+
+function isWebSocketUpgrade(c: Context): boolean {
+  return c.req.header("upgrade")?.toLowerCase() === "websocket";
+}
+
+/**
+ * 浏览器发起 WebSocket 时总会带 Origin，且浏览器不对 WS 做同源限制（CSWSH）。
+ * 修复原因：`/ws` 暴露终端、文件、Agent 等全部服务，任意网页都能在用户浏览器里连到
+ * `ws://127.0.0.1:<port>/ws` 并借用已下发的 Cookie / 无令牌模式执行命令。这里要求
+ * Origin 与请求 Host 一致（同源页面），或者属于 `MCODE_SERVER_ALLOWED_ORIGINS`
+ * 白名单（例如 `pnpm dev:web` 的 Vite 代理、反向代理域名）。非浏览器客户端
+ * （桌面远程连接、CLI、curl）不发送 Origin，不受影响，仍由令牌 / host capability 鉴权。
+ */
+function isAllowedWebSocketOrigin(c: Context, allowedOrigins: ReadonlySet<string>): boolean {
+  const origin = c.req.header("origin")?.trim();
+  if (!origin) return true;
+  let originUrl: URL;
+  try {
+    originUrl = new URL(origin);
+  } catch {
+    return false;
+  }
+  if (allowedOrigins.has(originUrl.origin.toLowerCase())) return true;
+  const host = c.req.header("x-forwarded-host")?.split(",")[0]?.trim() || c.req.header("host");
+  return Boolean(host) && originUrl.host.toLowerCase() === host!.trim().toLowerCase();
+}
+
+function parseAllowedOrigins(raw: string | undefined): ReadonlySet<string> {
+  const origins = new Set<string>();
+  for (const entry of raw?.split(",") ?? []) {
+    const trimmed = entry.trim();
+    if (!trimmed) continue;
+    try {
+      origins.add(new URL(trimmed).origin.toLowerCase());
+    } catch {
+      // 忽略无法解析的条目，避免一个拼写错误让整个白名单失效或抛出启动异常。
+    }
+  }
+  return origins;
 }
 
 function isStaticFallbackAllowed(pathname: string): boolean {
@@ -315,6 +387,24 @@ export function createHttpServer(
   const app = new Hono();
   const { injectWebSocket, upgradeWebSocket } = createNodeWebSocket({ app });
   const hostCapabilities = createHostCapabilityStore();
+
+  const allowedOrigins = parseAllowedOrigins(
+    [...(options.allowedOrigins ?? []), readTrimmedEnv("MCODE_SERVER_ALLOWED_ORIGINS") ?? ""].join(
+      ",",
+    ),
+  );
+  // Origin 校验必须早于令牌校验和任何 WS 升级，且与是否启用令牌无关：
+  // `--no-token` 本机模式恰恰最容易被恶意网页跨站连接。
+  app.use("*", async (c, next) => {
+    if (isWebSocketUpgrade(c) && !isAllowedWebSocketOrigin(c, allowedOrigins)) {
+      log("rejected cross-origin WebSocket upgrade", {
+        origin: c.req.header("origin"),
+        path: new URL(c.req.url).pathname,
+      });
+      return c.json({ error: "Forbidden origin" }, 403);
+    }
+    await next();
+  });
 
   const authToken = options.authToken?.trim();
   if (authToken) {
