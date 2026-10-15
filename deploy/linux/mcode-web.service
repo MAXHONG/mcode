@@ -1,0 +1,38 @@
+# Mcode Web — systemd user service for a headless Linux machine.
+#
+# Install (as the user that will own the workspace, NOT root):
+#   mkdir -p ~/.config/systemd/user ~/.config/mcode
+#   cp deploy/linux/mcode-web.service ~/.config/systemd/user/
+#   cp deploy/linux/mcode-web.env.example ~/.config/mcode/web.env
+#   chmod 600 ~/.config/mcode/web.env          # edit token / workspace / port
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now mcode-web
+#   sudo loginctl enable-linger "$USER"         # keep it running after logout / start at boot
+#
+# Logs:   journalctl --user -u mcode-web -f
+# Stop:   systemctl --user stop mcode-web
+#
+# The Agent runs commands and edits files with this user's permissions. Run it
+# under a dedicated account and only expose it on a trusted network (or behind
+# Tailscale / an HTTPS reverse proxy). See docs/linux-headless-web.md.
+
+[Unit]
+Description=Mcode Web (AI coding workbench)
+Documentation=https://github.com/MAXHONG/mcode/blob/main/docs/linux-headless-web.md
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+EnvironmentFile=%h/.config/mcode/web.env
+# Node.js >= 24 must be on this PATH (adjust if Node lives elsewhere, e.g. %h/node24/bin).
+Environment=PATH=%h/.local/bin:%h/node24/bin:/usr/local/bin:/usr/bin:/bin
+ExecStart=/bin/sh -c 'exec mcode --web --host "${MCODE_WEB_HOST:-127.0.0.1}" --port "${MCODE_WEB_PORT:-3030}" --workspace "${MCODE_WEB_WORKSPACE:-%h}" --no-open'
+Restart=on-failure
+RestartSec=5
+# Basic hardening that does not interfere with a coding agent's normal work.
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=default.target

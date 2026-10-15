@@ -7,7 +7,9 @@
 - `mcode --web` starts the existing local HTTP/WebSocket server with bundled Web assets and Agent. Existing Web flags remain available: `--workspace`, `--host`, `--port`, `--open`, `--no-open`, `--token`, `--no-token`.
 - Only a leading `--web` selects Web mode; a prompt value containing `--web` must remain CLI input. CLI parsing, locale, permissions and sessions keep their existing owner.
 - `mcode --help` includes the Web invocation plus existing CLI help; `mcode --web --help` describes Web flags. `mcode --version` reports the distribution version.
-- Web keeps localhost binding, automatic port selection and non-loopback token defaults. TUI inherits the real terminal in the same process; the launcher must not consume its stdin or print Web status.
+- Web keeps localhost binding and automatic port selection. Since 3.15.3 an access token is **always** generated (also on loopback); `--token` or `MCODE_WEB_TOKEN` fixes it, `--no-token` disables it (with a warning on non-loopback hosts). TUI inherits the real terminal in the same process; the launcher must not consume its stdin or print Web status.
+- The launcher refuses to start on Node.js < 24 with an actionable message.
+- The Web server accepts the token as `?token=` (which sets an `HttpOnly; SameSite=Strict` cookie), the cookie, or `Authorization: Bearer`, compared in constant time. Browser WebSocket upgrades whose `Origin` is neither the request host nor listed in `allowedOrigins` / `MCODE_SERVER_ALLOWED_ORIGINS` are rejected with 403, independent of token mode; clients that send no `Origin` (desktop remote connection, CLI) are unaffected.
 
 ## Ownership and boundaries
 
@@ -38,10 +40,13 @@ sequenceDiagram
 
 ## Packaging and migration
 
-- Build with `pnpm build:mcode`; output is `dist/mcode/releases/<version>/mcode-<version>.tar.gz`, plus checksum, `latest.json` and `install.sh`.
+- Build with `pnpm build:mcode`; output is `dist/mcode/releases/<version>/mcode-<version>.tar.gz`, plus checksum, `latest.json` and `install.sh` (self-hosted layout), and `dist/mcode/github-release/` with the same tarball, a flat `latest.json` and an `install.sh` that defaults to GitHub Releases. The build compiles `@mcode/shared` (`tsc -b packages/shared`) before the CLI so the TUI runtime collector finds its `dist/`. On macOS the archive is written without extended attributes.
 - Node remains required, at the version pinned in `mise.toml`. The archive includes TUI assets for macOS, Linux and Windows (arm64/x64); native functionality must be verified per platform rather than inferred from asset presence.
-- Build download URL: `--base-url` overrides `MCODE_DIST_BASE_URL`; environment overrides `.env.local`, which overrides `.env`. Missing URL fails before building. Installer `MCODE_DIST_BASE_URL` overrides its embedded default.
-- Installer `MCODE_DIST_HOME` overrides `~/.mcode/runtime`; `MCODE_DIST_BIN_DIR` overrides `~/.local/bin`. These release-only variables do not change CLI/session data directories. Installation writes the `mcode` launcher and preserves existing user data.
+- Build download URL: `--base-url` overrides `MCODE_DIST_BASE_URL`; environment overrides `.env.local`, which overrides `.env`. When none is set the default is `https://github.com/MAXHONG/mcode/releases/latest/download/`. Installer `MCODE_DIST_BASE_URL` overrides its embedded default.
+- Installer layout detection: a base URL containing `/releases/download/` or ending in `/releases/latest/download` uses flat assets (`<base>/<tarball>`); any other base uses `<base>/releases/<version>/<tarball>`.
+- Installer integrity: the archive's SHA-256 must match `latest.json.sha256` (or `MCODE_DIST_SHA256` for `MCODE_DIST_ARCHIVE` offline installs); mismatches abort before anything is installed. The installer requires Node.js ≥ 24 and curl or wget.
+- Installer `MCODE_DIST_HOME` overrides `~/.mcode/runtime`; `MCODE_DIST_BIN_DIR` overrides `~/.local/bin`; `MCODE_DIST_ARCHIVE` installs a local archive without network access. These release-only variables do not change CLI/session data directories. Installation writes the `mcode` launcher and preserves existing user data.
+- The release workflow (`.github/workflows/release-desktop.yml`, job `build-cli`) builds the bundle on Linux, runs the distribution unit tests and the smoke test, and publishes `github-release/*` next to the desktop installers.
 - `pnpm build:mcode` coexists with the existing `pnpm build:lite` (`scripts/build-mcode-lite.mjs`), which internal CI and release flows may still use; the two commands produce separate outputs (`dist/mcode` and `dist/mcode-lite`) and neither changes the other. Do not automatically delete old Lite installations. Retiring Lite requires confirming that no internal pipeline still depends on it.
 
 ## Acceptance and validation
@@ -50,7 +55,7 @@ sequenceDiagram
 2. Web process tests prove leading flag routing, workspace/static-root/Agent configuration, invalid arguments, help and shutdown behavior without requiring a model or network service.
 3. Installer test uses a local fixture archive to prove the installed command is `mcode` and defaults to CLI while forwarding `--web`.
 4. Build a real release, extract outside the repository, unset workspace module fallbacks, import its TUI/native runtime and interact with it through a pseudo-terminal. Verify first render and clean keyboard exit without sending a model prompt.
-5. Start the same extracted release with `--web`; verify HTML, `/api/server-info`, workspace and WebSocket connection, then stop it.
+5. Start the same extracted release with `--web`; verify the printed token, that `/api/server-info` is 401 without it and returns the workspace with it, HTML, an authenticated WebSocket connection, a 403 for a cross-site `Origin`, then stop it.
 6. Run root typecheck, lint and architecture checks. Report actual platform and any unexecuted cross-platform or model-call paths.
 
 ## Recorded validation (2026-09-20, open-source branch)

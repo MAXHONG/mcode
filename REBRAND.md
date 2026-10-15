@@ -40,6 +40,8 @@ Mcode 基于 [zai-org/ZCode](https://github.com/zai-org/ZCode) v3.15.1（Apache-
 - 安装包未签名、未公证；macOS 上的更新提示改为打开 Release 页面（设置 `MCODE_MAC_SIGNED_UPDATES=1` 的签名构建可恢复原地安装）。
 - `.github/workflows/release-desktop.yml` 在 macOS（arm64 / x64）、Windows（x64 / ARM64）、Linux（x64 / ARM64）Runner 上构建，推送 `v*` 标签或手动触发后发布到 GitHub Releases，并整理各平台更新清单（`scripts/ci/merge-update-manifests.mjs`）。
 - Mcode 版本号（`package.json` 的 `version`）可独立于上游递增；远程开发使用的上游组件版本由 `mcodeUpstreamVersion` 固定（`MCODE_REMOTE_UPSTREAM_VERSION`）。
+- v3.15.3 起，发布工作流同时构建命令行 / Web 发行包（`mcode-<版本>.tar.gz`、`latest.json`、`install.sh`），`install.sh` 默认从本仓库 GitHub Releases 下载并校验 SHA-256；无界面 Linux 部署见 `docs/linux-headless-web.md` 与 `deploy/linux/`。
+- 与上游的行为差异（v3.15.3）：已有可用模型（含个人 Provider）时启动不再强制打开登录页；`mcode --web` 默认总是启用访问令牌，Web 服务拒绝跨站 WebSocket 升级。
 
 ## 重新执行改名
 

@@ -1,6 +1,15 @@
 # Login Page
 
-启动阶段如果没有恢复到 OAuth 用户，且没有可用模型供应商配置，Root 会展示 `WelcomeScreen`。
+启动阶段如果没有可用模型供应商配置，并且没有恢复到 OAuth 用户（或尚未选定 Z.ai / BigModel 运行域 `providerFamilyDomain`），Root 会展示 `WelcomeScreen`。
+
+只要模型选择视图中存在至少一个带模型的 Provider（包括用户自建的 OpenAI 兼容 / Anthropic 兼容个人 Provider），启动门禁就不打开 `WelcomeScreen`，即使 `providerFamilyDomain` 尚未写入。`providerFamilyDomain` 只决定内置 Z.ai / BigModel family 的可见域，不代表模型可用性。这保证无头 Linux 上 `mcode --web` 预置个人 Provider 后可以直接进入工作区。判定函数为 `packages/ui/src/root/useProviderAvailabilityLoginEntryGuard.ts` 的 `shouldOpenStartupLoginEntry`：
+
+| 可用模型 | OAuth 用户 | `providerFamilyDomain` | 打开 WelcomeScreen |
+| -------- | ---------- | ---------------------- | ------------------ |
+| 有       | 任意       | 任意                   | 否                 |
+| 无       | 无         | 任意                   | 是                 |
+| 无       | 有         | 无                     | 是                 |
+| 无       | 有         | 有                     | 否                 |
 
 所有应用内登录入口都收敛到 `WelcomeScreen`，并复用 `LoginPanel` 的 OAuth 和 API Key 流程，避免手动登录、启动引导、模型供应商连接出现多套状态机：
 

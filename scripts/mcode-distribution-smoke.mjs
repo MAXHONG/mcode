@@ -93,19 +93,30 @@ try {
     webOutput += data;
   });
   let base;
+  let token = "";
   await until(
     () => {
-      base = webOutput.match(/Local:\s+(http:\/\/127\.0\.0\.1:\d+\/)/)?.[1];
+      const match = webOutput.match(/Local:\s+(http:\/\/127\.0\.0\.1:\d+\/)(?:\?token=(\S+))?/);
+      base = match?.[1];
+      token = match?.[2] ? decodeURIComponent(match[2]) : "";
       return Boolean(base);
     },
     "Web URL",
     () => webOutput,
   );
+  // 3.15.3 起 Web 模式默认总是启用访问令牌；未带令牌的 API 请求必须被拒绝。
+  assert.ok(token, "Web mode must print an access token by default");
+  const authHeaders = { authorization: `Bearer ${token}` };
   let info;
   await until(
     async () => {
       try {
+        const unauthorized = await fetch(new URL("api/server-info", base), {
+          signal: AbortSignal.timeout(1000),
+        });
+        if (unauthorized.status !== 401) return false;
         const response = await fetch(new URL("api/server-info", base), {
+          headers: authHeaders,
           signal: AbortSignal.timeout(1000),
         });
         if (!response.ok) return false;
@@ -123,10 +134,21 @@ try {
   assert.equal(html.status, 200);
   assert.match(await html.text(), /<html/i);
   const { default: WebSocket } = await import(pathToFileURL(require.resolve("ws")).href);
-  const socket = new WebSocket(new URL("ws", base.replace("http:", "ws:")));
+  const socket = new WebSocket(new URL("ws", base.replace("http:", "ws:")), {
+    headers: authHeaders,
+  });
   await once(socket, "open");
   socket.close();
   await once(socket, "close");
+  // 浏览器跨站 WebSocket（CSWSH）必须被拒绝。
+  const crossSite = new WebSocket(new URL("ws", base.replace("http:", "ws:")), {
+    headers: { ...authHeaders, origin: "https://evil.example" },
+  });
+  // 被拒绝的握手在 terminate 后还会触发 error；必须监听，否则成为未处理异常。
+  crossSite.on("error", () => {});
+  const [, crossSiteResponse] = await once(crossSite, "unexpected-response");
+  assert.equal(crossSiteResponse.statusCode, 403);
+  crossSite.terminate();
   const exited = once(web, "exit");
   web.kill("SIGTERM");
   assert.deepEqual(await exited, [0, null]);

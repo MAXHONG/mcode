@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "config": {
+    "providerOrder": ["my-openai-compatible"],
+    "providerConfigRules": {
+      "providerRules": [
+        {
+          "providerId": "my-openai-compatible",
+          "providerName": "My OpenAI-compatible gateway",
+          "enabled": true,
+          "config": {
+            "group": "standard-personal",
+            "access": { "type": "api-key", "apiKey": "REPLACE_WITH_YOUR_API_KEY" },
+            "api": { "type": "openai-chat-completions", "baseUrl": "https://api.example.com/v1" },
+            "personalModelIds": ["my-model"],
+            "modelOrder": ["my-model"]
+          }
+        }
+      ]
+    },
+    "modelConfigRules": {
+      "providerModelRules": [
+        {
+          "providerId": "my-openai-compatible",
+          "modelId": "my-model",
+          "config": {
+            "enabled": true,
+            "properties": {
+              "contextWindow": 200000,
+              "inputFormat": {
+                "supportsText": true,
+                "supportsImage": false,
+                "supportsVideo": false,
+                "supportsAudio": false,
+                "supportsPdf": false
+              },
+              "outputFormat": { "supportsText": true },
+              "supportsToolCall": true,
+              "supportsJsonSchemaOutput": false,
+              "supportsNativeWebSearch": false
+            },
+            "optionSpecs": {
+              "reasoningLevel": {
+                "values": ["low", "medium", "high"],
+                "map": "{\"reasoning_effort\": reasoningLevel}"
+              },
+              "maxOutputTokens": {
+                "max": 32000,
+                "map": "{'max_completion_tokens': maxOutputTokens}"
+              }
+            }
+          }
+        }
+      ],
+      "manualProviderModelRules": []
+    },
+    "defaultModelSelection": {
+      "providerId": "my-openai-compatible",
+      "modelId": "my-model",
+      "options": { "reasoningLevel": "low" }
+    }
+  }
+}
