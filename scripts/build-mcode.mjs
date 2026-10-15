@@ -14,7 +14,11 @@ import { installScriptSource } from "./mcode-distribution/installer.mjs";
 
 const root = resolve(import.meta.dirname, "..");
 const defaultOutDir = resolve(root, "dist", "mcode");
-const defaultBaseUrl = (await loadEndpointEnv()).MCODE_DIST_BASE_URL?.trim() || "";
+// 修复原因：旧脚本在未配置 MCODE_DIST_BASE_URL 时直接失败，导致 `pnpm build:mcode` 开箱即坏。
+// Mcode 的发行包随 GitHub Release 一起发布，install.sh 默认就从最新 Release 下载。
+const GITHUB_RELEASES_BASE_URL = "https://github.com/MAXHONG/mcode/releases/latest/download/";
+const defaultBaseUrl =
+  (await loadEndpointEnv()).MCODE_DIST_BASE_URL?.trim() || GITHUB_RELEASES_BASE_URL;
 const packageDirName = "mcode";
 const usage = `Usage:
   pnpm build:mcode
@@ -27,8 +31,14 @@ Options:
   --skip-build        Reuse existing web/server/agent build outputs.
   --version <text>    Release version. Defaults to root package.json version.
   --out-dir <path>    Output directory. Defaults to dist/mcode.
-  --base-url <url>    Default install.sh download base URL.
+  --base-url <url>    Default install.sh download base URL
+                      (default: MCODE_DIST_BASE_URL or ${GITHUB_RELEASES_BASE_URL}).
   --help, -h          Show this help.
+
+Outputs (under --out-dir):
+  releases/<version>/mcode-<version>.tar.gz, releases/<version>/sha256.txt,
+  latest.json, install.sh                  self-hosted download layout
+  github-release/                          flat assets for a GitHub Release
 `;
 
 function readArgValue(argv, arg, index) {
@@ -145,6 +155,16 @@ async function buildOutputs(skipBuild) {
     return;
   }
 
+  // 修复原因：@mcode/shared 没有 build 脚本，它的 dist/ 只由根 `tsc -b` 产出；
+  // TUI 运行时收集器要求 dist/index.js 存在，否则报
+  // “Missing @mcode/shared dist files”。这里只编译 shared 本身（不触碰 server dist，
+  // 避免 tsc 输出覆盖 tsup 打包的 entry-http.js，见 specs/mcode-unified-distribution.md）。
+  // dist/ 被删除但 tsconfig.tsbuildinfo 仍在时，增量构建会误判为最新而不输出，
+  // 所以 dist 缺失时用 --force 重新编译。
+  const sharedDistEntry = resolve(root, "packages", "shared", "dist", "index.js");
+  const sharedDistExists = Boolean(await stat(sharedDistEntry).catch(() => null));
+  run("pnpm", ["exec", "tsc", "-b", "packages/shared", ...(sharedDistExists ? [] : ["--force"])]);
+  await assertFile(sharedDistEntry, "@mcode/shared dist entry");
   run("pnpm", ["--filter", "@mcode/cli...", "build"]);
   await rm(resolve(root, "packages", "server", "dist"), {
     force: true,
@@ -226,14 +246,47 @@ async function createTarball({ packageParent, releaseDir, tarballName }) {
   await rm(tarball, {
     force: true,
   });
-  run("tar", ["-czf", tarball, "-C", packageParent, packageDirName]);
+  // 修复原因：macOS 的 bsdtar 默认把扩展属性（com.apple.provenance 等）写成 pax 头，
+  // GNU tar 解压时会刷出上百行 “Ignoring unknown extended header keyword”。
+  // COPYFILE_DISABLE 关闭 ._ AppleDouble 文件，--no-xattrs/--no-mac-metadata 关闭扩展属性。
+  const tarArgs =
+    process.platform === "darwin"
+      ? ["--no-xattrs", "--no-mac-metadata", "-czf", tarball, "-C", packageParent, packageDirName]
+      : ["-czf", tarball, "-C", packageParent, packageDirName];
+  run("tar", tarArgs, { env: { ...process.env, COPYFILE_DISABLE: "1" } });
   return tarball;
+}
+
+async function writeGithubReleaseAssets({ outDir, tarball, tarballName, sha256, version }) {
+  // GitHub Release 资产是扁平的：install.sh 在 base URL 含 `/releases/.../download` 时
+  // 直接按 `<base>/<tarball>` 下载，因此这里输出同名的扁平副本供 CI 上传。
+  const assetsDir = resolve(outDir, "github-release");
+  await rm(assetsDir, { force: true, recursive: true });
+  await mkdir(assetsDir, { recursive: true });
+  await cp(tarball, resolve(assetsDir, tarballName));
+  await writeFile(resolve(assetsDir, `${tarballName}.sha256`), `${sha256}  ${tarballName}\n`);
+  await writeFile(
+    resolve(assetsDir, "latest.json"),
+    JSON.stringify(
+      {
+        createdAt: new Date().toISOString(),
+        name: "mcode",
+        sha256,
+        tarball: tarballName,
+        version,
+      },
+      null,
+      2,
+    ),
+  );
+  const installer = resolve(assetsDir, "install.sh");
+  await writeFile(installer, installScriptSource(GITHUB_RELEASES_BASE_URL));
+  await chmod(installer, 0o755);
+  return assetsDir;
 }
 
 async function main() {
   const options = parseArgs(process.argv.slice(2));
-  if (!options.help && !options.baseUrl)
-    throw new Error("Configure MCODE_DIST_BASE_URL in .env or pass --base-url");
   if (options.help) {
     console.log(usage);
     return;
@@ -288,6 +341,13 @@ async function main() {
   const installScript = resolve(outDir, "install.sh");
   await writeFile(installScript, installScriptSource(options.baseUrl));
   await chmod(installScript, 0o755);
+  const githubAssetsDir = await writeGithubReleaseAssets({
+    outDir,
+    tarball,
+    tarballName,
+    sha256,
+    version,
+  });
   await rm(workDir, {
     force: true,
     recursive: true,
@@ -296,6 +356,7 @@ async function main() {
   console.log(`[mcode] release directory: ${outDir}`);
   console.log(`[mcode] tarball: ${tarball}`);
   console.log(`[mcode] sha256: ${sha256}`);
+  console.log(`[mcode] GitHub Release assets: ${githubAssetsDir}`);
 }
 
 await main();
