@@ -19,17 +19,38 @@ Mcode 是 AI 编程工作台，提供桌面应用、浏览器界面和终端 Age
 
 在 [Releases](https://github.com/MAXHONG/mcode/releases) 页面下载最新安装包：
 
-| 平台                  | 文件                       |
-| --------------------- | -------------------------- |
-| macOS（Apple Silicon） | `Mcode-<版本>-mac-arm64.dmg` |
-| macOS（Intel）         | `Mcode-<版本>-mac-x64.dmg`   |
-| Windows x64           | `Mcode-<版本>-win-x64.exe`   |
+| 平台                  | 文件                                                       |
+| --------------------- | ---------------------------------------------------------- |
+| macOS（Apple 芯片）    | `Mcode-<版本>-mac-arm64.dmg`                                 |
+| macOS（Intel 芯片）    | `Mcode-<版本>-mac-x64.dmg`                                   |
+| Windows x64           | `Mcode-<版本>-win-x64.exe`                                   |
+| Windows ARM64         | `Mcode-<版本>-win-arm64.exe`                                 |
+| Linux x64             | `.deb`（Debian/Ubuntu）、`.rpm`（Fedora/RHEL）、`.AppImage`、`.pkg.tar.zst`（Arch） |
+| Linux ARM64           | 同上，文件名含 `arm64` / `aarch64`                             |
 
 安装包未签名：macOS 首次打开被拦截时执行 `sudo xattr -rd com.apple.quarantine /Applications/Mcode.app`；Windows SmartScreen 提示时选择「更多信息 → 仍要运行」。
 
+### 自动更新
+
+v3.15.2 起，Mcode 启动后会定期检查 [GitHub Releases](https://github.com/MAXHONG/mcode/releases/latest) 是否有新版本：
+
+- **Windows / Linux**：提示新版本后可在应用内下载，重启时自动安装。
+- **macOS**：安装包未签名，系统不允许自动安装，提示新版本后会打开发布页，下载新 DMG 覆盖安装即可。
+
+v3.15.1 及更早版本没有该功能，需要手动下载一次 v3.15.2 或更高版本。
+
 ## 更新
 
+- 2026-10-15：v3.15.2 — 应用内自动更新（GitHub Releases）；新增 Windows ARM64、Linux x64/ARM64 安装包；界面 logo 全部改为 Mcode。
 - 2026-10-14：基于 ZCode v3.15.1 改名为 Mcode v3.15.1。
+
+## 发布新版本（维护者）
+
+1. 修改根目录 `package.json` 的 `version`（例如 `3.15.3`）并提交。
+2. 推送同名标签：`git tag v3.15.3 && git push origin v3.15.3`。
+3. GitHub Actions「Release Desktop」会编译全部平台并发布为最新 Release；已安装的客户端随后会收到更新提醒。
+
+`mcodeUpstreamVersion` 表示远程开发（SSH/WSL/Docker）复用的上游 ZCode 组件版本，只有同步上游代码时才需要修改。
 
 ## 初始化
 

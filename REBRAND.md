@@ -36,9 +36,10 @@ Mcode 基于 [zai-org/ZCode](https://github.com/zai-org/ZCode) v3.15.1（Apache-
 
 ## 构建与发布差异
 
-- 开源构建默认关闭自动更新与远端强制升级检查，避免 Mcode 被引导安装上游 ZCode 安装包。
-- 安装包未签名、未公证。
-- `scripts/ci/release-desktop.yml`（需复制到 `.github/workflows/` 启用）在 macOS（arm64 / x64）与 Windows（x64）Runner 上构建，推送 `v*` 标签或手动触发后发布到 GitHub Releases。
+- 自动更新改为读取本仓库 GitHub Releases 的 `latest*.yml`（`packages/desktop/src/main/manifestUpdateProvider.ts` 中的 `GitHubReleasesUpdateProvider`），不再请求 z.ai 的更新 manifest 服务；z.ai 下发的远端强制升级检查始终跳过，避免 Mcode 被引导安装上游 ZCode 安装包。
+- 安装包未签名、未公证；macOS 上的更新提示改为打开 Release 页面（设置 `MCODE_MAC_SIGNED_UPDATES=1` 的签名构建可恢复原地安装）。
+- `.github/workflows/release-desktop.yml` 在 macOS（arm64 / x64）、Windows（x64 / ARM64）、Linux（x64 / ARM64）Runner 上构建，推送 `v*` 标签或手动触发后发布到 GitHub Releases，并整理各平台更新清单（`scripts/ci/merge-update-manifests.mjs`）。
+- Mcode 版本号（`package.json` 的 `version`）可独立于上游递增；远程开发使用的上游组件版本由 `mcodeUpstreamVersion` 固定（`MCODE_REMOTE_UPSTREAM_VERSION`）。
 
 ## 重新执行改名
 
