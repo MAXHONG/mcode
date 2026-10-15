@@ -69,7 +69,7 @@ function fixture(provider: OAuthProviderId = "zai", responseStatus = 401) {
         { code: 401, msg: "登录状态已过期", success: false },
         { status: responseStatus },
       ),
-    isMcodeJwtRequest: (input, requestHeaders) =>
+    isZcodeJwtRequest: (input, requestHeaders) =>
       isCurrentOAuthCredentialRequest({
         input,
         headers: requestHeaders,
@@ -82,7 +82,7 @@ function fixture(provider: OAuthProviderId = "zai", responseStatus = 401) {
         credentialService: credentials,
         env,
       }),
-    onMcodeJwtInvalid: (input, requestHeaders) => {
+    onZcodeJwtInvalid: (input, requestHeaders) => {
       const logoutTask = service
         .logoutIfCurrentCredentialRequest(input, requestHeaders)
         .then((invalidated) => {

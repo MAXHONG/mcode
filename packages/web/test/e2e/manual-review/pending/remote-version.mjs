@@ -33,7 +33,7 @@ async function scenario({ width, theme, locale, missingVersion = false, oldDeskt
       // 本候选只断言入口校验/保留已挂载区域/提示/导航，不宣称覆盖宽屏任务操作。
       const baselineError = page
         .getByText(
-          "shard.services.mcodeTaskService.onDynamicWorkspaceEvent(...) is not a function",
+          "shard.services.zcodeTaskService.onDynamicWorkspaceEvent(...) is not a function",
           { exact: true },
         )
         .first();

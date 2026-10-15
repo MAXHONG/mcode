@@ -20,7 +20,7 @@ const resolution = {
     pluginManagementService: {
       getPluginReferenceCatalog,
     },
-    mcodeAgentService: {
+    zcodeAgentService: {
       onAgentRuntimeRestarted,
     },
   },

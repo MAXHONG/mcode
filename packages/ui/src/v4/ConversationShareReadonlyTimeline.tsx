@@ -269,7 +269,7 @@ const AssistantTextPresentation = memo(function AssistantTextPresentation({
           streaming={false}
           theme={theme}
           codePreviewSettings={codePreviewSettings}
-          renderMcodeFileCitations={false}
+          renderZCodeFileCitations={false}
           onOpenExternalUrl={onOpenExternalUrl}
         >
           {markdown}
@@ -391,7 +391,7 @@ const ToolCallPresentation = memo(function ToolCallPresentation({
     <MessageResponse
       theme={theme}
       codePreviewSettings={codePreviewSettings}
-      renderMcodeFileCitations={false}
+      renderZCodeFileCitations={false}
       onOpenExternalUrl={onOpenExternalUrl}
     >
       {markdown}

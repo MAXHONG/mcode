@@ -18,7 +18,7 @@ export async function prepareMcodeTelemetryEnv(
     ...env,
   }, {
     ...options,
-    productVersion: options.productVersion ?? env.MCODE_APP_VERSION,
+    productVersion: options.productVersion ?? env.ZCODE_APP_VERSION,
   });
   const deviceMid = prepared.MCODE_TELEMETRY_DEVICE_MID;
   return deviceMid ? { ...env, MCODE_TELEMETRY_DEVICE_MID: deviceMid } : env;

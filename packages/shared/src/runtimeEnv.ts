@@ -3,9 +3,9 @@ export const MCODE_HTTP_PROXY_ENV_KEY = "MCODE_HTTP_PROXY";
 export const MCODE_NO_PROXY_ENV_KEY = "MCODE_NO_PROXY";
 /** Desktop Host 只向 desktop-attached remote server 传递一次的网络配置。 */
 export const MCODE_REMOTE_RUNTIME_NETWORK_AUTHORITY_ENV_KEY =
-  "MCODE_REMOTE_RUNTIME_NETWORK_AUTHORITY";
-export const MCODE_REMOTE_HTTP_PROXY_ENV_KEY = "MCODE_REMOTE_HTTP_PROXY";
-export const MCODE_REMOTE_NO_PROXY_ENV_KEY = "MCODE_REMOTE_NO_PROXY";
+  "ZCODE_REMOTE_RUNTIME_NETWORK_AUTHORITY";
+export const MCODE_REMOTE_HTTP_PROXY_ENV_KEY = "ZCODE_REMOTE_HTTP_PROXY";
+export const MCODE_REMOTE_NO_PROXY_ENV_KEY = "ZCODE_REMOTE_NO_PROXY";
 export const MCODE_AGENT_CA_CERT_ENV_KEY = "MCODE_AGENT_CA_CERT";
 export const MCODE_TOOL_ENV_PASSTHROUGH_ENV_KEY = "MCODE_TOOL_ENV_PASSTHROUGH_JSON";
 /** Desktop Main 将服务端裁决的单功能灰度结果传给 Local/Remote Host。 */
@@ -135,7 +135,7 @@ interface CapturedCuaBrokerCredentials {
 }
 
 let capturedCuaBrokerCredentials: Readonly<CapturedCuaBrokerCredentials> | undefined;
-const capturedMcodeAgentTelemetryEnv: Record<string, string> = {};
+const capturedZCodeAgentTelemetryEnv: Record<string, string> = {};
 
 // CUA broker socket 会被上面的 sanitize 从子进程 env 中剔除（confused-deputy 防护 —— 不能让
 // 其它 MCP server / Bash / tool 子进程直接驱动已授权 Helper）。但 CLI 入口在 bootstrap
@@ -165,7 +165,7 @@ function captureMcodeCuaBrokerCredentials(env: Record<string, string | undefined
 }
 
 function captureMcodeAgentTelemetryEnv(env: Record<string, string | undefined>): void {
-  Object.assign(capturedMcodeAgentTelemetryEnv, readMcodeAgentTelemetryEnv(env));
+  Object.assign(capturedZCodeAgentTelemetryEnv, readMcodeAgentTelemetryEnv(env));
 }
 
 /**
@@ -185,7 +185,7 @@ export function readMcodeAgentTelemetryEnv(
 }
 
 export function getCapturedMcodeAgentTelemetryEnv(): Record<string, string> {
-  return { ...capturedMcodeAgentTelemetryEnv };
+  return { ...capturedZCodeAgentTelemetryEnv };
 }
 
 export function getCapturedMcodeCuaBrokerCredentials(): {
@@ -204,12 +204,12 @@ export function resetCapturedMcodeCuaBrokerCredentialsForTest(): void {
 }
 
 export function resetCapturedMcodeAgentTelemetryEnvForTest(): void {
-  for (const key of Object.keys(capturedMcodeAgentTelemetryEnv)) {
-    delete capturedMcodeAgentTelemetryEnv[key];
+  for (const key of Object.keys(capturedZCodeAgentTelemetryEnv)) {
+    delete capturedZCodeAgentTelemetryEnv[key];
   }
 }
 
-export function sanitizeMcodeRuntimeEnv<T extends Record<string, string | undefined>>(
+export function sanitizeZCodeRuntimeEnv<T extends Record<string, string | undefined>>(
   env: T,
 ): Record<string, string> {
   captureMcodeCuaBrokerCredentials(env);
@@ -224,7 +224,7 @@ export function sanitizeMcodeRuntimeEnv<T extends Record<string, string | undefi
   return sanitized;
 }
 
-export function buildMcodeToolEnvPassthroughEnv(env: EnvRecord): Record<string, string> {
+export function buildZCodeToolEnvPassthroughEnv(env: EnvRecord): Record<string, string> {
   const captured = readMcodeToolEnvPassthroughEnv(env);
 
   for (const [key, value] of Object.entries(env)) {

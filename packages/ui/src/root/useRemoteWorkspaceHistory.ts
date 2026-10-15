@@ -1149,11 +1149,11 @@ export function useRemoteWorkspaceHistory({
       ]
         .filter(Boolean)
         .join(" ");
-      const mcodeSessionStore = useMcodeSessionStore.getState();
+      const zcodeSessionStore = useMcodeSessionStore.getState();
       const failedTaskCount = markRemoteWorkspaceRunningTasksFailed({
         tabs: matchedTabs,
-        getWorkspaceState: mcodeSessionStore.getWorkspaceState,
-        setTaskRuntimeState: mcodeSessionStore.setTaskRuntimeState,
+        getWorkspaceState: zcodeSessionStore.getWorkspaceState,
+        setTaskRuntimeState: zcodeSessionStore.setTaskRuntimeState,
         reason,
       });
 

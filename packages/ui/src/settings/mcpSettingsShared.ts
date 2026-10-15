@@ -1,6 +1,6 @@
 import type { McpServerConfig, McodeMcpServer } from "@mcode/shared";
 
-export const MCP_SECTIONS = ["mcodeagentmcp"] as const;
+export const MCP_SECTIONS = ["zcodeagentmcp"] as const;
 
 export type ServerScope = (typeof MCP_SECTIONS)[number];
 
@@ -8,7 +8,7 @@ export const SOURCE_META: Record<
   ServerScope,
   { label: string; section: string; badgeClass: string }
 > = {
-  mcodeagentmcp: {
+  zcodeagentmcp: {
     label: "Mcode Agent",
     section: "Mcode Agent",
     badgeClass: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
@@ -34,7 +34,7 @@ export interface FormState {
 
 export const EMPTY_FORM: FormState = {
   name: "",
-  scope: "mcodeagentmcp",
+  scope: "zcodeagentmcp",
   storageLevel: "user",
   type: "stdio",
   command: "",
@@ -65,7 +65,7 @@ export function serverToForm(server: McodeMcpServer): FormState {
   }
   return {
     name: server.name,
-    scope: "mcodeagentmcp",
+    scope: "zcodeagentmcp",
     storageLevel: server.scope === "workspace" ? "workspace" : "user",
     type,
     command: cfg.command ?? "",

@@ -81,7 +81,7 @@ export class EndpointScopedMcodeBuiltinSource implements ProviderSource<Provider
       environmentConfigRoot: this.#options.environmentConfigRoot,
       platform: this.#options.platform,
       appVersion: this.#options.appVersion,
-      mcodeEndpointOrigin: endpointOrigin,
+      zcodeEndpointOrigin: endpointOrigin,
     });
     if (this.#current?.activeFilePath === paths.activeFilePath) return this.#current;
 

@@ -383,7 +383,7 @@ export type MessageResponseProps = {
   onOpenFileLink?: (target: MessageFileLinkTarget) => void;
   onOpenExternalUrl?: (url: string) => void;
   /** 仅 Assistant 正文开启：把完整 zcode-file-citation 投影为现有文件链接。 */
-  renderMcodeFileCitations?: boolean;
+  renderZCodeFileCitations?: boolean;
 };
 
 export interface MessageFileLinkTarget {
@@ -858,7 +858,7 @@ export function buildMessageStreamdownRenderKey(params: {
   attachmentReaderEpoch?: number;
   codeBlockTheme: BundledTheme;
   fontSizePx: number;
-  renderMcodeFileCitations?: boolean;
+  renderZCodeFileCitations?: boolean;
   sessionId?: string;
   workspacePath?: string;
   workspaceHomePath?: string;
@@ -874,7 +874,7 @@ export function buildMessageStreamdownRenderKey(params: {
     params.codeBlockTheme,
     params.fontSizePx,
     params.wrapLongLines ? "wrap" : "scroll",
-    params.renderMcodeFileCitations ? "citations" : "plain",
+    params.renderZCodeFileCitations ? "citations" : "plain",
     params.workspacePath ?? "",
     params.workspaceHomePath ?? "",
     params.workspaceIdentity ?? "",
@@ -1304,7 +1304,7 @@ export const messageResponsePropsAreEqual = (
   nextProps.workspaceRemoteSessionId === prevProps.workspaceRemoteSessionId &&
   nextProps.sessionId === prevProps.sessionId &&
   nextProps.readAttachment === prevProps.readAttachment &&
-  nextProps.renderMcodeFileCitations === prevProps.renderMcodeFileCitations &&
+  nextProps.renderZCodeFileCitations === prevProps.renderZCodeFileCitations &&
   nextProps.theme === prevProps.theme &&
   nextProps.codePreviewSettings === prevProps.codePreviewSettings &&
   nextProps.onOpenCodeViewer === prevProps.onOpenCodeViewer &&
@@ -1319,7 +1319,7 @@ export const MessageResponse = memo(
     onOpenCodeViewer,
     onOpenFileLink,
     onOpenExternalUrl,
-    renderMcodeFileCitations = false,
+    renderZCodeFileCitations = false,
     workspacePath,
     workspaceHomePath,
     workspaceIdentity,
@@ -1335,10 +1335,10 @@ export const MessageResponse = memo(
     const renderStreaming = streaming;
     const projectedCitationMarkdown = useMemo(
       () =>
-        renderMcodeFileCitations
+        renderZCodeFileCitations
           ? projectMcodeFileCitations(rawMarkdown, { streaming: renderStreaming }).visibleText
           : rawMarkdown,
-      [rawMarkdown, renderStreaming, renderMcodeFileCitations],
+      [rawMarkdown, renderStreaming, renderZCodeFileCitations],
     );
     const targetMarkdown = useMemo(
       () =>
@@ -1358,11 +1358,11 @@ export const MessageResponse = memo(
         // Windows 绝对路径链接里的 `\.` 会在 remark 解析期被当成标点转义吃掉
         // rehype 阶段已经看不到原文。这条还原必须无条件生效，不能挂在 citation 开关下。
         windowsFileLinkEscapeRemarkPlugin,
-        ...(renderMcodeFileCitations && workspacePath
+        ...(renderZCodeFileCitations && workspacePath
           ? [createMcodeFileCitationRemarkPlugin(workspacePath, workspaceHomePath)]
           : []),
       ],
-      [renderMcodeFileCitations, workspaceHomePath, workspacePath],
+      [renderZCodeFileCitations, workspaceHomePath, workspacePath],
     );
     const responseClassName = cn(
       "size-full text-ui-base leading-[1.75] tracking-wide [&>*:first-child]:mt-0 [&>*:last-child]:mb-0",
@@ -1373,8 +1373,8 @@ export const MessageResponse = memo(
       () =>
         renderStreaming
           ? `streaming:${streamdownMode}`
-          : `${streamdownMode}:${renderMcodeFileCitations ? "citations" : "plain"}:${hashMarkdownCacheKey(targetMarkdown)}`,
-      [renderStreaming, renderMcodeFileCitations, streamdownMode, targetMarkdown],
+          : `${streamdownMode}:${renderZCodeFileCitations ? "citations" : "plain"}:${hashMarkdownCacheKey(targetMarkdown)}`,
+      [renderStreaming, renderZCodeFileCitations, streamdownMode, targetMarkdown],
     );
     const boundaryScope = useMemo<MessageResponseBoundaryScope>(
       () => ({
@@ -1402,7 +1402,7 @@ export const MessageResponse = memo(
           attachmentReaderEpoch: getAttachmentReaderEpoch(readAttachment),
           codeBlockTheme,
           fontSizePx: codePreviewSettings.fontSizePx,
-          renderMcodeFileCitations,
+          renderZCodeFileCitations,
           sessionId,
           workspacePath,
           workspaceHomePath,
@@ -1416,7 +1416,7 @@ export const MessageResponse = memo(
       codePreviewSettings.fontSizePx,
       wrapLongLines,
       forceCodeWrap,
-      renderMcodeFileCitations,
+      renderZCodeFileCitations,
       readAttachment,
       sessionId,
       workspaceHomePath,

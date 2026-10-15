@@ -20,7 +20,7 @@ export const SHARED_MCODE_CREDENTIAL_KEYS = {
   zaiAccessToken: "oauth:zai:access_token",
   zaiRefreshToken: "oauth:zai:refresh_token",
   zaiUserInfo: "oauth:zai:user_info",
-  mcodeJwtToken: "zcodejwttoken",
+  zcodeJwtToken: "zcodejwttoken",
 } as const;
 
 export interface SharedMcodeCredentialStoreOptions {
@@ -82,7 +82,7 @@ export function createSharedMcodeCredentialStore(
         delete rawCredentials[SHARED_MCODE_CREDENTIAL_KEYS.zaiAccessToken];
         delete rawCredentials[SHARED_MCODE_CREDENTIAL_KEYS.zaiRefreshToken];
         delete rawCredentials[SHARED_MCODE_CREDENTIAL_KEYS.zaiUserInfo];
-        delete rawCredentials[SHARED_MCODE_CREDENTIAL_KEYS.mcodeJwtToken];
+        delete rawCredentials[SHARED_MCODE_CREDENTIAL_KEYS.zcodeJwtToken];
         if (activeProvider === ZAI_PROVIDER_ID) {
           delete rawCredentials[SHARED_MCODE_CREDENTIAL_KEYS.activeProvider];
         }
@@ -245,7 +245,7 @@ export function createSharedMcodeCredentialStore(
           encryptedCredentials.activeProvider;
         rawCredentials[SHARED_MCODE_CREDENTIAL_KEYS.zaiAccessToken] =
           encryptedCredentials.accessToken;
-        rawCredentials[SHARED_MCODE_CREDENTIAL_KEYS.mcodeJwtToken] = encryptedCredentials.jwtToken;
+        rawCredentials[SHARED_MCODE_CREDENTIAL_KEYS.zcodeJwtToken] = encryptedCredentials.jwtToken;
         rawCredentials[SHARED_MCODE_CREDENTIAL_KEYS.zaiUserInfo] = encryptedCredentials.userInfo;
       });
     },

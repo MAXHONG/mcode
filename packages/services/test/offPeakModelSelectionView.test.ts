@@ -18,10 +18,10 @@ describe("buildOffPeakModelSelectionView", () => {
       watch: false,
     });
     try {
-      const mcodeBuiltin = await source.read();
+      const zcodeBuiltin = await source.read();
       const resolution = new ProviderConfigResolver().resolve({
-        mcodeBuiltinProviders: mcodeBuiltin.providers,
-        mcodeBuiltinModelRules: mcodeBuiltin.models,
+        zcodeBuiltinProviders: zcodeBuiltin.providers,
+        zcodeBuiltinModelRules: zcodeBuiltin.models,
         accountProviders: new ProviderConfigMap([
           [
             "account:zai-offpeak-idle-plan",

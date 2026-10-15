@@ -31,7 +31,7 @@ describe("ConversationShareService import", () => {
     const service = new ConversationShareService({
       client,
       conversationWorkspaceRoot: conversationRoot,
-      mcodeSessionService: {
+      zcodeSessionService: {
         createSession: vi.fn(async () => {
           throw new Error("injected commit failure");
         }) as never,
@@ -42,7 +42,7 @@ describe("ConversationShareService import", () => {
           throw new Error("unexpected artifact read");
         },
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         conversationRowsRangeV4: vi.fn(async () => ({
           rows: [
             {
@@ -134,7 +134,7 @@ describe("ConversationShareService import", () => {
     const service = new ConversationShareService({
       client,
       conversationWorkspaceRoot: root,
-      mcodeSessionService: {
+      zcodeSessionService: {
         createSession: createSession as never,
         listSessions: vi.fn(async () => []),
       },
@@ -143,7 +143,7 @@ describe("ConversationShareService import", () => {
           throw new Error("unexpected artifact read");
         },
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         conversationRowsRangeV4: vi.fn(async () => ({
           rows,
           atSeq: 2,
@@ -215,7 +215,7 @@ describe("ConversationShareService import", () => {
     const service = new ConversationShareService({
       client,
       conversationWorkspaceRoot: root,
-      mcodeSessionService: {
+      zcodeSessionService: {
         createSession: createSession as never,
         listSessions: vi.fn(async () => []),
       },
@@ -224,7 +224,7 @@ describe("ConversationShareService import", () => {
           throw new Error("unexpected artifact read");
         },
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         conversationRowsRangeV4: vi.fn(async () => ({
           rows: [
             {
@@ -295,7 +295,7 @@ describe("ConversationShareService import", () => {
     const service = new ConversationShareService({
       client,
       conversationWorkspaceRoot: root,
-      mcodeSessionService: {
+      zcodeSessionService: {
         createSession: vi.fn(async () => ({ session: { sessionId: "imported-session" } })) as never,
         listSessions: vi.fn(async () => []),
       },
@@ -304,7 +304,7 @@ describe("ConversationShareService import", () => {
           throw new Error("unexpected artifact read");
         },
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         conversationRowsRangeV4: vi.fn(async () => ({
           rows: [
             {
@@ -389,7 +389,7 @@ describe("ConversationShareService import", () => {
     const service = new ConversationShareService({
       client,
       conversationWorkspaceRoot: root,
-      mcodeSessionService: {
+      zcodeSessionService: {
         createSession: createSession as never,
         listSessions: vi.fn(async () => []),
       },
@@ -398,7 +398,7 @@ describe("ConversationShareService import", () => {
           throw new Error("unexpected artifact read");
         },
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         conversationRowsRangeV4: vi.fn(async () => ({
           rows: [
             {
@@ -492,7 +492,7 @@ describe("ConversationShareService import", () => {
         client,
         conversationWorkspaceRoot: root,
         download,
-        mcodeSessionService: {
+        zcodeSessionService: {
           createSession: vi.fn(async () => ({
             session: { sessionId: "imported-session" },
           })) as never,
@@ -501,7 +501,7 @@ describe("ConversationShareService import", () => {
         artifactSource: {
           read: async () => ({ bytes: mdBytes, canonicalPath: `${root}/feature_map.md` }),
         },
-        mcodeAgentService: {
+        zcodeAgentService: {
           conversationRowsRangeV4: vi.fn(async () => ({
             rows,
             atSeq: 2,
@@ -630,14 +630,14 @@ describe("ConversationShareService import", () => {
       client,
       conversationWorkspaceRoot: root,
       download,
-      mcodeSessionService: {
+      zcodeSessionService: {
         createSession: vi.fn(async () => ({ session: { sessionId: "s" } })) as never,
         listSessions: vi.fn(async () => []),
       },
       artifactSource: {
         read: async () => ({ bytes: mdBytes, canonicalPath: `${root}/feature_map.md` }),
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         conversationRowsRangeV4: vi.fn(async () => ({
           rows: [
             {
@@ -738,14 +738,14 @@ describe("ConversationShareService import", () => {
       conversationWorkspaceRoot: root,
       download,
       downloadTimeoutMs: 20,
-      mcodeSessionService: {
+      zcodeSessionService: {
         createSession: vi.fn(async () => ({ session: { sessionId: "s" } })) as never,
         listSessions: vi.fn(async () => []),
       },
       artifactSource: {
         read: async () => ({ bytes: mdBytes, canonicalPath: `${root}/feature_map.md` }),
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         conversationRowsRangeV4: vi.fn(async () => ({
           rows: [
             {
@@ -822,7 +822,7 @@ describe("ConversationShareService import", () => {
         client,
         conversationWorkspaceRoot: root,
         ...(shareWebUrl ? { shareWebUrl } : {}),
-        mcodeSessionService: {
+        zcodeSessionService: {
           createSession: vi.fn(async () => ({
             session: { sessionId: "imported-session" },
           })) as never,
@@ -833,7 +833,7 @@ describe("ConversationShareService import", () => {
             throw new Error("unexpected artifact read");
           },
         },
-        mcodeAgentService: {
+        zcodeAgentService: {
           conversationRowsRangeV4: vi.fn(async () => ({
             rows: [
               {
@@ -925,7 +925,7 @@ describe("ConversationShareService import", () => {
     const service = new ConversationShareService({
       client,
       conversationWorkspaceRoot: root,
-      mcodeSessionService: {
+      zcodeSessionService: {
         createSession: vi.fn(async () => ({ session: { sessionId: "imported-session" } })) as never,
         listSessions: vi.fn(async () => []),
       },
@@ -934,7 +934,7 @@ describe("ConversationShareService import", () => {
           throw new Error("unexpected artifact read");
         },
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         conversationRowsRangeV4: vi.fn(async () => ({
           rows: [
             {
@@ -1028,7 +1028,7 @@ describe("ConversationShareService import", () => {
     const service = new ConversationShareService({
       client,
       conversationWorkspaceRoot: root,
-      mcodeSessionService: {
+      zcodeSessionService: {
         createSession: vi.fn(async () => ({ session: { sessionId: "imported-session" } })) as never,
         listSessions: vi.fn(async () => []),
       },
@@ -1037,7 +1037,7 @@ describe("ConversationShareService import", () => {
           throw new Error("unexpected artifact read");
         },
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         conversationRowsRangeV4: vi.fn(async () => ({
           rows,
           atSeq: 1,
@@ -1173,13 +1173,13 @@ describe("ConversationShareService import", () => {
     const service = new ConversationShareService({
       client,
       conversationWorkspaceRoot: root,
-      mcodeSessionService: { createSession: createSession as never, listSessions: async () => [] },
+      zcodeSessionService: { createSession: createSession as never, listSessions: async () => [] },
       artifactSource: {
         read: async () => {
           throw new Error("unexpected artifact read");
         },
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         conversationRowsRangeV4: vi.fn(),
         conversationFileChangesV4: vi.fn(),
       },

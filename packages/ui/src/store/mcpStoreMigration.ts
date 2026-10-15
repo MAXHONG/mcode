@@ -18,7 +18,7 @@ interface CommonMcpMigrationResult extends MigrateLegacyResult {
 
 function isMcodeAgentUserServer(server: NativeMcpServerRecord): boolean {
   return (
-    server.source === "mcodeagentmcp" &&
+    server.source === "zcodeagentmcp" &&
     server.scope === "user" &&
     (!server.location || server.location.source === "mcode")
   );
@@ -58,7 +58,7 @@ export async function importLegacyCommonServersToMcodeAgent(
     try {
       const persisted = await persistCliMcpToUserDirectory(platform, {
         action: "upsert",
-        source: "mcodeagentmcp",
+        source: "zcodeagentmcp",
         name,
         config,
       });

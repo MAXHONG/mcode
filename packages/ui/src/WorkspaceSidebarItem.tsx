@@ -211,7 +211,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
   );
   const confirmDialog = useConfirmDialog();
   const baseServices = useBaseWorkspaceServices();
-  const mcodeTaskService = services.mcodeTaskService;
+  const zcodeTaskService = services.zcodeTaskService;
   const taskItemsRef = useRef(taskItems);
   taskItemsRef.current = taskItems;
   const workspaceMcodeStateRef = useRef(workspaceMcodeState);
@@ -387,7 +387,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
         workspacePath: tab.workspacePath,
         workspaceIdentity: tab.workspaceIdentity,
       },
-      mcodeTaskService,
+      zcodeTaskService,
     });
     // 移除 workspace 只是移除入口和连接历史，不代表用户要隐藏历史任务：
     // 这里只失效缓存，保留 sqlite 任务索引原状态，避免重连同一 SSH workspace 后任务像“丢了”。
@@ -431,7 +431,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
     tab.id,
     tab.workspaceIdentity,
     tab.workspacePath,
-    mcodeTaskService,
+    zcodeTaskService,
   ]);
 
   const handleReconnectRemoteWorkspace = useCallback(
@@ -495,7 +495,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
       });
       let meta: McodeTaskMeta;
       try {
-        meta = await mcodeTaskService.renameTask({
+        meta = await zcodeTaskService.renameTask({
           taskId,
           workspacePath: tab.workspacePath,
           title,
@@ -539,7 +539,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
       findCurrentTaskItem,
       readOnlyReason,
       upsertOptimisticTaskListItem,
-      mcodeTaskService,
+      zcodeTaskService,
     ],
   );
 
@@ -572,7 +572,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
         });
       }
       try {
-        const meta = await mcodeTaskService.setTaskPinned({
+        const meta = await zcodeTaskService.setTaskPinned({
           taskId,
           workspacePath: tab.workspacePath,
           pinned,
@@ -628,7 +628,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
       tab.workspaceIdentity,
       tab.workspacePath,
       findCurrentTaskItem,
-      mcodeTaskService,
+      zcodeTaskService,
     ],
   );
 
@@ -638,7 +638,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
         return null;
       }
       const previousTask = findCurrentTaskItem(taskId);
-      const meta = await mcodeTaskService.archiveTask({
+      const meta = await zcodeTaskService.archiveTask({
         taskId,
         workspacePath: tab.workspacePath,
         ...(tab.workspaceIdentity ? { workspaceIdentity: tab.workspaceIdentity } : {}),
@@ -666,7 +666,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
       tab.workspaceIdentity,
       tab.workspacePath,
       findCurrentTaskItem,
-      mcodeTaskService,
+      zcodeTaskService,
     ],
   );
 
@@ -676,7 +676,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
         return null;
       }
       const previousTask = findCurrentTaskItem(taskId);
-      const meta = await mcodeTaskService.setTaskUnread({
+      const meta = await zcodeTaskService.setTaskUnread({
         taskId,
         workspacePath: tab.workspacePath,
         unread,
@@ -702,7 +702,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
       tab.workspacePath,
       findCurrentTaskItem,
       upsertOptimisticTaskListItem,
-      mcodeTaskService,
+      zcodeTaskService,
     ],
   );
 
@@ -1160,8 +1160,8 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
         remoteMcpSyncService={services.mcpSyncService}
         localPluginSyncService={baseServices.pluginSyncService}
         remotePluginSyncService={services.pluginSyncService}
-        localMcodeAgentService={baseServices.mcodeAgentService}
-        remoteMcodeAgentService={services.mcodeAgentService}
+        localZCodeAgentService={baseServices.zcodeAgentService}
+        remoteZCodeAgentService={services.zcodeAgentService}
         remoteTarget={tab.remoteTarget}
         skillWorkspacePath={tab.workspacePath}
         mcpWorkspacePath={tab.workspacePath}
@@ -1171,7 +1171,7 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
         workspaceIdentity={tab.workspaceIdentity}
         onSkillsSynced={async () => {
           await invalidateDeferredDraftSessionForSkillChange({
-            mcodeSessionService: services.mcodeSessionService,
+            zcodeSessionService: services.zcodeSessionService,
             workspacePath: tab.workspacePath,
             workspaceIdentity: tab.workspaceIdentity,
             reason: "sidebar-remote-skill-sync",
@@ -1199,8 +1199,8 @@ export const WorkspaceSidebarItem = memo(function WorkspaceSidebarItem({
             skillsService: services.skillsService,
             workspaceIdentity: tab.workspaceIdentity,
             workspacePath: tab.workspacePath,
-            mcodeAgentService: services.mcodeAgentService,
-            mcodeSessionService: services.mcodeSessionService,
+            zcodeAgentService: services.zcodeAgentService,
+            zcodeSessionService: services.zcodeSessionService,
           });
         }}
       />

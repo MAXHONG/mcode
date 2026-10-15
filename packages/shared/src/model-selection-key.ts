@@ -29,8 +29,8 @@ export function normalizeSupplierBaseUrl(baseUrl: string): string {
   return baseUrl.trim().replace(TRAILING_SLASHES_RE, "");
 }
 
-export function buildNativeSupplierKey(mcodeProvider: McodeProvider): string {
-  return `${NATIVE_SUPPLIER_KEY_PREFIX}${mcodeProvider}`;
+export function buildNativeSupplierKey(zcodeProvider: McodeProvider): string {
+  return `${NATIVE_SUPPLIER_KEY_PREFIX}${zcodeProvider}`;
 }
 
 export function buildCustomSupplierKey(providerId: string): string {
@@ -49,13 +49,13 @@ export function buildGhostSupplierIdentity(rawIdentity: string): string {
 }
 
 export function buildGhostSupplierKey(
-  mcodeProvider: McodeProvider,
+  zcodeProvider: McodeProvider,
   reason: ModelSelectionGhostReason,
   rawIdentity: string,
 ): string {
   return [
     GHOST_SUPPLIER_KEY_PREFIX,
-    mcodeProvider,
+    zcodeProvider,
     ":",
     reason,
     ":",
@@ -64,7 +64,7 @@ export function buildGhostSupplierKey(
 }
 
 export function resolveSupplierKeyFromModelDisplayValue(
-  mcodeProvider: McodeProvider,
+  zcodeProvider: McodeProvider,
   value: string | boolean | undefined,
 ): string {
   const customModel = decodeCustomModelValue(String(value ?? ""));
@@ -72,5 +72,5 @@ export function resolveSupplierKeyFromModelDisplayValue(
     return buildCustomSupplierKey(customModel.providerId);
   }
 
-  return buildNativeSupplierKey(mcodeProvider);
+  return buildNativeSupplierKey(zcodeProvider);
 }

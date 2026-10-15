@@ -1,4 +1,4 @@
-// composer parity：`#` 会话候选的数据源从旧 mcodeSessionStore/taskQueryCache/remote*
+// composer parity：`#` 会话候选的数据源从旧 zcodeSessionStore/taskQueryCache/remote*
 // 店面切到 v4 sessions-index（useWorkspaceSessionsIndexItems，侧栏同源）。
 // 旧店面在 v4 shell 下不再被会话列表填充，继续读会得到空面板；序列化与排序语义不变
 // （collectSessionMentionItems 保留，供单测与聚合复用）。
@@ -151,7 +151,7 @@ function buildSessionMentionScopes(params: {
     return [];
   }
 
-  const currentAgentService = params.currentServices.mcodeAgentService;
+  const currentAgentService = params.currentServices.zcodeAgentService;
   const scopes: WorkspaceSessionsIndexScope[] = [];
   const seenWorkspaceKeys = new Set<string>();
   const candidates: Array<
@@ -191,7 +191,7 @@ function buildSessionMentionScopes(params: {
     // 未连接 remote 也会在 resolver 处返回 null，不能回退到本地 base service。
     if (
       !resolved ||
-      resolved.services.mcodeAgentService !== currentAgentService
+      resolved.services.zcodeAgentService !== currentAgentService
     ) {
       continue;
     }
@@ -205,7 +205,7 @@ function buildSessionMentionScopes(params: {
       ...(resolved.remoteSessionId
         ? { endpointKey: resolved.remoteSessionId }
         : {}),
-      agentService: resolved.services.mcodeAgentService,
+      agentService: resolved.services.zcodeAgentService,
     });
   }
 
@@ -264,7 +264,7 @@ export function useSessionsMentionProvider(
           ...(workspaceIdentity ? { workspaceIdentity } : {}),
           ...(remoteSessionId ? { endpointKey: remoteSessionId } : {}),
           // 远端必须显式携带已解析 endpoint 的 service，不能让本机 Host 查询远端路径。
-          agentService: workspaceServices.mcodeAgentService,
+          agentService: workspaceServices.zcodeAgentService,
         },
       ];
     }

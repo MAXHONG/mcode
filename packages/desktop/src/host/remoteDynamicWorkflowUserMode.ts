@@ -12,7 +12,7 @@ import type { IMcodeAgentService } from "@mcode/services";
 export async function pushDynamicWorkflowUserModeToRemoteHosts(
   connections: ReadonlyArray<{
     target: RemoteTarget;
-    mcodeAgentService: Pick<IMcodeAgentService, "syncDynamicWorkflowUserMode">;
+    zcodeAgentService: Pick<IMcodeAgentService, "syncDynamicWorkflowUserMode">;
   }>,
   mode: DynamicWorkflowMode | undefined,
   onError: (error: unknown) => void,
@@ -22,7 +22,7 @@ export async function pushDynamicWorkflowUserModeToRemoteHosts(
       .filter((connection) => connection.target.kind !== "server")
       .map(async (connection) => {
         try {
-          await connection.mcodeAgentService.syncDynamicWorkflowUserMode(mode ? { mode } : {});
+          await connection.zcodeAgentService.syncDynamicWorkflowUserMode(mode ? { mode } : {});
         } catch (error) {
           onError(error);
         }

@@ -34,7 +34,7 @@ export function useActiveTaskSnapshotMeta(
   workspaceIdentity?: string,
   taskMetaFromLists?: McodeTaskMeta | null,
 ) {
-  const mcodeSessionService = useMcodeSessionService(
+  const zcodeSessionService = useMcodeSessionService(
     workspacePath,
     preferredRemoteSessionId,
     workspaceIdentity,
@@ -64,7 +64,7 @@ export function useActiveTaskSnapshotMeta(
       };
     }
 
-    void mcodeSessionService
+    void zcodeSessionService
       // active header 只需要 session meta/标题兜底，走 Mcode Protocol 的轻量读取，
       // 避免继续经 legacy snapshot 把大任务消息整包拉回 UI。
       .readSession({
@@ -89,7 +89,7 @@ export function useActiveTaskSnapshotMeta(
     return () => {
       cancelled = true;
     };
-  }, [mcodeSessionService, taskId, taskMetaFromLists, workspaceIdentity, workspacePath]);
+  }, [zcodeSessionService, taskId, taskMetaFromLists, workspaceIdentity, workspacePath]);
 
   return snapshotMeta;
 }

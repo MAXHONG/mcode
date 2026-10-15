@@ -379,12 +379,13 @@ function buildRemoteServerCommand(
 ): string {
   const envParts = [
     `${SERVICE_AUTHORITY_MODE_ENV}="desktop-attached-remote"`,
-    'MCODE_SERVER_RUNTIME_ROOT="$HOME/.mcode/server"',
+    'ZCODE_SERVER_RUNTIME_ROOT="$HOME/.zcode/server"',
   ];
   for (const [key, value] of Object.entries(
     pickRemoteRuntimeEnv(options?.remoteRuntimeEnv ?? {}),
   )) {
-    envParts.push(`${key}=${quotePosixShellArg(value)}`);
+    // 远端运行的是 z.ai CDN 上游组件，只认 ZCODE_* 前缀；桌面侧 env 仍为 MCODE_*。
+    envParts.push(`${toRemoteContractEnvKey(key)}=${quotePosixShellArg(value)}`);
   }
   const appVersion = options?.appVersion?.trim();
   if (appVersion) {
@@ -405,5 +406,9 @@ function buildRemoteServerCommand(
       );
     }
   }
-  return `${envParts.join(" ")} ~/.mcode/server/node ~/.mcode/server/mcode-server.cjs`;
+  return `${envParts.join(" ")} ~/.zcode/server/node ~/.zcode/server/zcode-server.cjs`;
+}
+
+export function toRemoteContractEnvKey(key: string): string {
+  return key.startsWith("MCODE_") ? `ZCODE_${key.slice("MCODE_".length)}` : key;
 }

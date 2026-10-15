@@ -12,7 +12,7 @@ interface RemotePinnedTaskState {
   refreshWorkspace: (params: {
     workspacePath: string;
     workspaceIdentity?: string;
-    mcodeTaskService: Pick<IMcodeTaskService, "listPinnedTasks">;
+    zcodeTaskService: Pick<IMcodeTaskService, "listPinnedTasks">;
   }) => Promise<void>;
   upsertTask: (task: McodeTaskMeta) => void;
   removeTask: (workspacePath: string, taskId: string, workspaceIdentity?: string) => void;
@@ -39,7 +39,7 @@ export const useRemotePinnedTaskStore = create<RemotePinnedTaskState>()((set) =>
   itemsByWorkspaceKey: {},
   loadingByWorkspaceKey: {},
   errorByWorkspaceKey: {},
-  async refreshWorkspace({ workspacePath, workspaceIdentity, mcodeTaskService }) {
+  async refreshWorkspace({ workspacePath, workspaceIdentity, zcodeTaskService }) {
     const workspaceKey = getWorkspaceKey(workspacePath, workspaceIdentity);
     set((state) => ({
       loadingByWorkspaceKey: {
@@ -53,7 +53,7 @@ export const useRemotePinnedTaskStore = create<RemotePinnedTaskState>()((set) =>
     }));
 
     try {
-      const items = await mcodeTaskService.listPinnedTasks({
+      const items = await zcodeTaskService.listPinnedTasks({
         workspacePath,
         ...(workspaceIdentity ? { workspaceIdentity } : {}),
       });
@@ -152,6 +152,6 @@ export async function refreshRemotePinnedTasksForSession({
   await useRemotePinnedTaskStore.getState().refreshWorkspace({
     workspacePath,
     workspaceIdentity,
-    mcodeTaskService: session.services.mcodeTaskService,
+    zcodeTaskService: session.services.zcodeTaskService,
   });
 }

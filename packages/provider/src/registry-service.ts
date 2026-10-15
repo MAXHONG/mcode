@@ -202,7 +202,7 @@ export class ProviderRegistryService {
       if (generation < this.#requestedGeneration) continue;
       this.#assertNotDisposed();
 
-      if (account.basedOnMcodeBuiltinRevision !== config.mcodeBuiltinRevision) {
+      if (account.basedOnZCodeBuiltinRevision !== config.zcodeBuiltinRevision) {
         // Built-in 已变化但 Account 仍基于旧事实时，继续服务上一份完整 Registry。
         // 当前 generation 结束；等待 Account Source 的后续 change 再一次性发布最终组合。
         this.#completedGeneration = generation;
@@ -220,10 +220,10 @@ export class ProviderRegistryService {
 
       try {
         const resolution = this.#resolver.resolve({
-          mcodeBuiltinProviders: config.mcodeBuiltinProviders,
-          mcodeBuiltinProviderTemplates: config.mcodeBuiltinProviderTemplates,
+          zcodeBuiltinProviders: config.zcodeBuiltinProviders,
+          zcodeBuiltinProviderTemplates: config.zcodeBuiltinProviderTemplates,
           personalProviders: config.personalProviders,
-          mcodeBuiltinModelRules: config.mcodeBuiltinModelRules,
+          zcodeBuiltinModelRules: config.zcodeBuiltinModelRules,
           personalModels: config.personalModels,
           accountProviders: account.providers,
           accountStates: account.states,
@@ -308,7 +308,7 @@ function freezeAccountSnapshot(
 ): AccountProviderConfigSnapshot {
   return Object.freeze({
     revision: snapshot.revision,
-    basedOnMcodeBuiltinRevision: snapshot.basedOnMcodeBuiltinRevision,
+    basedOnZCodeBuiltinRevision: snapshot.basedOnZCodeBuiltinRevision,
     providers: snapshot.providers,
     ...(snapshot.states ? { states: snapshot.states } : {}),
   });

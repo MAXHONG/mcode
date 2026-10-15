@@ -55,20 +55,20 @@ describe("ProviderConfigRuntime", () => {
       const configDir = join(root, ".mcode", "v2");
       const legacyFilePath = join(configDir, "config.json");
       const personalFilePath = join(configDir, "provider_config.json");
-      const mcodeBuiltinFilePath = join(root, "builtin.json");
+      const zcodeBuiltinFilePath = join(root, "builtin.json");
       const secret = "PRIVATE_KEY_MUST_NOT_APPEAR_IN_ERRORS";
       const invalidText =
         stage === "json"
           ? `{"apiKey":"${secret}","provider":`
           : JSON.stringify({ provider: { custom: { kind: secret } } });
       await mkdir(configDir, { recursive: true });
-      await writeFile(mcodeBuiltinFilePath, JSON.stringify(emptyBuiltinRelease()));
+      await writeFile(zcodeBuiltinFilePath, JSON.stringify(emptyBuiltinRelease()));
       if (stage === "io") await mkdir(legacyFilePath);
       else await writeFile(legacyFilePath, invalidText);
       setDataBaseDir(root);
       const recovery = vi.fn();
       const runtime = createProviderConfigRuntime({
-        mcodeBuiltinFilePath,
+        zcodeBuiltinFilePath,
         readLegacyProviders: readLegacyMcodeConfigProviders,
         onPersonalConfigRecovery: recovery,
         personalPollingIntervalMs: false,
@@ -123,12 +123,12 @@ describe("ProviderConfigRuntime", () => {
 
   it("旧配置不存在时仍可初始化空 Personal 配置", async () => {
     const root = await mkdtemp(join(tmpdir(), "mcode-provider-new-install-"));
-    const mcodeBuiltinFilePath = join(root, "builtin.json");
-    await writeFile(mcodeBuiltinFilePath, JSON.stringify(emptyBuiltinRelease()));
+    const zcodeBuiltinFilePath = join(root, "builtin.json");
+    await writeFile(zcodeBuiltinFilePath, JSON.stringify(emptyBuiltinRelease()));
     setDataBaseDir(root);
     const recovery = vi.fn();
     const runtime = createProviderConfigRuntime({
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       readLegacyProviders: readLegacyMcodeConfigProviders,
       onPersonalConfigRecovery: recovery,
       personalPollingIntervalMs: false,
@@ -150,9 +150,9 @@ describe("ProviderConfigRuntime", () => {
 
   it("保留含非法 endpoint 的 Personal Provider，并把问题留给 Registry 完整性校验", async () => {
     const root = await mkdtemp(join(tmpdir(), "mcode-provider-runtime-"));
-    const mcodeBuiltinFilePath = join(root, "mcodeBuiltin.json");
+    const zcodeBuiltinFilePath = join(root, "zcodeBuiltin.json");
     const personalFilePath = join(root, "provider_config.json");
-    await writeFile(mcodeBuiltinFilePath, JSON.stringify(emptyBuiltinRelease()), "utf8");
+    await writeFile(zcodeBuiltinFilePath, JSON.stringify(emptyBuiltinRelease()), "utf8");
     await writeFile(
       personalFilePath,
       JSON.stringify({
@@ -188,7 +188,7 @@ describe("ProviderConfigRuntime", () => {
 
     const recovery = vi.fn();
     const runtime = createProviderConfigRuntime({
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       personalFilePath,
       personalPollingIntervalMs: false,
       watch: false,
@@ -207,7 +207,7 @@ describe("ProviderConfigRuntime", () => {
 
   it("从旧 config.json 导入同目录 provider_config.json，不改写旧文件且不备份", async () => {
     const root = await mkdtemp(join(tmpdir(), "mcode-provider-runtime-"));
-    const mcodeBuiltinFilePath = join(root, "mcodeBuiltin.json");
+    const zcodeBuiltinFilePath = join(root, "zcodeBuiltin.json");
     const configDir = join(root, ".mcode", "v2");
     const legacyFilePath = join(configDir, "config.json");
     const legacyText = JSON.stringify({
@@ -221,10 +221,10 @@ describe("ProviderConfigRuntime", () => {
     });
     await mkdir(configDir, { recursive: true });
     await writeFile(legacyFilePath, legacyText, "utf8");
-    await writeFile(mcodeBuiltinFilePath, JSON.stringify(emptyBuiltinRelease()), "utf8");
+    await writeFile(zcodeBuiltinFilePath, JSON.stringify(emptyBuiltinRelease()), "utf8");
     setDataBaseDir(root);
     const runtime = createProviderConfigRuntime({
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       readLegacyProviders: readLegacyMcodeConfigProviders,
       watch: false,
     });
@@ -246,12 +246,12 @@ describe("ProviderConfigRuntime", () => {
 
   it("用注入的 Mcode Built-in Source 初始化，并在 Personal 文件缺失时单向导入旧配置", async () => {
     const root = await mkdtemp(join(tmpdir(), "mcode-provider-runtime-"));
-    const mcodeBuiltinFilePath = join(root, "mcodeBuiltin.json");
+    const zcodeBuiltinFilePath = join(root, "zcodeBuiltin.json");
     const personalFilePath = join(root, "personal.json");
-    await writeFile(mcodeBuiltinFilePath, JSON.stringify(emptyBuiltinRelease()), "utf8");
+    await writeFile(zcodeBuiltinFilePath, JSON.stringify(emptyBuiltinRelease()), "utf8");
     const readLegacyProviders = vi.fn(async () => [legacyProvider()]);
     const runtime = createProviderConfigRuntime({
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       personalFilePath,
       readLegacyProviders,
       watch: false,
@@ -321,10 +321,10 @@ describe("ProviderConfigRuntime", () => {
       },
     }));
     const runtime = createProviderConfigRuntime({
-      mcodeBuiltinFilePath: bundledFilePath,
-      mcodeBuiltinActiveFilePath: activeFilePath,
+      zcodeBuiltinFilePath: bundledFilePath,
+      zcodeBuiltinActiveFilePath: activeFilePath,
       personalFilePath: join(root, "personal.json"),
-      mcodeBuiltinRemote: {
+      zcodeBuiltinRemote: {
         controlFilePath: join(root, "cache", "refresh-control.json"),
         resolveEndpointKey: () => "https://example.com",
         fetchRelease,
@@ -335,8 +335,8 @@ describe("ProviderConfigRuntime", () => {
     await runtime.start();
     const initial = await runtime.configService.read();
     expect(initial.revision).toContain("mcode-builtin:1");
-    await expect(runtime.resolveMcodeBuiltinActiveFilePath()).resolves.toBe(activeFilePath);
-    await expect(runtime.refreshMcodeBuiltin({ force: true })).resolves.toBe("updated");
+    await expect(runtime.resolveZCodeBuiltinActiveFilePath()).resolves.toBe(activeFilePath);
+    await expect(runtime.refreshZCodeBuiltin({ force: true })).resolves.toBe("updated");
     expect((await runtime.configService.read()).revision).toContain("mcode-builtin:2");
     runtime.dispose();
   });

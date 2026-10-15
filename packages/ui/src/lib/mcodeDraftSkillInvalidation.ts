@@ -7,7 +7,7 @@ interface DeferredDraftRuntimeChangeParams {
   reason: string;
   workspacePath?: string | null;
   workspaceIdentity?: string | null;
-  mcodeSessionService: Pick<IMcodeSessionService, "closeSession">;
+  zcodeSessionService: Pick<IMcodeSessionService, "closeSession">;
 }
 
 export async function invalidateDeferredDraftSessionForRuntimeChange(
@@ -31,7 +31,7 @@ export async function invalidateDeferredDraftSessionForRuntimeChange(
   }
 
   try {
-    await params.mcodeSessionService.closeSession({
+    await params.zcodeSessionService.closeSession({
       workspacePath: params.workspacePath,
       ...(workspaceIdentity ? { workspaceIdentity } : {}),
       sessionId: draftSessionId,

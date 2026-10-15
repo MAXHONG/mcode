@@ -17,8 +17,8 @@ const { version } = JSON.parse(readFileSync(resolve(REPO_ROOT, "package.json"), 
 
 export default defineConfig(({ mode }) => {
   const env = { ...loadEnv(mode, REPO_ROOT, ""), ...process.env };
-  const mcodeEnv = env.MCODE_ENV?.trim().toLowerCase() === "production" ? "production" : "test";
-  const endpointEnv = { ...env, MCODE_ENV: mcodeEnv };
+  const zcodeEnv = env.MCODE_ENV?.trim().toLowerCase() === "production" ? "production" : "test";
+  const endpointEnv = { ...env, MCODE_ENV: zcodeEnv };
   const endpointOrigin = resolveRuntimeMcodeEndpointOrigin(endpointEnv);
   const oauthOrigin = resolveZaiOAuthOrigin(endpointEnv);
   const oauthClientId = resolveZaiOAuthClientId(endpointEnv);
@@ -53,7 +53,7 @@ export default defineConfig(({ mode }) => {
     define: {
       __MCODE_VERSION__: JSON.stringify(version),
       __MCODE_COMMIT__: JSON.stringify(env.MCODE_COMMIT || "unknown"),
-      __MCODE_ENV__: JSON.stringify(mcodeEnv),
+      __MCODE_ENV__: JSON.stringify(zcodeEnv),
       "import.meta.env.VITE_MCODE_BASE_URL": JSON.stringify(endpointOrigin),
       "import.meta.env.VITE_MCODE_ENDPOINT_ORIGIN": JSON.stringify(endpointOrigin),
       "import.meta.env.VITE_ZAI_OAUTH_CLIENT_ID": JSON.stringify(oauthClientId),

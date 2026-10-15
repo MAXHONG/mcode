@@ -126,11 +126,11 @@ describe("DockerBackend docker command resolution", () => {
     });
     const backend = createBackend();
 
-    await backend.upload(fileURLToPath(import.meta.url), "~/.mcode/server/server.tgz");
+    await backend.upload(fileURLToPath(import.meta.url), "~/.zcode/server/server.tgz");
 
     expect(mocks.spawn).toHaveBeenCalledWith(
       RESOLVED_DOCKER_COMMAND,
-      ["exec", "-i", "mcode-dev", "sh", "-lc", "cat > '/root/.mcode/server/server.tgz'"],
+      ["exec", "-i", "mcode-dev", "sh", "-lc", "cat > '/root/.zcode/server/server.tgz'"],
       expect.any(Object),
     );
     expect(mocks.execFile.mock.calls.some((call) => (call[1] as string[])[0] === "cp")).toBe(false);

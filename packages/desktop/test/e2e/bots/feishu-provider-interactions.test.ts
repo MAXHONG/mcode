@@ -66,11 +66,11 @@ describe("Bot provider interaction E2E", () => {
     const callback = (command: string, formValue?: Record<string, string>) =>
       harness.service.handleProviderCallbackResponse("feishu", {
         botId: "feishu-e2e",
-        mcodeFeishuSynchronousCardAction: true,
+        zcodeFeishuSynchronousCardAction: true,
         event: {
           operator: { operator_id: { open_id: "ou_e2e_user" } },
           action: {
-            behaviors: [{ type: "callback", value: { command, mcodeCardText: "Question" } }],
+            behaviors: [{ type: "callback", value: { command, zcodeCardText: "Question" } }],
             ...(formValue ? { form_value: formValue } : {}),
           },
           context: { card_update_token: "card-update-token-e2e" },
@@ -185,7 +185,7 @@ describe("Bot provider interaction E2E", () => {
             type: "callback",
             value: {
               command: `/elicitation ${token} approve`,
-              mcodeCardText: "Review this implementation plan.",
+              zcodeCardText: "Review this implementation plan.",
             },
           }],
         },

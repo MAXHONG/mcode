@@ -47,17 +47,17 @@ async function setup(
   const bundled = join(root, "bundled.json");
   await writeFile(bundled, JSON.stringify(release));
   const runtime = new NodeProviderConfigRuntime({
-    mcodeBuiltinFilePath: bundled,
-    mcodeBuiltinActiveFilePath: join(root, "active.json"),
+    zcodeBuiltinFilePath: bundled,
+    zcodeBuiltinActiveFilePath: join(root, "active.json"),
     personalFilePath: join(root, "personal.json"),
     watch: false,
     personalPollingIntervalMs: false,
-    mcodeBuiltinRemote: {
+    zcodeBuiltinRemote: {
       controlFilePath: join(root, "control.json"),
       resolveEndpointKey: () => "https://example.com",
       fetchRelease,
     },
-    onMcodeBuiltinRefreshError: () => {},
+    onZCodeBuiltinRefreshError: () => {},
   });
   disposers.push(() => runtime.dispose());
   return runtime;
@@ -69,9 +69,9 @@ describe("Built-in 环境生命周期检查", () => {
     const fetchRelease = vi.fn(async () => null);
     const runtime = await setup(fetchRelease);
     const recovery = vi.fn(async () => {});
-    runtime.onDidCheckMcodeBuiltin(recovery);
+    runtime.onDidCheckZCodeBuiltin(recovery);
     await runtime.start();
-    await runtime.refreshMcodeBuiltin();
+    await runtime.refreshZCodeBuiltin();
     await vi.waitFor(() => expect(recovery).toHaveBeenCalledTimes(1));
     expect(fetchRelease).toHaveBeenCalledTimes(1);
     await vi.advanceTimersByTimeAsync(60_000);
@@ -79,7 +79,7 @@ describe("Built-in 环境生命周期检查", () => {
     expect(fetchRelease).toHaveBeenCalledTimes(1);
     for (let minute = 0; minute < 59; minute++) {
       await vi.advanceTimersByTimeAsync(60_000);
-      await runtime.refreshMcodeBuiltin();
+      await runtime.refreshZCodeBuiltin();
     }
     await vi.waitFor(() => expect(fetchRelease).toHaveBeenCalledTimes(2));
     runtime.dispose();
@@ -94,13 +94,13 @@ describe("Built-in 环境生命周期检查", () => {
     });
     const runtime = await setup(fetchRelease);
     const recovery = vi.fn(async () => {});
-    runtime.onDidCheckMcodeBuiltin(recovery);
+    runtime.onDidCheckZCodeBuiltin(recovery);
     await runtime.start();
-    await runtime.refreshMcodeBuiltin().catch(() => {});
+    await runtime.refreshZCodeBuiltin().catch(() => {});
     await vi.waitFor(() => expect(recovery).toHaveBeenCalledTimes(1));
     await vi.advanceTimersByTimeAsync(60_000);
     await vi.waitFor(() => expect(fetchRelease).toHaveBeenCalledTimes(2));
-    await runtime.refreshMcodeBuiltin().catch(() => {});
+    await runtime.refreshZCodeBuiltin().catch(() => {});
     await vi.advanceTimersByTimeAsync(60_000);
     await vi.waitFor(() => expect(recovery).toHaveBeenCalledTimes(3));
     expect(fetchRelease).toHaveBeenCalledTimes(2);

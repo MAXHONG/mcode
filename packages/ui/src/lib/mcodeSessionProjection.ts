@@ -1610,7 +1610,7 @@ function mapCompactTimelinePayload(
     // Bugfix: compact lifecycle 是结构化状态事件，不是 assistant 正文。
     // 即使上游误带 text，也不能把内部 summary/prompt 投影到聊天区。
     content: "",
-    mcodeTimeline: timeline,
+    zcodeTimeline: timeline,
   };
 }
 
@@ -1640,7 +1640,7 @@ function mapSyntheticTimelinePartPayload(
     content: "",
     // Bugfix: fork notice 是 part.upserted 里的结构化 synthetic text，不是模型正文 delta。
     // 这里提前投成 timeline divider，避免 UI 按普通消息渲染后丢掉横线。
-    mcodeTimeline: timeline,
+    zcodeTimeline: timeline,
   };
 }
 
@@ -1685,7 +1685,7 @@ function mapGoalVerificationTimelinePayload(
     ...(inputId ? { inputId } : {}),
     messageId: goalVerificationTimelineMessageId(timeline),
     content: "",
-    mcodeTimeline: timeline,
+    zcodeTimeline: timeline,
   };
 }
 
@@ -1749,7 +1749,7 @@ function compactFailureToTimelineEvent(
     traceId,
     ...(inputId ? { inputId } : {}),
     content: "",
-    mcodeTimeline: {
+    zcodeTimeline: {
       version: 1,
       kind: "synthetic",
       type: "context_compaction",

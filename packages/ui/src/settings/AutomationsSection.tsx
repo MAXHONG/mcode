@@ -529,7 +529,7 @@ export function AutomationsSection({
 }: AutomationsSectionProps) {
   const { intl, locale } = useMcodeIntl();
   const platform = usePlatform();
-  const { clientScenesService, offPeakTaskService, mcodeAgentService } = useServices();
+  const { clientScenesService, offPeakTaskService, zcodeAgentService } = useServices();
   const confirmDialog = useConfirmDialog();
   const { openCodingPlanUpgrade } = useCodingPlanUpgradeDialog();
   const providerSettingsRead = useProviderSettingsView();
@@ -705,14 +705,14 @@ export function AutomationsSection({
     void initialize({
       workspacePath,
       workspaceIdentity,
-      agentService: mcodeAgentService,
+      agentService: zcodeAgentService,
     }).then(() => {
       if (!disposed) setLoadedWorkspaceKey(workspaceKey);
     });
     return () => {
       disposed = true;
     };
-  }, [workspacePath, workspaceIdentity, mcodeAgentService, initialize]);
+  }, [workspacePath, workspaceIdentity, zcodeAgentService, initialize]);
 
   useEffect(() => {
     const nextTab = resolveAutomationTabAfterOffPeakChange(tab, offPeakVisible);
@@ -806,7 +806,7 @@ export function AutomationsSection({
     setRefreshing(true);
     try {
       await Promise.all([
-        refresh(mcodeAgentService),
+        refresh(zcodeAgentService),
         offPeakRefresh(offPeakTaskService),
         ...(offPeakGrayEnabled ? [offPeakRefreshCodingPlanSupport(offPeakTaskService)] : []),
       ]);
@@ -820,7 +820,7 @@ export function AutomationsSection({
     offPeakRefreshCodingPlanSupport,
     offPeakTaskService,
     refresh,
-    mcodeAgentService,
+    zcodeAgentService,
   ]);
 
   // New task 页模板卡跳转过来：消费预填草稿 → 切 idle tab + 打开创建表单预填。
@@ -1019,7 +1019,7 @@ export function AutomationsSection({
       workspaceIdentity: targetIdentity,
     }: AutomationEditSubmit) => {
       if (view.mode === "edit") {
-        const ok = await updateAutomation(view.automation.automationId, input, mcodeAgentService);
+        const ok = await updateAutomation(view.automation.automationId, input, zcodeAgentService);
         if (!ok) {
           toast(
             intl.formatMessage({
@@ -1041,7 +1041,7 @@ export function AutomationsSection({
           workspacePath: targetPath,
           workspaceIdentity: targetIdentity,
         },
-        mcodeAgentService,
+        zcodeAgentService,
       );
       void reportAutomationCreateResult(platform, {
         automationId: created?.automationId,
@@ -1075,13 +1075,13 @@ export function AutomationsSection({
       showAutomationCreateLimitToast,
       updateAutomation,
       view,
-      mcodeAgentService,
+      zcodeAgentService,
     ],
   );
 
   const handleToggle = useCallback(
     async (automation: McodeAutomation, enabled: boolean) => {
-      await setEnabled(automation.automationId, enabled, mcodeAgentService);
+      await setEnabled(automation.automationId, enabled, zcodeAgentService);
       const message = useAutomationManagementStore.getState().error;
       if (message) toast(intl.formatMessage({ id: getAutomationActionErrorToastId("toggle") }));
       else {
@@ -1102,12 +1102,12 @@ export function AutomationsSection({
         setNow(Date.now());
       }
     },
-    [intl, setEnabled, mcodeAgentService],
+    [intl, setEnabled, zcodeAgentService],
   );
 
   const handleRestart = useCallback(
     async (automation: McodeAutomation) => {
-      await restartAutomation(automation.automationId, mcodeAgentService);
+      await restartAutomation(automation.automationId, zcodeAgentService);
       const message = useAutomationManagementStore.getState().error;
       if (message)
         toast(
@@ -1117,7 +1117,7 @@ export function AutomationsSection({
         );
       else setNow(Date.now());
     },
-    [intl, restartAutomation, mcodeAgentService],
+    [intl, restartAutomation, zcodeAgentService],
   );
 
   const handleRunNow = useCallback(
@@ -1132,14 +1132,14 @@ export function AutomationsSection({
         automation,
         providerSettingsView,
       });
-      const result = await runAutomationNow(automation.automationId, mcodeAgentService);
+      const result = await runAutomationNow(automation.automationId, zcodeAgentService);
       logger.debug("[automations] 立即运行交互结束", {
         automationId: automation.automationId,
         source,
         result,
       });
       if (result === "queued") {
-        await loadRuns(automation.automationId, mcodeAgentService, true);
+        await loadRuns(automation.automationId, zcodeAgentService, true);
         const latestSessionId = useAutomationManagementStore
           .getState()
           .runsCache[automation.automationId]?.runs?.find(
@@ -1184,7 +1184,7 @@ export function AutomationsSection({
       platform,
       providerSettingsView,
       runAutomationNow,
-      mcodeAgentService,
+      zcodeAgentService,
     ],
   );
 
@@ -1210,7 +1210,7 @@ export function AutomationsSection({
         automation,
         providerSettingsView,
       });
-      await deleteAutomation(automation.automationId, mcodeAgentService);
+      await deleteAutomation(automation.automationId, zcodeAgentService);
       const message = useAutomationManagementStore.getState().error;
       if (message) toast(intl.formatMessage({ id: getAutomationActionErrorToastId("delete") }));
       // 若在编辑该任务的整页,删除后回列表。
@@ -1220,7 +1220,7 @@ export function AutomationsSection({
           : prev,
       );
     },
-    [confirmDialog, deleteAutomation, intl, platform, providerSettingsView, mcodeAgentService],
+    [confirmDialog, deleteAutomation, intl, platform, providerSettingsView, zcodeAgentService],
   );
 
   const handleOffPeakOpenSession = useCallback(
@@ -1428,11 +1428,11 @@ export function AutomationsSection({
           runsEntry={view.mode === "edit" ? runsCache[view.automation.automationId] : undefined}
           onLoadRuns={() => {
             if (view.mode === "edit")
-              void loadRuns(view.automation.automationId, mcodeAgentService, true);
+              void loadRuns(view.automation.automationId, zcodeAgentService, true);
           }}
           onDeleteRun={(runId) => {
             if (view.mode === "edit") {
-              void deleteRun(view.automation.automationId, runId, mcodeAgentService);
+              void deleteRun(view.automation.automationId, runId, zcodeAgentService);
             }
           }}
           onOpenSession={

@@ -161,14 +161,14 @@ function uniqueImportedFileName(
 }
 
 export interface ConversationShareServiceOptions {
-  mcodeAgentService: ConversationShareAgentService;
+  zcodeAgentService: ConversationShareAgentService;
   client: ConversationShareHttpClient;
   artifactSource: ConversationShareArtifactSource;
   confirmPollIntervalMs?: number;
   confirmPollTimeoutMs?: number;
   now?: () => number;
   sleep?: (delayMs: number) => Promise<void>;
-  mcodeSessionService?: Pick<IMcodeSessionService, "createSession" | "listSessions">;
+  zcodeSessionService?: Pick<IMcodeSessionService, "createSession" | "listSessions">;
   download?: (url: string, init?: { signal?: AbortSignal }) => Promise<Response>;
   /** 单个 artifact 下载的超时（含读 body）；缺省 120s。 */
   downloadTimeoutMs?: number;
@@ -655,7 +655,7 @@ function selectRows(
 }
 
 export class ConversationShareService implements IConversationShareService {
-  private readonly mcodeAgentService: ConversationShareAgentService;
+  private readonly zcodeAgentService: ConversationShareAgentService;
   private readonly client: ConversationShareHttpClient;
   private readonly artifactSource: ConversationShareArtifactSource;
   private readonly confirmPollIntervalMs: number;
@@ -667,7 +667,7 @@ export class ConversationShareService implements IConversationShareService {
     string,
     Emitter<ConversationShareImportProgress>
   >();
-  private readonly mcodeSessionService?: Pick<
+  private readonly zcodeSessionService?: Pick<
     IMcodeSessionService,
     "createSession" | "listSessions"
   >;
@@ -699,14 +699,14 @@ export class ConversationShareService implements IConversationShareService {
   private importIndexWriteChain: Promise<void> = Promise.resolve();
 
   constructor(options: ConversationShareServiceOptions) {
-    this.mcodeAgentService = options.mcodeAgentService;
+    this.zcodeAgentService = options.zcodeAgentService;
     this.client = options.client;
     this.artifactSource = options.artifactSource;
     this.confirmPollIntervalMs = options.confirmPollIntervalMs ?? DEFAULT_CONFIRM_POLL_INTERVAL_MS;
     this.confirmPollTimeoutMs = options.confirmPollTimeoutMs ?? DEFAULT_CONFIRM_POLL_TIMEOUT_MS;
     this.now = options.now ?? Date.now;
     this.sleep = options.sleep ?? wait;
-    this.mcodeSessionService = options.mcodeSessionService;
+    this.zcodeSessionService = options.zcodeSessionService;
     this.download = options.download ?? ((url, init) => fetch(url, { signal: init?.signal }));
     this.downloadTimeoutMs = options.downloadTimeoutMs ?? DOWNLOAD_TIMEOUT_MS;
     this.conversationWorkspaceRoot =
@@ -723,7 +723,7 @@ export class ConversationShareService implements IConversationShareService {
     this.importIndexPath = join(this.conversationWorkspaceRoot, ".mcode-share-imports.json");
     this.logger = options.logger ?? createServiceLogger("conversation-share");
     this.completedImportsLoaded = this.loadCompletedImportIndex();
-    if (this.mcodeSessionService) {
+    if (this.zcodeSessionService) {
       void this.cleanupAbandonedImports().catch(() => undefined);
     }
   }
@@ -764,7 +764,7 @@ export class ConversationShareService implements IConversationShareService {
     input: ConversationSharePreflightInput,
   ): Promise<ConversationSharePreflightResult> {
     try {
-      return await this.preflightWithAgent(input, this.mcodeAgentService);
+      return await this.preflightWithAgent(input, this.zcodeAgentService);
     } catch (error) {
       throw normalizeConversationShareConnectionError(error);
     }
@@ -1402,7 +1402,7 @@ export class ConversationShareService implements IConversationShareService {
     input: ImportConversationShareInput,
     operationId: string,
   ): Promise<ImportConversationShareResult> {
-    if (!this.mcodeSessionService) {
+    if (!this.zcodeSessionService) {
       throwServiceError("feature_disabled", "Conversation share import is unavailable");
     }
     // 两个摘要已在 ConversationShareHttpClient.getContinuation 里对服务端原样发来的值复核过。
@@ -1442,7 +1442,7 @@ export class ConversationShareService implements IConversationShareService {
         typeof existingMarker.sessionId === "string" &&
         existingMarker.sessionId.startsWith("share-import-")
       ) {
-        const sessions = await this.mcodeSessionService.listSessions({ workspacePath, limit: 100 });
+        const sessions = await this.zcodeSessionService.listSessions({ workspacePath, limit: 100 });
         const existingSession = sessions.find(
           (item) => item.sessionId === existingMarker.sessionId,
         );
@@ -1670,7 +1670,7 @@ export class ConversationShareService implements IConversationShareService {
         }),
         "utf8",
       );
-      const snapshot = await this.mcodeSessionService.createSession({
+      const snapshot = await this.zcodeSessionService.createSession({
         workspacePath,
         ...(workspaceIdentity ? { workspaceIdentity } : {}),
         sessionId,
@@ -1863,7 +1863,7 @@ export class ConversationShareService implements IConversationShareService {
   }
 
   async publish(input: PublishTextConversationInput, operationId: string) {
-    return this.publishWithAgent(input, operationId, this.mcodeAgentService);
+    return this.publishWithAgent(input, operationId, this.zcodeAgentService);
   }
 
   private async publishWithAgent(
@@ -1921,7 +1921,7 @@ export class ConversationShareService implements IConversationShareService {
   private async publishInternal(
     input: PublishTextConversationInput,
     operationId?: string,
-    agentService: ConversationShareAgentService = this.mcodeAgentService,
+    agentService: ConversationShareAgentService = this.zcodeAgentService,
   ): Promise<ConversationShareRecord> {
     const report = (
       phase: ConversationSharePublishProgress["phase"],
@@ -2019,7 +2019,7 @@ export class ConversationShareService implements IConversationShareService {
       if (snapshot) preflightPreviewSnapshots.set(productTurnId, snapshot);
     }
     const artifactSnapshot = await buildConversationShareArtifactSnapshot({
-      mcodeAgentService: agentService,
+      zcodeAgentService: agentService,
       artifactSource: this.artifactSource,
       input,
       selectedRows,
@@ -2206,7 +2206,7 @@ export class ConversationShareService implements IConversationShareService {
   }
 
   private async cleanupAbandonedImports(): Promise<void> {
-    if (!this.mcodeSessionService) return;
+    if (!this.zcodeSessionService) return;
     await this.completedImportsLoaded;
     // 只扫描默认 conversation workspace 的 import-owned 子目录；其它 workspace 的 marker
     // 在下一次带 target 的导入请求中处理，避免启动期枚举并触碰用户项目目录。
@@ -2232,7 +2232,7 @@ export class ConversationShareService implements IConversationShareService {
       if (typeof marker.sessionId !== "string" || !marker.sessionId.startsWith("share-import-"))
         continue;
       try {
-        const sessions = await this.mcodeSessionService.listSessions({
+        const sessions = await this.zcodeSessionService.listSessions({
           workspacePath: this.conversationWorkspaceRoot,
           limit: 100,
         });

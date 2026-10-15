@@ -196,7 +196,7 @@ function makeRuntimeLifecycleEvent(
   };
 }
 
-describe("McodeAgent connection-scoped service facade", () => {
+describe("ZCodeAgent connection-scoped service facade", () => {
   it("desktop continuous 与 web replayable 都宣告 Host review domain capability", async () => {
     const { base } = setupBase();
     const desktop = createMcodeAgentConnectionScope(base, {

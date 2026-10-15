@@ -155,9 +155,9 @@ export class AccountProviderService implements ProviderSource<AccountProviderCon
       let config: ProviderConfigSnapshot | undefined;
       try {
         config = await this.#configSource.read();
-        const configuredProviders = config.mcodeBuiltinProviders;
+        const configuredProviders = config.zcodeBuiltinProviders;
         const { providers, states } = await this.#resolve({
-          configRevision: config.mcodeBuiltinRevision,
+          configRevision: config.zcodeBuiltinRevision,
           configuredProviders,
           previousProviders: latest?.providers ?? ProviderConfigMap.empty(),
           previousStates: latest?.states,
@@ -172,14 +172,14 @@ export class AccountProviderService implements ProviderSource<AccountProviderCon
         this.#assertNotDisposed();
         if (
           this.#pendingReasons.size > 0 ||
-          currentConfig.mcodeBuiltinRevision !== config.mcodeBuiltinRevision
+          currentConfig.zcodeBuiltinRevision !== config.zcodeBuiltinRevision
         ) {
           this.#pendingReasons.add("superseded-resolution");
           continue;
         }
-        const basedOnMcodeBuiltinRevision = config.mcodeBuiltinRevision;
+        const basedOnZCodeBuiltinRevision = config.zcodeBuiltinRevision;
         const next = createAccountProviderConfigSnapshot(
-          basedOnMcodeBuiltinRevision,
+          basedOnZCodeBuiltinRevision,
           providers,
           states,
         );

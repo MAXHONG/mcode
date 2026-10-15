@@ -9,7 +9,7 @@ import {
   withRequestIdHeader,
   REQUEST_ID_HEADER_NAME,
 } from "#src/providers/api/requestIdHeaders.js";
-import { buildMcodeSourceHeaders } from "#src/providers/sourceHeaders.js";
+import { buildZCodeSourceHeaders } from "#src/providers/sourceHeaders.js";
 import {
   buildOffPeakPlanIdentityHeaders,
   type OffPeakCredentialSnapshot,
@@ -111,12 +111,12 @@ export interface OffPeakBatchStatusResult {
   tickets: OffPeakTicketStatusEntry[];
 }
 
-/** 类型化服务端错误：调用方按 bimCode 分流（3101 无资格 / 3103 取号超限 / 其余）。 */
+/** 类型化服务端错误：调用方按 bizCode 分流（3101 无资格 / 3103 取号超限 / 其余）。 */
 export class OffPeakServerError extends Error {
   constructor(
     message: string,
     readonly httpStatus: number,
-    readonly bimCode?: number,
+    readonly bizCode?: number,
     readonly nextTakeAt?: number,
     readonly requestId?: string,
   ) {
@@ -156,7 +156,7 @@ export function createOffPeakServerClient(deps: OffPeakServerClientDeps): OffPea
       // test 服务端只能看到 user_agent=node，且客户端日志无法关联 2007/裸 429 的服务端请求。
       // 这里只补标准非敏感来源头和链路 id，JWT/API Key 仍禁止进入日志。
       const headers = withRequestIdHeader({
-        ...buildMcodeSourceHeaders(),
+        ...buildZCodeSourceHeaders(),
         ...(body === undefined ? {} : { "content-type": "application/json" }),
         authorization: `Bearer ${credentials.jwt}`,
         "x-coding-plan-api-key": credentials.codingPlanApiKey,
@@ -179,7 +179,7 @@ export function createOffPeakServerClient(deps: OffPeakServerClientDeps): OffPea
           undefined;
         // 可恢复的服务端拒绝使用 warn；只记录契约元数据，禁止记录凭证原文、指纹或响应体。
         deps.logger.warn(undefined, "off-peak request rejected", {
-          bimCode: errorBody.code,
+          bizCode: errorBody.code,
           credentialKind: credentials.kind,
           httpStatus: response.status,
           method,

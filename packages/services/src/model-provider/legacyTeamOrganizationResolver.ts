@@ -15,12 +15,12 @@ export function createLegacyTeamOrganizationResolver(dependencies: {
   apiClient: ApiClient;
   loadOAuthTokenSet: (
     family: ProviderFamilyDomain,
-  ) => Promise<{ accessToken: string; mcodeJwtToken?: string | null } | null>;
+  ) => Promise<{ accessToken: string; zcodeJwtToken?: string | null } | null>;
 }): (connection: LegacyTeamConnection) => Promise<string | null> {
   return async ({ family, projectId }) => {
     const tokens = await dependencies.loadOAuthTokenSet(family);
     const token = tokens?.accessToken.trim();
-    if (!token || (family === "bigmodel" && token === tokens?.mcodeJwtToken)) return null;
+    if (!token || (family === "bigmodel" && token === tokens?.zcodeJwtToken)) return null;
     const origin =
       family === "zai"
         ? resolveZaiBusinessBaseUrl(process.env)

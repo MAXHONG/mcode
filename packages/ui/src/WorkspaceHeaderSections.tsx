@@ -324,7 +324,7 @@ export function WorkspaceHeaderTitleSection({
     }
 
     try {
-      const renamedTask = await services.mcodeTaskService.renameTask({
+      const renamedTask = await services.zcodeTaskService.renameTask({
         taskId: renamingTaskId,
         workspacePath: workspaceAbsPath,
         title: normalizedTitle,
@@ -382,7 +382,7 @@ export function WorkspaceHeaderTitleSection({
     }
 
     handleCancelRenameTask();
-    void services.mcodeTaskService
+    void services.zcodeTaskService
       .archiveTask({
         taskId: resolvedTaskActionTaskId,
         workspacePath: workspaceAbsPath,
@@ -597,7 +597,7 @@ export function WorkspaceHeaderTitleSection({
                     nextState: { pinned: !isPinned, archived: false },
                   });
                 }
-                void services.mcodeTaskService
+                void services.zcodeTaskService
                   .setTaskPinned({
                     taskId: resolvedTaskActionTaskId,
                     workspacePath: workspaceAbsPath,
@@ -681,7 +681,7 @@ export function WorkspaceHeaderTitleSection({
                 if (!resolvedTaskActionTaskId) {
                   return;
                 }
-                void services.mcodeTaskService
+                void services.zcodeTaskService
                   .setTaskUnread({
                     taskId: resolvedTaskActionTaskId,
                     workspacePath: workspaceAbsPath,
@@ -780,8 +780,8 @@ export function WorkspaceHeaderTitleSection({
           remoteMcpSyncService={services.mcpSyncService}
           localPluginSyncService={baseServices.pluginSyncService}
           remotePluginSyncService={services.pluginSyncService}
-          localMcodeAgentService={baseServices.mcodeAgentService}
-          remoteMcodeAgentService={services.mcodeAgentService}
+          localZCodeAgentService={baseServices.zcodeAgentService}
+          remoteZCodeAgentService={services.zcodeAgentService}
           remoteTarget={remoteTarget}
           skillWorkspacePath={workspaceAbsPath}
           mcpWorkspacePath={workspaceAbsPath}
@@ -791,7 +791,7 @@ export function WorkspaceHeaderTitleSection({
           workspaceIdentity={workspaceIdentity}
           onSkillsSynced={async () => {
             await invalidateDeferredDraftSessionForSkillChange({
-              mcodeSessionService: services.mcodeSessionService,
+              zcodeSessionService: services.zcodeSessionService,
               workspacePath: workspaceAbsPath,
               workspaceIdentity,
               reason: "header-remote-skill-sync",
@@ -819,8 +819,8 @@ export function WorkspaceHeaderTitleSection({
               skillsService: services.skillsService,
               workspaceIdentity,
               workspacePath: workspaceAbsPath,
-              mcodeAgentService: services.mcodeAgentService,
-              mcodeSessionService: services.mcodeSessionService,
+              zcodeAgentService: services.zcodeAgentService,
+              zcodeSessionService: services.zcodeSessionService,
             });
           }}
         />

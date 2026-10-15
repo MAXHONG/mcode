@@ -55,7 +55,7 @@ describe("BOT-E2E-SC-01 Feishu streaming card lifecycle", () => {
       listener: (event: McodeStreamEvent) => Promise<void> | void;
     }> = [];
 
-    const mcodeTaskService = {
+    const zcodeTaskService = {
       listTasks: async () => [],
       createTask: async (params: unknown) => {
         createTaskCalls.push(params);
@@ -111,7 +111,7 @@ describe("BOT-E2E-SC-01 Feishu streaming card lifecycle", () => {
         save: async () => undefined,
         delete: async () => undefined,
       },
-      mcodeTaskService,
+      zcodeTaskService,
       settingService: {
         get: async () => ({
           locale: "zh-CN",

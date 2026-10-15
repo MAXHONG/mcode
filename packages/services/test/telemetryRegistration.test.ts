@@ -44,7 +44,7 @@ describe("telemetry service registration", () => {
     ]);
 
     const services = createLocalServices({
-      mcodeBuiltinProviderConfigFilePath: resolve(
+      zcodeBuiltinProviderConfigFilePath: resolve(
         import.meta.dirname,
         "../../../config/provider/mcode-builtin.json",
       ),

@@ -7,7 +7,7 @@ import {
 describe("Account 快照协议", () => {
   const snapshot = {
     revision: "account-1",
-    basedOnMcodeBuiltinRevision: "builtin-1",
+    basedOnZCodeBuiltinRevision: "builtin-1",
     providers: {},
     states: {
       account: {

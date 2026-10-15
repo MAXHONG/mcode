@@ -73,7 +73,7 @@ export function createRemoteConnectionServiceCollection(params: {
       .register(ICredentialService, params.credentialService)
       .register(IBroadcastService, createBroadcastService(params.parentPort))
       .register(IMcodeTaskService, params.remoteMcodeTaskService)
-      .register(IMcodeAgentService, params.connectionServices.mcodeAgentService)
+      .register(IMcodeAgentService, params.connectionServices.zcodeAgentService)
       .register(IMcodeSessionService, params.remoteMcodeSessionService)
       .register(IPromptAttachmentTransferService, params.promptAttachmentTransferService)
       .register(IFileWatcherService, params.connectionServices.fileWatcherService)

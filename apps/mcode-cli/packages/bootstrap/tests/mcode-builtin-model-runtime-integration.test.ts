@@ -18,17 +18,17 @@ import {
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
 import { ApiProviderModelRuntime } from "../src/app/provider-registry-model-runtime.js";
 
-const mcodeBuiltinProviderConfigFilePath = fileURLToPath(
+const zcodeBuiltinProviderConfigFilePath = fileURLToPath(
   new URL("../../../../../config/provider/mcode-builtin.json", import.meta.url),
 );
 const source = new NodeMcodeBuiltinProviderConfigSource({
-  bundledFilePath: mcodeBuiltinProviderConfigFilePath,
+  bundledFilePath: zcodeBuiltinProviderConfigFilePath,
   watch: false,
 });
-let mcodeBuiltin: McodeBuiltinProviderConfigSnapshot;
+let zcodeBuiltin: McodeBuiltinProviderConfigSnapshot;
 
 beforeAll(async () => {
-  mcodeBuiltin = await source.read();
+  zcodeBuiltin = await source.read();
 });
 
 afterAll(() => source.dispose());
@@ -66,8 +66,8 @@ describe("真实 Mcode Built-in Config 到 Active Model", () => {
       providerConfig: {
         access: { type: "api-key", apiKey: "test-zai-api-key" },
         api: {
-          type: mcodeBuiltin.providerTemplates.get("zai-api")?.config.api?.type,
-          baseUrl: mcodeBuiltin.providerTemplates.get("zai-api")?.config.api?.baseUrl,
+          type: zcodeBuiltin.providerTemplates.get("zai-api")?.config.api?.type,
+          baseUrl: zcodeBuiltin.providerTemplates.get("zai-api")?.config.api?.baseUrl,
         },
       },
     });
@@ -164,19 +164,19 @@ function resolveOneBuiltinProvider(
     models?: ModelConfigRules;
   } = {},
 ): ProviderRegistry {
-  const provider = mcodeBuiltin.providers.get(providerId);
+  const provider = zcodeBuiltin.providers.get(providerId);
   const personalProvider = overlays.personalProviders?.get(providerId);
   if (!provider && !personalProvider) {
     throw new Error(`测试引用的 Built-in Provider 或 Personal 实例不存在: ${providerId}`);
   }
   const resolution = new ProviderConfigResolver().resolve({
-    mcodeBuiltinProviders: provider
+    zcodeBuiltinProviders: provider
       ? new ProviderConfigMap([[providerId, provider]])
       : ProviderConfigMap.empty(),
-    mcodeBuiltinProviderTemplates: mcodeBuiltin.providerTemplates,
+    zcodeBuiltinProviderTemplates: zcodeBuiltin.providerTemplates,
     accountProviders: overlays.accountProviders ?? ProviderConfigMap.empty(),
     personalProviders: overlays.personalProviders ?? ProviderConfigMap.empty(),
-    mcodeBuiltinModelRules: mcodeBuiltin.models,
+    zcodeBuiltinModelRules: zcodeBuiltin.models,
     personalModels: overlays.models ?? ModelConfigRules.empty(),
   });
   expect(resolution.issues).toEqual([]);

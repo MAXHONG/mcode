@@ -278,7 +278,7 @@ describe("hostResponseMessageSchema", () => {
       type: "init-local",
       workspacePath: "/repo/active",
       agentWarmupTargets: [{ workspacePath: "/repo/active" }],
-      mcodeBuiltinProviderConfigFilePath: "/repo/config/provider/mcode-builtin.json",
+      zcodeBuiltinProviderConfigFilePath: "/repo/config/provider/mcode-builtin.json",
       runtimeProcessEnvPatch: {
         PATH: "/Users/demo/.local/bin:/usr/bin:/bin",
         FNM_DIR: "/Users/demo/.fnm",
@@ -288,7 +288,7 @@ describe("hostResponseMessageSchema", () => {
     expect(parsed.success).toBe(true);
     if (parsed.success && parsed.data.type === "init-local") {
       expect(parsed.data.runtimeProcessEnvPatch?.PATH).toContain("/Users/demo/.local/bin");
-      expect(parsed.data.mcodeBuiltinProviderConfigFilePath).toBe(
+      expect(parsed.data.zcodeBuiltinProviderConfigFilePath).toBe(
         "/repo/config/provider/mcode-builtin.json",
       );
     }
@@ -306,7 +306,7 @@ describe("hostResponseMessageSchema", () => {
     expect(
       hostIncomingMessageSchema.safeParse({
         type: "init-local",
-        mcodeBuiltinProviderConfigFilePath: "/repo/config/provider/mcode-builtin.json",
+        zcodeBuiltinProviderConfigFilePath: "/repo/config/provider/mcode-builtin.json",
         runtimeProcessEnvPatch: { PATH: ["/usr/bin"] },
       }).success,
     ).toBe(false);
@@ -315,7 +315,7 @@ describe("hostResponseMessageSchema", () => {
   it("rejects more than one local host agent warmup target", () => {
     const parsed = hostIncomingMessageSchema.safeParse({
       type: "init-local",
-      mcodeBuiltinProviderConfigFilePath: "/repo/config/provider/mcode-builtin.json",
+      zcodeBuiltinProviderConfigFilePath: "/repo/config/provider/mcode-builtin.json",
       agentWarmupTargets: ["a", "b"].map((name) => ({
         workspacePath: `/repo/${name}`,
       })),
@@ -640,12 +640,12 @@ describe("hostResponseMessageSchema", () => {
   it("defaults Mcode interaction behavior to queue and accepts guide patches", () => {
     const parsed = appSettingsSchema.parse({});
     const patch = appSettingsPatchSchema.parse({
-      mcodeInteractionBehavior: "guide",
+      zcodeInteractionBehavior: "guide",
     });
 
-    expect(parsed.mcodeInteractionBehavior).toBe("queue");
+    expect(parsed.zcodeInteractionBehavior).toBe("queue");
     expect(patch).toMatchObject({
-      mcodeInteractionBehavior: "guide",
+      zcodeInteractionBehavior: "guide",
     });
   });
 

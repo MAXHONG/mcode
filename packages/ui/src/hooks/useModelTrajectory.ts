@@ -25,7 +25,7 @@ function getErrorMessage(error: unknown): string {
 /**
  * 读取某个 task/session 的模型调用轨迹（model-io）。
  *
- * 路径解析与文件读取都收口在 mcodeTaskService.getModelTrajectory（host 侧），
+ * 路径解析与文件读取都收口在 zcodeTaskService.getModelTrajectory（host 侧），
  * 桌面读本机、手机远控读远端 host，UI 只消费结构化结果。
  */
 export function useModelTrajectory(
@@ -33,7 +33,7 @@ export function useModelTrajectory(
   taskId: string | null,
   workspaceIdentity?: string,
 ): ModelTrajectoryState & { refresh: () => void } {
-  const mcodeTaskService = useMcodeTaskService(workspacePath, undefined, workspaceIdentity);
+  const zcodeTaskService = useMcodeTaskService(workspacePath, undefined, workspaceIdentity);
   const [state, setState] = useState<ModelTrajectoryState>(INITIAL_STATE);
   const [reloadToken, setReloadToken] = useState(0);
   const requestVersionRef = useRef(0);
@@ -57,7 +57,7 @@ export function useModelTrajectory(
     requestVersionRef.current = requestVersion;
     setState({ loading: true, data: null, error: null });
 
-    void mcodeTaskService
+    void zcodeTaskService
       .getModelTrajectory({ taskId })
       .then((data) => {
         if (disposed || requestVersionRef.current !== requestVersion) {
@@ -82,7 +82,7 @@ export function useModelTrajectory(
     return () => {
       disposed = true;
     };
-  }, [mcodeTaskService, taskId, workspaceIdentity, workspacePath, reloadToken]);
+  }, [zcodeTaskService, taskId, workspaceIdentity, workspacePath, reloadToken]);
 
   return { ...state, refresh };
 }

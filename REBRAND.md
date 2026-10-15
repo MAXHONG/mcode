@@ -29,6 +29,9 @@ Mcode 基于 [zai-org/ZCode](https://github.com/zai-org/ZCode) v3.15.1（Apache-
 - **官网内嵌页桥接**：`window.zcodeBridge`、`zcodejwttoken`、`__zcodeLang__` 等（Coding Plan 购买页、奖励页依赖）。
 - **插件协议**：`.zcode-plugin/plugin.json` 清单目录、`zcode-plugins-official` 市场 id、`ZCODE_PLUGIN_ROOT` 等插件环境变量、插件页面 API `window.zcode`、MCP `_meta` 中的 `zcode/*` 键。
 - **远控 relay 协议**字段（如 `zcode_type`），与官方手机/网页远控服务保持兼容。
+- **官网托管页 wire 标识**：`zcode-artifact://`、`.zcode-share`、`zcode-file-citation`、`zcode:coding-plan:*`、`zcode-theme`，以及 RPC 通道名 `zcode-task` / `zcode-agent` / `zcode-session`（手机/网页远控页、分享页、Coding Plan 内嵌页依赖）。
+- **远程开发（SSH / WSL / Docker）契约**：远端直接复用 `cdn-zcode.z.ai` 上的上游组件，因此远端目录 `~/.zcode/server`、`zcode-server.cjs`、`glm/<平台>/zcode.cjs`、`zcode-agent` wrapper、远端插件目录 `zcode-cua-plugin` / `zcode-guide-plugin`、握手消息 `zcode-hello` / `zcode-hello-ack`、远端环境变量 `ZCODE_SERVICE_AUTHORITY_MODE` / `ZCODE_APP_VERSION` / `ZCODE_SERVER_RUNTIME_ROOT` / `ZCODE_REMOTE_*` 均保持原名。桌面端其余 `MCODE_*` 环境变量在拼接远端启动命令时自动映射为 `ZCODE_*`。
+- **RPC 服务成员与数据字段名**（约 90 个，如 `zcodeTaskService`、`zcodeAgentService`、`zcodeJwtToken`、`zcodeBuiltin*`、`addZCodeAgentMcpServer`）：远端上游 server 与官方远控页按名字调用，属于协议的一部分，用户不可见。完整清单见 `scripts/rebrand/rebrand-to-mcode.py` 的保护规则。
 - 第三方依赖补丁（`patches/`）与 `LICENSE`。
 
 ## 构建与发布差异

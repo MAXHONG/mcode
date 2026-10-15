@@ -19,10 +19,10 @@ describe("LegacyRemoteWorkspaceRpcContract", () => {
   it("在构造 mixed service collection 前拒绝缺失的远端 channel", () => {
     const contract = completeContract();
     delete contract.terminalService;
-    delete contract.mcodeTaskService;
+    delete contract.zcodeTaskService;
 
     expect(() => assertLegacyRemoteWorkspaceRpcContract(contract)).toThrow(
-      "terminalService, mcodeTaskService",
+      "terminalService, zcodeTaskService",
     );
   });
 });

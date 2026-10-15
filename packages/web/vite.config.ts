@@ -28,12 +28,12 @@ export default defineConfig(({ mode }) => {
   // 启动脚本通过 process.env 显式选择 test/production；它必须优先于 .env 文件，
   // 否则 share:test 可能被 mode 的旧配置误解析到错误 endpoint。
   const env = { ...loadEnv(mode, REPO_ROOT, ""), ...process.env };
-  const mcodeEnv = resolveMcodeEnv(env.MCODE_ENV);
+  const zcodeEnv = resolveMcodeEnv(env.MCODE_ENV);
   const endpointEnv = {
     ...env,
-    MCODE_ENV: mcodeEnv,
+    MCODE_ENV: zcodeEnv,
   };
-  const mcodeEndpointOrigin = resolveRuntimeMcodeEndpointOrigin(endpointEnv);
+  const zcodeEndpointOrigin = resolveRuntimeMcodeEndpointOrigin(endpointEnv);
   const zaiOAuthOrigin = resolveZaiOAuthOrigin(endpointEnv);
   // ZAI OAuth client_id 是公开标识，允许注入浏览器包；secret/token 不得走 VITE_。
   const zaiOAuthClientId = resolveZaiOAuthClientId(endpointEnv);
@@ -59,7 +59,7 @@ export default defineConfig(({ mode }) => {
         // Web 登录本地调试时，OAuth token 交换必须先命中线上同源接口。
         // 该专用代理放在 `/api` 通配代理之前，避免被转发到本地 server 导致 404。
         "/api/v1/oauth/token": {
-          target: mcodeEndpointOrigin,
+          target: zcodeEndpointOrigin,
           changeOrigin: true,
           secure: true,
         },
@@ -86,10 +86,10 @@ export default defineConfig(({ mode }) => {
         resolveRemoteFrontendVersion(version, process.env.WEB_REMOTE_FRONTEND_VERSION),
       ),
       __MCODE_COMMIT__: JSON.stringify(env.MCODE_COMMIT || "unknown"),
-      __MCODE_ENV__: JSON.stringify(mcodeEnv),
-      "import.meta.env.VITE_MCODE_BASE_URL": JSON.stringify(mcodeEndpointOrigin),
+      __MCODE_ENV__: JSON.stringify(zcodeEnv),
+      "import.meta.env.VITE_MCODE_BASE_URL": JSON.stringify(zcodeEndpointOrigin),
       // 兼容旧 Web runtime 读取名；新代码统一读 VITE_MCODE_BASE_URL。
-      "import.meta.env.VITE_MCODE_ENDPOINT_ORIGIN": JSON.stringify(mcodeEndpointOrigin),
+      "import.meta.env.VITE_MCODE_ENDPOINT_ORIGIN": JSON.stringify(zcodeEndpointOrigin),
       // 明确注入 OAuth 公开配置，避免 Web 端在不同 mode 下隐式依赖源码 fallback。
       "import.meta.env.VITE_ZAI_OAUTH_CLIENT_ID": JSON.stringify(zaiOAuthClientId),
       "import.meta.env.VITE_ZAI_OAUTH_ORIGIN": JSON.stringify(zaiOAuthOrigin),

@@ -57,8 +57,8 @@ const agent = {
   onAgentRuntimeLifecycle: (handler: any) => subscribe("lifecycle", handler),
 };
 const services = {
-  mcodeAgentService: agent,
-  mcodeTaskService: { onDynamicWorkspaceEvent: () => (handler: any) => subscribe("task", handler) },
+  zcodeAgentService: agent,
+  zcodeTaskService: { onDynamicWorkspaceEvent: () => (handler: any) => subscribe("task", handler) },
   pluginUiBridgeService: proxy(harness.bridge),
   pluginUiSamplingService: proxy(harness.bridge),
   pluginUiAppToolsService: proxy(harness.appTools),

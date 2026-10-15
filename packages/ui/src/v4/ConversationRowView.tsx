@@ -1700,7 +1700,7 @@ const AssistantTextRowView = memo(function AssistantTextRowView({
         <GenUiMessageResponse
           completed={row.state === "complete"}
           messageKey={`${row.rowId}:${row.entityId ?? ""}`}
-          renderMcodeFileCitations
+          renderZCodeFileCitations
           streaming={streaming}
           workspacePath={context.workspacePath}
           workspaceIdentity={context.workspaceIdentity}

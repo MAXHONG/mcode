@@ -65,7 +65,7 @@ export async function prepareCliProviderRuntimeEnv(
     };
   }
 
-  const mcodeBuiltinFilePath =
+  const zcodeBuiltinFilePath =
     explicitMcodeBuiltin ??
     (await resolveBundledMcodeBuiltinProviderConfig({
       dataBaseDir,
@@ -76,15 +76,15 @@ export async function prepareCliProviderRuntimeEnv(
     explicitPersonal ?? join(dataBaseDir, ".mcode", "v2", PERSONAL_PROVIDER_CONFIG_FILE_NAME);
   const appVersion = options.appVersion ?? MCODE_VERSION;
   const platform = options.platform ?? resolveMcodeBuiltinClientPlatform();
-  const mcodeEndpointOrigin = resolveRuntimeMcodeEndpointOrigin(options.env);
+  const zcodeEndpointOrigin = resolveRuntimeMcodeEndpointOrigin(options.env);
   const cachePaths = resolveMcodeBuiltinCachePaths({
     environmentConfigRoot: join(dataBaseDir, ".mcode", "v2"),
     platform,
     appVersion,
-    mcodeEndpointOrigin,
+    zcodeEndpointOrigin,
   });
   const source = new NodeMcodeBuiltinProviderConfigSource({
-    bundledFilePath: mcodeBuiltinFilePath,
+    bundledFilePath: zcodeBuiltinFilePath,
     activeFilePath: cachePaths.activeFilePath,
     watch: false,
   });
@@ -97,7 +97,7 @@ export async function prepareCliProviderRuntimeEnv(
 
   return {
     [MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]: cachePaths.activeFilePath,
-    [MCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE_ENV]: mcodeBuiltinFilePath,
+    [MCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE_ENV]: zcodeBuiltinFilePath,
     [MCODE_PERSONAL_PROVIDER_CONFIG_FILE_ENV]: personalFilePath,
   };
 }

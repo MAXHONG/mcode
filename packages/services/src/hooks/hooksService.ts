@@ -25,7 +25,7 @@ import { atomicWriteWorkspaceHookConfig } from "./workspaceHookConfigMutation.js
 import {
   fromLegacyHooksConfig,
   fromProjectSnapshot,
-  fromUserMcodeSource,
+  fromUserZCodeSource,
   resolveNextRootEnabled,
   toMcodeHooksEvents,
   type LegacyHooksConfig,
@@ -250,7 +250,7 @@ async function loadHooksImpl(
     }),
     ...(await loadLegacyHooksFromLocation("agents", workspacePath)),
     ...(await loadLegacyHooksFromLocation("claude", workspacePath)),
-    ...fromUserMcodeSource({
+    ...fromUserZCodeSource({
       source: userSource,
       runtimeRoot,
       workspacePath,

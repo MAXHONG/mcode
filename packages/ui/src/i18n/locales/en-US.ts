@@ -2589,11 +2589,11 @@ const enUS: Record<string, string> = {
   "settings.toolGroupingChanges": "Group file changes",
   "settings.toolGroupingChangesDescription":
     "Group consecutive Write, Edit, and ApplyPatch calls into a Changes section.",
-  "settings.mcodeInteractionBehavior": "Interaction behavior",
+  "settings.zcodeInteractionBehavior": "Interaction behavior",
   "settings.mcodeInteractionBehaviorDescription":
     "While Mcode is running, add follow-up actions to the queue or guide them to run after the next tool call.",
-  "settings.mcodeInteractionBehavior.option.queue": "Queue",
-  "settings.mcodeInteractionBehavior.option.guide": "Guide",
+  "settings.zcodeInteractionBehavior.option.queue": "Queue",
+  "settings.zcodeInteractionBehavior.option.guide": "Guide",
   "settings.askUserQuestionAutoResolution": "Automatically continue questions",
   "settings.askUserQuestionAutoResolutionDescription":
     "When enabled, Agent questions automatically continue after 5 minutes without an answer. When disabled, current and future questions wait for your response.",
@@ -4601,7 +4601,7 @@ const enUS: Record<string, string> = {
   "settings.commands.description":
     "Manage Mcode Agent .md command files. Commands can be invoked with /command-name in chat.",
   "settings.commands.sourceFilterLabel": "Source filter",
-  "settings.commands.source.mcodeAgent": "Mcode Agent",
+  "settings.commands.source.zcodeAgent": "Mcode Agent",
   "settings.commands.add": "New",
   "settings.commands.addNew": "New command",
   "settings.commands.addDescription":

@@ -574,12 +574,12 @@ describe("McpSettingsSection status list", () => {
 
   it("status list key changes for enable toggles but ignores display status", () => {
     const baseServer = {
-      id: "mcodeagentmcp-global-broken",
+      id: "zcodeagentmcp-global-broken",
       name: "broken",
       config: { type: "stdio" as const, command: "missing-mcp-command" },
       enabled: true,
       status: "unknown" as const,
-      source: "mcodeagentmcp" as const,
+      source: "zcodeagentmcp" as const,
       scope: "user" as const,
     };
 
@@ -597,12 +597,12 @@ describe("McpSettingsSection status list", () => {
 
   it("tracks pending OAuth authorization as a refresh trigger", () => {
     const pendingServer = {
-      id: "mcodeagentmcp-global-figma",
+      id: "zcodeagentmcp-global-figma",
       name: "figma",
       config: { type: "http" as const, url: "https://mcp.example.test/mcp" },
       enabled: true,
       status: "connecting" as const,
-      source: "mcodeagentmcp" as const,
+      source: "zcodeagentmcp" as const,
       scope: "user" as const,
       authorization: {
         authorizationUrl: "https://auth.example.test/authorize?state=state_test",
@@ -612,7 +612,7 @@ describe("McpSettingsSection status list", () => {
     };
 
     expect(buildPendingMcpOAuthAuthorizationRefreshKey([pendingServer])).toBe(
-      "mcodeagentmcp-global-figma:2026-07-08T00:00:00.000Z",
+      "zcodeagentmcp-global-figma:2026-07-08T00:00:00.000Z",
     );
     expect(
       buildPendingMcpOAuthAuthorizationRefreshKey([
@@ -666,16 +666,16 @@ describe("McpSettingsSection status list", () => {
       buildMcpOAuthAuthorizationStatusRefreshServers(
         [
           {
-            id: "mcodeagentmcp-global-figma",
+            id: "zcodeagentmcp-global-figma",
             name: "figma",
             config: { type: "http" as const, url: "https://mcp.example.test/mcp" },
             enabled: true,
             status: "connecting" as const,
-            source: "mcodeagentmcp" as const,
+            source: "zcodeagentmcp" as const,
             scope: "user" as const,
           },
           {
-            id: "mcodeagentmcp-global-everything",
+            id: "zcodeagentmcp-global-everything",
             name: "everything",
             config: {
               type: "stdio" as const,
@@ -684,7 +684,7 @@ describe("McpSettingsSection status list", () => {
             },
             enabled: true,
             status: "connected" as const,
-            source: "mcodeagentmcp" as const,
+            source: "zcodeagentmcp" as const,
             scope: "user" as const,
           },
         ],

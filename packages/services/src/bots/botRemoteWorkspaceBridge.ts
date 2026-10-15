@@ -239,11 +239,11 @@ export function createBotRemoteWorkspaceService(params: {
       }
       return { ok: false, message: result.error ?? "unknown" };
     },
-    async getMcodeTaskService(target: {
+    async getZCodeTaskService(target: {
       workspacePath: string;
       workspaceIdentity: string;
     }): Promise<IMcodeTaskServiceShape | null> {
-      return (await getRuntimeServices(target))?.mcodeTaskService ?? null;
+      return (await getRuntimeServices(target))?.zcodeTaskService ?? null;
     },
     async getModelSelectionService(target: { workspacePath: string; workspaceIdentity: string }) {
       return (await getRuntimeServices(target))?.modelSelectionService ?? null;
@@ -255,7 +255,7 @@ export function createBotRemoteWorkspaceService(params: {
       // 这里只更新已经缓存的 runtime，避免切换设置时为了闲置 Bot 新建远端 Host/Agent。
       await Promise.all(
         Array.from(runtimeServicesByWorkspaceKey.values()).map((services) =>
-          services.mcodeAgentService.syncAppRuntimePreferences(preferences),
+          services.zcodeAgentService.syncAppRuntimePreferences(preferences),
         ),
       );
     },
@@ -325,7 +325,7 @@ export function createBotRemoteWorkspaceService(params: {
               settings.askUserQuestionAutoResolutionEnabled !== false,
             modelIoFullRetentionEnabled: settings.modelIoFullRetentionEnabled === true,
           }));
-      await services.mcodeAgentService.syncAppRuntimePreferences(preferences);
+      await services.zcodeAgentService.syncAppRuntimePreferences(preferences);
       if (revision === appRuntimePreferencesRevision) {
         break;
       }

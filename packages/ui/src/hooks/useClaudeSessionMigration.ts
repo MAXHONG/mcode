@@ -63,7 +63,7 @@ export function useClaudeSessionMigration(params: {
   workspaceIdentity?: string;
   isDesktop?: boolean;
 }) {
-  const mcodeTaskService = useMcodeTaskService(
+  const zcodeTaskService = useMcodeTaskService(
     params.workspacePath ?? undefined,
     undefined,
     params.workspaceIdentity,
@@ -156,7 +156,7 @@ export function useClaudeSessionMigration(params: {
       logger.info(
         `[Migration] 开始扫描 Claude 原生历史 workspaceFilter=${effectiveWorkspacePath ?? "all"} range=${range} limit=${scanLimit ?? "unlimited"}`,
       );
-      const nextCandidates = await mcodeTaskService.scanImportableClaudeSessions({
+      const nextCandidates = await zcodeTaskService.scanImportableClaudeSessions({
         workspacePath: effectiveWorkspacePath,
         ...(effectiveWorkspaceIdentity
           ? { workspaceIdentity: effectiveWorkspaceIdentity }
@@ -183,7 +183,7 @@ export function useClaudeSessionMigration(params: {
       setIsScanning(false);
     }
   }, [
-    mcodeTaskService,
+    zcodeTaskService,
     effectiveWorkspaceIdentity,
     effectiveWorkspacePath,
     range,
@@ -203,7 +203,7 @@ export function useClaudeSessionMigration(params: {
       logger.info(
         `[Migration] 开始导入 Claude 原生历史 workspaceFilter=${effectiveWorkspacePath ?? "all"} selected=${sessionIds.length}`,
       );
-      const result = await mcodeTaskService.importClaudeSessions({
+      const result = await zcodeTaskService.importClaudeSessions({
         workspacePath: effectiveWorkspacePath,
         ...(effectiveWorkspaceIdentity
           ? { workspaceIdentity: effectiveWorkspaceIdentity }
@@ -247,7 +247,7 @@ export function useClaudeSessionMigration(params: {
       setIsImporting(false);
     }
   }, [
-    mcodeTaskService,
+    zcodeTaskService,
     effectiveWorkspaceIdentity,
     effectiveWorkspacePath,
     supportState.supported,

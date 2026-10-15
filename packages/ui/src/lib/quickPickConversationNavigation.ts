@@ -76,7 +76,7 @@ export function selectQuickPickConversationTaskIds(params: {
     }
   }
 
-  // quickpick 的上/下一个任务以前只读 mcodeSessionStore.taskListCache。
+  // quickpick 的上/下一个任务以前只读 zcodeSessionStore.taskListCache。
   // 任务列表迁到 task query cache 后，旧缓存可能为空或顺序过期；只有新缓存还没到时才走旧路径兜底。
   return [...params.fallbackTaskIds];
 }

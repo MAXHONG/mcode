@@ -26,7 +26,7 @@ import {
 } from "../src/index.js";
 
 const temporaryDirectories: string[] = [];
-const mcodeBuiltinProviderConfigFilePath = fileURLToPath(
+const zcodeBuiltinProviderConfigFilePath = fileURLToPath(
   new URL("../../../config/provider/mcode-builtin.json", import.meta.url),
 );
 
@@ -44,7 +44,7 @@ afterEach(async () => {
 describe("@mcode/provider-node", () => {
   it("从 Built-in Model Config Rules 解析 ox-alpha 同策略别名和 API-specific reasoning", async () => {
     const source = new NodeMcodeBuiltinProviderConfigSource({
-      bundledFilePath: mcodeBuiltinProviderConfigFilePath,
+      bundledFilePath: zcodeBuiltinProviderConfigFilePath,
       watch: false,
     });
     const snapshot = await source.read();
@@ -110,7 +110,7 @@ describe("@mcode/provider-node", () => {
 
   it("从 Built-in Config 解析模型能力、Access 协议和 Tool Schema 兼容事实", async () => {
     const source = new NodeMcodeBuiltinProviderConfigSource({
-      bundledFilePath: mcodeBuiltinProviderConfigFilePath,
+      bundledFilePath: zcodeBuiltinProviderConfigFilePath,
       watch: false,
     });
     const snapshot = await source.read();
@@ -191,7 +191,7 @@ describe("@mcode/provider-node", () => {
         providerConfigRules: {
           providerRules: [
             {
-              providerId: "mcodeBuiltin",
+              providerId: "zcodeBuiltin",
               config: {
                 group: "zai-family",
                 access: {
@@ -250,12 +250,12 @@ describe("@mcode/provider-node", () => {
         [MCODE_PERSONAL_PROVIDER_CONFIG_FILE_ENV]: " /personal.json ",
       }),
     ).toEqual({
-      mcodeBuiltinFilePath: "/mcodeBuiltin.json",
+      zcodeBuiltinFilePath: "/mcodeBuiltin.json",
       personalFilePath: "/personal.json",
     });
     expect(
       createNodeProviderRuntimePathEnv({
-        mcodeBuiltinFilePath: "/mcodeBuiltin.json",
+        zcodeBuiltinFilePath: "/mcodeBuiltin.json",
         personalFilePath: "/personal.json",
       }),
     ).toEqual({
@@ -266,7 +266,7 @@ describe("@mcode/provider-node", () => {
 
   it("Mcode Built-in Source 每次读取当前版本化文件，revision 随内容改变", async () => {
     const root = await temporaryDirectory();
-    const filePath = join(root, "mcodeBuiltin.json");
+    const filePath = join(root, "zcodeBuiltin.json");
     await writeMcodeBuiltin(filePath, "model-a");
     const source = new NodeMcodeBuiltinProviderConfigSource({
       bundledFilePath: filePath,
@@ -277,15 +277,15 @@ describe("@mcode/provider-node", () => {
     await writeMcodeBuiltin(filePath, "model-b");
     const second = await source.read();
 
-    expect(first.providers.get("mcodeBuiltin")?.builtinModelIds).toEqual(["model-a"]);
-    expect(second.providers.get("mcodeBuiltin")?.builtinModelIds).toEqual(["model-b"]);
+    expect(first.providers.get("zcodeBuiltin")?.builtinModelIds).toEqual(["model-a"]);
+    expect(second.providers.get("zcodeBuiltin")?.builtinModelIds).toEqual(["model-b"]);
     expect(second.revision).not.toBe(first.revision);
     source.dispose();
   });
 
   it("Mcode Built-in Source 只为新的 content revision 发布一次变化", async () => {
     const root = await temporaryDirectory();
-    const filePath = join(root, "mcodeBuiltin.json");
+    const filePath = join(root, "zcodeBuiltin.json");
     await writeMcodeBuiltin(filePath, "model-a");
     const source = new NodeMcodeBuiltinProviderConfigSource({ bundledFilePath: filePath });
     const reasons: string[] = [];
@@ -301,7 +301,7 @@ describe("@mcode/provider-node", () => {
     await settleFileWatcher();
 
     expect(reasons).toEqual(["file-changed"]);
-    expect((await source.read()).providers.get("mcodeBuiltin")?.builtinModelIds).toEqual([
+    expect((await source.read()).providers.get("zcodeBuiltin")?.builtinModelIds).toEqual([
       "model-b",
     ]);
     source.dispose();
@@ -436,9 +436,9 @@ describe("@mcode/provider-node", () => {
 
   it("Node Config Runtime 在新目标缺失时调用外部 Legacy Importer 并不产生备份", async () => {
     const root = await temporaryDirectory();
-    const mcodeBuiltinFilePath = join(root, "mcodeBuiltin.json");
+    const zcodeBuiltinFilePath = join(root, "zcodeBuiltin.json");
     const personalFilePath = join(root, "provider_config.json");
-    await writeMcodeBuiltin(mcodeBuiltinFilePath, "mcodeBuiltin-model");
+    await writeMcodeBuiltin(zcodeBuiltinFilePath, "zcodeBuiltin-model");
     const importLegacy = vi.fn(async () => {
       return Object.freeze({
         providers: new ProviderConfigMap([["legacy", personalProviderConfig(false)]]),
@@ -446,7 +446,7 @@ describe("@mcode/provider-node", () => {
       });
     });
     const runtime = new NodeProviderConfigRuntime({
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       personalFilePath,
       importLegacy,
       watch: false,
@@ -472,7 +472,7 @@ describe("@mcode/provider-node", () => {
       throw new Error("已有 Personal Config 时不应再次导入旧 Provider Store");
     });
     const restartedRuntime = new NodeProviderConfigRuntime({
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       personalFilePath,
       importLegacy: repeatedImport,
       watch: false,
@@ -519,15 +519,15 @@ describe("@mcode/provider-node", () => {
 
   it("Endpoint-scoped Config Runtime 向 Agent 暴露当前 Endpoint 的 Active 路径", async () => {
     const root = await temporaryDirectory();
-    const mcodeBuiltinFilePath = join(root, "mcodeBuiltin.json");
+    const zcodeBuiltinFilePath = join(root, "zcodeBuiltin.json");
     const environmentConfigRoot = join(root, "environment");
     const personalFilePath = join(root, "config.json");
     const endpointOrigin = "https://api.example.com";
-    await writeMcodeBuiltin(mcodeBuiltinFilePath, "mcodeBuiltin-model");
+    await writeMcodeBuiltin(zcodeBuiltinFilePath, "zcodeBuiltin-model");
     const runtime = new NodeProviderConfigRuntime({
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       personalFilePath,
-      mcodeBuiltinEnvironment: {
+      zcodeBuiltinEnvironment: {
         environmentConfigRoot,
         platform: "darwin-aarch64",
         appVersion: "3.9.2",
@@ -540,29 +540,29 @@ describe("@mcode/provider-node", () => {
 
     await runtime.start();
 
-    await expect(runtime.resolveMcodeBuiltinActiveFilePath()).resolves.toBe(
+    await expect(runtime.resolveZCodeBuiltinActiveFilePath()).resolves.toBe(
       resolveMcodeBuiltinCachePaths({
         environmentConfigRoot,
         platform: "darwin-aarch64",
         appVersion: "3.9.2",
-        mcodeEndpointOrigin: endpointOrigin,
+        zcodeEndpointOrigin: endpointOrigin,
       }).activeFilePath,
     );
     // start 不等待后台下载；释放临时目录前等待首轮控制文件 lease 收尾，不能和 rm 竞态。
-    await runtime.refreshMcodeBuiltin();
+    await runtime.refreshZCodeBuiltin();
     runtime.dispose();
   });
 
   it("正式 Personal Config 损坏时保留原文件且不误调 Legacy Importer", async () => {
     const root = await temporaryDirectory();
-    const mcodeBuiltinFilePath = join(root, "mcodeBuiltin.json");
+    const zcodeBuiltinFilePath = join(root, "zcodeBuiltin.json");
     const personalFilePath = join(root, "provider_config.json");
     const invalidText = JSON.stringify({ provider: { unsupported: {} } }, null, 2);
-    await writeMcodeBuiltin(mcodeBuiltinFilePath, "mcodeBuiltin-model");
+    await writeMcodeBuiltin(zcodeBuiltinFilePath, "zcodeBuiltin-model");
     await writeFile(personalFilePath, invalidText, "utf8");
     const importLegacy = vi.fn(async () => emptyUpdate());
     const runtime = new NodeProviderConfigRuntime({
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       personalFilePath,
       importLegacy,
       watch: false,
@@ -579,16 +579,16 @@ describe("@mcode/provider-node", () => {
 
   it("Node Registry Runtime 在进程级聚合 Config，并只发布完整 API Provider", async () => {
     const root = await temporaryDirectory();
-    const mcodeBuiltinFilePath = join(root, "mcodeBuiltin.json");
+    const zcodeBuiltinFilePath = join(root, "zcodeBuiltin.json");
     const personalFilePath = join(root, "personal.json");
-    await writeCompleteMcodeBuiltin(mcodeBuiltinFilePath);
+    await writeCompleteMcodeBuiltin(zcodeBuiltinFilePath);
     await writeFile(
       personalFilePath,
       JSON.stringify(
         storedConfig({
           providers: new ProviderConfigMap([
             {
-              providerId: "mcodeBuiltin",
+              providerId: "zcodeBuiltin",
               templateId: "test-api",
               config: new ProviderConfig({
                 group: "standard-personal",
@@ -602,7 +602,7 @@ describe("@mcode/provider-node", () => {
       "utf8",
     );
     const runtime = new NodeProviderRegistryRuntime({
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       personalFilePath,
       watch: false,
     });
@@ -612,7 +612,7 @@ describe("@mcode/provider-node", () => {
 
     expect(snapshot.registry.providers).toHaveLength(1);
     expect(
-      runtime.registryService.getModel("mcodeBuiltin", "model-a")?.config.properties,
+      runtime.registryService.getModel("zcodeBuiltin", "model-a")?.config.properties,
     ).toMatchObject({
       contextWindow: 200_000,
       inputFormat: expect.objectContaining({ supportsVideo: false }),
@@ -659,7 +659,7 @@ async function writeMcodeBuiltin(filePath: string, modelId: string): Promise<voi
         providerConfigRules: {
           providerRules: [
             {
-              providerId: "mcodeBuiltin",
+              providerId: "zcodeBuiltin",
               config: {
                 group: "zai-family",
                 access: {

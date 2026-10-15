@@ -67,9 +67,9 @@ function toMessagePortLike(port: PortLike): MessagePortLike {
 }
 
 export interface RemoteBotWorkspaceRuntimeServices {
-  mcodeAgentService: IMcodeAgentServiceShape;
-  mcodeTaskService: IMcodeTaskServiceShape;
-  mcodeSessionService: IMcodeSessionServiceShape;
+  zcodeAgentService: IMcodeAgentServiceShape;
+  zcodeTaskService: IMcodeTaskServiceShape;
+  zcodeSessionService: IMcodeSessionServiceShape;
   modelSelectionService: IModelSelectionServiceShape;
 }
 
@@ -79,13 +79,13 @@ export function createRemoteRuntimeServicesFromPort(
   const protocol = new MessagePortProtocol(toMessagePortLike(port as PortLike));
   const client = new ChannelClient(protocol);
   return {
-    mcodeAgentService: ProxyChannel.toService<IMcodeAgentServiceShape>(
+    zcodeAgentService: ProxyChannel.toService<IMcodeAgentServiceShape>(
       client.getChannel(IMcodeAgentService.channelName),
     ),
-    mcodeTaskService: ProxyChannel.toService<IMcodeTaskServiceShape>(
+    zcodeTaskService: ProxyChannel.toService<IMcodeTaskServiceShape>(
       client.getChannel(IMcodeTaskService.channelName),
     ),
-    mcodeSessionService: ProxyChannel.toService<IMcodeSessionServiceShape>(
+    zcodeSessionService: ProxyChannel.toService<IMcodeSessionServiceShape>(
       client.getChannel(IMcodeSessionService.channelName),
     ),
     modelSelectionService: ProxyChannel.toService<IModelSelectionServiceShape>(

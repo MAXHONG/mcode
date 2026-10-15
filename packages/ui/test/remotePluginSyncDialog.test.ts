@@ -20,7 +20,7 @@ import {
 type RemotePluginSyncParams = Parameters<typeof syncSelectedRemotePlugins>[0];
 type RemotePluginSyncRow = RemotePluginSyncParams["rows"][number];
 type RemoteInstallResult = Awaited<
-  ReturnType<NonNullable<RemotePluginSyncParams["remoteMcodeAgentService"]>["installPlugin"]>
+  ReturnType<NonNullable<RemotePluginSyncParams["remoteZCodeAgentService"]>["installPlugin"]>
 >;
 
 function makeCandidate(
@@ -378,7 +378,7 @@ describe("RemotePluginSyncDialog helpers", () => {
         },
       } as never,
       remoteWorkspacePath: "/remote/workspace",
-      remoteMcodeAgentService: {
+      remoteZCodeAgentService: {
         addPluginMarketplace: async (params) => {
           calls.push(`add:${params.source}`);
           return { diagnostics: [] };
@@ -464,7 +464,7 @@ describe("RemotePluginSyncDialog helpers", () => {
       localPluginSyncService: {} as never,
       remotePluginSyncService: {} as never,
       remoteWorkspacePath: "/remote/workspace",
-      remoteMcodeAgentService: {
+      remoteZCodeAgentService: {
         installPlugin: async () => ({
           dependencyClosure: [],
           diagnostics: [],
@@ -572,7 +572,7 @@ describe("RemotePluginSyncDialog helpers", () => {
       localPluginSyncService: {} as never,
       remotePluginSyncService: {} as never,
       remoteWorkspacePath: "/remote/workspace",
-      remoteMcodeAgentService: {
+      remoteZCodeAgentService: {
         installPlugin: async (params) => {
           calls.push({ operation: "install", scope: params.scope });
           return {
@@ -666,7 +666,7 @@ describe("RemotePluginSyncDialog helpers", () => {
       localPluginSyncService: {} as never,
       remotePluginSyncService: {} as never,
       remoteWorkspacePath: "/remote/workspace",
-      remoteMcodeAgentService: {
+      remoteZCodeAgentService: {
         installPlugin: async (params) => {
           installOperationIds.push(params.operationId ?? "");
           if (params.pluginName === "slow") {
@@ -802,7 +802,7 @@ describe("RemotePluginSyncDialog helpers", () => {
       localPluginSyncService: {} as never,
       remotePluginSyncService: {} as never,
       remoteWorkspacePath: "/remote/workspace",
-      remoteMcodeAgentService: {
+      remoteZCodeAgentService: {
         installPlugin: async (params) => {
           installOperationIds.push(params.operationId ?? "");
           slowStarted.resolve();
@@ -847,7 +847,7 @@ describe("RemotePluginSyncDialog helpers", () => {
       localPluginSyncService: {} as never,
       remotePluginSyncService: {} as never,
       remoteWorkspacePath: "/remote/workspace",
-      remoteMcodeAgentService: {
+      remoteZCodeAgentService: {
         installPlugin: async (params) => {
           installCalls.push(params.pluginName);
           return {

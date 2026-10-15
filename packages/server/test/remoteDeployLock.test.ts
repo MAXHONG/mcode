@@ -62,7 +62,7 @@ describe("acquireRemoteDeployLock", () => {
     const backend = new ControlledLockBackend();
     let resolved = false;
     const acquirePromise = acquireRemoteDeployLock(backend, {
-      lockDir: "~/.mcode/server/.deploy.lock",
+      lockDir: "~/.zcode/server/.deploy.lock",
       ownerToken: "owner-test",
     }).then((handle) => {
       resolved = true;

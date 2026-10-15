@@ -309,7 +309,7 @@ export function useMcodeTaskService(
   const services = workspacePath
     ? useWorkspaceServices(workspacePath, preferredRemoteSessionId, workspaceIdentity)
     : useServices();
-  const rawService = services.mcodeTaskService;
+  const rawService = services.zcodeTaskService;
   if (!rawService || typeof rawService !== "object") {
     return rawService;
   }

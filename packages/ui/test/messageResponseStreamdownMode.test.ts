@@ -169,7 +169,7 @@ describe("resolveMessageStreamdownMode", () => {
         createElement(
           MessageResponse,
           {
-            renderMcodeFileCitations: true,
+            renderZCodeFileCitations: true,
             workspacePath: "/workspace",
             onOpenFileLink: vi.fn(),
           },
@@ -198,7 +198,7 @@ describe("resolveMessageStreamdownMode", () => {
         createElement(
           MessageResponse,
           {
-            renderMcodeFileCitations: true,
+            renderZCodeFileCitations: true,
             workspacePath: "/workspace",
             onOpenFileLink: vi.fn(),
           },
@@ -279,7 +279,7 @@ describe("resolveMessageStreamdownMode", () => {
         createElement(
           MessageResponse,
           {
-            renderMcodeFileCitations: true,
+            renderZCodeFileCitations: true,
             streaming: true,
             workspacePath: "/workspace",
             onOpenFileLink: vi.fn(),
@@ -298,7 +298,7 @@ describe("resolveMessageStreamdownMode", () => {
         createElement(
           MessageResponse,
           {
-            renderMcodeFileCitations: true,
+            renderZCodeFileCitations: true,
             streaming: true,
             workspacePath: "/workspace",
             onOpenFileLink: vi.fn(),
@@ -321,7 +321,7 @@ describe("resolveMessageStreamdownMode", () => {
         createElement(
           MessageResponse,
           {
-            renderMcodeFileCitations: true,
+            renderZCodeFileCitations: true,
             workspacePath: "C:\\workspace",
             onOpenFileLink: vi.fn(),
           },
@@ -341,7 +341,7 @@ describe("resolveMessageStreamdownMode", () => {
       createElement(
         MessageResponse,
         {
-          renderMcodeFileCitations: true,
+          renderZCodeFileCitations: true,
           workspacePath: "/workspace",
           onOpenFileLink: vi.fn(),
         },
@@ -366,7 +366,7 @@ describe("resolveMessageStreamdownMode", () => {
           createElement(
             MessageResponse,
             {
-              renderMcodeFileCitations: true,
+              renderZCodeFileCitations: true,
               workspacePath: "/workspace",
               onOpenFileLink: vi.fn(),
             },

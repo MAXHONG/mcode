@@ -6,7 +6,7 @@ import {
 import { createHttpServer } from "./http.js";
 
 async function main(): Promise<void> {
-  const mcodeBuiltinProviderConfigFilePath = await materializeBundledMcodeBuiltinProviderConfig({
+  const zcodeBuiltinProviderConfigFilePath = await materializeBundledMcodeBuiltinProviderConfig({
     environmentConfigRoot: getAppConfigDir(),
     content: readBundledMcodeBuiltinProviderConfig(),
   });
@@ -17,7 +17,7 @@ async function main(): Promise<void> {
   const topicResourcePeers = createTopicResourcePeers();
   const services = createLocalServices({
     topicResourceRelayChannel: (request) => topicResourcePeers.getChannel(request),
-    mcodeBuiltinProviderConfigFilePath,
+    zcodeBuiltinProviderConfigFilePath,
     providerProvisioningTargetEnabled: Boolean(authToken),
   });
 

@@ -126,7 +126,7 @@ describe("settingsSyncService Claude AGENTS.md migration", () => {
       targetExists: false,
       supported: true,
     });
-    await expect(service.copyClaudeAgentsFileToMcodeAgentsFile({
+    await expect(service.copyClaudeAgentsFileToZcodeAgentsFile({
       workspacePath,
       overwrite: false,
     })).resolves.toEqual({
@@ -159,7 +159,7 @@ describe("settingsSyncService Claude AGENTS.md migration", () => {
       supported: true,
     });
 
-    await expect(service.copyClaudeAgentsFileToMcodeAgentsFile({
+    await expect(service.copyClaudeAgentsFileToZcodeAgentsFile({
       workspacePath,
       overwrite: false,
     })).resolves.toEqual({
@@ -171,7 +171,7 @@ describe("settingsSyncService Claude AGENTS.md migration", () => {
     });
     expect(readFileSync(join(home, ".mcode", "AGENTS.md"), "utf-8")).toBe("existing agents");
 
-    await expect(service.copyClaudeAgentsFileToMcodeAgentsFile({
+    await expect(service.copyClaudeAgentsFileToZcodeAgentsFile({
       workspacePath,
       overwrite: true,
     })).resolves.toEqual({
@@ -200,7 +200,7 @@ describe("settingsSyncService Claude AGENTS.md migration", () => {
       supported: false,
       unavailableReason: "missingSource",
     });
-    await expect(service.copyClaudeAgentsFileToMcodeAgentsFile({
+    await expect(service.copyClaudeAgentsFileToZcodeAgentsFile({
       workspacePath,
       overwrite: true,
     })).resolves.toEqual({

@@ -17,7 +17,7 @@ export const MCODE_PLUGIN_ID_ENV_KEY = "MCODE_PLUGIN_ID";
 
 export type McpSource =
   | "mcp"
-  | "mcodeagentmcp"
+  | "zcodeagentmcp"
   | "claudeclimcp"
   | "geminiclimcp"
   | "codexclimcp"
@@ -113,7 +113,7 @@ export interface McpConfig {
   mcp: {
     mcpServers: Record<string, McpServerConfig>;
   };
-  mcodeagentmcp: CliMcpConfig;
+  zcodeagentmcp: CliMcpConfig;
   claudeclimcp: CliMcpConfig;
   geminiclimcp: CliMcpConfig;
   codexclimcp: CliMcpConfig;

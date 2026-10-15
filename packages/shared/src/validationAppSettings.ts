@@ -165,14 +165,14 @@ function sanitizeMcodeEndpointOrigin(value: unknown): unknown {
     return value;
   }
   const raw = value as Record<string, unknown>;
-  if (!("mcodeEndpointOrigin" in raw)) {
+  if (!("zcodeEndpointOrigin" in raw)) {
     return value;
   }
-  const parsed = mcodeEndpointOriginSchema.safeParse(raw.mcodeEndpointOrigin);
+  const parsed = mcodeEndpointOriginSchema.safeParse(raw.zcodeEndpointOrigin);
   if (parsed.success && typeof parsed.data === "string") {
-    return { ...raw, mcodeEndpointOrigin: parsed.data };
+    return { ...raw, zcodeEndpointOrigin: parsed.data };
   }
-  const { mcodeEndpointOrigin: _mcodeEndpointOrigin, ...next } = raw;
+  const { zcodeEndpointOrigin: _mcodeEndpointOrigin, ...next } = raw;
   // 非生产 endpoint override 是开发辅助字段，坏值只丢弃该字段，不能拖垮整个 settings 读取。
   return next;
 }
@@ -495,7 +495,7 @@ const appSettingsObjectSchema = z.object({
   toolGroupingExploreEnabled: z.boolean().default(true),
   toolGroupingTerminalEnabled: z.boolean().default(true),
   toolGroupingChangesEnabled: z.boolean().default(false),
-  mcodeInteractionBehavior: mcodeInteractionBehaviorSchema.default("queue"),
+  zcodeInteractionBehavior: mcodeInteractionBehaviorSchema.default("queue"),
   askUserQuestionAutoResolutionEnabled: z.boolean().default(true),
   modelIoFullRetentionEnabled: z.boolean().default(false),
   dynamicWorkflowMode: dynamicWorkflowModeSettingSchema,
@@ -522,7 +522,7 @@ const appSettingsObjectSchema = z.object({
   settingsSyncFirstRunPromptHandled: z.boolean().optional(),
   webRemoteControlExternalRelayDevice: webRemoteControlExternalRelayDeviceSchema.optional(),
   webRemoteControlLastEnabledContext: webRemoteControlLastEnabledContextSchema.optional(),
-  mcodeEndpointOrigin: mcodeEndpointOriginSchema.optional(),
+  zcodeEndpointOrigin: mcodeEndpointOriginSchema.optional(),
 });
 
 export const appSettingsSchema = z.preprocess(
@@ -572,7 +572,7 @@ export const appSettingsPatchSchema = z.object({
   toolGroupingExploreEnabled: z.boolean().optional(),
   toolGroupingTerminalEnabled: z.boolean().optional(),
   toolGroupingChangesEnabled: z.boolean().optional(),
-  mcodeInteractionBehavior: mcodeInteractionBehaviorSchema.optional(),
+  zcodeInteractionBehavior: mcodeInteractionBehaviorSchema.optional(),
   askUserQuestionAutoResolutionEnabled: z.boolean().optional(),
   modelIoFullRetentionEnabled: z.boolean().optional(),
   // 空串是「删除选择、回到跟随」的哨兵：RPC 会吞掉 undefined，normalizeSettingsPatch 把它归一成删除。
@@ -617,5 +617,5 @@ export const appSettingsPatchSchema = z.object({
   settingsSyncFirstRunPromptHandled: z.boolean().optional(),
   webRemoteControlExternalRelayDevice: webRemoteControlExternalRelayDeviceSchema.optional(),
   webRemoteControlLastEnabledContext: webRemoteControlLastEnabledContextSchema.optional(),
-  mcodeEndpointOrigin: mcodeEndpointOriginSchema.optional(),
+  zcodeEndpointOrigin: mcodeEndpointOriginSchema.optional(),
 });

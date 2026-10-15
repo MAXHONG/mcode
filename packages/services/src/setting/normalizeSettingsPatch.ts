@@ -69,12 +69,12 @@ export function normalizeSettingsPatch(patch: Partial<AppSettings>): Partial<App
   }
 
   if (
-    "mcodeEndpointOrigin" in normalizedPatch &&
-    typeof normalizedPatch.mcodeEndpointOrigin === "string"
+    "zcodeEndpointOrigin" in normalizedPatch &&
+    typeof normalizedPatch.zcodeEndpointOrigin === "string"
   ) {
     // 非生产 endpoint override 需要支持 Reset 清空；RPC/JSON 对 undefined 不稳定时，用空串也能回到默认生产域。
-    const trimmedMcodeEndpointOrigin = normalizedPatch.mcodeEndpointOrigin.trim();
-    normalizedPatch.mcodeEndpointOrigin =
+    const trimmedMcodeEndpointOrigin = normalizedPatch.zcodeEndpointOrigin.trim();
+    normalizedPatch.zcodeEndpointOrigin =
       trimmedMcodeEndpointOrigin.length > 0 ? trimmedMcodeEndpointOrigin : undefined;
   }
 

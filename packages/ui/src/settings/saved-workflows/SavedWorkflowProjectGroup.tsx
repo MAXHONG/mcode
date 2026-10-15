@@ -92,7 +92,7 @@ export function SavedWorkflowProjectGroup({
     project.remoteTarget,
   );
   const { services, rpcReady } = resolution;
-  const agentService = services.mcodeAgentService;
+  const agentService = services.zcodeAgentService;
   const fileWatcherService = services.fileWatcherService;
 
   const workspaceKey = useMemo(

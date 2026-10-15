@@ -310,7 +310,7 @@ export function TreemappingPane({
 }) {
   const { intl } = useMcodeIntl();
   const [selectedPath, setSelectedPath] = useState<string | null>(null);
-  // store 收尾：消息源从旧 mcodeSessionStore 迁 v4 conversation 投影 rows。
+  // store 收尾：消息源从旧 zcodeSessionStore 迁 v4 conversation 投影 rows。
   // 旧 source.kind === "message"（按 legacy messageId 锚定某条消息）的入口随旧
   // ChatView 一起删除，这里统一取最后一个 assistant 轮的活动。
   const message: TaskChatMessage | null = useTreemappingConversationMessage({

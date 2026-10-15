@@ -2,7 +2,7 @@
 import type { SettingsDirectoryLocation } from "./settings-source.js";
 
 export type CommandSource = "user" | "plugin";
-export type CommandAgentSource = "mcodeAgent";
+export type CommandAgentSource = "zcodeAgent";
 
 export interface CommandInfo {
   name: string;

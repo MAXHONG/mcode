@@ -336,7 +336,7 @@ export const WorkspaceShellLayout = memo(
     isDesktop,
     isMacDesktop,
     isWindowsDesktop,
-    workspaceShellMcodeState,
+    workspaceShellZCodeState,
     theme,
     isMacFullscreen,
     desktopWindowChromeState,
@@ -525,7 +525,7 @@ export const WorkspaceShellLayout = memo(
     usePaneSessionPersistence({
       workspaceKey,
       activeSessionId: activeTaskId,
-      draftFocusVersion: workspaceShellMcodeState.draftFocusVersion,
+      draftFocusVersion: workspaceShellZCodeState.draftFocusVersion,
       enabled: !isWebRemoteControlShell,
       selectSession: (sessionId) =>
         handleSelectTask(workspaceAbsPath, sessionId, workspaceIdentity),
@@ -2126,7 +2126,7 @@ export const WorkspaceShellLayout = memo(
                     providerWorkspaceConfigPath={providerConfigFile.path}
                     providerWorkspaceConfigExists={providerConfigFile.exists}
                     providerWorkspaceConfigLoading={providerConfigFile.loading}
-                    workspaceHeaderState={workspaceShellMcodeState}
+                    workspaceHeaderState={workspaceShellZCodeState}
                     gitSummary={gitState.summary}
                     gitDirtyFileCount={gitDirtyFileCount}
                     isMacDesktop={isMacDesktop}
@@ -2603,7 +2603,7 @@ export const WorkspaceShellLayout = memo(
                           providerWorkspaceConfigPath={providerConfigFile.path}
                           providerWorkspaceConfigExists={providerConfigFile.exists}
                           providerWorkspaceConfigLoading={providerConfigFile.loading}
-                          workspaceHeaderState={workspaceShellMcodeState}
+                          workspaceHeaderState={workspaceShellZCodeState}
                           gitSummary={gitState.summary}
                           gitDirtyFileCount={gitDirtyFileCount}
                           isMacDesktop={isMacDesktop}

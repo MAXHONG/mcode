@@ -12,7 +12,7 @@ export interface McodeBuiltinCachePathOptions {
   readonly environmentConfigRoot: string;
   readonly platform: string;
   readonly appVersion: string;
-  readonly mcodeEndpointOrigin: string;
+  readonly zcodeEndpointOrigin: string;
 }
 
 export interface McodeBuiltinCachePaths {
@@ -26,7 +26,7 @@ export function resolveMcodeBuiltinCachePaths(
 ): McodeBuiltinCachePaths {
   const platform = normalizeSegment(options.platform, "platform");
   const appVersion = normalizeSegment(options.appVersion, "appVersion");
-  const endpointKey = createMcodeBuiltinEndpointKey(options.mcodeEndpointOrigin);
+  const endpointKey = createMcodeBuiltinEndpointKey(options.zcodeEndpointOrigin);
   const directory = join(
     options.environmentConfigRoot,
     "runtime",
@@ -42,8 +42,8 @@ export function resolveMcodeBuiltinCachePaths(
 }
 
 /** 将 Mcode 控制面 Origin 规范化后映射为安全、稳定且碰撞风险可忽略的缓存路径段。 */
-export function createMcodeBuiltinEndpointKey(mcodeEndpointOrigin: string): string {
-  const normalized = normalizeMcodeBuiltinEndpointOrigin(mcodeEndpointOrigin);
+export function createMcodeBuiltinEndpointKey(zcodeEndpointOrigin: string): string {
+  const normalized = normalizeMcodeBuiltinEndpointOrigin(zcodeEndpointOrigin);
   const digest = createHash("sha256").update(normalized).digest("hex").slice(0, 32);
   return `endpoint-${digest}`;
 }

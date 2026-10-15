@@ -69,7 +69,7 @@ function setup(locale: "zh-CN" | "en-US" = "zh-CN", remote = true) {
   vi.stubGlobal("fetch", fetch);
   const service = f.createBotsService({
     repo: repo as never,
-    mcodeTaskService: taskService,
+    zcodeTaskService: taskService,
     broadcastService,
     modelSelectionService,
     credentialService: f.createCredentialService({ "secret-1": "secret" }),

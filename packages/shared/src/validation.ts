@@ -434,7 +434,7 @@ export const remoteTargetSchema = z.discriminatedUnion("kind", [
 ]);
 
 export const helloMessageSchema = z.object({
-  type: z.literal("mcode-hello"),
+  type: z.literal("zcode-hello"),
   version: z.string(),
   platform: z.string(),
   arch: z.string(),
@@ -442,7 +442,7 @@ export const helloMessageSchema = z.object({
 });
 
 export const helloAckMessageSchema = z.object({
-  type: z.literal("mcode-hello-ack"),
+  type: z.literal("zcode-hello-ack"),
   version: z.string(),
   clientId: nonEmptyStringSchema,
 });
@@ -523,7 +523,7 @@ export const hostInitLocalMessageSchema = z.object({
   // 启动只预热 active workspace（desktop STARTUP_AGENT_WARMUP_LIMIT = 1），协议层同步收紧上限。
   agentWarmupTargets: z.array(hostAgentWarmupTargetSchema).max(1).optional(),
   agentSpawnFallbackCwd: nonEmptyStringSchema.optional(),
-  mcodeBuiltinProviderConfigFilePath: nonEmptyStringSchema,
+  zcodeBuiltinProviderConfigFilePath: nonEmptyStringSchema,
   runtimeProcessEnvPatch: z
     .record(z.string().regex(/^[A-Za-z_][A-Za-z0-9_]*$/), z.string())
     .optional(),

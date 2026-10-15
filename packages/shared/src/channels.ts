@@ -107,13 +107,13 @@ export const ServiceChannels = {
   /** 跨窗口广播 */
   Broadcast: "broadcast",
   /** Mcode task wrapper 服务 */
-  McodeTask: "zcode-task",
+  ZCodeTask: "zcode-task",
   /** 窗口 Host 聚合 workspace/task 投影与列表写路由 */
   WindowController: "window-controller",
   /** Mcode Protocol agent 服务 */
-  McodeAgent: "zcode-agent",
+  ZCodeAgent: "zcode-agent",
   /** Mcode session 应用服务 */
-  McodeSession: "zcode-session",
+  ZCodeSession: "zcode-session",
   /** 会话分享发布、预览与 continuation API 编排 */
   ConversationShare: "conversation-share",
   /** 文件系统监视服务 */
@@ -145,7 +145,7 @@ export const ServiceChannels = {
   PluginSync: "plugin-sync",
   /** 插件管理服务 */
   Plugins: "plugins",
-  /** 设置页插件管理服务（UI 平台能力面收敛，不再直触 mcodeAgentService） */
+  /** 设置页插件管理服务（UI 平台能力面收敛，不再直触 zcodeAgentService） */
   PluginManagement: "plugin-management",
   /** 插件 UI 沙箱桥：host 读取 ui:// 资源并向 main 登记、代理 UI 发起的工具调用 */
   PluginUiBridge: "plugin-ui-bridge",

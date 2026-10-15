@@ -809,7 +809,7 @@ export interface IMcodeAgentService {
   ): Promise<McodeProviderTestModelConnectivityResult>;
   /**
    * @deprecated：send 主路径已收敛 v4 sendText 命令。仅剩两个消费点——
-   * adapter 带附件输入回退（待附件命令面落地后移除）与 mcodeSessionService
+   * adapter 带附件输入回退（待附件命令面落地后移除）与 zcodeSessionService
    * pass-through；新代码禁止回用。
    */
   sendPrompt(params: McodeAgentSendPromptParams): Promise<McodeSessionSendResult>;
@@ -1004,5 +1004,5 @@ export interface IMcodeAgentService {
 }
 
 export const IMcodeAgentService = createServiceDescriptor<IMcodeAgentService>(
-  ServiceChannels.McodeAgent,
+  ServiceChannels.ZCodeAgent,
 );

@@ -33,7 +33,7 @@ export async function createWorkerSelectionIntegration() {
   const deliverySource = new MutableAccountProviderConfigSource();
   let deliveryPaused = false;
   const runtimePaths = {
-    mcodeBuiltinFilePath: resolve("../../config/provider/mcode-builtin.json"),
+    zcodeBuiltinFilePath: resolve("../../config/provider/mcode-builtin.json"),
     personalFilePath: join(home, ".mcode/v2/provider_config.json"),
   };
   const runtime = new NodeProviderRegistryRuntime({
@@ -61,7 +61,7 @@ export async function createWorkerSelectionIntegration() {
     }
     source.replace(
       createAccountProviderConfigSnapshot(
-        config.mcodeBuiltinRevision,
+        config.zcodeBuiltinRevision,
         new ProviderConfigMap([...providers]),
         Object.fromEntries(
           [individual, team].map((id) => [
@@ -95,7 +95,7 @@ export async function createWorkerSelectionIntegration() {
         USERPROFILE: home,
         MCODE_DATA_BASE_DIR: home,
         MCODE_RUNTIME_ENV: "development",
-        MCODE_BUILTIN_PROVIDER_CONFIG_FILE: runtimePaths.mcodeBuiltinFilePath,
+        MCODE_BUILTIN_PROVIDER_CONFIG_FILE: runtimePaths.zcodeBuiltinFilePath,
         MCODE_PERSONAL_PROVIDER_CONFIG_FILE: runtimePaths.personalFilePath,
       },
     }),
@@ -118,7 +118,7 @@ export async function createWorkerSelectionIntegration() {
   const repo = new TaskIndexRepo();
   const syncer = createMcodeTaskIndexSyncer({ agentService: agent, taskIndexRepo: repo });
   const task = createMcodeTaskServiceAdapter({
-    mcodeAgentService: agent,
+    zcodeAgentService: agent,
     taskIndexRepo: repo,
     taskIndexSyncer: syncer,
   });

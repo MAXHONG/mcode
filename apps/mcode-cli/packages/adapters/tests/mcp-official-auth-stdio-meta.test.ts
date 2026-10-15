@@ -129,7 +129,7 @@ describe("official stdio MCP auth via tools/call _meta", () => {
     const adapter = createMcpAdapter({
       officialMcpAuth: {
         authHeadersPort: { resolveHeaders },
-        resolveMcodeApiOrigin: () => MCODE_ORIGIN,
+        resolveZCodeApiOrigin: () => MCODE_ORIGIN,
         trustedOrigins: { isTrusted },
       },
       workingDirectory: "/repo",
@@ -173,7 +173,7 @@ describe("official stdio MCP auth via tools/call _meta", () => {
         authHeadersPort: {
           resolveHeaders: vi.fn(async () => ({ headers: IDENTITY_HEADERS, ok: true as const })),
         },
-        resolveMcodeApiOrigin: () => MCODE_ORIGIN,
+        resolveZCodeApiOrigin: () => MCODE_ORIGIN,
         trustedOrigins: { isTrusted: vi.fn(async () => ({ trusted: true })) },
       },
     });
@@ -205,7 +205,7 @@ describe("official stdio MCP auth via tools/call _meta", () => {
             reason: "official_auth_plan_required" as const,
           })),
         },
-        resolveMcodeApiOrigin: () => MCODE_ORIGIN,
+        resolveZCodeApiOrigin: () => MCODE_ORIGIN,
         trustedOrigins: { isTrusted: vi.fn(async () => ({ trusted: true })) },
       },
     });
@@ -230,7 +230,7 @@ describe("official stdio MCP auth via tools/call _meta", () => {
     const adapter = createMcpAdapter({
       officialMcpAuth: {
         authHeadersPort: { resolveHeaders },
-        resolveMcodeApiOrigin: () => "http://mcode.example",
+        resolveZCodeApiOrigin: () => "http://mcode.example",
         trustedOrigins: {
           isTrusted: vi.fn(async () => ({ detail: "origin must be https", trusted: false })),
         },
@@ -256,7 +256,7 @@ describe("official stdio MCP auth via tools/call _meta", () => {
     const adapter = createMcpAdapter({
       officialMcpAuth: {
         authHeadersPort: { resolveHeaders },
-        resolveMcodeApiOrigin: () => {
+        resolveZCodeApiOrigin: () => {
           throw new Error("settings unavailable");
         },
         trustedOrigins: { isTrusted },
@@ -280,7 +280,7 @@ describe("official stdio MCP auth via tools/call _meta", () => {
     const adapter = createMcpAdapter({
       officialMcpAuth: {
         authHeadersPort: { resolveHeaders },
-        resolveMcodeApiOrigin: () => MCODE_ORIGIN,
+        resolveZCodeApiOrigin: () => MCODE_ORIGIN,
         trustedOrigins: {
           isTrusted: vi.fn(async () => {
             throw new Error("registry exploded");
@@ -323,7 +323,7 @@ describe("official stdio MCP auth via tools/call _meta", () => {
         authHeadersPort: {
           resolveHeaders: vi.fn(async () => ({ headers: IDENTITY_HEADERS, ok: true as const })),
         },
-        resolveMcodeApiOrigin: () => MCODE_ORIGIN,
+        resolveZCodeApiOrigin: () => MCODE_ORIGIN,
         trustedOrigins: { isTrusted: vi.fn(async () => ({ trusted: true })) },
       },
     });
@@ -339,7 +339,7 @@ describe("official stdio MCP auth via tools/call _meta", () => {
     const adapter = createMcpAdapter({
       officialMcpAuth: {
         authHeadersPort: { resolveHeaders },
-        resolveMcodeApiOrigin: () => MCODE_ORIGIN,
+        resolveZCodeApiOrigin: () => MCODE_ORIGIN,
         trustedOrigins: { isTrusted: vi.fn(async () => ({ trusted: true })) },
       },
     });

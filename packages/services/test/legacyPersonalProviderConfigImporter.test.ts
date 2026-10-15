@@ -42,7 +42,7 @@ function completeModelConfig(contextWindow = 200_000): ModelConfig {
 
 function mcodeBuiltinSnapshot(): ProviderConfigLayerSnapshot {
   return {
-    revision: "mcodeBuiltin-1",
+    revision: "zcodeBuiltin-1",
     providers: new ProviderConfigMap([
       [
         "deepseek",
@@ -344,9 +344,9 @@ describe("Legacy Personal Provider Config Importer", () => {
     ]);
 
     const resolution = new ProviderConfigResolver().resolve({
-      mcodeBuiltinProviders: ProviderConfigMap.empty(),
+      zcodeBuiltinProviders: ProviderConfigMap.empty(),
       personalProviders: document.providers,
-      mcodeBuiltinModelRules: genericRules,
+      zcodeBuiltinModelRules: genericRules,
       personalModels: document.models,
       accountProviders: ProviderConfigMap.empty(),
     });
@@ -398,9 +398,9 @@ describe("Legacy Personal Provider Config Importer", () => {
     expect(document.models.getExact("zai-api", "user-model")).toBeUndefined();
 
     const resolution = new ProviderConfigResolver().resolve({
-      mcodeBuiltinProviders: mcodeBuiltinSnapshot().providers,
+      zcodeBuiltinProviders: mcodeBuiltinSnapshot().providers,
       personalProviders: document.providers,
-      mcodeBuiltinModelRules: mcodeBuiltinSnapshot().models,
+      zcodeBuiltinModelRules: mcodeBuiltinSnapshot().models,
       personalModels: document.models,
       accountProviders: ProviderConfigMap.empty(),
     });

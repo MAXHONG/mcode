@@ -48,7 +48,7 @@ export function supportsTaskNativeSessionLogFile(
 /**
  * 读取当前 task 对应的原生会话日志路径。
  *
- * 路径规则统一通过 mcodeTaskService 解析，避免 UI 层猜 provider 自己的目录结构。
+ * 路径规则统一通过 zcodeTaskService 解析，避免 UI 层猜 provider 自己的目录结构。
  */
 export function useTaskNativeSessionLogFile(
   workspacePath: string,
@@ -57,7 +57,7 @@ export function useTaskNativeSessionLogFile(
   workspaceIdentity?: string,
   options: { enabled?: boolean } = {},
 ) {
-  const mcodeTaskService = useMcodeTaskService(workspacePath, undefined, workspaceIdentity);
+  const zcodeTaskService = useMcodeTaskService(workspacePath, undefined, workspaceIdentity);
   const [state, setState] = useState<TaskNativeSessionLogFileState>(INITIAL_STATE);
   const requestVersionRef = useRef(0);
   const enabled = options.enabled ?? true;
@@ -99,7 +99,7 @@ export function useTaskNativeSessionLogFile(
       error: null,
     });
 
-    void mcodeTaskService
+    void zcodeTaskService
       .getTaskNativeSessionLogFile({
         taskId,
         workspacePath,
@@ -143,7 +143,7 @@ export function useTaskNativeSessionLogFile(
     return () => {
       disposed = true;
     };
-  }, [enabled, mcodeTaskService, providerHint, taskId, workspaceIdentity, workspacePath]);
+  }, [enabled, zcodeTaskService, providerHint, taskId, workspaceIdentity, workspacePath]);
 
   return state;
 }

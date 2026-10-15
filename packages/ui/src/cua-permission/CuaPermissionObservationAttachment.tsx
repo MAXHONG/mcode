@@ -122,7 +122,7 @@ export function CuaPermissionObservationAttachment() {
     if (
       !permissionService ||
       !platform.openCuaPermissionOnboarding ||
-      typeof services.mcodeAgentService.onDynamicCuaPermissionObservation !== "function"
+      typeof services.zcodeAgentService.onDynamicCuaPermissionObservation !== "function"
     ) {
       return;
     }
@@ -132,7 +132,7 @@ export function CuaPermissionObservationAttachment() {
     let chain = Promise.resolve();
     let activeOperationId: string | null = null;
     let disposed = false;
-    const subscription = services.mcodeAgentService.onDynamicCuaPermissionObservation()(
+    const subscription = services.zcodeAgentService.onDynamicCuaPermissionObservation()(
       (observation) => {
         const missing = requiredCuaPermissionsForRequestAccessStatus(observation.permissionStatus);
         const key = cuaPermissionObservationKey(observation);

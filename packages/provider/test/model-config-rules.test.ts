@@ -162,7 +162,7 @@ describe("ModelConfigRules", () => {
       ],
     };
     const rules = parseMcodeBuiltinModelConfigRules(source);
-    expect(rules.toMcodeBuiltinJSON()).toEqual(source);
+    expect(rules.toZCodeBuiltinJSON()).toEqual(source);
   });
 
   it("Personal 手动配置通过所属集合表达模式，往返不混回智能组", () => {

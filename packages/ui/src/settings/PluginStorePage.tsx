@@ -69,7 +69,7 @@ export function PluginStorePage({
   const { intl, locale } = useMcodeIntl();
   const { order: storeOrder, refresh: refreshStoreOrder } = usePluginStoreOrder();
   const { pluginManagementService, skillsService } = useServices();
-  const mcodeSessionService = useMcodeSessionService(
+  const zcodeSessionService = useMcodeSessionService(
     workspacePath ?? undefined,
     undefined,
     workspaceIdentity,
@@ -306,7 +306,7 @@ export function PluginStorePage({
   // 避免会话里残留悬挂或旧版本能力。
   const refreshAfterPluginChange = useCallback(async () => {
     await invalidateDeferredDraftSessionForSkillChange({
-      mcodeSessionService,
+      zcodeSessionService,
       workspacePath,
       workspaceIdentity: normalizedWorkspaceIdentity ?? undefined,
       reason: "settings-plugin-enabled",
@@ -316,7 +316,7 @@ export function PluginStorePage({
       workspaceIdentity: normalizedWorkspaceIdentity,
       skillsService,
     });
-  }, [normalizedWorkspaceIdentity, skillsService, workspacePath, mcodeSessionService]);
+  }, [normalizedWorkspaceIdentity, skillsService, workspacePath, zcodeSessionService]);
 
   const uninstall = usePluginUninstall({
     pluginService: pluginManagementService,

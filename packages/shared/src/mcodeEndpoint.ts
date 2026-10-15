@@ -67,10 +67,10 @@ export interface McodeEndpointUrls {
   webRemoteCallbackUrl: string;
   webShareCallbackUrl: string;
   relayWsUrl: string;
-  mcodePlanOpenAiBaseUrl: string;
-  mcodePlanAnthropicBaseUrl: string;
-  mcodePlanBillingCurrentUrl: string;
-  mcodePlanBillingBalanceUrl: string;
+  zcodePlanOpenAiBaseUrl: string;
+  zcodePlanAnthropicBaseUrl: string;
+  zcodePlanBillingCurrentUrl: string;
+  zcodePlanBillingBalanceUrl: string;
 }
 
 export interface RuntimeMcodeEndpointEnv {
@@ -109,8 +109,8 @@ export interface RuntimeProductEndpointEnv
   extends RuntimeMcodeEndpointEnv, RuntimeBigModelApiEnv, RuntimeZaiEndpointEnv {}
 
 export interface RuntimeProductEndpointConfig {
-  mcodeEnv: McodeEnv;
-  mcodeEndpointOrigin: string;
+  zcodeEnv: McodeEnv;
+  zcodeEndpointOrigin: string;
   mcodeEndpointUrls: McodeEndpointUrls;
   zaiOAuthOrigin: string;
   zaiBusinessBaseUrl: string;
@@ -128,11 +128,11 @@ function readRuntimeEnvValue(
 
 function readRuntimeMcodeEnvScopedValue(
   env: Record<string, string | undefined>,
-  mcodeEnv: McodeEnv,
+  zcodeEnv: McodeEnv,
   testKey: string,
   productionKey: string,
 ): string | undefined {
-  return readRuntimeEnvValue(env, mcodeEnv === "production" ? productionKey : testKey);
+  return readRuntimeEnvValue(env, zcodeEnv === "production" ? productionKey : testKey);
 }
 
 export function normalizeMcodeEndpointOrigin(value: string): string {
@@ -175,7 +175,7 @@ export function isTrustedCodingPlanWebviewOrigin(
   }
 }
 
-export function resolveMcodeEndpointOrigin(options?: {
+export function resolveZCodeEndpointOrigin(options?: {
   env?: McodeEnv;
   envBaseOrigin?: string | null;
   overrideOrigin?: string | null;
@@ -205,14 +205,14 @@ export function resolveRuntimeMcodeEndpointOrigin(
   env: RuntimeMcodeEndpointEnv = {},
   options?: { overrideOrigin?: string | null },
 ): string {
-  const mcodeEnv = resolveRuntimeMcodeEnv(env);
+  const zcodeEnv = resolveRuntimeMcodeEnv(env);
   const scopedBaseOrigin =
-    mcodeEnv === "production"
+    zcodeEnv === "production"
       ? readRuntimeEnvValue(env, "MCODE_PRODUCTION_BASE_URL")
       : readRuntimeEnvValue(env, "MCODE_TEST_BASE_URL");
 
-  return resolveMcodeEndpointOrigin({
-    env: mcodeEnv,
+  return resolveZCodeEndpointOrigin({
+    env: zcodeEnv,
     envBaseOrigin:
       readRuntimeEnvValue(env, "MCODE_BASE_URL") ??
       readRuntimeEnvValue(env, "MCODE_ENDPOINT_ORIGIN") ??
@@ -251,13 +251,13 @@ export function resolveWebRemoteControlRelayWsUrl(options?: {
 }
 
 export function resolveBigModelApiOrigin(env: RuntimeBigModelApiEnv = {}): string {
-  const mcodeEnv = resolveRuntimeMcodeEnv(env);
+  const zcodeEnv = resolveRuntimeMcodeEnv(env);
   const scopedBaseOrigin =
-    mcodeEnv === "production"
+    zcodeEnv === "production"
       ? readRuntimeEnvValue(env, "BIGMODEL_PRODUCTION_API_BASE_URL")
       : readRuntimeEnvValue(env, "BIGMODEL_TEST_API_BASE_URL");
   const fallbackOrigin =
-    mcodeEnv === "production" ? DEFAULT_BIGMODEL_API_ORIGIN : TEST_BIGMODEL_API_ORIGIN;
+    zcodeEnv === "production" ? DEFAULT_BIGMODEL_API_ORIGIN : TEST_BIGMODEL_API_ORIGIN;
 
   return normalizeMcodeEndpointOrigin(
     readRuntimeEnvValue(env, "BIGMODEL_API_BASE_URL") ?? scopedBaseOrigin ?? fallbackOrigin,
@@ -280,15 +280,15 @@ export function buildBigModelCodingPlanTeamManageUrl(env: RuntimeBigModelApiEnv 
 }
 
 export function resolveZaiOAuthOrigin(env: RuntimeZaiEndpointEnv = {}): string {
-  const mcodeEnv = resolveRuntimeMcodeEnv(env);
+  const zcodeEnv = resolveRuntimeMcodeEnv(env);
   const scopedOrigin = readRuntimeMcodeEnvScopedValue(
     env,
-    mcodeEnv,
+    zcodeEnv,
     "ZAI_TEST_OAUTH_ORIGIN",
     "ZAI_PRODUCTION_OAUTH_ORIGIN",
   );
   const fallbackOrigin =
-    mcodeEnv === "production" ? DEFAULT_ZAI_OAUTH_ORIGIN : TEST_ZAI_OAUTH_ORIGIN;
+    zcodeEnv === "production" ? DEFAULT_ZAI_OAUTH_ORIGIN : TEST_ZAI_OAUTH_ORIGIN;
 
   return normalizeMcodeEndpointOrigin(
     readRuntimeEnvValue(env, "ZAI_OAUTH_ORIGIN") ?? scopedOrigin ?? fallbackOrigin,
@@ -296,15 +296,15 @@ export function resolveZaiOAuthOrigin(env: RuntimeZaiEndpointEnv = {}): string {
 }
 
 export function resolveZaiBusinessBaseUrl(env: RuntimeZaiEndpointEnv = {}): string {
-  const mcodeEnv = resolveRuntimeMcodeEnv(env);
+  const zcodeEnv = resolveRuntimeMcodeEnv(env);
   const scopedOrigin = readRuntimeMcodeEnvScopedValue(
     env,
-    mcodeEnv,
+    zcodeEnv,
     "ZAI_TEST_BUSINESS_BASE_URL",
     "ZAI_PRODUCTION_BUSINESS_BASE_URL",
   );
   const fallbackOrigin =
-    mcodeEnv === "production" ? DEFAULT_ZAI_BUSINESS_BASE_URL : TEST_ZAI_BUSINESS_BASE_URL;
+    zcodeEnv === "production" ? DEFAULT_ZAI_BUSINESS_BASE_URL : TEST_ZAI_BUSINESS_BASE_URL;
 
   return normalizeMcodeEndpointOrigin(
     readRuntimeEnvValue(env, "ZAI_BUSINESS_BASE_URL") ?? scopedOrigin ?? fallbackOrigin,
@@ -312,15 +312,15 @@ export function resolveZaiBusinessBaseUrl(env: RuntimeZaiEndpointEnv = {}): stri
 }
 
 export function resolveZaiOAuthClientId(env: RuntimeZaiEndpointEnv = {}): string {
-  const mcodeEnv = resolveRuntimeMcodeEnv(env);
+  const zcodeEnv = resolveRuntimeMcodeEnv(env);
   const scopedClientId = readRuntimeMcodeEnvScopedValue(
     env,
-    mcodeEnv,
+    zcodeEnv,
     "ZAI_TEST_OAUTH_CLIENT_ID",
     "ZAI_PRODUCTION_OAUTH_CLIENT_ID",
   );
   const fallbackClientId =
-    mcodeEnv === "production" ? DEFAULT_ZAI_OAUTH_CLIENT_ID : TEST_ZAI_OAUTH_CLIENT_ID;
+    zcodeEnv === "production" ? DEFAULT_ZAI_OAUTH_CLIENT_ID : TEST_ZAI_OAUTH_CLIENT_ID;
 
   return (
     readRuntimeEnvValue(env, "ZAI_OAUTH_CLIENT_ID") ??
@@ -347,13 +347,13 @@ export function buildRuntimeZaiBusinessUrl(env: RuntimeZaiEndpointEnv = {}, path
 export function resolveRuntimeProductEndpointConfig(
   env: RuntimeProductEndpointEnv = {},
 ): RuntimeProductEndpointConfig {
-  const mcodeEnv = resolveRuntimeMcodeEnv(env);
-  const mcodeEndpointOrigin = resolveRuntimeMcodeEndpointOrigin(env);
+  const zcodeEnv = resolveRuntimeMcodeEnv(env);
+  const zcodeEndpointOrigin = resolveRuntimeMcodeEndpointOrigin(env);
 
   return {
-    mcodeEnv,
-    mcodeEndpointOrigin,
-    mcodeEndpointUrls: buildMcodeEndpointUrls(mcodeEndpointOrigin),
+    zcodeEnv,
+    zcodeEndpointOrigin,
+    mcodeEndpointUrls: buildMcodeEndpointUrls(zcodeEndpointOrigin),
     zaiOAuthOrigin: resolveZaiOAuthOrigin(env),
     zaiBusinessBaseUrl: resolveZaiBusinessBaseUrl(env),
     zaiOAuthClientId: resolveZaiOAuthClientId(env),
@@ -379,10 +379,10 @@ export function buildMcodeEndpointUrls(
     webRemoteCallbackUrl: `${normalizedOrigin}/web-remote/callback`,
     webShareCallbackUrl: `${normalizedOrigin}/cn/share/callback`,
     relayWsUrl: `${wsOrigin}/ws`,
-    mcodePlanOpenAiBaseUrl: `${normalizedOrigin}/api/v1/zcode-plan`,
-    mcodePlanAnthropicBaseUrl: `${normalizedOrigin}/api/v1/zcode-plan/anthropic`,
-    mcodePlanBillingCurrentUrl: `${normalizedOrigin}/api/v1/zcode-plan/billing/current`,
-    mcodePlanBillingBalanceUrl: `${normalizedOrigin}/api/v1/zcode-plan/billing/balance`,
+    zcodePlanOpenAiBaseUrl: `${normalizedOrigin}/api/v1/zcode-plan`,
+    zcodePlanAnthropicBaseUrl: `${normalizedOrigin}/api/v1/zcode-plan/anthropic`,
+    zcodePlanBillingCurrentUrl: `${normalizedOrigin}/api/v1/zcode-plan/billing/current`,
+    zcodePlanBillingBalanceUrl: `${normalizedOrigin}/api/v1/zcode-plan/billing/balance`,
   };
 }
 

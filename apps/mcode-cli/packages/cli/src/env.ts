@@ -4,9 +4,9 @@ import { dirname, join, parse, resolve } from "node:path";
 import { config as loadDotenv } from "dotenv";
 import {
   MCODE_RUNTIME_ENV_KEY,
-  buildMcodeToolEnvPassthroughEnv,
+  buildZCodeToolEnvPassthroughEnv,
   normalizeMcodeRuntimeEnv,
-  sanitizeMcodeRuntimeEnv,
+  sanitizeZCodeRuntimeEnv,
   sanitizeMcodeRuntimeEnvInPlace,
   type McodeRuntimeEnv,
 } from "@mcode/shared/runtime-env";
@@ -30,8 +30,8 @@ export function prepareCliRuntimeEnv(
   argv: readonly string[] = process.argv,
 ): CliEnv {
   const prepared = {
-    ...sanitizeMcodeRuntimeEnv(env),
-    ...buildMcodeToolEnvPassthroughEnv(env),
+    ...sanitizeZCodeRuntimeEnv(env),
+    ...buildZCodeToolEnvPassthroughEnv(env),
   };
   applyCliRuntimeEnvDefaults(prepared, argv);
   return prepared;
@@ -41,7 +41,7 @@ export function applyCliRuntimeEnvSanitization(
   env: CliEnv,
   argv: readonly string[] = process.argv,
 ): void {
-  const toolEnvPassthrough = buildMcodeToolEnvPassthroughEnv(env);
+  const toolEnvPassthrough = buildZCodeToolEnvPassthroughEnv(env);
   sanitizeMcodeRuntimeEnvInPlace(env);
   Object.assign(env, toolEnvPassthrough);
   applyCliRuntimeEnvDefaults(env, argv);

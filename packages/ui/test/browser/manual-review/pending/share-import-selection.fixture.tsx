@@ -61,7 +61,7 @@ const modelSelectionService: IModelSelectionService = {
   onDidChange: () => ({ dispose() {} }),
 };
 const services = {
-  mcodeSessionService: {},
+  zcodeSessionService: {},
   settingService: { get: async () => ({}) },
 } as unknown as IServiceAccessor;
 const platform = {} as IPlatformService;

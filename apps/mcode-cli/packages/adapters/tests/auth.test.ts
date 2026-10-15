@@ -49,7 +49,7 @@ describe("shared Mcode credentials", () => {
       expect(await store.load(SHARED_MCODE_CREDENTIAL_KEYS.zaiAccessToken)).toBe(
         "zai-access-token",
       );
-      expect(await store.load(SHARED_MCODE_CREDENTIAL_KEYS.mcodeJwtToken)).toBe("mcode-jwt-token");
+      expect(await store.load(SHARED_MCODE_CREDENTIAL_KEYS.zcodeJwtToken)).toBe("mcode-jwt-token");
       expect(
         loadSharedMcodeCredentialSync(SHARED_MCODE_CREDENTIAL_KEYS.zaiAccessToken, {
           baseDir: dir,

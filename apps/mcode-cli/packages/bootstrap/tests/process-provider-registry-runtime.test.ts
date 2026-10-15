@@ -91,17 +91,17 @@ describe("process provider registry runtime", () => {
       expect(runtime.runtime.registryService.getSnapshot()).toBe(old);
       releaseDownload();
       await vi.waitFor(() =>
-        expect(runtime.runtime.registryService.getSnapshot()!.config.mcodeBuiltinRevision).toMatch(
+        expect(runtime.runtime.registryService.getSnapshot()!.config.zcodeBuiltinRevision).toMatch(
           `mcode-builtin:${builtin.revision}:`,
         ),
       );
       const next = runtime.runtime.registryService.getSnapshot()!;
-      expect(next.account.basedOnMcodeBuiltinRevision).toBe(next.config.mcodeBuiltinRevision);
+      expect(next.account.basedOnZCodeBuiltinRevision).toBe(next.config.zcodeBuiltinRevision);
       expect(JSON.parse(await readFile(active, "utf8")).revision).toBe(builtin.revision);
       expect(JSON.parse(await readFile(bundled, "utf8")).revision).toBe(builtin.revision - 1);
       const worker = await startProcessProviderRegistryRuntime(env);
       try {
-        expect(worker.snapshot.config.mcodeBuiltinRevision).toBe(next.config.mcodeBuiltinRevision);
+        expect(worker.snapshot.config.zcodeBuiltinRevision).toBe(next.config.zcodeBuiltinRevision);
         expect(request).toHaveBeenCalledTimes(2);
       } finally {
         worker.dispose();
@@ -136,8 +136,8 @@ describe("process provider registry runtime", () => {
       await writeFile(filePath, JSON.stringify(builtin));
       await vi.waitFor(() => {
         const next = runtime.runtime.registryService.getSnapshot()!;
-        expect(next.config.mcodeBuiltinRevision).toMatch(`mcode-builtin:${builtin.revision}:`);
-        expect(next.account.basedOnMcodeBuiltinRevision).toBe(next.config.mcodeBuiltinRevision);
+        expect(next.config.zcodeBuiltinRevision).toMatch(`mcode-builtin:${builtin.revision}:`);
+        expect(next.account.basedOnZCodeBuiltinRevision).toBe(next.config.zcodeBuiltinRevision);
       });
       expect(
         runtime.runtime.registryService.getProvider("account:bigmodel-individual-coding-plan"),
@@ -172,7 +172,7 @@ describe("process provider registry runtime", () => {
     try {
       for (const current of [personal, team, personal]) {
         const snapshot = createAccountProviderConfigSnapshot(
-          runtime.snapshot.config.mcodeBuiltinRevision,
+          runtime.snapshot.config.zcodeBuiltinRevision,
           providers,
           {
             [personal]: {
@@ -216,7 +216,7 @@ describe("process provider registry runtime", () => {
     } as const;
     const parsed = parseProcessAccountProviderConfigSnapshot({
       revision: "account-1",
-      basedOnMcodeBuiltinRevision: "mcode-builtin:1",
+      basedOnZCodeBuiltinRevision: "mcode-builtin:1",
       states,
       providers: {
         account: {
@@ -236,7 +236,7 @@ describe("process provider registry runtime", () => {
         builtinModelIds: ["model-a"],
       },
     });
-    expect(parsed.basedOnMcodeBuiltinRevision).toBe("mcode-builtin:1");
+    expect(parsed.basedOnZCodeBuiltinRevision).toBe("mcode-builtin:1");
     expect(parsed.states).toEqual(states);
   });
 
@@ -244,7 +244,7 @@ describe("process provider registry runtime", () => {
     expect(() =>
       parseProcessAccountProviderConfigSnapshot({
         revision: "account-invalid",
-        basedOnMcodeBuiltinRevision: "mcode-builtin:1",
+        basedOnZCodeBuiltinRevision: "mcode-builtin:1",
         providers: {
           api: {
             access: {
@@ -261,7 +261,7 @@ describe("process provider registry runtime", () => {
     expect(() =>
       parseProcessAccountProviderConfigSnapshot({
         revision: "account-invalid-static-field",
-        basedOnMcodeBuiltinRevision: "mcode-builtin:1",
+        basedOnZCodeBuiltinRevision: "mcode-builtin:1",
         providers: {
           account: {
             access: { type: "zhipu-account", entitled: true },
@@ -280,15 +280,15 @@ describe("process provider registry runtime", () => {
 
   it("Personal 文件损坏时保留原文件并以内存空配置启动", async () => {
     const root = await temporaryDirectory();
-    const mcodeBuiltinFilePath = join(root, "mcode-builtin.json");
+    const zcodeBuiltinFilePath = join(root, "mcode-builtin.json");
     const personalFilePath = join(root, "personal.json");
     await writeFile(
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       JSON.stringify(mcodeBuiltinRelease({ providers: {}, templates: {}, models: [] })),
     );
     await writeFile(personalFilePath, "{not-json");
     const started = await startProcessProviderRegistryRuntime({
-      [MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]: mcodeBuiltinFilePath,
+      [MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]: zcodeBuiltinFilePath,
       [MCODE_PERSONAL_PROVIDER_CONFIG_FILE_ENV]: personalFilePath,
     });
     try {
@@ -306,10 +306,10 @@ describe("process provider registry runtime", () => {
 
   it("从进程环境启动一份 Registry，并由调用方持有生命周期", async () => {
     const root = await temporaryDirectory();
-    const mcodeBuiltinFilePath = join(root, "mcode-builtin.json");
+    const zcodeBuiltinFilePath = join(root, "mcode-builtin.json");
     const personalFilePath = join(root, "personal.json");
     await writeFile(
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       JSON.stringify(
         mcodeBuiltinRelease({
           providers: {
@@ -391,7 +391,7 @@ describe("process provider registry runtime", () => {
     );
 
     const started = await startProcessProviderRegistryRuntime({
-      [MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]: mcodeBuiltinFilePath,
+      [MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]: zcodeBuiltinFilePath,
       [MCODE_PERSONAL_PROVIDER_CONFIG_FILE_ENV]: personalFilePath,
     });
 
@@ -400,7 +400,7 @@ describe("process provider registry runtime", () => {
     started?.accountSource.replace(
       {
         revision: "account-access-1",
-        basedOnMcodeBuiltinRevision: started!.snapshot.config.mcodeBuiltinRevision,
+        basedOnZCodeBuiltinRevision: started!.snapshot.config.zcodeBuiltinRevision,
         providers: new ProviderConfigMap([
           [
             "account",
@@ -422,7 +422,7 @@ describe("process provider registry runtime", () => {
     const beforeSwitch = await started.accountSource.read();
     const switched = parseProcessAccountProviderConfigSnapshot({
       revision: "account-access-2",
-      basedOnMcodeBuiltinRevision: beforeSwitch.basedOnMcodeBuiltinRevision,
+      basedOnZCodeBuiltinRevision: beforeSwitch.basedOnZCodeBuiltinRevision,
       providers: Object.fromEntries(
         [...beforeSwitch.providers.entries()].map(([id, config]) => [id, config.toJSON()]),
       ),
@@ -437,7 +437,7 @@ describe("process provider registry runtime", () => {
 
   it("Standalone 从账号凭据生成 Account Overlay，并在请求前返回当前 API Key", async () => {
     const root = await temporaryDirectory();
-    const mcodeBuiltinFilePath = join(root, "mcode-builtin.json");
+    const zcodeBuiltinFilePath = join(root, "mcode-builtin.json");
     const personalFilePath = join(root, "personal.json");
     const credentialStore = createSharedMcodeCredentialStore({
       baseDir: join(root, "home"),
@@ -450,7 +450,7 @@ describe("process provider registry runtime", () => {
       accountIdentity,
     });
     await writeFile(
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       JSON.stringify(
         mcodeBuiltinRelease({
           providers: {
@@ -514,7 +514,7 @@ describe("process provider registry runtime", () => {
 
     const started = await startProcessProviderRegistryRuntime(
       {
-        [MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]: mcodeBuiltinFilePath,
+        [MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]: zcodeBuiltinFilePath,
         [MCODE_PERSONAL_PROVIDER_CONFIG_FILE_ENV]: personalFilePath,
       },
       { standalone: { credentialStore } },
@@ -575,10 +575,10 @@ describe("process provider registry runtime", () => {
 
   it("Standalone 首次账号凭据读取失败时仍以 fail-closed Account 启动 Personal API Provider", async () => {
     const root = await temporaryDirectory();
-    const mcodeBuiltinFilePath = join(root, "mcode-builtin.json");
+    const zcodeBuiltinFilePath = join(root, "mcode-builtin.json");
     const personalFilePath = join(root, "personal.json");
     await writeFile(
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       JSON.stringify(
         mcodeBuiltinRelease({
           providers: {},
@@ -620,7 +620,7 @@ describe("process provider registry runtime", () => {
 
     const started = await startProcessProviderRegistryRuntime(
       {
-        [MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]: mcodeBuiltinFilePath,
+        [MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]: zcodeBuiltinFilePath,
         [MCODE_PERSONAL_PROVIDER_CONFIG_FILE_ENV]: personalFilePath,
       },
       { standalone: { credentialStore, onAccountInitializationError } },
@@ -633,11 +633,11 @@ describe("process provider registry runtime", () => {
 
   it("只有显式开启 Standalone 导入时才迁移旧 CLI 用户 Provider", async () => {
     const root = await temporaryDirectory();
-    const mcodeBuiltinFilePath = join(root, "mcode-builtin.json");
+    const zcodeBuiltinFilePath = join(root, "mcode-builtin.json");
     const personalFilePath = join(root, "personal.json");
     const legacyFilePath = join(root, "legacy-cli.json");
     await writeFile(
-      mcodeBuiltinFilePath,
+      zcodeBuiltinFilePath,
       JSON.stringify(
         mcodeBuiltinRelease({
           providers: {},
@@ -670,7 +670,7 @@ describe("process provider registry runtime", () => {
       "utf8",
     );
     const env = {
-      [MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]: mcodeBuiltinFilePath,
+      [MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]: zcodeBuiltinFilePath,
       [MCODE_PERSONAL_PROVIDER_CONFIG_FILE_ENV]: personalFilePath,
     };
 

@@ -177,7 +177,7 @@ export async function runMcodeProtocolAgent(
       create: () =>
         prepareMcodeTelemetryEnv(runtimeEnv, {
           cliVersion: options.version,
-          productVersion: options.env?.MCODE_APP_VERSION,
+          productVersion: options.env?.ZCODE_APP_VERSION,
           runtimeSurface,
         }),
     });
@@ -204,8 +204,8 @@ export async function runMcodeProtocolAgent(
     // 返回结构化权限错误，stdio 则把 reason 下发给插件。连接与工具发现都不受影响。
     let officialMcpAuthContext: OfficialMcpAuthRequestContext | undefined;
     // stdio 官方 MCP 没有 url 可供校验，targetOrigin 只能由宿主给出。
-    // 与下面 trustedOrigins 的 resolveMcodeApiOrigin 必须是同一个表达式，否则两侧判定分叉。
-    const resolveMcodeApiOrigin = (): string =>
+    // 与下面 trustedOrigins 的 resolveZCodeApiOrigin 必须是同一个表达式，否则两侧判定分叉。
+    const resolveZCodeApiOrigin = (): string =>
       resolveRuntimeMcodeEndpointOrigin(options.env ?? process.env);
     const workspaceIdentity = (options.env ?? process.env)[MCODE_WORKSPACE_IDENTITY_ENV]?.trim();
     const officialMcpAuth = {
@@ -226,13 +226,13 @@ export async function runMcodeProtocolAgent(
           };
         },
       }),
-      resolveMcodeApiOrigin,
+      resolveZCodeApiOrigin,
       ...(workspaceIdentity ? { workspaceIdentity } : {}),
       // 信任判定只看一条：目标 origin 等于当前 Mcode API origin（https）。pluginId 不参与。
       // origin 运行时解析（跟随 production/test 与自建环境），不硬编码域名。
       trustedOrigins: createOfficialMcpTrustedOriginRegistry({
         devTrustedOriginsRaw: (options.env ?? process.env)[OFFICIAL_MCP_DEV_TRUSTED_ORIGINS_ENV],
-        resolveMcodeApiOrigin,
+        resolveZCodeApiOrigin,
       }),
     };
     // MCP elicitation 归属到协议 server 的会话；pool 先于 server 创建，端口延迟绑定。

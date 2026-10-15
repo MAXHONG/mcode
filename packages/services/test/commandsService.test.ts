@@ -170,8 +170,8 @@ describe("commandsService", () => {
     expect(result.userCommands).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
-          agentSource: "mcodeAgent",
-          id: "mcodeAgent:mcode:global:/global",
+          agentSource: "zcodeAgent",
+          id: "zcodeAgent:mcode:global:/global",
           name: "/global",
           scope: "global",
           description: "Global command",
@@ -182,8 +182,8 @@ describe("commandsService", () => {
           }),
         }),
         expect.objectContaining({
-          agentSource: "mcodeAgent",
-          id: "mcodeAgent:mcode:project:/ops/deploy",
+          agentSource: "zcodeAgent",
+          id: "zcodeAgent:mcode:project:/ops/deploy",
           name: "/ops/deploy",
           scope: "project",
           projectPath: workspacePath,
@@ -217,8 +217,8 @@ describe("commandsService", () => {
 
     expect(result.userCommands).toEqual([
       expect.objectContaining({
-        agentSource: "mcodeAgent",
-        id: "mcodeAgent:mcode:project:/project-only",
+        agentSource: "zcodeAgent",
+        id: "zcodeAgent:mcode:project:/project-only",
         name: "/project-only",
         scope: "project",
         location: expect.objectContaining({
@@ -278,17 +278,17 @@ describe("commandsService", () => {
     const service = await createCommandsServiceInEnv(home);
     const all = await service.list({ workspacePath });
     const mcodeOnly = await service.list({
-      agentSource: "mcodeAgent",
+      agentSource: "zcodeAgent",
       workspacePath,
     });
 
     expect(all.userCommands.map((command) => command.id)).toEqual([
-      "mcodeAgent:mcode:project:/project",
-      "mcodeAgent:mcode:global:/review",
+      "zcodeAgent:mcode:project:/project",
+      "zcodeAgent:mcode:global:/review",
     ]);
     expect(mcodeOnly.userCommands.map((command) => command.id)).toEqual([
-      "mcodeAgent:mcode:project:/project",
-      "mcodeAgent:mcode:global:/review",
+      "zcodeAgent:mcode:project:/project",
+      "zcodeAgent:mcode:global:/review",
     ]);
   });
 
@@ -297,7 +297,7 @@ describe("commandsService", () => {
     const service = await createCommandsServiceInEnv(home);
 
     const created = await service.writeCommandFile({
-      agentSource: "mcodeAgent",
+      agentSource: "zcodeAgent",
       config: {
         name: "ship-it",
         prompt: "Ship it",
@@ -305,14 +305,14 @@ describe("commandsService", () => {
       },
     });
     const directory = await service.getPrimaryUserCommandsDirectory({
-      agentSource: "mcodeAgent",
+      agentSource: "zcodeAgent",
     });
 
     expect(directory.path).toBe(join(home, ".mcode", "commands"));
     expect(created.command).toMatchObject({
-      agentSource: "mcodeAgent",
+      agentSource: "zcodeAgent",
       filePath: join(home, ".mcode", "commands", "ship-it.md"),
-      id: "mcodeAgent:mcode:global:/ship-it",
+      id: "zcodeAgent:mcode:global:/ship-it",
       name: "/ship-it",
       location: expect.objectContaining({
         source: "mcode",
@@ -386,7 +386,7 @@ describe("commandsService", () => {
 
     expect(result.userCommands).toEqual([
       expect.objectContaining({
-        id: "mcodeAgent:agents:project:/agents-only",
+        id: "zcodeAgent:agents:project:/agents-only",
         name: "/agents-only",
         description: "agents only",
         location: expect.objectContaining({

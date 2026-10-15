@@ -1836,7 +1836,7 @@ async function isValidReleaseDir(releaseDir: string, platformArch: string): Prom
     return false;
   }
 
-  if (!(await fileExists(releaseDir, "server", "mcode-server.cjs"))) {
+  if (!(await fileExists(releaseDir, "server", "zcode-server.cjs"))) {
     return false;
   }
 

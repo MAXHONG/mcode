@@ -129,7 +129,7 @@ export function CodingPlanEmbeddedWebviewDialog({
       endpointOrigin: RENDERER_MCODE_ENDPOINT_URLS.origin,
       e2eStoreBridgeEnabled: env.VITE_MCODE_E2E_STORE_BRIDGE === "1",
       overrideOrigin: env.VITE_CODING_PLAN_WEBVIEW_ORIGIN,
-      mcodeEnv: MCODE_ENV,
+      zcodeEnv: MCODE_ENV,
     });
     // URL 带 ?lang= hint 让官网首屏就有正确语言，避免注入前的英文闪烁。
     // 同步带 ?theme= hint，避免官网 SSR 默认 dark 在 App 浅色主题下首帧闪烁。
@@ -181,13 +181,13 @@ export function CodingPlanEmbeddedWebviewDialog({
           provider === "zai"
             ? {
                 zaiAccessToken: values[0],
-                mcodeJwtToken: values[1],
+                zcodeJwtToken: values[1],
               }
             : {
                 bigmodelAccessToken: values[0],
                 // BigModel OAuth callback 同样会落盘 mcode JWT；官网用它在
                 // zcode-plan 域查 billing/balance 判定 Start Plan 状态。
-                mcodeJwtToken: values[1],
+                zcodeJwtToken: values[1],
               };
         const reportContext = buildCodingPlanEmbeddedReportContext({
           funnelContext,

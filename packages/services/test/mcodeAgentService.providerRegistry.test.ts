@@ -846,7 +846,7 @@ describe("createMcodeAgentService provider registry", () => {
     const { createMcodeAgentService } = await import("../src/mcode-agent/mcodeAgentService.js");
     const accountSnapshot: AccountProviderConfigSnapshot = {
       revision: "account-1",
-      basedOnMcodeBuiltinRevision: "mcode-builtin:1",
+      basedOnZCodeBuiltinRevision: "mcode-builtin:1",
       states: {
         "account:zai-individual-coding-plan": {
           availability: "available",
@@ -891,7 +891,7 @@ describe("createMcodeAgentService provider registry", () => {
       mcodeProtocolMethods.providerUpdateAccountConfig,
       {
         revision: "account-1",
-        basedOnMcodeBuiltinRevision: "mcode-builtin:1",
+        basedOnZCodeBuiltinRevision: "mcode-builtin:1",
         states: accountSnapshot.states,
         providers: {
           "account:zai-individual-coding-plan": {
@@ -916,7 +916,7 @@ describe("createMcodeAgentService provider registry", () => {
   it("pushes changed Account Config without rebuilding the Workspace Snapshot", async () => {
     const accountSource = createAccountProviderConfigChangeSource({
       revision: "account-1",
-      basedOnMcodeBuiltinRevision: "mcode-builtin:1",
+      basedOnZCodeBuiltinRevision: "mcode-builtin:1",
       providers: new ProviderConfigMap([
         [
           "account:zai-individual-coding-plan",
@@ -966,7 +966,7 @@ describe("createMcodeAgentService provider registry", () => {
 
     accountSource.emit("team-plan-selected", {
       revision: "account-2",
-      basedOnMcodeBuiltinRevision: "mcode-builtin:1",
+      basedOnZCodeBuiltinRevision: "mcode-builtin:1",
       providers: new ProviderConfigMap([
         [
           "account:zai-individual-coding-plan",

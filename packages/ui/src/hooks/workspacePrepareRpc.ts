@@ -14,7 +14,7 @@ export async function prepareWorkspaceWithMcodeSessionService(params: {
   workspacePath: string;
   workspaceIdentity?: string;
   provider: McodeProvider;
-  mcodeSessionService: Pick<IMcodeSessionService, "readWorkspacePresentation">;
+  zcodeSessionService: Pick<IMcodeSessionService, "readWorkspacePresentation">;
 }): Promise<McodeWorkspacePrepareResult> {
   const startedAt = Date.now();
   logger.info("[mcode-workspace-presentation] workspace prepare start", {
@@ -25,7 +25,7 @@ export async function prepareWorkspaceWithMcodeSessionService(params: {
 
   let presentation: Awaited<ReturnType<IMcodeSessionService["readWorkspacePresentation"]>>;
   try {
-    presentation = await params.mcodeSessionService.readWorkspacePresentation({
+    presentation = await params.zcodeSessionService.readWorkspacePresentation({
       workspacePath: params.workspacePath,
       workspaceIdentity: params.workspaceIdentity,
     });

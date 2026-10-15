@@ -32,28 +32,28 @@ afterEach(() => {
 });
 
 describe("MCP Source Types", () => {
-  it("应包含 mcodeagentmcp 类型", () => {
-    const sources: McpSource[] = ["mcp", "mcodeagentmcp"];
+  it("应包含 zcodeagentmcp 类型", () => {
+    const sources: McpSource[] = ["mcp", "zcodeagentmcp"];
 
-    expect(sources).toContain("mcodeagentmcp");
+    expect(sources).toContain("zcodeagentmcp");
   });
 
-  it("mcodeagentmcp 应该是 CliMcpSource 类型", () => {
-    const cliSource: CliMcpSource = "mcodeagentmcp";
-    expect(cliSource).toBe("mcodeagentmcp");
+  it("zcodeagentmcp 应该是 CliMcpSource 类型", () => {
+    const cliSource: CliMcpSource = "zcodeagentmcp";
+    expect(cliSource).toBe("zcodeagentmcp");
   });
 });
 
 describe("MCP Source Descriptors", () => {
   it("只为 Mcode Agent 提供描述符", () => {
-    expect(MCP_SOURCE_DESCRIPTORS.map((descriptor) => descriptor.source)).toEqual(["mcodeagentmcp"]);
+    expect(MCP_SOURCE_DESCRIPTORS.map((descriptor) => descriptor.source)).toEqual(["zcodeagentmcp"]);
   });
 
-  it("应能通过 getSourceDescriptor 获取 mcodeagentmcp 描述符", () => {
-    const descriptor = getSourceDescriptor("mcodeagentmcp");
+  it("应能通过 getSourceDescriptor 获取 zcodeagentmcp 描述符", () => {
+    const descriptor = getSourceDescriptor("zcodeagentmcp");
 
     expect(descriptor).toBeDefined();
-    expect(descriptor.source).toBe("mcodeagentmcp");
+    expect(descriptor.source).toBe("zcodeagentmcp");
     expect(descriptor.configDirSegments).toEqual([".mcode", "cli"]);
     expect(descriptor.fileName).toBe("config.json");
     expect(descriptor.format).toBe("json");
@@ -75,15 +75,15 @@ describe("MCP Source Descriptors", () => {
 });
 
 describe("MCP 配置文件路径", () => {
-  it("mcodeagentmcp 主配置文件应在 ~/.mcode/cli/config.json", () => {
-    const descriptor = getSourceDescriptor("mcodeagentmcp");
+  it("zcodeagentmcp 主配置文件应在 ~/.mcode/cli/config.json", () => {
+    const descriptor = getSourceDescriptor("zcodeagentmcp");
 
     expect(descriptor.configDirSegments).toEqual([".mcode", "cli"]);
     expect(descriptor.fileName).toBe("config.json");
   });
 
-  it("mcodeagentmcp 应使用 JSON 格式和 mcp.servers 键名", () => {
-    const descriptor = getSourceDescriptor("mcodeagentmcp");
+  it("zcodeagentmcp 应使用 JSON 格式和 mcp.servers 键名", () => {
+    const descriptor = getSourceDescriptor("zcodeagentmcp");
 
     expect(descriptor.format).toBe("json");
     expect(descriptor.configKeyName).toBe("mcp.servers");
@@ -202,7 +202,7 @@ describe("MCP enabled state", () => {
 
     await saveCliMcpToUserDirectory({
       action: "set-enabled",
-      source: "mcodeagentmcp",
+      source: "zcodeagentmcp",
       name: "browser",
       enabled: false,
       projectPath: workspacePath,
@@ -223,7 +223,7 @@ describe("MCP enabled state", () => {
 
     await saveCliMcpToUserDirectory({
       action: "set-enabled",
-      source: "mcodeagentmcp",
+      source: "zcodeagentmcp",
       name: "browser",
       enabled: true,
       projectPath: workspacePath,
@@ -261,7 +261,7 @@ describe("MCP enabled state", () => {
 
     await saveCliMcpToUserDirectory({
       action: "set-enabled",
-      source: "mcodeagentmcp",
+      source: "zcodeagentmcp",
       name: "browser",
       enabled: false,
       location: server?.location,
@@ -322,7 +322,7 @@ describe("MCP enabled state", () => {
 
     await saveCliMcpToUserDirectory({
       action: "set-enabled",
-      source: "mcodeagentmcp",
+      source: "zcodeagentmcp",
       name: "browser",
       enabled: false,
       location: server?.location,
@@ -441,7 +441,7 @@ describe("MCP enabled state", () => {
 
     await saveCliMcpToUserDirectory({
       action: "set-enabled",
-      source: "mcodeagentmcp",
+      source: "zcodeagentmcp",
       name: "browser",
       enabled: true,
       location: server?.location,

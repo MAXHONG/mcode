@@ -19,7 +19,7 @@ import {
 } from "@/lib/taskListMetaSync.js";
 
 export function syncBotTaskConfigOptionsToStore(params: {
-  mcodeSessionStore: Pick<
+  zcodeSessionStore: Pick<
     ReturnType<typeof useMcodeSessionStore.getState>,
     "setTaskConfigOptions"
   >;
@@ -31,7 +31,7 @@ export function syncBotTaskConfigOptionsToStore(params: {
   // Bugfix: Bot /mode 不经过 ChatInputToolbar/useTaskStreamEvents。
   // setTaskConfigOptions 会按 activeTaskId 决定是否同步到 workspace configOptions，
   // 当前 mode 再由 configOptions 派生，避免 UI 维护第二份模式状态。
-  params.mcodeSessionStore.setTaskConfigOptions(
+  params.zcodeSessionStore.setTaskConfigOptions(
     params.workspacePath,
     params.taskId,
     params.configOptions,
@@ -80,8 +80,8 @@ export function useBotBroadcastEffects(
         tabStoreApi.getState().tabs,
       );
       if (stream) {
-        const mcodeSessionStore = useMcodeSessionStore.getState();
-        const workspaceState = mcodeSessionStore.getWorkspaceState(
+        const zcodeSessionStore = useMcodeSessionStore.getState();
+        const workspaceState = zcodeSessionStore.getWorkspaceState(
           stream.workspacePath,
           stream.workspaceIdentity,
         );
@@ -104,7 +104,7 @@ export function useBotBroadcastEffects(
           case "agent_message_chunk":
           case "agent_thought_chunk":
           case "tool_call":
-            mcodeSessionStore.setTaskRuntimeState(
+            zcodeSessionStore.setTaskRuntimeState(
               stream.workspacePath,
               stream.taskId,
               "streaming",
@@ -113,8 +113,8 @@ export function useBotBroadcastEffects(
             );
             break;
           case "permission_request":
-            mcodeSessionStore.setTaskPermissionRequest(stream.workspacePath, stream.taskId, event, stream.workspaceIdentity);
-            mcodeSessionStore.setTaskRuntimeState(
+            zcodeSessionStore.setTaskPermissionRequest(stream.workspacePath, stream.taskId, event, stream.workspaceIdentity);
+            zcodeSessionStore.setTaskRuntimeState(
               stream.workspacePath,
               stream.taskId,
               "streaming",
@@ -123,15 +123,15 @@ export function useBotBroadcastEffects(
             );
             break;
           case "task_complete":
-            mcodeSessionStore.setTaskRuntimeState(
+            zcodeSessionStore.setTaskRuntimeState(
               stream.workspacePath,
               stream.taskId,
               "completed",
               undefined,
               stream.workspaceIdentity,
             );
-            mcodeSessionStore.setTaskPermissionRequest(stream.workspacePath, stream.taskId, null, stream.workspaceIdentity);
-            mcodeSessionStore.setTaskError(stream.workspacePath, stream.taskId, null, stream.workspaceIdentity);
+            zcodeSessionStore.setTaskPermissionRequest(stream.workspacePath, stream.taskId, null, stream.workspaceIdentity);
+            zcodeSessionStore.setTaskError(stream.workspacePath, stream.taskId, null, stream.workspaceIdentity);
             break;
           case "task_error": {
             const normalizedError = normalizeMcodeUiError(
@@ -146,19 +146,19 @@ export function useBotBroadcastEffects(
                 taskId: event.taskId,
               },
             );
-            mcodeSessionStore.setTaskRuntimeState(
+            zcodeSessionStore.setTaskRuntimeState(
               stream.workspacePath,
               stream.taskId,
               "failed",
               normalizedError.message,
               stream.workspaceIdentity,
             );
-            mcodeSessionStore.setTaskPermissionRequest(stream.workspacePath, stream.taskId, null, stream.workspaceIdentity);
-            mcodeSessionStore.setTaskError(stream.workspacePath, stream.taskId, normalizedError, stream.workspaceIdentity);
+            zcodeSessionStore.setTaskPermissionRequest(stream.workspacePath, stream.taskId, null, stream.workspaceIdentity);
+            zcodeSessionStore.setTaskError(stream.workspacePath, stream.taskId, normalizedError, stream.workspaceIdentity);
             break;
           }
           case "task_warning":
-            mcodeSessionStore.setTaskError(
+            zcodeSessionStore.setTaskError(
               stream.workspacePath,
               stream.taskId,
               normalizeMcodeUiError(
@@ -178,7 +178,7 @@ export function useBotBroadcastEffects(
             break;
           case "usage_update":
             {
-              const workspaceState = mcodeSessionStore.getWorkspaceState(
+              const workspaceState = zcodeSessionStore.getWorkspaceState(
                 stream.workspacePath,
                 stream.workspaceIdentity,
               );
@@ -204,13 +204,13 @@ export function useBotBroadcastEffects(
                 size: event.size,
                 used: event.used,
               });
-              mcodeSessionStore.setTaskContextWindow(
+              zcodeSessionStore.setTaskContextWindow(
                 stream.workspacePath,
                 stream.taskId,
                 event.size,
                 stream.workspaceIdentity,
               );
-              mcodeSessionStore.setTaskUsage(
+              zcodeSessionStore.setTaskUsage(
                 stream.workspacePath,
                 stream.taskId,
                 nextUsage,
@@ -220,7 +220,7 @@ export function useBotBroadcastEffects(
             break;
           case "session_info_update":
             if (event.apiRetry !== undefined) {
-              mcodeSessionStore.setTaskApiRetryStatus(
+              zcodeSessionStore.setTaskApiRetryStatus(
                 stream.workspacePath,
                 stream.taskId,
                 event.apiRetry ?? null,
@@ -241,8 +241,8 @@ export function useBotBroadcastEffects(
       }
       // Bots 在 host 侧创建/推进 task，不会挂载聊天视图里的 stream 订阅。
       // 因此除了刷新列表，还要同步 task 运行态；否则 sidebar 能看到新 task，却不会显示进行中状态。
-      const mcodeSessionStore = useMcodeSessionStore.getState();
-      const workspaceState = mcodeSessionStore.getWorkspaceState(
+      const zcodeSessionStore = useMcodeSessionStore.getState();
+      const workspaceState = zcodeSessionStore.getWorkspaceState(
         refresh.workspacePath,
         refresh.workspaceIdentity,
       );
@@ -252,7 +252,7 @@ export function useBotBroadcastEffects(
         // Bugfix: /model、/mode 可以从第三方 Bot 修改当前 task 的真实 Mcode Agent 状态。
         // 这些操作不经过 ChatInputToolbar，本地 store 以前不会同步 provider/configOptions，
         // 导致 Bot 回复已切换但 UI 下拉仍显示旧状态。
-        mcodeSessionStore.bindRuntimeProvider(
+        zcodeSessionStore.bindRuntimeProvider(
           refresh.workspacePath,
           provider,
           refresh.workspaceIdentity,
@@ -260,14 +260,14 @@ export function useBotBroadcastEffects(
       }
       if (refresh.configOptions) {
         syncBotTaskConfigOptionsToStore({
-          mcodeSessionStore,
+          zcodeSessionStore,
           workspacePath: refresh.workspacePath,
           workspaceIdentity: refresh.workspaceIdentity,
           taskId: refresh.taskId,
           configOptions: refresh.configOptions,
         });
       }
-      mcodeSessionStore.setTaskRuntimeState(
+      zcodeSessionStore.setTaskRuntimeState(
         refresh.workspacePath,
         refresh.taskId,
         resolveBotTaskBroadcastRuntimeStatus(refresh.event),
@@ -300,14 +300,14 @@ export function useBotBroadcastEffects(
       // prompt 经 v4 命令进入 session 事件日志，订阅该 session 的 conversation 投影
       // 会自然出现该消息；本地拼装面（mcodeChatMessages）随旧 ChatView 退役。
       if (refresh.event === "permission_request" && refresh.permissionRequest) {
-        mcodeSessionStore.setTaskPermissionRequest(
+        zcodeSessionStore.setTaskPermissionRequest(
           refresh.workspacePath,
           refresh.taskId,
           refresh.permissionRequest,
           refresh.workspaceIdentity,
         );
       } else if (refresh.event === "permission_resolved" && refresh.requestId) {
-        mcodeSessionStore.removeTaskPermissionRequest(
+        zcodeSessionStore.removeTaskPermissionRequest(
           refresh.workspacePath,
           refresh.taskId,
           refresh.requestId,
@@ -316,7 +316,7 @@ export function useBotBroadcastEffects(
       } else if (refresh.event === "elicitation_request" && refresh.elicitationRequest) {
         // Bugfix: Bot channel 消费 AskUserQuestion 后，下一题只会先到 Bot runtime。
         // 当前 UI 窗口不一定有同一条 Mcode Agent stream 订阅，必须把新的 elicitation_request 显式写回 store。
-        mcodeSessionStore.setTaskElicitationRequest(
+        zcodeSessionStore.setTaskElicitationRequest(
           refresh.workspacePath,
           refresh.taskId,
           refresh.elicitationRequest,
@@ -325,14 +325,14 @@ export function useBotBroadcastEffects(
       } else if (refresh.event === "elicitation_resolved" && refresh.requestId) {
         // Bugfix: Bot 代用户提交 AskUserQuestion 时，当前 UI 窗口不一定能收到 Mcode Agent stream 的
         // elicitation_response。通过 bots:task 明确同步 requestId 出队，避免问答弹窗一直挂着。
-        mcodeSessionStore.removeTaskElicitationRequest(
+        zcodeSessionStore.removeTaskElicitationRequest(
           refresh.workspacePath,
           refresh.taskId,
           refresh.requestId,
           refresh.workspaceIdentity,
         );
       } else if (refresh.event === "completed" || refresh.event === "error") {
-        mcodeSessionStore.setTaskPermissionRequest(
+        zcodeSessionStore.setTaskPermissionRequest(
           refresh.workspacePath,
           refresh.taskId,
           null,
@@ -340,7 +340,7 @@ export function useBotBroadcastEffects(
         );
       }
       if (shouldRefreshBotTaskList(refresh.event, Boolean(refresh.task))) {
-        mcodeSessionStore.bumpTaskListVersion(refresh.workspacePath, refresh.workspaceIdentity);
+        zcodeSessionStore.bumpTaskListVersion(refresh.workspacePath, refresh.workspaceIdentity);
       }
     });
     return () => disposable.dispose();

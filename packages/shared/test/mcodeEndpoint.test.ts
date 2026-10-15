@@ -26,25 +26,25 @@ import {
   resolveZaiBusinessBaseUrl,
   resolveZaiOAuthClientId,
   resolveZaiOAuthOrigin,
-  resolveMcodeEndpointOrigin,
+  resolveZCodeEndpointOrigin,
 } from "../src/mcodeEndpoint.js";
 import { appSettingsPatchSchema, appSettingsSchema } from "../src/validationAppSettings.js";
 
 describe("mcodeEndpoint", () => {
   it("defaults to the scoped origin in every env without env base url", () => {
-    expect(resolveMcodeEndpointOrigin({ env: "test" })).toBe(TEST_MCODE_ENDPOINT_ORIGIN);
-    expect(resolveMcodeEndpointOrigin({ env: "production" })).toBe(DEFAULT_MCODE_ENDPOINT_ORIGIN);
+    expect(resolveZCodeEndpointOrigin({ env: "test" })).toBe(TEST_MCODE_ENDPOINT_ORIGIN);
+    expect(resolveZCodeEndpointOrigin({ env: "production" })).toBe(DEFAULT_MCODE_ENDPOINT_ORIGIN);
   });
 
   it("uses MCODE_BASE_URL style env base as the default endpoint", () => {
     expect(
-      resolveMcodeEndpointOrigin({
+      resolveZCodeEndpointOrigin({
         env: "test",
         envBaseOrigin: "https://zcode.z.ai/api/v1",
       }),
     ).toBe(TEST_MCODE_ENDPOINT_ORIGIN);
     expect(
-      resolveMcodeEndpointOrigin({
+      resolveZCodeEndpointOrigin({
         env: "production",
         envBaseOrigin: "https://zcode.z.ai/api/v1",
       }),
@@ -53,7 +53,7 @@ describe("mcodeEndpoint", () => {
 
   it("keeps the non-production settings override above env base url", () => {
     expect(
-      resolveMcodeEndpointOrigin({
+      resolveZCodeEndpointOrigin({
         env: "test",
         envBaseOrigin: "https://zcode.z.ai",
         overrideOrigin: "http://localhost:3030/api/v1",
@@ -63,7 +63,7 @@ describe("mcodeEndpoint", () => {
 
   it("uses a non-production override after normalizing to origin", () => {
     expect(
-      resolveMcodeEndpointOrigin({
+      resolveZCodeEndpointOrigin({
         env: "test",
         overrideOrigin: "https://zcode.z.ai/api/v1/ignored?x=1",
       }),
@@ -72,7 +72,7 @@ describe("mcodeEndpoint", () => {
 
   it("ignores overrides in production", () => {
     expect(
-      resolveMcodeEndpointOrigin({
+      resolveZCodeEndpointOrigin({
         env: "production",
         envBaseOrigin: "https://zcode.z.ai",
         overrideOrigin: "https://zcode.z.ai",
@@ -88,10 +88,10 @@ describe("mcodeEndpoint", () => {
       webRemoteCallbackUrl: "http://localhost:3030/web-remote/callback",
       webShareCallbackUrl: "http://localhost:3030/cn/share/callback",
       relayWsUrl: "ws://localhost:3030/ws",
-      mcodePlanOpenAiBaseUrl: "http://localhost:3030/api/v1/zcode-plan",
-      mcodePlanAnthropicBaseUrl: "http://localhost:3030/api/v1/zcode-plan/anthropic",
-      mcodePlanBillingCurrentUrl: "http://localhost:3030/api/v1/zcode-plan/billing/current",
-      mcodePlanBillingBalanceUrl: "http://localhost:3030/api/v1/zcode-plan/billing/balance",
+      zcodePlanOpenAiBaseUrl: "http://localhost:3030/api/v1/zcode-plan",
+      zcodePlanAnthropicBaseUrl: "http://localhost:3030/api/v1/zcode-plan/anthropic",
+      zcodePlanBillingCurrentUrl: "http://localhost:3030/api/v1/zcode-plan/billing/current",
+      zcodePlanBillingBalanceUrl: "http://localhost:3030/api/v1/zcode-plan/billing/balance",
     });
   });
 
@@ -132,20 +132,20 @@ describe("mcodeEndpoint", () => {
   });
 
   it("derives runtime zcode-plan urls from MCODE_ENV", () => {
-    expect(buildRuntimeMcodeEndpointUrls({ MCODE_ENV: "test" }).mcodePlanOpenAiBaseUrl).toBe(
+    expect(buildRuntimeMcodeEndpointUrls({ MCODE_ENV: "test" }).zcodePlanOpenAiBaseUrl).toBe(
       "https://zcode.z.ai/api/v1/zcode-plan",
     );
-    expect(buildRuntimeMcodeEndpointUrls({ MCODE_ENV: "production" }).mcodePlanOpenAiBaseUrl).toBe(
+    expect(buildRuntimeMcodeEndpointUrls({ MCODE_ENV: "production" }).zcodePlanOpenAiBaseUrl).toBe(
       "https://zcode.z.ai/api/v1/zcode-plan",
     );
-    expect(buildRuntimeMcodeEndpointUrls({}).mcodePlanOpenAiBaseUrl).toBe(
+    expect(buildRuntimeMcodeEndpointUrls({}).zcodePlanOpenAiBaseUrl).toBe(
       "https://zcode.z.ai/api/v1/zcode-plan",
     );
     expect(
       buildRuntimeMcodeEndpointUrls({
         MCODE_ENV: "test",
         MCODE_BASE_URL: "https://zcode.z.ai/ignored/path",
-      }).mcodePlanAnthropicBaseUrl,
+      }).zcodePlanAnthropicBaseUrl,
     ).toBe("https://zcode.z.ai/api/v1/zcode-plan/anthropic");
   });
 
@@ -201,8 +201,8 @@ describe("mcodeEndpoint", () => {
 
   it("resolves all product endpoints for the test product environment", () => {
     expect(resolveRuntimeProductEndpointConfig({ MCODE_ENV: "test" })).toMatchObject({
-      mcodeEnv: "test",
-      mcodeEndpointOrigin: TEST_MCODE_ENDPOINT_ORIGIN,
+      zcodeEnv: "test",
+      zcodeEndpointOrigin: TEST_MCODE_ENDPOINT_ORIGIN,
       zaiOAuthOrigin: TEST_ZAI_OAUTH_ORIGIN,
       zaiBusinessBaseUrl: TEST_ZAI_BUSINESS_BASE_URL,
       zaiOAuthClientId: TEST_ZAI_OAUTH_CLIENT_ID,
@@ -212,8 +212,8 @@ describe("mcodeEndpoint", () => {
 
   it("resolves all product endpoints for the production product environment", () => {
     expect(resolveRuntimeProductEndpointConfig({ MCODE_ENV: "production" })).toMatchObject({
-      mcodeEnv: "production",
-      mcodeEndpointOrigin: DEFAULT_MCODE_ENDPOINT_ORIGIN,
+      zcodeEnv: "production",
+      zcodeEndpointOrigin: DEFAULT_MCODE_ENDPOINT_ORIGIN,
       zaiOAuthOrigin: DEFAULT_ZAI_OAUTH_ORIGIN,
       zaiBusinessBaseUrl: DEFAULT_ZAI_BUSINESS_BASE_URL,
       zaiOAuthClientId: DEFAULT_ZAI_OAUTH_CLIENT_ID,
@@ -247,7 +247,7 @@ describe("mcodeEndpoint", () => {
     };
 
     expect(resolveRuntimeProductEndpointConfig(env)).toMatchObject({
-      mcodeEndpointOrigin: "https://test-mcode.example.com",
+      zcodeEndpointOrigin: "https://test-mcode.example.com",
       zaiOAuthOrigin: "https://test-oauth.example.com",
       zaiBusinessBaseUrl: "https://test-business.example.com",
       zaiOAuthClientId: "client_test_override",
@@ -290,7 +290,7 @@ describe("mcodeEndpoint", () => {
     };
 
     expect(resolveRuntimeProductEndpointConfig(env)).toMatchObject({
-      mcodeEndpointOrigin: TEST_MCODE_ENDPOINT_ORIGIN,
+      zcodeEndpointOrigin: TEST_MCODE_ENDPOINT_ORIGIN,
       zaiOAuthOrigin: TEST_ZAI_OAUTH_ORIGIN,
       zaiBusinessBaseUrl: TEST_ZAI_BUSINESS_BASE_URL,
       zaiOAuthClientId: TEST_ZAI_OAUTH_CLIENT_ID,
@@ -304,12 +304,12 @@ describe("mcodeEndpoint", () => {
 
   it("persists optional endpoint override in app settings", () => {
     expect(
-      appSettingsSchema.parse({ mcodeEndpointOrigin: "https://zcode.z.ai/path" })
-        .mcodeEndpointOrigin,
+      appSettingsSchema.parse({ zcodeEndpointOrigin: "https://zcode.z.ai/path" })
+        .zcodeEndpointOrigin,
     ).toBe(TEST_MCODE_ENDPOINT_ORIGIN);
     expect(
-      appSettingsPatchSchema.parse({ mcodeEndpointOrigin: "http://localhost:3030/foo" })
-        .mcodeEndpointOrigin,
+      appSettingsPatchSchema.parse({ zcodeEndpointOrigin: "http://localhost:3030/foo" })
+        .zcodeEndpointOrigin,
     ).toBe("http://localhost:3030");
   });
 });

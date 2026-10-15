@@ -211,7 +211,7 @@ describe("Mcode CLI login", () => {
       expect(await credentialStore.load(SHARED_MCODE_CREDENTIAL_KEYS.zaiAccessToken)).toBe(
         "zai-access-token",
       );
-      expect(await credentialStore.load(SHARED_MCODE_CREDENTIAL_KEYS.mcodeJwtToken)).toBe(
+      expect(await credentialStore.load(SHARED_MCODE_CREDENTIAL_KEYS.zcodeJwtToken)).toBe(
         "jwt-token",
       );
       expect(

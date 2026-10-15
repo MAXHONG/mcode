@@ -32,6 +32,7 @@ import {
   REMOTE_AGENT_OFFICIAL_PLUGIN_INCLUDED_TOP_LEVEL_PATHS,
   REMOTE_AGENT_OFFICIAL_PLUGIN_PACKAGE_NAMES,
   REMOTE_AGENT_OFFICIAL_PLUGIN_REQUIRED_RELATIVE_PATHS,
+  resolveRemoteAgentOfficialPluginLocalSourceDirName,
   buildRemoteAgentOfficialPluginDir,
   buildRemoteAgentOfficialPluginRequiredPaths,
 } from "@mcode/server/remote/mcodeAgentOfficialPluginAssets.js";
@@ -99,10 +100,16 @@ async function computeDevelopmentAgentAssetsSha256(params: {
   repoRoot: string;
 }): Promise<string> {
   const hash = createHash("sha256");
-  hash.update("bundle:mcode.cjs\n");
+  hash.update("bundle:zcode.cjs\n");
   hash.update(await readFile(params.localBundlePath));
   for (const packageName of REMOTE_AGENT_OFFICIAL_PLUGIN_PACKAGE_NAMES) {
-    const packageRoot = join(params.repoRoot, "apps", "mcode-cli", "packages", packageName);
+    const packageRoot = join(
+      params.repoRoot,
+      "apps",
+      "mcode-cli",
+      "packages",
+      resolveRemoteAgentOfficialPluginLocalSourceDirName(packageName),
+    );
     hash.update(`plugin:${packageName}\n`);
     await hashDevelopmentOfficialPluginPackage(hash, packageRoot, packageName);
   }
@@ -251,7 +258,7 @@ async function shouldSkipDevelopmentMcodeAgentDeploy(params: {
   try {
     await waitForClose(
       await params.backend.exec(
-        `"\${MCODE_SERVER_RUNTIME_ROOT:-$HOME/.mcode/server}/node" -e ${quotePosixShellArg(verifyBundleScript)} ${quotePosixPathArg(params.remoteBundlePath)} ${quotePosixShellArg(params.localBundleSha256)}`,
+        `"\${ZCODE_SERVER_RUNTIME_ROOT:-$HOME/.zcode/server}/node" -e ${quotePosixShellArg(verifyBundleScript)} ${quotePosixPathArg(params.remoteBundlePath)} ${quotePosixShellArg(params.localBundleSha256)}`,
       ),
     );
   } catch {
@@ -273,7 +280,13 @@ async function stageDevelopmentOfficialPluginPackages(params: {
 }): Promise<void> {
   await mkdir(params.packagesDir, { recursive: true });
   for (const packageName of REMOTE_AGENT_OFFICIAL_PLUGIN_PACKAGE_NAMES) {
-    const sourceRoot = join(params.repoRoot, "apps", "mcode-cli", "packages", packageName);
+    const sourceRoot = join(
+      params.repoRoot,
+      "apps",
+      "mcode-cli",
+      "packages",
+      resolveRemoteAgentOfficialPluginLocalSourceDirName(packageName),
+    );
     const manifestPath = join(sourceRoot, ".zcode-plugin", "plugin.json");
     if (!existsSync(manifestPath)) {
       throw new Error(`[mcode-agent-deploy] missing official plugin manifest: ${manifestPath}`);

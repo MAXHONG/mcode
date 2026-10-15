@@ -65,7 +65,7 @@ export function encodeMcodeBuiltinRelease(release: McodeBuiltinRelease): object 
         templateRules: release.config.providerTemplates.toJSON(),
         providerRules: release.config.providers.toJSON(),
       },
-      modelConfigRules: release.config.modelConfigRules.toMcodeBuiltinJSON(),
+      modelConfigRules: release.config.modelConfigRules.toZCodeBuiltinJSON(),
     },
   };
 }

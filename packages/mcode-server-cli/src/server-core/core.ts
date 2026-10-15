@@ -26,7 +26,7 @@ export async function runServerCore(generation: number): Promise<void> {
   const topicResourcePeers = createTopicResourcePeers();
   const explicitMcodeBuiltinProviderConfigFilePath =
     process.env[MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]?.trim();
-  const mcodeBuiltinProviderConfigFilePath = explicitMcodeBuiltinProviderConfigFilePath
+  const zcodeBuiltinProviderConfigFilePath = explicitMcodeBuiltinProviderConfigFilePath
     ? explicitMcodeBuiltinProviderConfigFilePath
     : typeof __MCODE_BUILTIN_PROVIDER_CONFIG_JSON__ === "string"
       ? await materializeMcodeBuiltinProviderConfig({
@@ -34,13 +34,13 @@ export async function runServerCore(generation: number): Promise<void> {
           content: __MCODE_BUILTIN_PROVIDER_CONFIG_JSON__,
         })
       : undefined;
-  if (!mcodeBuiltinProviderConfigFilePath) {
+  if (!zcodeBuiltinProviderConfigFilePath) {
     throw new Error(
       `当前构建未嵌入 Mcode Built-in Provider Config，且未设置 ${MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV}`,
     );
   }
   const services = createLocalServices({
-    mcodeBuiltinProviderConfigFilePath,
+    zcodeBuiltinProviderConfigFilePath,
     serviceAuthorityMode: "standalone-server",
     topicResourceRelayChannel: (request) => topicResourcePeers.getChannel(request),
   });

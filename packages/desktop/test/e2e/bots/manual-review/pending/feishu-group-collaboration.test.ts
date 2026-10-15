@@ -29,13 +29,13 @@ describe("BOT-E2E-GR-01 group provider admission", () => {
       const admissions: Array<{ taskId: string; commandId: string; source: BotGroupInputSource }> =
         [];
       let created = 0;
-      h.mcodeTaskService.createTask = async () => ({
+      h.zcodeTaskService.createTask = async () => ({
         taskId: `group-task-${++created}`,
         title: "E2E Group",
         workspacePath: resolveE2ERuntimePath("bots", "e2e-bot-workspace"),
         provider: "glm",
       });
-      h.mcodeTaskService.submitBotGroupInput = async (params: (typeof admissions)[number]) => {
+      h.zcodeTaskService.submitBotGroupInput = async (params: (typeof admissions)[number]) => {
         admissions.push(params);
         return {
           commandId: params.commandId,

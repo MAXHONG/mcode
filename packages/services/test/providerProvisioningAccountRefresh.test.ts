@@ -26,9 +26,9 @@ class StaticConfigSource implements ProviderSource<ProviderConfigSnapshot> {
   async read(): Promise<ProviderConfigSnapshot> {
     return {
       revision: "config-1",
-      mcodeBuiltinRevision: "builtin-1",
+      zcodeBuiltinRevision: "builtin-1",
       personalRevision: "personal-1",
-      mcodeBuiltinProviders: new ProviderConfigMap([
+      zcodeBuiltinProviders: new ProviderConfigMap([
         [
           BUILTIN_MODEL_PROVIDER_IDS.zaiIndividualCodingPlan,
           createAccountProviderConfig({
@@ -47,7 +47,7 @@ class StaticConfigSource implements ProviderSource<ProviderConfigSnapshot> {
         ],
       ]),
       personalProviders: ProviderConfigMap.empty(),
-      mcodeBuiltinModelRules: ModelConfigRules.empty(),
+      zcodeBuiltinModelRules: ModelConfigRules.empty(),
       personalModels: ModelConfigRules.empty(),
     };
   }

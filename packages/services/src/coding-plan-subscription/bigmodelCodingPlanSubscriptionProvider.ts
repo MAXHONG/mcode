@@ -860,8 +860,8 @@ export class BigModelCodingPlanSubscriptionProvider {
     if (!token) {
       throw new Error("bigmodel_oauth_required");
     }
-    const mcodeJwtToken = (await this.credentialService.load(MCODE_JWT_TOKEN_KEY))?.trim();
-    if (mcodeJwtToken && token === mcodeJwtToken) {
+    const zcodeJwtToken = (await this.credentialService.load(MCODE_JWT_TOKEN_KEY))?.trim();
+    if (zcodeJwtToken && token === zcodeJwtToken) {
       // 旧版 BigModel OAuth callback 曾把 mcode JWT 同时写进
       // oauth:bigmodel:access_token，付费套餐预览会拿它去打 bigmodel.cn 并报令牌过期。
       // 这里在服务边界拦截旧污染状态，避免继续向 BigModel 业务接口发送错误凭据。

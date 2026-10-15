@@ -25,7 +25,7 @@ vi.mock("electron", () => ({
 }));
 
 vi.mock("@mcode/shared", () => ({
-  MCODE_APP_VERSION_ENV: "MCODE_APP_VERSION",
+  MCODE_APP_VERSION_ENV: "ZCODE_APP_VERSION",
   MCODE_BUILD_COMMIT_ID_ENV: "MCODE_BUILD_COMMIT_ID",
   MCODE_RUNTIME_ENV_KEY: "MCODE_RUNTIME_ENV",
   MCODE_TOOL_ENV_PASSTHROUGH_ENV_KEY: "MCODE_TOOL_ENV_PASSTHROUGH_JSON",
@@ -64,7 +64,7 @@ vi.mock("@mcode/shared", () => ({
     env.ZAI_BUSINESS_BASE_URL ?? env.ZAI_TEST_BUSINESS_BASE_URL ?? "https://api.z.ai",
   resolveZaiOAuthClientId: (env: Record<string, string | undefined>) =>
     env.ZAI_OAUTH_CLIENT_ID ?? env.ZAI_TEST_OAUTH_CLIENT_ID ?? "client_P8X5CMWmlaRO9gyO-KSqtg",
-  sanitizeMcodeRuntimeEnv: (env: Record<string, string | undefined>) => {
+  sanitizeZCodeRuntimeEnv: (env: Record<string, string | undefined>) => {
     const sanitizedKeys = new Set([
       "NODE_ENV",
       "ELECTRON_RUN_AS_NODE",
@@ -110,7 +110,7 @@ vi.mock("@mcode/shared", () => ({
         );
       }),
     ),
-  buildMcodeToolEnvPassthroughEnv: (env: Record<string, string | undefined>) => {
+  buildZCodeToolEnvPassthroughEnv: (env: Record<string, string | undefined>) => {
     const captured: Record<string, string> = {};
     for (const [key, value] of Object.entries(env)) {
       const upperKey = key.toUpperCase();
@@ -481,7 +481,7 @@ describe("desktopRuntimeEnv buildHostProcessEnv", () => {
 
     const env = buildHostProcessEnv({});
 
-    expect(env.MCODE_APP_VERSION).toBe("0.0.0-test");
+    expect(env.ZCODE_APP_VERSION).toBe("0.0.0-test");
     expect(env.MCODE_BUILD_COMMIT_ID).toBe("commit-test");
   });
 

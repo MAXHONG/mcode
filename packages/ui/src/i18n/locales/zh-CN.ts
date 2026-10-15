@@ -2434,11 +2434,11 @@ const zhCN: Record<string, string> = {
   "settings.toolGroupingChanges": "分组文件更改",
   "settings.toolGroupingChangesDescription":
     "将连续的 Write、Edit 和 ApplyPatch 调用聚合为 Changes 分组。",
-  "settings.mcodeInteractionBehavior": "交互行为",
+  "settings.zcodeInteractionBehavior": "交互行为",
   "settings.mcodeInteractionBehaviorDescription":
     "在 Mcode 运行时将后续操作加入队列，或引导至下一轮工具调用后运行。",
-  "settings.mcodeInteractionBehavior.option.queue": "队列",
-  "settings.mcodeInteractionBehavior.option.guide": "引导",
+  "settings.zcodeInteractionBehavior.option.queue": "队列",
+  "settings.zcodeInteractionBehavior.option.guide": "引导",
   "settings.askUserQuestionAutoResolution": "提问自动继续",
   "settings.askUserQuestionAutoResolutionDescription":
     "开启后，Agent 提问 5 分钟未回答会自动继续；关闭后，当前和后续提问会一直等待你的回答。",
@@ -4313,7 +4313,7 @@ const zhCN: Record<string, string> = {
   "settings.commands.description":
     "管理 Mcode Agent 的 .md 命令文件。命令可通过 /command-name 在聊天中调用。",
   "settings.commands.sourceFilterLabel": "来源筛选",
-  "settings.commands.source.mcodeAgent": "Mcode Agent",
+  "settings.commands.source.zcodeAgent": "Mcode Agent",
   "settings.commands.add": "新建",
   "settings.commands.addNew": "新建命令",
   "settings.commands.addDescription": "填写命令名称和提示词，保存后返回列表。",

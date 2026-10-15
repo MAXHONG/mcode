@@ -17,6 +17,7 @@ import {
   buildRemoteAgentBundleWrapper,
   isRemoteAgentBundleWrapperCurrent,
   REMOTE_AGENT_BUNDLE_NAME,
+  resolveRemoteAgentWrapperName,
 } from "@mcode/server/remote/mcodeAgentBundleWrapper.js";
 import {
   deployRemoteAgentWrapper,
@@ -165,11 +166,7 @@ export async function deployMcodeAgentRuntime(
 
   // binaryName 指 wrapper 可执行文件名（如 mcode-agent / mcode-agent.exe）——
   // 一个调用远端 node 执行 mcode.cjs 的壳脚本。
-  const binaryName = runtime.resolveEntrySegments(env.platform).at(-1);
-  if (!binaryName) {
-    loggers.logWarn(`[mcode-agent-deploy] ${provider}: 无法解析 agent 入口名称，跳过部署`);
-    return;
-  }
+  const binaryName = resolveRemoteAgentWrapperName(env.platform);
 
   const remoteProviderDir = `${REMOTE_AGENT_RUNTIME_BASE}/${runtime.bundledResourceDir}`;
   const remoteVersionFile = `${remoteProviderDir}/.version`;

@@ -106,7 +106,7 @@ describe("assistant code-comment parser", () => {
       "::code",
       "::code-comment",
       '::code-comment{title="partial" body="still streaming',
-      ":::mcode-file-cit",
+      ":::zcode-file-cit",
     ];
 
     for (const prefix of prefixes) {

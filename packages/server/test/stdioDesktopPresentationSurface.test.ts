@@ -81,7 +81,7 @@ describe("stdio Desktop presentation surface", () => {
       "app-server",
       "--stdio",
     ]);
-    const mcodeBuiltinProviderConfigFilePath = join(home, "mcode-builtin.json");
+    const zcodeBuiltinProviderConfigFilePath = join(home, "mcode-builtin.json");
     const personalConfigFilePath = join(home, ".mcode", "v2", "provider_config.json");
     await mkdir(join(home, ".mcode", "v2"), { recursive: true });
     await writeFile(
@@ -110,7 +110,7 @@ describe("stdio Desktop presentation surface", () => {
       "utf8",
     );
     await writeFile(
-      mcodeBuiltinProviderConfigFilePath,
+      zcodeBuiltinProviderConfigFilePath,
       JSON.stringify({
         schemaVersion: 1,
         revision: 1,
@@ -189,8 +189,8 @@ describe("stdio Desktop presentation surface", () => {
       env: {
         [SERVICE_AUTHORITY_MODE_ENV]: "desktop-attached-remote",
       },
-      mcodeBuiltinProviderConfigFilePath,
-      mcodeAgentCommandResolver: commandResolver,
+      zcodeBuiltinProviderConfigFilePath,
+      zcodeAgentCommandResolver: commandResolver,
     });
 
     try {

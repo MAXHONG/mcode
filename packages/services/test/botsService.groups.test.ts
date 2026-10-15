@@ -87,7 +87,7 @@ function setup(
     result: { type: "inputAccepted", inputId: params.commandId, delivery: "queue" },
   }));
   const service = f.createBotsService({
-    mcodeTaskService: taskService,
+    zcodeTaskService: taskService,
     repo: repo as never,
     credentialService: f.createCredentialService({}),
     runStartupBackgroundTasks: false,
@@ -96,7 +96,7 @@ function setup(
           remoteWorkspaceService: {
             isConnected: vi.fn(async () => remoteConnection.connected),
             ensureConnected: vi.fn(async () => ({ ok: remoteConnection.connected })),
-            getMcodeTaskService: vi.fn(async () => taskService),
+            getZCodeTaskService: vi.fn(async () => taskService),
             getModelSelectionService: vi.fn(async () =>
               f.createModelSelectionService([{ id: "glm", name: "GLM", models: ["default"] }]),
             ),
@@ -178,7 +178,7 @@ describe("Feishu group sessions", () => {
     );
     const restarted = f.createBotsService({
       repo: repo as never,
-      mcodeTaskService: taskService,
+      zcodeTaskService: taskService,
       credentialService: f.createCredentialService({}),
       runStartupBackgroundTasks: false,
     });
@@ -332,7 +332,7 @@ describe("Feishu group sessions", () => {
       );
       const restarted = f.createBotsService({
         repo: repo as never,
-        mcodeTaskService: taskService,
+        zcodeTaskService: taskService,
         credentialService: f.createCredentialService({}),
         runStartupBackgroundTasks: false,
       });
@@ -453,7 +453,7 @@ describe("Feishu group sessions", () => {
     taskService.submitBotGroupInput.mockClear();
     const payload = {
       botId: "feishu-1",
-      mcodeBotOpenId: "ou_current_bot",
+      zcodeBotOpenId: "ou_current_bot",
       event: {
         sender: { sender_type: "bot", sender_id: { open_id: "ou_other_bot" } },
         message: {
@@ -2452,7 +2452,7 @@ describe("Feishu group sessions", () => {
     await vi.waitFor(() => expect(release).toBeTypeOf("function"));
     const response = await service.handleProviderCallbackResponse("feishu", {
       botId: "feishu-1",
-      mcodeBotRemoved: true,
+      zcodeBotRemoved: true,
       event: { chat_id: "oc_a" },
     });
     expect(response.ok).toBe(true);
@@ -2471,7 +2471,7 @@ describe("Feishu group sessions", () => {
     await repo.writeConfig(config);
     // 测试凭据服务对未登记的引用返回 null；下面使用实际登记凭据的独立服务。
     const secured = f.createBotsService({
-      mcodeTaskService: f.createLegacyTaskService(),
+      zcodeTaskService: f.createLegacyTaskService(),
       repo: repo as never,
       credentialService: f.createCredentialService({ "verification-secret": "expected-token" }),
       runStartupBackgroundTasks: false,
@@ -2479,7 +2479,7 @@ describe("Feishu group sessions", () => {
     services.push(secured);
     const response = await secured.handleProviderCallbackResponse("feishu", {
       botId: "feishu-1",
-      mcodeBotRemoved: true,
+      zcodeBotRemoved: true,
       token: "incorrect-token",
       event: { chat_id: "oc_a" },
     });

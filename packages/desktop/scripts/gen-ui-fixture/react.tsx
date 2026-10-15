@@ -65,7 +65,7 @@ void (async () => {
   );
   const base = {
     genUiService: service,
-    mcodeTaskService: {
+    zcodeTaskService: {
       onDynamicWorkspaceEvent: () => (listener: (event: unknown) => void) => {
         taskListeners.add(listener);
         return { dispose: () => taskListeners.delete(listener) };

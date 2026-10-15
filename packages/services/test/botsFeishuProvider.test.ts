@@ -248,7 +248,7 @@ describe("feishu bot provider", () => {
     const provider = createFeishuBotProvider({ loadCredential: async () => "secret" });
     const result = provider.parseCallback({
       botId: "feishu-1",
-      mcodeBotOpenId: "ou_bot",
+      zcodeBotOpenId: "ou_bot",
       event: {
         sender: { sender_type: "user", sender_id: { open_id: "ou_user" } },
         message: {
@@ -988,7 +988,7 @@ describe("feishu bot provider", () => {
       action: {
         value: {
           command: "/approve request-1 option-1",
-          mcodeCardText: "Review this implementation plan.",
+          zcodeCardText: "Review this implementation plan.",
         },
       },
     }).finally(() => {
@@ -1041,7 +1041,7 @@ describe("feishu bot provider", () => {
         action: {
           value: {
             command: "/approve request-1 option-1",
-            mcodeCardText: "Review this implementation plan.",
+            zcodeCardText: "Review this implementation plan.",
           },
         },
       }),
@@ -1066,23 +1066,23 @@ describe("feishu bot provider", () => {
     });
     await vi.advanceTimersByTimeAsync(2000);
     expect(await response).toEqual({});
-    expect(payload?.mcodeFeishuCardResponseState).toEqual({ deferred: true });
+    expect(payload?.zcodeFeishuCardResponseState).toEqual({ deferred: true });
     finish(undefined);
   });
 
   it("keeps WebSocket bot identity trusted when event payload contains routing fields", async () => {
     const onPayload = vi.fn(async () => undefined);
     const handlers = createFeishuWebSocketEventHandlers({ bot: createFeishuBot(), onPayload });
-    await handlers["im.message.receive_v1"]({ botId: "other", mcodeProvider: "lark" });
+    await handlers["im.message.receive_v1"]({ botId: "other", zcodeProvider: "lark" });
     expect(onPayload).toHaveBeenLastCalledWith(
-      expect.objectContaining({ botId: "feishu-1", mcodeProvider: "feishu" }),
+      expect.objectContaining({ botId: "feishu-1", zcodeProvider: "feishu" }),
     );
     await handlers["card.action.trigger"]({
       botId: "other",
-      mcodeFeishuSynchronousCardAction: false,
+      zcodeFeishuSynchronousCardAction: false,
     });
     expect(onPayload).toHaveBeenLastCalledWith(
-      expect.objectContaining({ botId: "feishu-1", mcodeFeishuSynchronousCardAction: true }),
+      expect.objectContaining({ botId: "feishu-1", zcodeFeishuSynchronousCardAction: true }),
     );
   });
 
@@ -1091,7 +1091,7 @@ describe("feishu bot provider", () => {
     expect(
       provider.parseCallback({
         botId: "feishu-1",
-        mcodeBotOpenId: "ou_bot",
+        zcodeBotOpenId: "ou_bot",
         event: {
           sender: { sender_type: "user", sender_id: { user_id: "ou_user" } },
           message: {
@@ -1166,7 +1166,7 @@ describe("feishu bot provider", () => {
       });
       const again = await provider.prepareCallbackPayload!(
         createFeishuBot({ feishuAppId: "app-root" }),
-        { ...(prepared as object), mcodeTopicActive: false, mcodeTopicHasAcceptedInput: true },
+        { ...(prepared as object), mcodeTopicActive: false, zcodeTopicHasAcceptedInput: true },
       );
       expect(provider.parseCallback(again)[0]?.referencedMessage).toBeUndefined();
       expect(
@@ -1179,7 +1179,7 @@ describe("feishu bot provider", () => {
     const provider = createFeishuBotProvider({ loadCredential: vi.fn(async () => "secret") });
     const payload = {
       botId: "feishu-1",
-      mcodeBotOpenId: "ou_bot",
+      zcodeBotOpenId: "ou_bot",
       event: {
         sender: { sender_type: "user", sender_id: { open_id: "ou_user" } },
         message: {
@@ -1230,8 +1230,8 @@ describe("feishu bot provider", () => {
       const adapter = createFeishuBotProvider({ loadCredential: async () => "secret" });
       const payload = {
         botId: "feishu-1",
-        mcodeProvider: provider,
-        mcodeBotOpenId: "ou_bot",
+        zcodeProvider: provider,
+        zcodeBotOpenId: "ou_bot",
         event: {
           sender: { sender_type: "bot", sender_id: { open_id: "ou_other_bot" } },
           message: {
@@ -1333,8 +1333,8 @@ describe("feishu bot provider", () => {
       const adapter = createFeishuBotProvider({ loadCredential: async () => "secret" });
       const payload = {
         botId: "feishu-1",
-        mcodeProvider: provider,
-        mcodeBotOpenId: "ou_bot",
+        zcodeProvider: provider,
+        zcodeBotOpenId: "ou_bot",
         event: {
           sender: { sender_type: "bot", sender_id: { open_id: "ou_other_bot" } },
           message: {
@@ -1414,7 +1414,7 @@ describe("feishu bot provider", () => {
       provider.parseCallback({
         botId: "feishu-1",
         token: "token",
-        mcodeBotOpenId: "ou_bot",
+        zcodeBotOpenId: "ou_bot",
         event: {
           sender: { sender_type: "user", sender_id: { open_id: "ou_user" } },
           message: {
@@ -1462,8 +1462,8 @@ describe("feishu bot provider", () => {
     const provider = createFeishuBotProvider({ loadCredential: async () => "secret" });
     const messages = provider.parseCallback({
       botId: "native-post",
-      mcodeProvider: providerName,
-      mcodeBotOpenId: "ou_bot",
+      zcodeProvider: providerName,
+      zcodeBotOpenId: "ou_bot",
       event: {
         sender: { sender_type: "user", sender_id: { open_id: "ou_user" } },
         message: {
@@ -1590,7 +1590,7 @@ describe("feishu bot provider", () => {
     expect(
       provider.parseCallback({
         botId: "lark-1",
-        mcodeProvider: "lark",
+        zcodeProvider: "lark",
         event: {
           sender: { sender_id: { open_id: "ou_user" } },
           message: {
@@ -1788,7 +1788,7 @@ describe("feishu bot provider", () => {
     expect(
       provider.parseCallback({
         botId: "feishu-1",
-        mcodeBotOpenId: "ou_bot",
+        zcodeBotOpenId: "ou_bot",
         event: {
           sender: { sender_type: "user", sender_id: { open_id: "ou_user" } },
           message: {
@@ -1816,7 +1816,7 @@ describe("feishu bot provider", () => {
     const provider = createFeishuBotProvider({ loadCredential: vi.fn(async () => "secret") });
     const result = provider.parseCallback({
       botId: "feishu-1",
-      mcodeBotOpenId: "ou_bot",
+      zcodeBotOpenId: "ou_bot",
       event: {
         sender: { sender_type: "user", sender_id: { open_id: "ou_user" } },
         message: {
@@ -2657,7 +2657,7 @@ describe("feishu bot provider", () => {
             tag: "button",
             behaviors: [
               expect.objectContaining({
-                value: { command: "/elicitation abc123def456 fast path", mcodeCardText: "Ask" },
+                value: { command: "/elicitation abc123def456 fast path", zcodeCardText: "Ask" },
               }),
             ],
           }),
@@ -3192,7 +3192,7 @@ describe("feishu bot provider", () => {
             token: "card-token",
             value: {
               command: "/workspace /tmp/workspace",
-              mcodeCardText: "请选择工作区",
+              zcodeCardText: "请选择工作区",
             },
           },
         },
@@ -3235,7 +3235,7 @@ describe("feishu bot provider", () => {
                 type: "callback",
                 value: {
                   command: "/workspace /tmp/workspace",
-                  mcodeCardText: "请选择工作区",
+                  zcodeCardText: "请选择工作区",
                 },
               },
             ],
@@ -3282,7 +3282,7 @@ describe("feishu bot provider", () => {
                 type: "callback",
                 value: {
                   command: "/elicitation question0token web",
-                  mcodeCardText: "第一题",
+                  zcodeCardText: "第一题",
                 },
               },
             ],
@@ -3352,7 +3352,7 @@ describe("feishu bot provider", () => {
                 type: "callback",
                 value: {
                   command: "/elicitation abc123def456 __submit__",
-                  mcodeCardText: "Question",
+                  zcodeCardText: "Question",
                 },
               },
             ],

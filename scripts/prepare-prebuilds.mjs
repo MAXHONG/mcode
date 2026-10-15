@@ -198,7 +198,7 @@ const remoteOfficialPluginPackages = [
     packageName: "@mcode/mcode-cua-plugin",
     relativePath: "apps/mcode-cli/packages/mcode-cua-plugin",
     requiresRuntime: false,
-    stagedPath: "packages/mcode-cua-plugin",
+    stagedPath: "packages/zcode-cua-plugin",
   },
   {
     packageName: "@mcode/ios-simulator-plugin",
@@ -230,7 +230,7 @@ const remoteOfficialPluginPackages = [
     packageName: "@mcode/mcode-guide-plugin",
     relativePath: "apps/mcode-cli/packages/mcode-guide-plugin",
     requiresRuntime: false,
-    stagedPath: "packages/mcode-guide-plugin",
+    stagedPath: "packages/zcode-guide-plugin",
   },
 ];
 // 随 CLI 内置的技能包（不是插件）：远端 agent 的 bootstrap 沿官方插件同款候选目录在 mcode.cjs 旁
@@ -275,7 +275,7 @@ function shouldCopyOfficialPluginAsset(sourcePath) {
 const remoteOfficialPluginRequiredPaths = [
   "packages/android-emulator-plugin/.zcode-plugin/plugin.json",
   "packages/browser-use-plugin/.zcode-plugin/plugin.json",
-  "packages/mcode-cua-plugin/.zcode-plugin/plugin.json",
+  "packages/zcode-cua-plugin/.zcode-plugin/plugin.json",
   "packages/image-search-plugin/.zcode-plugin/plugin.json",
   "packages/image-search-plugin/.mcp.json",
   "packages/documents-plugin/.zcode-plugin/plugin.json",
@@ -287,7 +287,7 @@ const remoteOfficialPluginRequiredPaths = [
   "packages/skill-creator-plugin/.zcode-plugin/plugin.json",
   "packages/plugin-creator-plugin/.zcode-plugin/plugin.json",
   "packages/plugin-creator-plugin/skills/plugin-creator/SKILL.md",
-  "packages/mcode-guide-plugin/.zcode-plugin/plugin.json",
+  "packages/zcode-guide-plugin/.zcode-plugin/plugin.json",
   // 修复原因：文档技能正文与 visual-judge 都是必需 seed 资产，不能只校验 manifest。
   "packages/documents-plugin/agents/visual-judge.md",
   "packages/documents-plugin/skills/docx/SKILL.md",
@@ -475,7 +475,7 @@ function buildServerBundle() {
 
 function runBootstrapServerRemoteBuild() {
   // bootstrap:with-remote 会在本地串联 install、remote assets、workspace build。
-  // 这里不能复用已有 mcode-server.cjs：开发时 package version 常不变，旧 bundle 会把缺少新 RPC 的
+  // 这里不能复用已有 zcode-server.cjs：开发时 package version 常不变，旧 bundle 会把缺少新 RPC 的
   // server 部署到 SSH 远端。只保留“直接用当前 Node 启动 tsx”的低内存优化，不改变 CI 的 build:remote。
   runCommand(
     process.execPath,
@@ -491,10 +491,10 @@ function copyServerBundle() {
   const serverDir = join(releaseDir, "server");
   mkdirSync(serverDir, { recursive: true });
   copyFileSync(
-    join(rootDir, "packages/server/dist/remote/mcode-server.cjs"),
-    join(serverDir, "mcode-server.cjs"),
+    join(rootDir, "packages/server/dist/remote/zcode-server.cjs"),
+    join(serverDir, "zcode-server.cjs"),
   );
-  console.log("  [ok] mock-cdn server/mcode-server.cjs");
+  console.log("  [ok] mock-cdn server/zcode-server.cjs");
 }
 
 function copyNodePtyPrebuilds() {
@@ -662,7 +662,7 @@ function stageRemoteBundledSkillPack(glmDir) {
 }
 
 // 远端 agent 现在跑编译出来的 mcode.cjs（而不是各平台独立的原生二进制）：
-// 远端部署时已经有一份独立 node（跑 mcode-server.cjs），agent 复用它执行 mcode.cjs 即可，
+// 远端部署时已经有一份独立 node（跑 zcode-server.cjs），agent 复用它执行 mcode.cjs 即可，
 // 不必再为每个平台准备一份内嵌 node 的 SEA 二进制。mcode.cjs 跨平台同一份，逐平台只是放进各自的
 // glm/<platform> 组件目录，保持现有 manifest 组件结构不变。
 function stageRemoteAgentBundles() {
@@ -686,10 +686,10 @@ function stageRemoteAgentBundles() {
     // 避免被打进组件 tar 把远端资源撑大。
     rmSync(glmDir, { recursive: true, force: true });
     mkdirSync(glmDir, { recursive: true });
-    copyFileSync(cliBundlePath, join(glmDir, "mcode.cjs"));
+    copyFileSync(cliBundlePath, join(glmDir, "zcode.cjs"));
     stageRemoteOfficialPlugins(glmDir);
     stageRemoteBundledSkillPack(glmDir);
-    console.log(`  [ok] mock-cdn glm/${platformKey}/mcode.cjs`);
+    console.log(`  [ok] mock-cdn glm/${platformKey}/zcode.cjs`);
   }
 }
 
@@ -992,7 +992,7 @@ function buildReusableComponentRequiredPaths(componentId, platformKey) {
     case "glm":
       // GLM 现在是编译产物 mcode.cjs（跨平台同一份），远端用已部署的 node 执行它。
       // 复用时还要确认官方插件 seed 资源完整，否则旧 release 会继续产出 0 builtin plugin 的远端资源包。
-      return ["mcode.cjs", ...remoteOfficialPluginRequiredPaths];
+      return ["zcode.cjs", ...remoteOfficialPluginRequiredPaths];
     case "bfs":
       return ["bfs"];
     case "ripgrep":

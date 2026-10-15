@@ -14,7 +14,7 @@ const onAgentRuntimeRestarted = vi.fn((listener: (event: { workspaceKey: string 
 });
 const resolution = {
   services: {
-    mcodeAgentService: {
+    zcodeAgentService: {
       getSkillReferenceCatalog,
       onAgentRuntimeRestarted,
     },

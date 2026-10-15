@@ -16,11 +16,11 @@ export function useSessionDebug({
   taskId: string | null;
   enabled?: boolean;
 }) {
-  const { mcodeAgentService } = useServices();
+  const { zcodeAgentService } = useServices();
   const scopeKey = JSON.stringify([workspaceIdentity?.trim() || workspacePath, taskId]);
   const [result, setResult] = useState<{
     key: string;
-    service: typeof mcodeAgentService;
+    service: typeof zcodeAgentService;
     data: SessionDebugSnapshot | null;
     error: boolean;
   } | null>(null);
@@ -30,19 +30,19 @@ export function useSessionDebug({
     let timer: ReturnType<typeof setTimeout> | undefined;
     const refresh = async () => {
       try {
-        const data = await mcodeAgentService.readSessionDebug({
+        const data = await zcodeAgentService.readSessionDebug({
           workspacePath,
           workspaceIdentity,
           sessionId: taskId,
         });
-        if (!disposed) setResult({ key: scopeKey, service: mcodeAgentService, data, error: false });
+        if (!disposed) setResult({ key: scopeKey, service: zcodeAgentService, data, error: false });
       } catch {
         if (!disposed)
           setResult((previous) => ({
             key: scopeKey,
-            service: mcodeAgentService,
+            service: zcodeAgentService,
             data:
-              previous?.key === scopeKey && previous.service === mcodeAgentService
+              previous?.key === scopeKey && previous.service === zcodeAgentService
                 ? previous.data
                 : null,
             error: true,
@@ -57,7 +57,7 @@ export function useSessionDebug({
       disposed = true;
       clearTimeout(timer);
     };
-  }, [enabled, scopeKey, taskId, workspaceIdentity, workspacePath, mcodeAgentService]);
-  const current = result?.key === scopeKey && result.service === mcodeAgentService ? result : null;
+  }, [enabled, scopeKey, taskId, workspaceIdentity, workspacePath, zcodeAgentService]);
+  const current = result?.key === scopeKey && result.service === zcodeAgentService ? result : null;
   return { ...(current?.data ?? EMPTY_DEBUG), error: current?.error ?? false };
 }

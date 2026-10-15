@@ -40,32 +40,32 @@ type WorkspaceProviderConfigServiceScope = "workspace" | "base";
 
 export function resolveWorkspaceProviderConfigMcodeService(params: {
   configuredServiceScope: WorkspaceProviderConfigServiceScope;
-  workspaceMcodeService: IMcodeTaskService;
-  baseMcodeService: IMcodeTaskService | null;
+  workspaceZCodeService: IMcodeTaskService;
+  baseZCodeService: IMcodeTaskService | null;
   remoteSessionId: string | null;
 }): IMcodeTaskService | null {
   if (params.configuredServiceScope === "workspace") {
-    return params.workspaceMcodeService;
+    return params.workspaceZCodeService;
   }
 
-  if (params.baseMcodeService) {
-    return params.baseMcodeService;
+  if (params.baseZCodeService) {
+    return params.baseZCodeService;
   }
 
-  // Bugfix: 远程 workspace 下如果误回退到 workspaceMcodeService，
+  // Bugfix: 远程 workspace 下如果误回退到 workspaceZCodeService，
   // “前往配置”会读到远端绝对路径（如 /root/...），本机无法正确打开。
-  // 这里在远程会话里严格要求 baseMcodeService，就绪前先等待，不再冒险走错误 fallback。
+  // 这里在远程会话里严格要求 baseZCodeService，就绪前先等待，不再冒险走错误 fallback。
   if (params.remoteSessionId) {
     return null;
   }
 
-  return params.workspaceMcodeService;
+  return params.workspaceZCodeService;
 }
 
 /**
  * 读取当前 workspace + provider 的主配置文件路径。
  *
- * 统一通过 mcodeTaskService 获取路径规则，避免 UI 层拼接 provider 配置路径。
+ * 统一通过 zcodeTaskService 获取路径规则，避免 UI 层拼接 provider 配置路径。
  */
 export function useWorkspaceProviderConfigFile(
   workspacePath: string,
@@ -77,7 +77,7 @@ export function useWorkspaceProviderConfigFile(
     enabled?: boolean;
   },
 ) {
-  const workspaceMcodeService = useMcodeTaskService(
+  const workspaceZCodeService = useMcodeTaskService(
     workspacePath,
     preferredRemoteSessionId,
     workspaceIdentity,
@@ -89,23 +89,23 @@ export function useWorkspaceProviderConfigFile(
     preferredRemoteSessionId,
     workspaceIdentity,
   );
-  const baseMcodeService = useRemoteWorkspaceSessionStore(
-    (state) => state.baseServices?.mcodeTaskService ?? null,
+  const baseZCodeService = useRemoteWorkspaceSessionStore(
+    (state) => state.baseServices?.zcodeTaskService ?? null,
   );
   const workspaceRpcEnabled = shouldEnableWorkspaceRpc({
     workspaceIdentity,
     remoteSessionId,
   });
-  const mcodeTaskService = resolveWorkspaceProviderConfigMcodeService({
+  const zcodeTaskService = resolveWorkspaceProviderConfigMcodeService({
     configuredServiceScope,
-    workspaceMcodeService,
-    baseMcodeService,
+    workspaceZCodeService,
+    baseZCodeService,
     remoteSessionId,
   });
   const mcodeServiceScope =
     configuredServiceScope === "base"
       ? "base"
-      : remoteSessionId && workspaceMcodeService !== baseMcodeService
+      : remoteSessionId && workspaceZCodeService !== baseZCodeService
         ? "remote"
         : "base";
   const [state, setState] =
@@ -135,7 +135,7 @@ export function useWorkspaceProviderConfigFile(
       };
     }
 
-    if (!mcodeTaskService) {
+    if (!zcodeTaskService) {
       requestVersionRef.current += 1;
       setState({
         path: null,
@@ -164,7 +164,7 @@ export function useWorkspaceProviderConfigFile(
       `[useWorkspaceProviderConfigFile] 开始读取 provider 配置路径 workspace=${workspacePath} provider=${provider} scope=${mcodeServiceScope} session=${remoteSessionId ?? "none"}`,
     );
 
-    void mcodeTaskService
+    void zcodeTaskService
       .getWorkspaceProviderConfigFile({
         workspacePath,
         ...(workspaceIdentity ? { workspaceIdentity } : {}),
@@ -211,7 +211,7 @@ export function useWorkspaceProviderConfigFile(
       disposed = true;
     };
   }, [
-    mcodeTaskService,
+    zcodeTaskService,
     mcodeServiceScope,
     enabled,
     provider,

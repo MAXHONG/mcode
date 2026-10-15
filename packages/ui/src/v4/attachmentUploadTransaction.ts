@@ -108,7 +108,7 @@ function createUploadId(): string {
 export function measureAttachmentChannelRequestBytes(method: string, params: unknown): number {
   const writer = new BufferWriter();
   // RequestType.Promise=100；max int id 比正常短生命周期 request id 更保守。
-  serialize(writer, [100, 2_147_483_647, ServiceChannels.McodeAgent, method]);
+  serialize(writer, [100, 2_147_483_647, ServiceChannels.ZCodeAgent, method]);
   serialize(writer, [params]);
   return writer.buffer.byteLength;
 }

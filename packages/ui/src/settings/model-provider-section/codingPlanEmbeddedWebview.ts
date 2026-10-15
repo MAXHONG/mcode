@@ -18,7 +18,7 @@ export type CodingPlanPurchaseAudience = "personal" | "team";
 
 export interface CodingPlanEmbeddedCredentials {
   zaiAccessToken?: string | null;
-  mcodeJwtToken?: string | null;
+  zcodeJwtToken?: string | null;
   bigmodelAccessToken?: string | null;
 }
 
@@ -56,7 +56,7 @@ export interface ResolveCodingPlanEmbeddedOriginOptions {
   endpointOrigin: string;
   e2eStoreBridgeEnabled?: boolean;
   overrideOrigin?: string | null;
-  mcodeEnv?: McodeEnv;
+  zcodeEnv?: McodeEnv;
 }
 
 export const CODING_PLAN_WEBVIEW_OVERRIDE_ENV_KEY = "VITE_CODING_PLAN_WEBVIEW_ORIGIN";
@@ -81,7 +81,7 @@ export function resolveCodingPlanEmbeddedOrigin({
   endpointOrigin,
   e2eStoreBridgeEnabled,
   overrideOrigin,
-  mcodeEnv = MCODE_ENV,
+  zcodeEnv = MCODE_ENV,
 }: ResolveCodingPlanEmbeddedOriginOptions): string {
   const normalizedOverride = overrideOrigin?.trim();
   if (
@@ -91,7 +91,7 @@ export function resolveCodingPlanEmbeddedOrigin({
     return normalizeMcodeEndpointOrigin(normalizedOverride);
   }
   // Bug 原因：本地开发默认注入 MCODE_ENV=production，不能仅凭 Vite DEV 就打开未启动的官网本地页。
-  if (dev && mcodeEnv === "test") {
+  if (dev && zcodeEnv === "test") {
     return "http://localhost:3000";
   }
   const normalizedEndpointOrigin = normalizeMcodeEndpointOrigin(endpointOrigin);
@@ -189,7 +189,7 @@ export function createCodingPlanAuthInjectionScript({
     provider === "zai"
       ? {
           "oauth:zai:access_token": credentials.zaiAccessToken?.trim() || null,
-          zcodejwttoken: credentials.mcodeJwtToken?.trim() || null,
+          zcodejwttoken: credentials.zcodeJwtToken?.trim() || null,
           "oauth:bigmodel:access_token": null,
         }
       : {
@@ -198,7 +198,7 @@ export function createCodingPlanAuthInjectionScript({
           // 官网用它查 billing/balance 判定 Start Plan 是否使用中；BigModel 分支缺失注入
           // 会导致官网 Start Plan 卡因查不到权益而误显示「已过期」。业务接口仍走
           // oauth:bigmodel:access_token，互不污染。
-          zcodejwttoken: credentials.mcodeJwtToken?.trim() || null,
+          zcodejwttoken: credentials.zcodeJwtToken?.trim() || null,
           "oauth:bigmodel:access_token": credentials.bigmodelAccessToken?.trim() || null,
         };
   const storageUpdates = Object.entries(values)

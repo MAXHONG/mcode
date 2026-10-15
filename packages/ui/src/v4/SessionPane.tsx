@@ -626,8 +626,8 @@ export function SessionPane({
     highspeedCardService,
     modelSelectionService,
     usageStatsService,
-    mcodeSessionService,
-    mcodeTaskService,
+    zcodeSessionService,
+    zcodeTaskService,
   } = useServices();
   const { intl, locale } = useMcodeIntl();
   const slashCommands = useSlashCommands(workspacePath, workspaceIdentity);
@@ -2396,7 +2396,7 @@ export function SessionPane({
         let replacesChildSessionId: string | undefined;
         if (targetChildSessionId) {
           try {
-            await mcodeSessionService.readSession({
+            await zcodeSessionService.readSession({
               workspacePath,
               ...(workspaceIdentity ? { workspaceIdentity } : {}),
               sessionId: targetChildSessionId,
@@ -2474,7 +2474,7 @@ export function SessionPane({
       workspaceIdentity,
       workspaceKey,
       workspacePath,
-      mcodeSessionService,
+      zcodeSessionService,
     ],
   );
 
@@ -4276,7 +4276,7 @@ export function SessionPane({
       });
 
       try {
-        await mcodeTaskService.restartWorkspaceProcess({
+        await zcodeTaskService.restartWorkspaceProcess({
           workspacePath,
           workspaceIdentity,
           provider: displayProvider,
@@ -4287,7 +4287,7 @@ export function SessionPane({
           workspacePath,
           workspaceIdentity,
           provider: displayProvider,
-          mcodeSessionService,
+          zcodeSessionService,
         });
         handleDraftSelectModel(modelSelection.providerId, modelSelection.modelId);
         store.setConfigOptions(workspacePath, prepareResult.configOptions ?? [], workspaceIdentity);
@@ -4317,8 +4317,8 @@ export function SessionPane({
       showModelChangeNotice,
       workspaceIdentity,
       workspacePath,
-      mcodeSessionService,
-      mcodeTaskService,
+      zcodeSessionService,
+      zcodeTaskService,
     ],
   );
 

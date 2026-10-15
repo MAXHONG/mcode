@@ -8,6 +8,6 @@ export function resolveTaskModel(model: string | undefined): string | undefined 
   return model && model !== "default" ? model : undefined;
 }
 
-export function getNativeModelProviderId(mcodeProvider: McodeProvider): string {
-  return `${BOT_NATIVE_MODEL_PROVIDER_PREFIX}${mcodeProvider}`;
+export function getNativeModelProviderId(zcodeProvider: McodeProvider): string {
+  return `${BOT_NATIVE_MODEL_PROVIDER_PREFIX}${zcodeProvider}`;
 }

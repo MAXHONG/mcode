@@ -27,7 +27,7 @@ describe("invalidateDeferredDraftSessionForSkillChange", () => {
       reason: "test",
       workspacePath,
       workspaceIdentity,
-      mcodeSessionService: createSessionService(closeSession),
+      zcodeSessionService: createSessionService(closeSession),
     });
 
     expect(closeSession).toHaveBeenCalledWith({
@@ -52,7 +52,7 @@ describe("invalidateDeferredDraftSessionForSkillChange", () => {
     await invalidateDeferredDraftSessionForSkillChange({
       reason: "test",
       workspacePath,
-      mcodeSessionService: createSessionService(closeSession),
+      zcodeSessionService: createSessionService(closeSession),
     });
 
     expect(closeSession).not.toHaveBeenCalled();
@@ -72,7 +72,7 @@ describe("invalidateDeferredDraftSessionForSkillChange", () => {
     await invalidateDeferredDraftSessionForSkillChange({
       reason: "test",
       workspacePath,
-      mcodeSessionService: createSessionService(closeSession),
+      zcodeSessionService: createSessionService(closeSession),
     });
 
     expect(closeSession).toHaveBeenCalledWith({

@@ -208,8 +208,8 @@ export class OAuthService implements IOAuthService {
 
     // 启动缓存恢复只需要检查共享 mcode JWT；若通过 loadActiveTokenSet 连带读取
     // provider access token，会把原本后台执行的 BigModel profile 迁移重新阻塞到首屏恢复链路。
-    const mcodeJwtToken = (await this.credentialService.load(MCODE_JWT_TOKEN_KEY))?.trim() ?? "";
-    if (mcodeJwtToken && resolveJwtExpiration(mcodeJwtToken, this.now()).kind === "expired") {
+    const zcodeJwtToken = (await this.credentialService.load(MCODE_JWT_TOKEN_KEY))?.trim() ?? "";
+    if (zcodeJwtToken && resolveJwtExpiration(zcodeJwtToken, this.now()).kind === "expired") {
       serviceLog.info("cached session invalidated because mcode JWT expired", {
         provider: activeProvider,
       });
@@ -217,7 +217,7 @@ export class OAuthService implements IOAuthService {
         restoreGeneration,
         activeProvider,
         profile,
-        mcodeJwtToken,
+        zcodeJwtToken,
       );
       if (!invalidated) {
         return this.restoreCachedSessionState();
@@ -256,7 +256,7 @@ export class OAuthService implements IOAuthService {
     }
 
     if (activeProvider === ZAI_PROVIDER_ID) {
-      if (!mcodeJwtToken) {
+      if (!zcodeJwtToken) {
         // sidebar 登录入口之前只看缓存 user_info，会把“缺少 zcodejwttoken”的状态误判成已登录。
         // 这里补充 zcodejwttoken 门槛，确保没有后端 JWT 时统一按未登录处理。
         log("restoreCachedSession skipped: missing zcodejwttoken:", activeProvider);
@@ -781,9 +781,9 @@ export class OAuthService implements IOAuthService {
           pending.provider === ZAI_PROVIDER_ID
             ? readTrimmedString(zai?.access_token)
             : readTrimmedString(bigmodel?.access_token) || readTrimmedString(bigmodel?.accessToken);
-        const mcodeJwtToken = readTrimmedString(ready.token);
+        const zcodeJwtToken = readTrimmedString(ready.token);
         const userId = readTrimmedString(user?.user_id);
-        if (!mcodeJwtToken || !providerAccessToken || !userId) {
+        if (!zcodeJwtToken || !providerAccessToken || !userId) {
           throw new Error("OAuth flow 查询响应无效");
         }
         const username = readTrimmedString(user?.name) || readTrimmedString(user?.email) || userId;
@@ -804,12 +804,12 @@ export class OAuthService implements IOAuthService {
         const tokenSet = adapter.normalizePolledTokenSet
           ? await adapter.normalizePolledTokenSet({
               accessToken: providerAccessToken,
-              mcodeJwtToken,
+              zcodeJwtToken,
               ...(refreshToken ? { refreshToken } : {}),
             })
           : {
               accessToken: providerAccessToken,
-              mcodeJwtToken,
+              zcodeJwtToken,
               ...(refreshToken ? { refreshToken } : {}),
             };
         return { tokenSet, profile };

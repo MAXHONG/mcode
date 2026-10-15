@@ -36,7 +36,7 @@ describe("fetchMcodeBuiltinRemoteRelease", () => {
         await fetchMcodeBuiltinRemoteRelease({
           apiClient: new NodeApiClient({
             fetchImpl: request as typeof fetch,
-            resolveMcodeEndpointOrigin: () => "https://example.com",
+            resolveZCodeEndpointOrigin: () => "https://example.com",
           }),
           endpointOrigin: "https://example.com/base",
           appVersion: "3.0.0",
@@ -61,7 +61,7 @@ describe("fetchMcodeBuiltinRemoteRelease", () => {
   it("服务端尚未下发 URL 时不请求 CDN，也不消费旧 inline 字段", async () => {
     const request = vi.fn(
       async () =>
-        new Response(JSON.stringify({ code: 0, data: { configs: { mcodeBuiltin: release } } })),
+        new Response(JSON.stringify({ code: 0, data: { configs: { zcodeBuiltin: release } } })),
     );
     await expect(
       fetchMcodeBuiltinRemoteRelease({

@@ -27,9 +27,9 @@ describe("Account preset membership", () => {
             "GLM-5.3-Flash",
           ]);
           const result = new ProviderConfigResolver().resolve({
-            mcodeBuiltinProviders: snapshot.providers,
-            mcodeBuiltinProviderTemplates: snapshot.providerTemplates,
-            mcodeBuiltinModelRules: snapshot.models,
+            zcodeBuiltinProviders: snapshot.providers,
+            zcodeBuiltinProviderTemplates: snapshot.providerTemplates,
+            zcodeBuiltinModelRules: snapshot.models,
             accountProviders: new ProviderConfigMap([
               [
                 providerId,

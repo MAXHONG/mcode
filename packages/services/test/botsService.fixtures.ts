@@ -331,21 +331,21 @@ export function createMcodeSessionService(
 export function createBotsService(
   deps: Omit<
     Parameters<typeof createBotsServiceImpl>[0],
-    "mcodeSessionService" | "mcodeTaskService"
+    "zcodeSessionService" | "zcodeTaskService"
   > & {
-    mcodeTaskService?: IMcodeTaskService;
+    zcodeTaskService?: IMcodeTaskService;
     /** 旧测试名保留为别名；真实注入的是 Mcode task service。 */
     legacyTaskService?: IMcodeTaskService;
-    mcodeSessionService?: IMcodeSessionService;
+    zcodeSessionService?: IMcodeSessionService;
   },
 ): ReturnType<typeof createBotsServiceImpl> {
   const {
     legacyTaskService,
-    mcodeTaskService: providedMcodeTaskService,
-    mcodeSessionService: _providedMcodeSessionService,
+    zcodeTaskService: providedMcodeTaskService,
+    zcodeSessionService: _providedMcodeSessionService,
     ...rest
   } = deps;
-  const mcodeTaskService =
+  const zcodeTaskService =
     providedMcodeTaskService ?? legacyTaskService ?? createLegacyTaskService();
   const modelSelectionService =
     deps.modelSelectionService ??
@@ -365,12 +365,12 @@ export function createBotsService(
     remoteWorkspaceService: {
       isConnected: vi.fn(async () => true),
       ensureConnected: vi.fn(async () => ({ ok: true })),
-      getMcodeTaskService: vi.fn(async () => mcodeTaskService),
+      getZCodeTaskService: vi.fn(async () => zcodeTaskService),
       getModelSelectionService: vi.fn(async () => modelSelectionService),
     },
     modelSelectionService,
     ...rest,
-    mcodeTaskService,
+    zcodeTaskService,
   });
 }
 

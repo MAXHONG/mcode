@@ -188,7 +188,7 @@ interface TaskOverlay {
 }
 
 interface CreateMcodeTaskServiceAdapterOptions {
-  mcodeAgentService: IMcodeAgentService;
+  zcodeAgentService: IMcodeAgentService;
   taskIndexRepo?: TaskIndexRepo;
   // syncer 现在持有 workspace emitter 和 broadcast 入口，adapter 必须共用同一实例，
   // 否则 desktop-continuous 路径和 task adapter 路径的事件订阅会分裂成两份，UI 收不全。
@@ -270,7 +270,7 @@ export function createMcodeTaskServiceAdapter(
     const key = JSON.stringify([resolveWorkspaceKey(workspace), workspace.remoteSessionId ?? ""]);
     let scope = botConnectionScopes.get(key);
     if (!scope) {
-      scope = createMcodeAgentConnectionScope(options.mcodeAgentService, {
+      scope = createMcodeAgentConnectionScope(options.zcodeAgentService, {
         connectionId: `bot-${randomUUID()}`,
         clientMode: "desktop-continuous",
         role: "trusted-host-relay",
@@ -447,7 +447,7 @@ export function createMcodeTaskServiceAdapter(
         // 上传/寄存命令面尚未建模（CLI 侧 fork-edit-retry.ts 同款裁决“附件命令面后续”）。
         // 带附件输入保留旧 session/send，避免手机 replayable 图片/文件输入回归；
         // 过渡归宿 = v4 附件命令面（届时由 v4 sendText 承接）。
-        await options.mcodeAgentService.sendPrompt({
+        await options.zcodeAgentService.sendPrompt({
           workspacePath: target.workspacePath,
           workspaceIdentity: target.workspaceIdentity,
           ...(target.remoteSessionId ? { remoteSessionId: target.remoteSessionId } : {}),
@@ -473,7 +473,7 @@ export function createMcodeTaskServiceAdapter(
         // queue 的 traceId 对账（completeRuntimeCommandByInputId 语义不变）。
         // heldQueueDisposition=keepQueueAndSend：旧 session/send 没有 held choice 闸门，
         // replayable 无人机交互路径按“立即发送、不动队列”等价老语义。
-        const ack = await options.mcodeAgentService.sendConversationCommandV4({
+        const ack = await options.zcodeAgentService.sendConversationCommandV4({
           workspacePath: target.workspacePath,
           workspaceIdentity: target.workspaceIdentity,
           ...(target.remoteSessionId ? { remoteSessionId: target.remoteSessionId } : {}),
@@ -1178,7 +1178,7 @@ export function createMcodeTaskServiceAdapter(
     rememberTaskTarget(params);
     const thoughtLevel = params.thoughtLevel?.trim();
     const mcpServers = await resolveProductMcpServers(params.mcpServers);
-    return options.mcodeAgentService.resumeSession({
+    return options.zcodeAgentService.resumeSession({
       workspacePath: params.workspacePath,
       workspaceIdentity: params.workspaceIdentity,
       sessionId: params.taskId,
@@ -1205,7 +1205,7 @@ export function createMcodeTaskServiceAdapter(
   ): Promise<void> {
     await sendHostCasCommandV4({
       send: (envelope) =>
-        options.mcodeAgentService.sendConversationCommandV4({
+        options.zcodeAgentService.sendConversationCommandV4({
           workspacePath: target.workspacePath,
           workspaceIdentity: target.workspaceIdentity,
           envelope,
@@ -1228,7 +1228,7 @@ export function createMcodeTaskServiceAdapter(
     mode: McodeSessionMode,
   ): Promise<void> {
     if (mode === "auto") {
-      await options.mcodeAgentService.setMode({
+      await options.zcodeAgentService.setMode({
         workspacePath: target.workspacePath,
         workspaceIdentity: target.workspaceIdentity,
         sessionId: target.taskId,
@@ -1251,7 +1251,7 @@ export function createMcodeTaskServiceAdapter(
     const repaired = await repairImportedClaudeSessionSnapshot({
       snapshot,
       target: params,
-      createSession: (input) => options.mcodeAgentService.createSession(input),
+      createSession: (input) => options.zcodeAgentService.createSession(input),
       onRepair: (history) => {
         logger.warn(
           undefined,
@@ -1360,7 +1360,7 @@ export function createMcodeTaskServiceAdapter(
       if (legacySnapshot.meta.migrationSource === "claudeCode") {
         try {
           const mcpServers = await resolveProductMcpServers(params.mcpServers);
-          const snapshot = await options.mcodeAgentService.createSession({
+          const snapshot = await options.zcodeAgentService.createSession({
             workspacePath: params.workspacePath,
             workspaceIdentity: params.workspaceIdentity,
             sessionId: params.taskId,
@@ -1874,7 +1874,7 @@ export function createMcodeTaskServiceAdapter(
   }
 
   async function disposeMcodeAgentServiceAndWait(): Promise<void> {
-    const agentService = options.mcodeAgentService as IMcodeAgentService & {
+    const agentService = options.zcodeAgentService as IMcodeAgentService & {
       disposeAllAndWait?: () => Promise<void>;
     };
     if (agentService.disposeAllAndWait) {
@@ -1889,7 +1889,7 @@ export function createMcodeTaskServiceAdapter(
     disposeAllAndWait(): Promise<void>;
   } = {
     async initialize(params) {
-      const result = await options.mcodeAgentService.initialize(params);
+      const result = await options.zcodeAgentService.initialize(params);
       return {
         available: result.available,
         version: result.protocolName
@@ -1901,7 +1901,7 @@ export function createMcodeTaskServiceAdapter(
     async releaseWorkspacePreparation(params): Promise<void> {
       // 关闭 workspace UI 只会释放 RPC 使用方，不会自动终止已预热的 Agent。
       // WSL Host 共享后 Host 会继续存活，因此必须按 workspaceKey 显式回收对应 runtime。
-      await options.mcodeAgentService.disposeWorkspace(normalizeWorkspaceParams(params));
+      await options.zcodeAgentService.disposeWorkspace(normalizeWorkspaceParams(params));
     },
 
     async checkCodexConnectivity(): Promise<McodeCodexConnectivityCheckResult> {
@@ -1923,7 +1923,7 @@ export function createMcodeTaskServiceAdapter(
       let snapshot: McodeSessionStateSnapshot | null = null;
       if (draftSessionId && !mcpServers) {
         try {
-          snapshot = await options.mcodeAgentService.readSession({
+          snapshot = await options.zcodeAgentService.readSession({
             ...target,
             sessionId: draftSessionId,
           });
@@ -1931,7 +1931,7 @@ export function createMcodeTaskServiceAdapter(
             if (!sameModelSelection(snapshot.settings.model.current, requestedSelection)) {
               // replayable 首发复用 draft session 时，draft 可能仍停在预热时的旧模型。
               // 复用前必须同步 UI 当前模型，否则手机远控首发会显示新模型但真实请求仍用旧模型。
-              snapshot = await options.mcodeAgentService.setModel({
+              snapshot = await options.zcodeAgentService.setModel({
                 ...target,
                 sessionId: draftSessionId,
                 model: requestedSelection,
@@ -1944,7 +1944,7 @@ export function createMcodeTaskServiceAdapter(
           ) {
             // replayable 首发复用 draft session 时也必须以 UI 当前 thought_level 为准。
             // 否则手机远控可能复用旧 draft session，导致首发请求沿用过期推理强度。
-            snapshot = await options.mcodeAgentService.setThoughtLevel({
+            snapshot = await options.zcodeAgentService.setThoughtLevel({
               ...target,
               sessionId: draftSessionId,
               thoughtLevel: requestedSelection.options.reasoningLevel,
@@ -1971,7 +1971,7 @@ export function createMcodeTaskServiceAdapter(
           const model = requestedSelection;
           const ack = assertV4CommandAckOk(
             "createSession",
-            await options.mcodeAgentService.sendConversationCommandV4({
+            await options.zcodeAgentService.sendConversationCommandV4({
               ...target,
               envelope: createHostCommandEnvelope({
                 type: "createSession",
@@ -1996,12 +1996,12 @@ export function createMcodeTaskServiceAdapter(
           if (!sessionId) {
             throw new Error("v4 createSession accepted without sessionId result");
           }
-          snapshot = await options.mcodeAgentService.readSession({
+          snapshot = await options.zcodeAgentService.readSession({
             ...target,
             sessionId,
           });
         } else {
-          snapshot = await options.mcodeAgentService.createSession({
+          snapshot = await options.zcodeAgentService.createSession({
             ...target,
             sessionTraceId: createSessionTraceId(),
             mode: toMcodeMode(params.mode),
@@ -2058,7 +2058,7 @@ export function createMcodeTaskServiceAdapter(
       const target = taskTargets.get(params.taskId);
       if (target && taskKey(target) !== taskKey(params))
         throw new Error("Topic task workspace mismatch");
-      const messages = await options.mcodeAgentService.readSessionMessages({
+      const messages = await options.zcodeAgentService.readSessionMessages({
         workspacePath: params.workspacePath,
         workspaceIdentity: params.workspaceIdentity,
         remoteSessionId: params.remoteSessionId ?? target?.remoteSessionId,
@@ -2440,7 +2440,7 @@ export function createMcodeTaskServiceAdapter(
         workspacePath: target.workspacePath,
       });
       // session/stop → v4 stop 命令（goal-pause barrier 语义由 CLI 原生 handler 承接）。
-      const ack = await options.mcodeAgentService.sendConversationCommandV4({
+      const ack = await options.zcodeAgentService.sendConversationCommandV4({
         workspacePath: target.workspacePath,
         workspaceIdentity: target.workspaceIdentity,
         envelope: createHostCommandEnvelope({
@@ -2479,7 +2479,7 @@ export function createMcodeTaskServiceAdapter(
         activePromptInputIds.set(taskKey(target), params.inputId);
       }
       try {
-        const result = await options.mcodeAgentService.compactSession({
+        const result = await options.zcodeAgentService.compactSession({
           workspacePath: target.workspacePath,
           workspaceIdentity: target.workspaceIdentity,
           sessionId: params.taskId,
@@ -2533,7 +2533,7 @@ export function createMcodeTaskServiceAdapter(
         workspaceIdentity: target.workspaceIdentity,
         workspacePath: target.workspacePath,
       });
-      const result = await options.mcodeAgentService.goalSession({
+      const result = await options.zcodeAgentService.goalSession({
         workspacePath: target.workspacePath,
         workspaceIdentity: target.workspaceIdentity,
         sessionId: params.taskId,
@@ -2584,7 +2584,7 @@ export function createMcodeTaskServiceAdapter(
       // interactionId ≡ 业务 requestId（CLI interaction-broker 同源注册）；optionId 由
       // CLI 侧 buildProtocolPermissionOptions 精确回映 response（allow_project 的
       // permissionUpdates 持久化规则不丢，见 interaction-broker v4AnswerToPermissionResponse）。
-      const ack = await options.mcodeAgentService.sendConversationCommandV4({
+      const ack = await options.zcodeAgentService.sendConversationCommandV4({
         workspacePath: target.workspacePath,
         workspaceIdentity: target.workspaceIdentity,
         envelope: createHostCommandEnvelope({
@@ -2611,7 +2611,7 @@ export function createMcodeTaskServiceAdapter(
       // AskUserQuestion/plan-approval 回执收敛 v4 resolveInteraction。
       // answer.action/content 是 additive 扩展（多题答案/注解无损承载，CLI 侧
       // interaction-broker 优先按 action 精确映射，缺省回落 optionId/freeText 兼容路径）。
-      const ack = await options.mcodeAgentService.sendConversationCommandV4({
+      const ack = await options.zcodeAgentService.sendConversationCommandV4({
         workspacePath: target.workspacePath,
         workspaceIdentity: target.workspaceIdentity,
         envelope: createHostCommandEnvelope({
@@ -2645,7 +2645,7 @@ export function createMcodeTaskServiceAdapter(
     async closeTask(params): Promise<void> {
       // 此兼容入口仍通过 closeSession 关闭会话；尚无只关闭 runtime、保留会话的独立操作。
       const target = getTaskTarget(params.taskId);
-      await options.mcodeAgentService.closeSession({
+      await options.zcodeAgentService.closeSession({
         workspacePath: target.workspacePath,
         workspaceIdentity: target.workspaceIdentity,
         sessionId: params.taskId,
@@ -2924,7 +2924,7 @@ export function createMcodeTaskServiceAdapter(
       }
       const snapshot = restored.snapshot;
       const projectionStartedAt = Date.now();
-      const mcodeSnapshot = limitTaskSnapshotMessages(
+      const zcodeSnapshot = limitTaskSnapshotMessages(
         snapshotToMcode(snapshot, {
           includeEmptyPendingElicitations: params.clientMode === "web-remote-replayable",
         }),
@@ -2933,7 +2933,7 @@ export function createMcodeTaskServiceAdapter(
       const projectionDurationMs = Date.now() - projectionStartedAt;
       // session owner 的快照刷新索引投影；syncTaskMeta 继续保留用户手动标题。
       const indexStartedAt = Date.now();
-      const indexedMeta = await syncTaskIndexMeta(mcodeSnapshot.meta);
+      const indexedMeta = await syncTaskIndexMeta(zcodeSnapshot.meta);
       const indexDurationMs = Date.now() - indexStartedAt;
       logger.info(undefined, "[mcode-task-service] 历史快照读取完成", {
         clientMode: params.clientMode ?? "unknown",
@@ -2943,12 +2943,12 @@ export function createMcodeTaskServiceAdapter(
         projectionDurationMs,
         resumeDurationMs,
         snapshotKind: "session",
-        stats: getTaskSnapshotMessageDiagnostics(mcodeSnapshot),
+        stats: getTaskSnapshotMessageDiagnostics(zcodeSnapshot),
         taskId: params.taskId,
         workspaceIdentity: params.workspaceIdentity ?? null,
         workspacePath: params.workspacePath,
       });
-      return { ...mcodeSnapshot, meta: indexedMeta };
+      return { ...zcodeSnapshot, meta: indexedMeta };
     },
 
     async getTaskSnapshotWithEtag(params) {
@@ -3018,7 +3018,7 @@ export function createMcodeTaskServiceAdapter(
 
     async getTaskModelSelection(params): Promise<ModelSelection | null> {
       const target = getTaskTarget(params.taskId);
-      const snapshot = await options.mcodeAgentService.readSession({
+      const snapshot = await options.zcodeAgentService.readSession({
         workspacePath: target.workspacePath,
         workspaceIdentity: target.workspaceIdentity,
         sessionId: params.taskId,
@@ -3077,7 +3077,7 @@ export function createMcodeTaskServiceAdapter(
           const targetWorkspaceIdentity = params.workspacePath
             ? params.workspaceIdentity
             : undefined;
-          const snapshot = await options.mcodeAgentService.createSession({
+          const snapshot = await options.zcodeAgentService.createSession({
             workspacePath: source.workspacePath,
             workspaceIdentity: targetWorkspaceIdentity,
             sessionId: buildImportedClaudeTaskId(source.workspacePath, source.sessionId),
@@ -3140,7 +3140,7 @@ export function createMcodeTaskServiceAdapter(
         // thought 字段承载；provider/model 取当前会话选型，与桌面 v4 工具条同一命令面）。
         // 同 provider 同 model 直切，不涉及 runtimeModel（provider 凭据）解析——这正是
         // setModel 尚不能迁移的原因（见下方 setModel 标注）。
-        const current = await options.mcodeAgentService.readSession({
+        const current = await options.zcodeAgentService.readSession({
           workspacePath: target.workspacePath,
           workspaceIdentity: target.workspaceIdentity,
           sessionId: params.taskId,
@@ -3174,7 +3174,7 @@ export function createMcodeTaskServiceAdapter(
       // Snapshot；模型执行事实已经收敛到目标 Worker Registry，Host 只发送 Selection。
       // 过渡归宿 = task facade 原生消费 V4 config 投影与 revision。
       const target = getTaskTarget(params.taskId);
-      await options.mcodeAgentService.setModel({
+      await options.zcodeAgentService.setModel({
         workspacePath: target.workspacePath,
         workspaceIdentity: target.workspaceIdentity,
         sessionId: params.taskId,
@@ -3254,7 +3254,7 @@ export function createMcodeTaskServiceAdapter(
     async getTaskTokenUsage(params): Promise<McodeTaskTokenUsageResult> {
       // 摘要面板需要展示 task 的累计模型消耗，不能复用 usage_update 的 context window。
       // 这里通过 Mcode Protocol 读 agent SQLite 的 model_usage 聚合，保持桌面和远控同一事实源。
-      return options.mcodeAgentService.getTaskTokenUsage({
+      return options.zcodeAgentService.getTaskTokenUsage({
         workspacePath: params.workspacePath,
         workspaceIdentity: params.workspaceIdentity,
         sessionId: params.taskId,
@@ -3269,7 +3269,7 @@ export function createMcodeTaskServiceAdapter(
     },
 
     async restartWorkspaceProcess(params): Promise<void> {
-      await options.mcodeAgentService.disposeWorkspace(normalizeWorkspaceParams(params));
+      await options.zcodeAgentService.disposeWorkspace(normalizeWorkspaceParams(params));
     },
 
     async deleteTask(params): Promise<void> {
@@ -3365,7 +3365,7 @@ export function createMcodeTaskServiceAdapter(
           titleLength: meta.title.length,
         });
         try {
-          const ack = await options.mcodeAgentService.sendConversationCommandV4({
+          const ack = await options.zcodeAgentService.sendConversationCommandV4({
             workspacePath: params.workspacePath,
             workspaceIdentity: params.workspaceIdentity,
             envelope: createHostCommandEnvelope({
@@ -3522,7 +3522,7 @@ export function createMcodeTaskServiceAdapter(
         // 协议 + 手机 store + bots 投影整波重做（且 ui/store 本波由并行 agent 主修，避让）。
         // 死期改判 = replayable 读路径 v4 store 波次（波次 3），与 host/index.ts 镜像、
         // mapStateUpdated/mapServiceEvent、agentService.onDynamicSessionEvent 同批摘除。
-        const upstreamDisposable = options.mcodeAgentService.onDynamicSessionEvent({
+        const upstreamDisposable = options.zcodeAgentService.onDynamicSessionEvent({
           workspacePath: params.workspacePath,
           workspaceIdentity: params.workspaceIdentity,
           sessionId: params.taskId,
@@ -3556,7 +3556,7 @@ export function createMcodeTaskServiceAdapter(
       taskIndexSyncer.disposeAll();
       for (const scope of botConnectionScopes.values()) void scope.dispose();
       botConnectionScopes.clear();
-      options.mcodeAgentService.disposeAll();
+      options.zcodeAgentService.disposeAll();
       disposeLocalTaskState();
     },
 
@@ -4939,7 +4939,7 @@ function mapCompactTimelinePayload(
     // compact lifecycle 是结构化状态事件，不是 assistant 正文。
     // 即使上游误带 text，也不能把内部 summary/prompt 投影到聊天区。
     content: "",
-    mcodeTimeline: timeline,
+    zcodeTimeline: timeline,
   };
 }
 
@@ -4969,7 +4969,7 @@ function mapSyntheticTimelinePartPayload(
     content: stringValue(part.text) ?? "",
     // fork notice 是 part.upserted 里的结构化 synthetic text，不是模型正文 delta。
     // 这里提前投成 timeline divider，避免 UI 按普通消息渲染后丢掉横线。
-    mcodeTimeline: timeline,
+    zcodeTimeline: timeline,
   };
 }
 
@@ -5029,7 +5029,7 @@ function compactFailureToTimelineEvent(
     traceId,
     ...(inputId ? { inputId } : {}),
     content: "",
-    mcodeTimeline: {
+    zcodeTimeline: {
       version: 1,
       kind: "synthetic",
       type: "context_compaction",

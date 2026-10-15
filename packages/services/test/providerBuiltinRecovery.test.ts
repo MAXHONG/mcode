@@ -28,10 +28,10 @@ describe("App Built-in / Account 失败恢复", () => {
     await writeFile(builtin, JSON.stringify(release));
     const download = vi.fn(async () => null);
     const configRuntime = createProviderConfigRuntime({
-      mcodeBuiltinFilePath: builtin,
+      zcodeBuiltinFilePath: builtin,
       personalFilePath: join(root, "personal.json"),
       personalPollingIntervalMs: false,
-      mcodeBuiltinRemote: {
+      zcodeBuiltinRemote: {
         controlFilePath: join(root, "control.json"),
         resolveEndpointKey: () => "https://control.example",
         fetchRelease: download,
@@ -55,24 +55,24 @@ describe("App Built-in / Account 失败恢复", () => {
     });
     try {
       await runtime.start();
-      await configRuntime.refreshMcodeBuiltin();
+      await configRuntime.refreshZCodeBuiltin();
       const old = runtime.registryService.getSnapshot()!;
       fail = true;
       await writeFile(builtin, JSON.stringify({ ...release, revision: 2 }));
       await vi.waitFor(() => expect(errors).toHaveBeenCalled());
-      expect(runtime.registryService.getSnapshot()!.config.mcodeBuiltinRevision).toBe(
-        old.config.mcodeBuiltinRevision,
+      expect(runtime.registryService.getSnapshot()!.config.zcodeBuiltinRevision).toBe(
+        old.config.zcodeBuiltinRevision,
       );
       fail = false;
       const beforeRecovery = resolve.mock.calls.length;
       await vi.advanceTimersByTimeAsync(60_000);
       await vi.waitFor(() =>
-        expect(runtime.registryService.getSnapshot()!.config.mcodeBuiltinRevision).toMatch(
+        expect(runtime.registryService.getSnapshot()!.config.zcodeBuiltinRevision).toMatch(
           "mcode-builtin:2:",
         ),
       );
       const next = runtime.registryService.getSnapshot()!;
-      expect(next.account.basedOnMcodeBuiltinRevision).toBe(next.config.mcodeBuiltinRevision);
+      expect(next.account.basedOnZCodeBuiltinRevision).toBe(next.config.zcodeBuiltinRevision);
       expect(resolve.mock.calls.length).toBe(beforeRecovery + 1);
       expect(download).toHaveBeenCalledTimes(1);
     } finally {

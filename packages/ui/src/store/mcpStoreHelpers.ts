@@ -12,7 +12,7 @@ export const MCP_DELETED_PRELOAD_KEY = "mcode-mcp-deleted-preload";
 
 export const DEFAULT_MCP_CONFIG: McpConfig = {
   mcp: { mcpServers: {} },
-  mcodeagentmcp: { mcpServers: {}, projects: {} },
+  zcodeagentmcp: { mcpServers: {}, projects: {} },
   claudeclimcp: { mcpServers: {}, projects: {} },
   geminiclimcp: { mcpServers: {}, projects: {} },
   codexclimcp: { mcpServers: {}, projects: {} },
@@ -88,7 +88,7 @@ function toIdKey(value: string): string {
 }
 
 export function makeServerId(source: McpSource, name: string, projectPath?: string, directorySource?: NonNullable<NativeMcpServerRecord["location"]>["source"]): string {
-  const sourceKey = source === "mcodeagentmcp" && directorySource && directorySource !== "mcode"
+  const sourceKey = source === "zcodeagentmcp" && directorySource && directorySource !== "mcode"
     ? `${source}-${directorySource}`
     : source;
   return `${sourceKey}-${toIdKey(toScopeKey(projectPath))}-${toIdKey(name)}`;

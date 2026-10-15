@@ -41,7 +41,7 @@ function service(
 ) {
   return new ProviderConfigService({
     personalRepository: repo,
-    mcodeBuiltinSource: {
+    zcodeBuiltinSource: {
       read: async () => ({
         revision: "builtin",
         providers: ProviderConfigMap.empty(),

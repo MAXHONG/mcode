@@ -121,7 +121,7 @@ function createUsageStatsServiceForTest(params: {
       load: vi.fn(async (key) => params.credentialTokens?.[key] ?? null),
     },
     env: params.env,
-    mcodeAgentService: {
+    zcodeAgentService: {
       getAppUsageStats: params.getAppUsageStats ?? vi.fn(async () => createAppUsageSnapshot()),
     },
   });

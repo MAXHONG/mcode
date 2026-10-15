@@ -351,7 +351,7 @@ async function readDirectoryServersFromFile(
   );
   const location = buildDirectoryMcpLocation(descriptor, scope, workspacePath);
   return Object.entries(serverMap).map(([name, config]) => ({
-    source: "mcodeagentmcp",
+    source: "zcodeagentmcp",
     scope,
     name,
     config: config as McpServerConfig,

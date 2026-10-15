@@ -31,7 +31,7 @@ export interface HighspeedServiceTransport {
  * （ZAI JWT 配 BigModel key 只会在服务端取号时被拒）。
  */
 export interface HighspeedInferenceAuth {
-  mcodeJwt: string;
+  zcodeJwt: string;
   family: "zai" | "bigmodel";
   codingPlanAuthorization: string;
   targetType: "PERSONAL" | "TEAM";
@@ -70,21 +70,21 @@ type SendBudget = <T>(task: Promise<T>) => Promise<SendBudgetOutcome<T>>;
  * 鉴权中间件：两者必须携带完全一致的 Coding Plan 凭据，加速推理只是额外附带卡 ID。
  */
 export function buildHighspeedCodingPlanAuthHeaders(params: {
-  mcodeJwt: string;
+  zcodeJwt: string;
   codingPlanAuthorization: string;
   targetType: "PERSONAL" | "TEAM";
   organizationId?: string;
   projectId?: string;
 }): Record<string, string> {
-  const mcodeJwt = params.mcodeJwt.trim();
+  const zcodeJwt = params.zcodeJwt.trim();
   const codingPlanAuthorization = params.codingPlanAuthorization.trim();
-  if (!mcodeJwt) throw new Error("highspeed request requires mcode jwt");
+  if (!zcodeJwt) throw new Error("highspeed request requires mcode jwt");
   if (!codingPlanAuthorization) throw new Error("highspeed request requires Coding Plan jwt");
   if (params.targetType === "TEAM" && (!params.organizationId || !params.projectId)) {
     throw new Error("highspeed team request requires organization and project");
   }
   return {
-    Authorization: /^Bearer\s/i.test(mcodeJwt) ? mcodeJwt : `Bearer ${mcodeJwt}`,
+    Authorization: /^Bearer\s/i.test(zcodeJwt) ? zcodeJwt : `Bearer ${zcodeJwt}`,
     // 接口契约要求 Bearer 前缀；凭据库可能存裸 token，这里统一归一化。
     "X-Bigmodel-Authorization": /^Bearer\s/i.test(codingPlanAuthorization)
       ? codingPlanAuthorization
@@ -135,13 +135,13 @@ export function buildHighspeedTurnExecution(params: {
     },
     requestAuth: {
       // Anthropic 兼容客户端会发送 x-api-key；服务端仍以 Authorization、Coding Plan 双 JWT 与卡 ID 裁决。
-      apiKey: params.auth.mcodeJwt,
+      apiKey: params.auth.zcodeJwt,
       headers: {
         // Bug 原因：加速推理曾只发 mcode JWT + 卡 ID，而它与 draw 走同一 highspeed 网关、同一
         // 鉴权中间件，缺少 Coding Plan 双 JWT + Team 身份头时网关无法校验套餐权益，返回
         // 401 auth_failed。这里复用与 draw 完全一致的 Coding Plan 头，再附加本次执行的卡 ID。
         ...buildHighspeedCodingPlanAuthHeaders({
-          mcodeJwt: params.auth.mcodeJwt,
+          zcodeJwt: params.auth.zcodeJwt,
           codingPlanAuthorization: params.auth.codingPlanAuthorization,
           targetType: params.auth.targetType,
           ...(params.auth.organizationId ? { organizationId: params.auth.organizationId } : {}),
@@ -192,7 +192,7 @@ export class HighspeedCardService implements IHighspeedCardService {
     this.resolveInferenceAuth =
       options.resolveInferenceAuth ??
       (async () => ({
-        mcodeJwt: "mock-mcode-jwt",
+        zcodeJwt: "mock-mcode-jwt",
         family: "zai",
         codingPlanAuthorization: "mock-coding-plan-jwt",
         targetType: "PERSONAL",

@@ -497,7 +497,7 @@ export interface McodeAgentMessageChunk {
   /** agent messageId；Mcode synthetic timeline 消息用它做 upsert。 */
   messageId?: string;
   content: string;
-  mcodeTimeline?: McodeTimelineMeta;
+  zcodeTimeline?: McodeTimelineMeta;
 }
 export interface McodeAgentThoughtChunk {
   type: "agent_thought_chunk";

@@ -44,14 +44,15 @@ import { buildRemoteAgentBundleWrapper } from "@mcode/server/remote/mcodeAgentBu
 import {
   REMOTE_AGENT_OFFICIAL_PLUGIN_INCLUDED_TOP_LEVEL_PATHS,
   REMOTE_AGENT_OFFICIAL_PLUGIN_PACKAGE_NAMES,
+  resolveRemoteAgentOfficialPluginLocalSourceDirName,
   REMOTE_AGENT_OFFICIAL_PLUGIN_REQUIRED_RELATIVE_PATHS,
 } from "@mcode/server/remote/mcodeAgentOfficialPluginAssets.js";
 
 const retiredProtocolPrefix = `${"a"}${"cp"}`;
 const retiredProxyRuntimeId = `${retiredProtocolPrefix}-proxy-runtime`;
 // 远端 Mcode Agent bundle 文件名（与 REMOTE_AGENT_BUNDLE_NAME 保持一致）。
-const REMOTE_AGENT_BUNDLE_FILE_NAME = "mcode.cjs";
-const REMOTE_AGENT_WRAPPER_FILE_NAME = "mcode-agent";
+const REMOTE_AGENT_BUNDLE_FILE_NAME = "zcode.cjs";
+const REMOTE_AGENT_WRAPPER_FILE_NAME = "zcode-agent";
 const BROWSER_USE_REQUIRED_RELATIVE_PATHS = [
   // node_repl 宿主已抽成 @mcode/node-repl-host，browser-use 不再产出 dist/mcp/server.js。
   "browser-use-plugin/docs/api.json",
@@ -129,7 +130,7 @@ const LEGACY_REMOTE_TEST_AGENT_RUNTIME: Record<
     bundledResourceDir: "glm",
     version: MCODE_AGENT_RUNTIME.version,
     resolveEntrySegments: (platform) => [
-      resolveTestPlatformBinaryName("mcode-agent", platform),
+      resolveTestPlatformBinaryName("zcode-agent", platform),
     ],
   },
 };
@@ -238,7 +239,7 @@ class FakeRemoteBackend implements IRemoteBackend {
       );
     }
 
-    const versionCommand = `"${"$HOME"}"'/.mcode/server/node' "${"$HOME"}"'/.mcode/server/mcode-server.cjs' --version`;
+    const versionCommand = `"${"$HOME"}"'/.zcode/server/node' "${"$HOME"}"'/.zcode/server/zcode-server.cjs' --version`;
     if (command === versionCommand) {
       const versionSource =
         this.serverVersions.length > 1
@@ -266,8 +267,8 @@ class FakeRemoteBackend implements IRemoteBackend {
   async exists(remotePath: string): Promise<boolean> {
     return (
       this.remoteFiles.has(remotePath) ||
-      remotePath === "~/.mcode/server/node" ||
-      remotePath === "~/.mcode/server/mcode-server.cjs"
+      remotePath === "~/.zcode/server/node" ||
+      remotePath === "~/.zcode/server/zcode-server.cjs"
     );
   }
 
@@ -342,9 +343,9 @@ class FailFirstGlmUploadRemoteBackend extends FakeRemoteBackend {
   override async upload(localPath: string, remotePath: string): Promise<void> {
     if (
       this.shouldFailGlmUpload &&
-      (remotePath === "~/.mcode/server/agents/glm/mcode.cjs.new" ||
+      (remotePath === "~/.zcode/server/agents/glm/zcode.cjs.new" ||
         remotePath.startsWith(
-          "~/.mcode/server/agents/glm/mcode.cjs.new-",
+          "~/.zcode/server/agents/glm/zcode.cjs.new-",
         ))
     ) {
       this.shouldFailGlmUpload = false;
@@ -447,7 +448,7 @@ async function stageRemoteRuntimeRelease(
   await mkdir(nodePtyDir, { recursive: true });
   await writeFile(join(nodeDir, "node"), "node runtime", "utf8");
   await writeFile(
-    join(serverDir, "mcode-server.cjs"),
+    join(serverDir, "zcode-server.cjs"),
     "// remote server bundle\n",
     "utf8",
   );
@@ -562,17 +563,17 @@ function createFullyDeployedRemoteFiles(
 ): Record<string, string> {
   const [platform] = platformKey.split("-") as ["linux" | "darwin", string];
   const files: Record<string, string> = {
-    "~/.mcode/server/build/Release/pty.node": "deployed node-pty",
+    "~/.zcode/server/build/Release/pty.node": "deployed node-pty",
   };
   if (platform === "darwin") {
-    files["~/.mcode/server/build/Release/spawn-helper"] =
+    files["~/.zcode/server/build/Release/spawn-helper"] =
       "deployed spawn helper";
   }
 
   for (const [provider, runtime] of Object.entries(
     LEGACY_REMOTE_TEST_AGENT_RUNTIME,
   )) {
-    const remoteProviderDir = `~/.mcode/server/agents/${runtime.bundledResourceDir}`;
+    const remoteProviderDir = `~/.zcode/server/agents/${runtime.bundledResourceDir}`;
     files[`${remoteProviderDir}/.version`] = `${runtime.version}\n`;
     if (runtime.binaryKind === "node-script") {
       files[`${remoteProviderDir}/.bundle-meta.json`] = JSON.stringify({
@@ -610,13 +611,13 @@ function createFullyDeployedRemoteFiles(
   }
 
   for (const { runtime, version } of getRemoteRuntimeToolsForPlatform(platform)) {
-    files[`~/.mcode/server/tools/${runtime.bundledResourceDir}/.version`] =
+    files[`~/.zcode/server/tools/${runtime.bundledResourceDir}/.version`] =
       `${version}\n`;
     const entrySegments = runtime.resolveEntrySegments(platform);
     const binaryName = entrySegments[entrySegments.length - 1];
     if (binaryName) {
       files[
-        `~/.mcode/server/tools/${runtime.bundledResourceDir}/${binaryName}`
+        `~/.zcode/server/tools/${runtime.bundledResourceDir}/${binaryName}`
       ] = `${runtime.bundledResourceDir} binary`;
     }
   }
@@ -653,7 +654,7 @@ function addMatchingGlmArtifactIdentity(
   if (!glm) {
     throw new Error("missing glm component in staged manifest");
   }
-  remoteFiles["~/.mcode/server/.asset-components/glm.json"] = JSON.stringify({
+  remoteFiles["~/.zcode/server/.asset-components/glm.json"] = JSON.stringify({
     id: "glm",
     version,
     sha256: glm.sha256,
@@ -667,7 +668,7 @@ function addMatchingServerBundleArtifactIdentity(
   platformKey: RemotePlatformKey,
 ): void {
   const serverBundle = findManifestComponent(manifest, "server-bundle");
-  remoteFiles["~/.mcode/server/.asset-components/server-bundle.json"] =
+  remoteFiles["~/.zcode/server/.asset-components/server-bundle.json"] =
     JSON.stringify({
       id: "server-bundle",
       version: serverBundle.version,
@@ -709,13 +710,13 @@ async function writeTestOfficialPluginPackages(repoDir: string): Promise<void> {
         "apps",
         "mcode-cli",
         "packages",
-        pluginName,
+        resolveRemoteAgentOfficialPluginLocalSourceDirName(pluginName),
         ".zcode-plugin",
         "plugin.json",
       );
       await mkdir(dirname(manifestPath), { recursive: true });
       const pluginManifestName =
-        pluginName === "mcode-cua-plugin"
+        pluginName === "zcode-cua-plugin"
           ? "computer-use"
           : pluginName.replace(/-plugin$/u, "");
       await writeFile(
@@ -756,7 +757,7 @@ function resolveRemoteComponentCacheDirForTest(
     .update(componentVersion)
     .digest("hex")
     .slice(0, 16);
-  return `~/.mcode/server/asset-cache/components/${platformArch}/${componentId}/${cacheSegment}`;
+  return `~/.zcode/server/asset-cache/components/${platformArch}/${componentId}/${cacheSegment}`;
 }
 
 async function stageRemoteAssetArchive(
@@ -993,7 +994,7 @@ async function computeDevelopmentAgentAssetsSha256ForTest(
   cliBundlePath: string,
 ): Promise<string> {
   const hash = createHash("sha256");
-  hash.update("bundle:mcode.cjs\n");
+  hash.update("bundle:zcode.cjs\n");
   hash.update(await readFile(cliBundlePath));
   for (const packageName of OFFICIAL_PLUGIN_PACKAGE_NAMES) {
     const packageRoot = join(
@@ -1001,7 +1002,7 @@ async function computeDevelopmentAgentAssetsSha256ForTest(
       "apps",
       "mcode-cli",
       "packages",
-      packageName,
+      resolveRemoteAgentOfficialPluginLocalSourceDirName(packageName),
     );
     hash.update(`plugin:${packageName}\n`);
     for (const topLevelPath of OFFICIAL_PLUGIN_INCLUDED_TOP_LEVEL_PATHS) {
@@ -1356,8 +1357,8 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
 
   it("node-runtime 已安装语义版本时应忽略 expectedVersion 的内容 hash 后缀", async () => {
     const backend = new FakeRemoteBackend({
-      "~/.mcode/server/node": "node",
-      "~/.mcode/server/.asset-components/node-runtime.json":
+      "~/.zcode/server/node": "node",
+      "~/.zcode/server/.asset-components/node-runtime.json":
         '{"id":"node-runtime","version":"v22.16.0+aaaaaaaaaaaa","platformArch":"linux-arm64"}\n',
     });
     const installed: string[] = [];
@@ -1408,14 +1409,14 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/agents/glm/mcode.cjs.new",
+        "~/.zcode/server/agents/glm/zcode.cjs.new",
       ),
     ).toBe(true);
     expect(
       backend.uploads.some(
         (upload) =>
           upload.remotePath ===
-          `~/.mcode/server/${retiredProxyRuntimeId}.tar.gz`,
+          `~/.zcode/server/${retiredProxyRuntimeId}.tar.gz`,
       ),
     ).toBe(false);
     expect(
@@ -1446,7 +1447,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/build/Release/pty.node.new",
+        "~/.zcode/server/build/Release/pty.node.new",
       ),
     ).toBe(true);
   });
@@ -1482,7 +1483,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/mcode-server.cjs.new",
+        "~/.zcode/server/zcode-server.cjs.new",
       ),
     ).toBe(true);
     expect(backend.commands.join("\n")).toContain("skill-sync");
@@ -1523,7 +1524,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/agents/glm/mcode.cjs.new",
+        "~/.zcode/server/agents/glm/zcode.cjs.new",
       ),
     ).toBe(true);
     expect(
@@ -1534,32 +1535,32 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/build/Release/pty.node.new",
+        "~/.zcode/server/build/Release/pty.node.new",
       ),
     ).toBe(true);
     expect(
       backend.uploads.some(
         (upload) =>
           upload.remotePath ===
-          `~/.mcode/server/${retiredProxyRuntimeId}.tar.gz`,
+          `~/.zcode/server/${retiredProxyRuntimeId}.tar.gz`,
       ),
     ).toBe(false);
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/tools/bfs/bfs.new",
+        "~/.zcode/server/tools/bfs/bfs.new",
       ),
     ).toBe(true);
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/tools/ripgrep/rg.new",
+        "~/.zcode/server/tools/ripgrep/rg.new",
       ),
     ).toBe(true);
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/tools/ugrep/ugrep.new",
+        "~/.zcode/server/tools/ugrep/ugrep.new",
       ),
     ).toBe(true);
   });
@@ -1588,17 +1589,17 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/build/Release/spawn-helper.new",
+        "~/.zcode/server/build/Release/spawn-helper.new",
       ),
     ).toBe(true);
     expect(
       backend.uploads.some((upload) =>
-        upload.remotePath.includes("~/.mcode/server/tools/bfs/"),
+        upload.remotePath.includes("~/.zcode/server/tools/bfs/"),
       ),
     ).toBe(false);
     expect(
       backend.uploads.some((upload) =>
-        upload.remotePath.includes("~/.mcode/server/tools/ugrep/"),
+        upload.remotePath.includes("~/.zcode/server/tools/ugrep/"),
       ),
     ).toBe(false);
   });
@@ -1611,8 +1612,8 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     await mkdir(mockCdnDir, { recursive: true });
 
     const backend = new FakeRemoteBackend({
-      "~/.mcode/server/agents/codex/.version": `${LEGACY_REMOTE_TEST_AGENT_RUNTIME.codex.version}\n`,
-      "~/.mcode/server/agents/codex/.bundle-meta.json": JSON.stringify({
+      "~/.zcode/server/agents/codex/.version": `${LEGACY_REMOTE_TEST_AGENT_RUNTIME.codex.version}\n`,
+      "~/.zcode/server/agents/codex/.bundle-meta.json": JSON.stringify({
         provider: "codex",
         version: LEGACY_REMOTE_TEST_AGENT_RUNTIME.codex.version,
         platform: "darwin-arm64",
@@ -1634,19 +1635,19 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(deployed).toBe(false);
     expect(
       backend.uploads.some(
-        (upload) => upload.remotePath === "~/.mcode/server/agents/codex.tar.gz",
+        (upload) => upload.remotePath === "~/.zcode/server/agents/codex.tar.gz",
       ),
     ).toBe(false);
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/agents/glm/mcode.cjs.new",
+        "~/.zcode/server/agents/glm/zcode.cjs.new",
       ),
     ).toBe(true);
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/tools/ripgrep/rg.new",
+        "~/.zcode/server/tools/ripgrep/rg.new",
       ),
     ).toBe(true);
   });
@@ -1664,12 +1665,12 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       platform: "linux-arm64",
     });
     const backend = new FakeRemoteBackend({
-      "~/.mcode/server/agents/codex/.version": `${LEGACY_REMOTE_TEST_AGENT_RUNTIME.codex.version}\n`,
-      "~/.mcode/server/agents/codex/.bundle-meta.json": matchingMeta,
-      [`~/.mcode/server/agents/codex/node_modules/@zed-industries/codex-${retiredProtocolPrefix}/bin/codex-${retiredProtocolPrefix}.js`]:
+      "~/.zcode/server/agents/codex/.version": `${LEGACY_REMOTE_TEST_AGENT_RUNTIME.codex.version}\n`,
+      "~/.zcode/server/agents/codex/.bundle-meta.json": matchingMeta,
+      [`~/.zcode/server/agents/codex/node_modules/@zed-industries/codex-${retiredProtocolPrefix}/bin/codex-${retiredProtocolPrefix}.js`]:
         "codex entry",
-      "~/.mcode/server/tools/ripgrep/.version": "v14.1.1-1\n",
-      "~/.mcode/server/tools/ripgrep/rg": "ripgrep binary",
+      "~/.zcode/server/tools/ripgrep/.version": "v14.1.1-1\n",
+      "~/.zcode/server/tools/ripgrep/rg": "ripgrep binary",
     });
 
     const deployed = await deployServer(
@@ -1687,13 +1688,13 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(deployed).toBe(false);
     expect(
       backend.uploads.some(
-        (upload) => upload.remotePath === "~/.mcode/server/agents/codex.tar.gz",
+        (upload) => upload.remotePath === "~/.zcode/server/agents/codex.tar.gz",
       ),
     ).toBe(false);
     expect(
       backend.uploads.some(
         (upload) =>
-          upload.remotePath === "~/.mcode/server/tools/ripgrep/rg.new",
+          upload.remotePath === "~/.zcode/server/tools/ripgrep/rg.new",
       ),
     ).toBe(false);
   });
@@ -1714,12 +1715,12 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       platform: "darwin-arm64",
     });
     const backend = new FakeRemoteBackend({
-      "~/.mcode/server/agents/codex/.version": `${LEGACY_REMOTE_TEST_AGENT_RUNTIME.codex.version}\n`,
-      "~/.mcode/server/agents/codex/.bundle-meta.json": matchingMeta,
-      [`~/.mcode/server/agents/codex/node_modules/@zed-industries/codex-${retiredProtocolPrefix}/bin/codex-${retiredProtocolPrefix}.js`]:
+      "~/.zcode/server/agents/codex/.version": `${LEGACY_REMOTE_TEST_AGENT_RUNTIME.codex.version}\n`,
+      "~/.zcode/server/agents/codex/.bundle-meta.json": matchingMeta,
+      [`~/.zcode/server/agents/codex/node_modules/@zed-industries/codex-${retiredProtocolPrefix}/bin/codex-${retiredProtocolPrefix}.js`]:
         "codex entry",
-      "~/.mcode/server/tools/ripgrep/.version": "v13.0.0-10\n",
-      "~/.mcode/server/tools/ripgrep/rg": "ripgrep binary",
+      "~/.zcode/server/tools/ripgrep/.version": "v13.0.0-10\n",
+      "~/.zcode/server/tools/ripgrep/rg": "ripgrep binary",
     });
 
     const deployed = await deployServer(
@@ -1737,13 +1738,13 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(deployed).toBe(false);
     expect(
       backend.uploads.some(
-        (upload) => upload.remotePath === "~/.mcode/server/agents/codex.tar.gz",
+        (upload) => upload.remotePath === "~/.zcode/server/agents/codex.tar.gz",
       ),
     ).toBe(false);
     expect(
       backend.uploads.some(
         (upload) =>
-          upload.remotePath === "~/.mcode/server/tools/ripgrep/rg.new",
+          upload.remotePath === "~/.zcode/server/tools/ripgrep/rg.new",
       ),
     ).toBe(false);
   });
@@ -1764,10 +1765,10 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       platform: "linux-x64",
     });
     const backend = new FakeRemoteBackend({
-      [`~/.mcode/server/agents/${retiredProtocolPrefix}/.version`]: `${LEGACY_REMOTE_TEST_AGENT_RUNTIME.claude.version}\n`,
-      [`~/.mcode/server/agents/${retiredProtocolPrefix}/.bundle-meta.json`]:
+      [`~/.zcode/server/agents/${retiredProtocolPrefix}/.version`]: `${LEGACY_REMOTE_TEST_AGENT_RUNTIME.claude.version}\n`,
+      [`~/.zcode/server/agents/${retiredProtocolPrefix}/.bundle-meta.json`]:
         matchingMeta,
-      [`~/.mcode/server/agents/${retiredProtocolPrefix}/dist/index.js`]:
+      [`~/.zcode/server/agents/${retiredProtocolPrefix}/dist/index.js`]:
         "claude entry",
     });
 
@@ -1788,7 +1789,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       backend.uploads.some(
         (upload) =>
           upload.remotePath ===
-          `~/.mcode/server/agents/${retiredProtocolPrefix}.tar.gz`,
+          `~/.zcode/server/agents/${retiredProtocolPrefix}.tar.gz`,
       ),
     ).toBe(false);
   });
@@ -1826,15 +1827,15 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     );
 
     const backend = new FakeRemoteBackend({
-      [`~/.mcode/server/agents/${retiredProtocolPrefix}/.version`]: `${LEGACY_REMOTE_TEST_AGENT_RUNTIME.claude.version}\n`,
-      [`~/.mcode/server/agents/${retiredProtocolPrefix}/.bundle-meta.json`]:
+      [`~/.zcode/server/agents/${retiredProtocolPrefix}/.version`]: `${LEGACY_REMOTE_TEST_AGENT_RUNTIME.claude.version}\n`,
+      [`~/.zcode/server/agents/${retiredProtocolPrefix}/.bundle-meta.json`]:
         JSON.stringify({
           provider: "claude",
           version: LEGACY_REMOTE_TEST_AGENT_RUNTIME.claude.version,
           platform: "linux-x64",
           patchFingerprint: "patch-old",
         }),
-      [`~/.mcode/server/agents/${retiredProtocolPrefix}/dist/index.js`]:
+      [`~/.zcode/server/agents/${retiredProtocolPrefix}/dist/index.js`]:
         "claude entry",
     });
 
@@ -1855,13 +1856,13 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       backend.uploads.some(
         (upload) =>
           upload.remotePath ===
-          `~/.mcode/server/agents/${retiredProtocolPrefix}.tar.gz`,
+          `~/.zcode/server/agents/${retiredProtocolPrefix}.tar.gz`,
       ),
     ).toBe(false);
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/agents/glm/mcode.cjs.new",
+        "~/.zcode/server/agents/glm/zcode.cjs.new",
       ),
     ).toBe(true);
   });
@@ -1899,19 +1900,19 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     );
 
     expect(installedFiles).toEqual([
-      "glm:~/.mcode/server/agents/glm/mcode.cjs",
+      "glm:~/.zcode/server/agents/glm/zcode.cjs",
     ]);
     expect(installedDirectories).toEqual([
       {
         componentId: "glm",
-        remoteDir: "~/.mcode/server/agents/glm/packages",
+        remoteDir: "~/.zcode/server/agents/glm/packages",
         sourceRelativePath: "glm/linux-arm64/packages",
       },
     ]);
     expect(
       backend.uploads.some(
         (upload) =>
-          upload.remotePath === "~/.mcode/server/agents/glm/mcode-agent.new",
+          upload.remotePath === "~/.zcode/server/agents/glm/zcode-agent.new",
       ),
     ).toBe(false);
 
@@ -1919,7 +1920,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       backend.commands.some(
         (command) =>
           command.includes(
-            `/.mcode/server/agents/${retiredProtocolPrefix}/.version`,
+            `/.zcode/server/agents/${retiredProtocolPrefix}/.version`,
           ) &&
           command.includes(LEGACY_REMOTE_TEST_AGENT_RUNTIME.claude.version),
       ),
@@ -1984,7 +1985,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       { log: () => undefined, logWarn: () => undefined },
     );
 
-    const wrapperTempPath = `~/.mcode/server/agents/glm/${REMOTE_AGENT_WRAPPER_FILE_NAME}.new`;
+    const wrapperTempPath = `~/.zcode/server/agents/glm/${REMOTE_AGENT_WRAPPER_FILE_NAME}.new`;
     expect(backend.uploads.map((upload) => upload.remotePath)).toContain(
       wrapperTempPath,
     );
@@ -1995,7 +1996,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       '"$runtime_root/node"',
     );
     expect(installedDirectories).toEqual([
-      "glm:~/.mcode/server/agents/glm/packages",
+      "glm:~/.zcode/server/agents/glm/packages",
     ]);
     expect(
       backend.commands.some(
@@ -2009,9 +2010,9 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
   it("WSL 已有坏 wrapper 时即使版本匹配也应重写", async () => {
     const remoteFiles = createFullyDeployedRemoteFiles("linux-arm64");
     remoteFiles[
-      `~/.mcode/server/agents/glm/${REMOTE_AGENT_WRAPPER_FILE_NAME}`
+      `~/.zcode/server/agents/glm/${REMOTE_AGENT_WRAPPER_FILE_NAME}`
     ] =
-      '#!/bin/sh\nset -eu\nruntime_root="/home/dev/.mcode/server"\nexec "/node" "/home/dev/.mcode/server/agents/glm/mcode.cjs" ""\n';
+      '#!/bin/sh\nset -eu\nruntime_root="/home/dev/.zcode/server"\nexec "/node" "/home/dev/.zcode/server/agents/glm/zcode.cjs" ""\n';
     const backend = new FakeWslRemoteBackend(remoteFiles);
     const installedFiles: string[] = [];
     const installedDirectories: string[] = [];
@@ -2036,22 +2037,22 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     );
 
     expect(installedFiles).toEqual([
-      "glm:~/.mcode/server/agents/glm/mcode.cjs",
+      "glm:~/.zcode/server/agents/glm/zcode.cjs",
     ]);
     expect(backend.uploads.map((upload) => upload.remotePath)).toContain(
-      `~/.mcode/server/agents/glm/${REMOTE_AGENT_WRAPPER_FILE_NAME}.new`,
+      `~/.zcode/server/agents/glm/${REMOTE_AGENT_WRAPPER_FILE_NAME}.new`,
     );
     expect(installedDirectories).toEqual([
-      "glm:~/.mcode/server/agents/glm/packages",
+      "glm:~/.zcode/server/agents/glm/packages",
     ]);
   });
 
   it("Mcode Agent 版本匹配但远端缺 builtin plugin 资产时应复用 cache 补部署 packages", async () => {
-    const remoteOfficialPluginDir = "~/.mcode/server/agents/glm/packages";
+    const remoteOfficialPluginDir = "~/.zcode/server/agents/glm/packages";
     const remoteFiles = createFullyDeployedRemoteFiles("linux-arm64");
     remoteFiles[remoteOfficialPluginDir] = "directory marker";
     delete remoteFiles[
-      "~/.mcode/server/agents/glm/packages/skill-creator-plugin/.zcode-plugin/plugin.json"
+      "~/.zcode/server/agents/glm/packages/skill-creator-plugin/.zcode-plugin/plugin.json"
     ];
     // SSH / Docker backend 的 exists 契约只检查普通文件，目录即使存在也会返回 false。
     const backend = new FakeFileOnlyExistsRemoteBackend(remoteFiles, [
@@ -2099,13 +2100,13 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
         componentId: "glm",
         forceRefresh: false,
         kind: "file",
-        remotePath: "~/.mcode/server/agents/glm/mcode.cjs",
+        remotePath: "~/.zcode/server/agents/glm/zcode.cjs",
       },
       {
         componentId: "glm",
         forceRefresh: false,
         kind: "directory",
-        remoteDir: "~/.mcode/server/agents/glm/packages",
+        remoteDir: "~/.zcode/server/agents/glm/packages",
       },
     ]);
     const permissionRepairCommand = backend.commands.find((command) =>
@@ -2115,15 +2116,15 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect.stringContaining("if [ -d "),
     );
     expect(permissionRepairCommand).toContain(
-      "/.mcode/server/agents/glm/packages",
+      "/.zcode/server/agents/glm/packages",
     );
     expect(permissionRepairCommand).not.toContain("/.mcode/plugins");
   });
 
   it("GLM 制品 hash 和 builtin plugin 资产都匹配时不应修复权限", async () => {
     const remoteFiles = createFullyDeployedRemoteFiles("linux-arm64");
-    remoteFiles["~/.mcode/server/agents/glm/.version"] = "旧版本标签\n";
-    remoteFiles["~/.mcode/server/.asset-components/glm.json"] = JSON.stringify({
+    remoteFiles["~/.zcode/server/agents/glm/.version"] = "旧版本标签\n";
+    remoteFiles["~/.zcode/server/.asset-components/glm.json"] = JSON.stringify({
       id: "glm",
       version: "旧版本标签",
       sha256: TEST_GLM_ARTIFACT_SHA256,
@@ -2164,7 +2165,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
 
   it("GLM 版本相同但制品 hash 变化时应重新部署并修复旧目录权限", async () => {
     const remoteFiles = createFullyDeployedRemoteFiles("linux-arm64");
-    remoteFiles["~/.mcode/server/.asset-components/glm.json"] = JSON.stringify({
+    remoteFiles["~/.zcode/server/.asset-components/glm.json"] = JSON.stringify({
       id: "glm",
       version: MCODE_AGENT_RUNTIME.version,
       sha256: "b".repeat(64),
@@ -2221,27 +2222,27 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     );
     expect(permissionRepairCommandIndex).toBeGreaterThanOrEqual(0);
     expect(backend.commands[permissionRepairCommandIndex]).toContain(
-      "/.mcode/server/agents/glm/packages",
+      "/.zcode/server/agents/glm/packages",
     );
     expect(installRequests).toEqual([
       {
         componentId: "glm",
         forceRefresh: false,
         kind: "file",
-        remotePath: "~/.mcode/server/agents/glm/mcode.cjs",
+        remotePath: "~/.zcode/server/agents/glm/zcode.cjs",
       },
       {
         componentId: "glm",
         forceRefresh: false,
         kind: "directory",
-        remoteDir: "~/.mcode/server/agents/glm/packages",
+        remoteDir: "~/.zcode/server/agents/glm/packages",
       },
     ]);
   });
 
   it("Mcode Agent 升级时权限修复失败仍应尝试替换 packages", async () => {
     const remoteFiles = createFullyDeployedRemoteFiles("linux-arm64");
-    remoteFiles["~/.mcode/server/agents/glm/.version"] = "3.3.3\n";
+    remoteFiles["~/.zcode/server/agents/glm/.version"] = "3.3.3\n";
     const backend = new FakeRemoteBackend(remoteFiles, {
       commandPlans: [
         {
@@ -2279,14 +2280,14 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       ),
     ).toBe(true);
     expect(installRequests).toEqual([
-      "glm:directory:~/.mcode/server/agents/glm/packages",
-      "glm:file:~/.mcode/server/agents/glm/mcode.cjs",
+      "glm:directory:~/.zcode/server/agents/glm/packages",
+      "glm:file:~/.zcode/server/agents/glm/zcode.cjs",
     ]);
   });
 
   it("Mcode Agent 升级时 chmod 失败后 packages 替换失败不应继续更新 bundle", async () => {
     const remoteFiles = createFullyDeployedRemoteFiles("linux-arm64");
-    remoteFiles["~/.mcode/server/agents/glm/.version"] = "3.3.3\n";
+    remoteFiles["~/.zcode/server/agents/glm/.version"] = "3.3.3\n";
     const backend = new FakeRemoteBackend(remoteFiles, {
       commandPlans: [
         {
@@ -2321,7 +2322,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     ).rejects.toThrow("packages replace failed");
 
     expect(installRequests).toEqual([
-      "glm:directory:~/.mcode/server/agents/glm/packages",
+      "glm:directory:~/.zcode/server/agents/glm/packages",
     ]);
   });
 
@@ -2454,9 +2455,9 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(installedFiles).toEqual([]);
     const devBundleUpload = backend.uploads.find(
       (upload) =>
-        upload.remotePath === "~/.mcode/server/agents/glm/mcode.cjs.new" ||
+        upload.remotePath === "~/.zcode/server/agents/glm/zcode.cjs.new" ||
         upload.remotePath.startsWith(
-          "~/.mcode/server/agents/glm/mcode.cjs.new-",
+          "~/.zcode/server/agents/glm/zcode.cjs.new-",
         ),
     );
     expect(
@@ -2465,7 +2466,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(
       backend.commands.some(
         (command) =>
-          command.includes("mcode-agent.new") && command.includes("mcode.cjs"),
+          command.includes("zcode-agent.new") && command.includes("zcode.cjs"),
       ),
     ).toBe(true);
     expect(
@@ -2475,7 +2476,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       upload.remotePath.includes("/agents/glm/packages.tar.gz-"),
     );
     expect(officialPluginUpload?.remotePath).toMatch(
-      /^~\/.mcode\/server\/agents\/glm\/packages\.tar\.gz-[\w-]+$/u,
+      /^~\/.zcode\/server\/agents\/glm\/packages\.tar\.gz-[\w-]+$/u,
     );
     expect(
       backend.commands.some(
@@ -2532,15 +2533,15 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       cliBundlePath,
     );
     const backend = new FakeRemoteBackend({
-      "~/.mcode/server/agents/glm/.version": `${MCODE_AGENT_RUNTIME.version}\n`,
-      "~/.mcode/server/agents/glm/.dev-version": `${devVersion}\n`,
-      "~/.mcode/server/agents/glm/mcode-agent": "dev wrapper",
-      "~/.mcode/server/agents/glm/mcode.cjs": bundleMatches
+      "~/.zcode/server/agents/glm/.version": `${MCODE_AGENT_RUNTIME.version}\n`,
+      "~/.zcode/server/agents/glm/.dev-version": `${devVersion}\n`,
+      "~/.zcode/server/agents/glm/zcode-agent": "dev wrapper",
+      "~/.zcode/server/agents/glm/zcode.cjs": bundleMatches
         ? "console.log('same dev mcode agent');\n"
         : "old published bundle without PAT support",
       ...Object.fromEntries(
         OFFICIAL_PLUGIN_REQUIRED_RELATIVE_PATHS.map((relativePath) => [
-          `~/.mcode/server/agents/glm/packages/${relativePath}`,
+          `~/.zcode/server/agents/glm/packages/${relativePath}`,
           `dev official plugin ${relativePath}`,
         ]),
       ),
@@ -2571,7 +2572,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     );
 
     expect(installedFiles).toEqual([]);
-    expect(backend.uploads.some((upload) => upload.remotePath.endsWith("mcode.cjs.new"))).toBe(!bundleMatches);
+    expect(backend.uploads.some((upload) => upload.remotePath.endsWith("zcode.cjs.new"))).toBe(!bundleMatches);
     expect(
       backend.commands.some((command) =>
         command.includes("command chmod -R u+rwX"),
@@ -2602,7 +2603,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/build/Release/spawn-helper.new",
+        "~/.zcode/server/build/Release/spawn-helper.new",
       ),
     ).toBe(true);
   });
@@ -2693,7 +2694,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       {
         commandPlans: [
           {
-            matcher: /command mv -f .*mcode-server\.cjs/,
+            matcher: /command mv -f .*zcode-server\.cjs/,
             exitCode: 23,
             stderrText: "mock mv failed",
           },
@@ -2718,7 +2719,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
 
   it("生产态未接入 CDN 下载占位时应抛出明确错误", async () => {
     const backend = new FakeRemoteBackend({
-      "~/.mcode/server/agents/codex/.version": "0.0.0\n",
+      "~/.zcode/server/agents/codex/.version": "0.0.0\n",
     });
 
     await expect(
@@ -2737,7 +2738,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
 
   it("生产态 remoteCdnBaseUrl 固定到旧版本时应前置报错", async () => {
     const backend = new FakeRemoteBackend({
-      "~/.mcode/server/agents/codex/.version": "0.0.0\n",
+      "~/.zcode/server/agents/codex/.version": "0.0.0\n",
     });
 
     await expect(
@@ -2773,7 +2774,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     }
     try {
       const remoteFiles = {
-        "~/.mcode/server/agents/codex/.version": "0.0.0\n",
+        "~/.zcode/server/agents/codex/.version": "0.0.0\n",
       };
       addMatchingServerBundleArtifactIdentity(
         remoteFiles,
@@ -2798,19 +2799,19 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         hasUploadForStagingTarget(
           backend,
-          "~/.mcode/server/agents/glm/mcode.cjs.new",
+          "~/.zcode/server/agents/glm/zcode.cjs.new",
         ),
       ).toBe(true);
       expect(
         backend.uploads.some(
           (upload) =>
-            upload.remotePath === "~/.mcode/server/agents/codex.tar.gz",
+            upload.remotePath === "~/.zcode/server/agents/codex.tar.gz",
         ),
       ).toBe(false);
       expect(
         hasUploadForStagingTarget(
           backend,
-          "~/.mcode/server/tools/ripgrep/rg.new",
+          "~/.zcode/server/tools/ripgrep/rg.new",
         ),
       ).toBe(true);
       expect(
@@ -2887,7 +2888,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         hasUploadForStagingTarget(
           backend,
-          "~/.mcode/server/agents/glm/mcode.cjs.new",
+          "~/.zcode/server/agents/glm/zcode.cjs.new",
         ),
       ).toBe(true);
     } finally {
@@ -2962,7 +2963,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       );
 
       const nodeUpload = backend.uploads.find((upload) =>
-        upload.remotePath.startsWith("~/.mcode/server/node.new-"),
+        upload.remotePath.startsWith("~/.zcode/server/node.new-"),
       );
       expect(deployed).toBe(true);
       expect(nodeUpload?.localPath).toContain(remoteCacheDir);
@@ -2995,7 +2996,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
         MCODE_VERSION,
         "glm",
         "linux-arm64",
-        "mcode.cjs",
+        "zcode.cjs",
       ),
       "new CDN GLM bytes under the same semantic version",
       "utf8",
@@ -3019,7 +3020,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
         MCODE_VERSION,
         "glm",
         "linux-arm64",
-        "mcode.cjs",
+        "zcode.cjs",
       ),
     );
     const remoteFiles = createFullyDeployedRemoteFiles("linux-arm64");
@@ -3041,7 +3042,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         hasUploadForStagingTarget(
           backend,
-          "~/.mcode/server/agents/glm/mcode.cjs.new",
+          "~/.zcode/server/agents/glm/zcode.cjs.new",
         ),
       ).toBe(true);
       expect(backend.commands.join("\n")).toContain(cdnGlm?.sha256);
@@ -3087,7 +3088,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     );
     await mkdir(staleComponentDir, { recursive: true });
     await writeFile(join(staleComponentDir, ".ready"), "ready\n", "utf8");
-    await writeFile(join(staleComponentDir, "mcode.cjs"), "stale glm bundle");
+    await writeFile(join(staleComponentDir, "zcode.cjs"), "stale glm bundle");
     for (const relativePath of OFFICIAL_PLUGIN_REQUIRED_RELATIVE_PATHS) {
       const stalePluginPath = join(
         staleComponentDir,
@@ -3105,7 +3106,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       "linux-arm64",
     );
     delete remoteFiles[
-      "~/.mcode/server/agents/glm/packages/skill-creator-plugin/.zcode-plugin/plugin.json"
+      "~/.zcode/server/agents/glm/packages/skill-creator-plugin/.zcode-plugin/plugin.json"
     ];
     const cdnServer = await createStaticFileServer(cdnRoot);
 
@@ -3126,7 +3127,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         backend.uploads.some((upload) =>
           upload.remotePath.startsWith(
-            "~/.mcode/server/agents/glm/packages.tar.gz-",
+            "~/.zcode/server/agents/glm/packages.tar.gz-",
           ),
         ),
       ).toBe(true);
@@ -3152,7 +3153,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
         ),
       ).resolves.toContain("glm official plugin");
       await expect(
-        readFile(join(staleComponentDir, "mcode.cjs"), "utf8"),
+        readFile(join(staleComponentDir, "zcode.cjs"), "utf8"),
       ).resolves.toBe("stale glm bundle");
     } finally {
       await cdnServer.close();
@@ -3196,7 +3197,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     );
     await mkdir(staleComponentDir, { recursive: true });
     await writeFile(join(staleComponentDir, ".ready"), "ready\n", "utf8");
-    await writeFile(join(staleComponentDir, "mcode.cjs"), "stale glm bundle");
+    await writeFile(join(staleComponentDir, "zcode.cjs"), "stale glm bundle");
     const requiredReleasePath =
       "glm/linux-arm64/packages/skill-creator-plugin/.zcode-plugin/plugin.json";
     const cdnServer = await createStaticFileServer(cdnRoot);
@@ -3263,12 +3264,12 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
 
     try {
       const remoteFiles = {
-        "~/.mcode/server/version.txt": `${MCODE_VERSION}\n`,
-        "~/.mcode/server/node": "node",
-        "~/.mcode/server/.asset-components/node-runtime.json":
+        "~/.zcode/server/version.txt": `${MCODE_VERSION}\n`,
+        "~/.zcode/server/node": "node",
+        "~/.zcode/server/.asset-components/node-runtime.json":
           '{"id":"node-runtime","version":"24.10.0-node-runtime","platformArch":"linux-arm64"}\n',
-        "~/.mcode/server/build/Release/pty.node": "pty",
-        "~/.mcode/server/.asset-components/node-pty.json":
+        "~/.zcode/server/build/Release/pty.node": "pty",
+        "~/.zcode/server/.asset-components/node-pty.json":
           '{"id":"node-pty","version":"1.0.0-node-pty","platformArch":"linux-arm64"}\n',
       };
       addMatchingServerBundleArtifactIdentity(
@@ -3323,7 +3324,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     try {
       const backend = new FakeRemoteBackend({
         ...createFullyDeployedRemoteFiles("linux-arm64"),
-        [`~/.mcode/server/agents/${retiredProtocolPrefix}/.version`]: "0.0.0\n",
+        [`~/.zcode/server/agents/${retiredProtocolPrefix}/.version`]: "0.0.0\n",
       });
 
       const deployed = await deployServer(
@@ -3345,7 +3346,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
         backend.uploads.some(
           (upload) =>
             upload.remotePath ===
-            `~/.mcode/server/agents/${retiredProtocolPrefix}.tar.gz`,
+            `~/.zcode/server/agents/${retiredProtocolPrefix}.tar.gz`,
         ),
       ).toBe(false);
       expect(
@@ -3374,7 +3375,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
           Object.entries(LEGACY_REMOTE_TEST_AGENT_RUNTIME)
             .filter(([, runtime]) => runtime.binaryKind === "node-script")
             .map(([provider, runtime]) => [
-              `~/.mcode/server/agents/${runtime.bundledResourceDir}/.bundle-meta.json`,
+              `~/.zcode/server/agents/${runtime.bundledResourceDir}/.bundle-meta.json`,
               JSON.stringify({
                 provider,
                 version: runtime.version,
@@ -3463,12 +3464,12 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       "linux-x64",
     );
     delete deployedFiles[
-      `~/.mcode/server/agents/${retiredProtocolPrefix}/node_modules/@anthropic-ai/claude-agent-sdk-linux-x64/claude`
+      `~/.zcode/server/agents/${retiredProtocolPrefix}/node_modules/@anthropic-ai/claude-agent-sdk-linux-x64/claude`
     ];
     const backend = new FakeRemoteBackend(
       {
         ...deployedFiles,
-        [`~/.mcode/server/.asset-components/${retiredProtocolPrefix}-claude.json`]:
+        [`~/.zcode/server/.asset-components/${retiredProtocolPrefix}-claude.json`]:
           JSON.stringify({
             id: `${retiredProtocolPrefix}-claude`,
             version: claudeBundle.version,
@@ -3491,7 +3492,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
           },
           {
             matcher: new RegExp(
-              `rm -rf "\\$HOME"'\\/\\.mcode\\/server\\/asset-cache\\/components\\/linux-x64\\/${retiredProtocolPrefix}-claude`,
+              `rm -rf "\\$HOME"'\\/\\.zcode\\/server\\/asset-cache\\/components\\/linux-x64\\/${retiredProtocolPrefix}-claude`,
               "u",
             ),
             exitCode: 0,
@@ -3525,14 +3526,14 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         backend.commands.some((command) =>
           command.includes(
-            `rm -rf "$HOME"'/.mcode/server/asset-cache/components/linux-x64/${retiredProtocolPrefix}-claude/${cachedComponentDir.split("/").at(-1) ?? ""}'`,
+            `rm -rf "$HOME"'/.zcode/server/asset-cache/components/linux-x64/${retiredProtocolPrefix}-claude/${cachedComponentDir.split("/").at(-1) ?? ""}'`,
           ),
         ),
       ).toBe(false);
       expect(
         backend.commands.some((command) =>
           command.includes(
-            `test -e "$HOME"'/.mcode/server/agents/${retiredProtocolPrefix}/node_modules/@anthropic-ai/claude-agent-sdk-linux-x64/claude'`,
+            `test -e "$HOME"'/.zcode/server/agents/${retiredProtocolPrefix}/node_modules/@anthropic-ai/claude-agent-sdk-linux-x64/claude'`,
           ),
         ),
       ).toBe(false);
@@ -3594,7 +3595,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     const backend = new FakeRemoteBackend(
       {
         ...remoteFiles,
-        [`~/.mcode/server/.asset-components/${retiredProtocolPrefix}-claude.json`]:
+        [`~/.zcode/server/.asset-components/${retiredProtocolPrefix}-claude.json`]:
           JSON.stringify({
             id: `${retiredProtocolPrefix}-claude`,
             version: "0.29.2+oldhash000000",
@@ -3814,7 +3815,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
 
     try {
       const remoteFiles = {
-        "~/.mcode/server/agents/codex/.version": "0.0.0\n",
+        "~/.zcode/server/agents/codex/.version": "0.0.0\n",
       };
       addMatchingServerBundleArtifactIdentity(
         remoteFiles,
@@ -3934,7 +3935,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         hasUploadForStagingTarget(
           backend,
-          "~/.mcode/server/agents/glm/mcode.cjs.new",
+          "~/.zcode/server/agents/glm/zcode.cjs.new",
         ),
       ).toBe(true);
       expect(
@@ -3979,7 +3980,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       await expect(
         deployServer(
           new FakeRemoteBackend({
-            "~/.mcode/server/agents/codex/.version": "0.0.0\n",
+            "~/.zcode/server/agents/codex/.version": "0.0.0\n",
           }),
           { platform: "linux", arch: "arm64" },
           {
@@ -4032,7 +4033,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     try {
       await deployServer(
         new FakeRemoteBackend({
-          "~/.mcode/server/agents/codex/.version": "0.0.0\n",
+          "~/.zcode/server/agents/codex/.version": "0.0.0\n",
         }),
         { platform: "linux", arch: "arm64" },
         {
@@ -4046,7 +4047,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       );
       await deployServer(
         new FakeRemoteBackend({
-          "~/.mcode/server/agents/codex/.version": "0.0.0\n",
+          "~/.zcode/server/agents/codex/.version": "0.0.0\n",
         }),
         { platform: "linux", arch: "arm64" },
         {
@@ -4089,13 +4090,13 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       const backend = new FakeRemoteBackend(
         {
           ...createFullyDeployedRemoteFiles("linux-arm64"),
-          "~/.mcode/server/.asset-components/node-runtime.json":
+          "~/.zcode/server/.asset-components/node-runtime.json":
             createRemoteAssetComponentMeta(
               "node-runtime",
               findManifestComponent(manifest, "node-runtime").version,
               "linux-arm64",
             ),
-          "~/.mcode/server/.asset-components/node-pty.json":
+          "~/.zcode/server/.asset-components/node-pty.json":
             createRemoteAssetComponentMeta(
               "node-pty",
               findManifestComponent(manifest, "node-pty").version,
@@ -4121,13 +4122,13 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(backend.uploads.map((upload) => upload.remotePath)).toEqual(
         expect.arrayContaining([
           expect.stringMatching(
-            /^~\/.mcode\/server\/mcode-server\.cjs\.new-[\w-]+$/u,
+            /^~\/.zcode\/server\/zcode-server\.cjs\.new-[\w-]+$/u,
           ),
           expect.stringMatching(
-            /^~\/.mcode\/server\/agents\/glm\/mcode\.cjs\.new-[\w-]+$/u,
+            /^~\/.zcode\/server\/agents\/glm\/zcode\.cjs\.new-[\w-]+$/u,
           ),
           expect.stringMatching(
-            /^~\/.mcode\/server\/agents\/glm\/packages\.tar\.gz-[\w-]+$/u,
+            /^~\/.zcode\/server\/agents\/glm\/packages\.tar\.gz-[\w-]+$/u,
           ),
         ]),
       );
@@ -4215,13 +4216,13 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
         manifest,
         "linux-arm64",
       );
-      remoteFiles["~/.mcode/server/.asset-components/node-runtime.json"] =
+      remoteFiles["~/.zcode/server/.asset-components/node-runtime.json"] =
         createRemoteAssetComponentMeta(
           "node-runtime",
           findManifestComponent(manifest, "node-runtime").version,
           "linux-arm64",
         );
-      remoteFiles["~/.mcode/server/.asset-components/node-pty.json"] =
+      remoteFiles["~/.zcode/server/.asset-components/node-pty.json"] =
         createRemoteAssetComponentMeta(
           "node-pty",
           findManifestComponent(manifest, "node-pty").version,
@@ -4255,13 +4256,13 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         hasUploadForStagingTarget(
           backend,
-          "~/.mcode/server/agents/glm/mcode.cjs.new",
+          "~/.zcode/server/agents/glm/zcode.cjs.new",
         ),
       ).toBe(true);
       expect(
         hasUploadForStagingTarget(
           backend,
-          "~/.mcode/server/agents/glm/packages.tar.gz",
+          "~/.zcode/server/agents/glm/packages.tar.gz",
         ),
       ).toBe(true);
     } finally {
@@ -4286,13 +4287,13 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       manifest,
       "linux-arm64",
     );
-    remoteFiles["~/.mcode/server/.asset-components/node-runtime.json"] =
+    remoteFiles["~/.zcode/server/.asset-components/node-runtime.json"] =
       createRemoteAssetComponentMeta(
         "node-runtime",
         findManifestComponent(manifest, "node-runtime").version,
         "linux-arm64",
       );
-    remoteFiles["~/.mcode/server/.asset-components/node-pty.json"] =
+    remoteFiles["~/.zcode/server/.asset-components/node-pty.json"] =
       createRemoteAssetComponentMeta(
         "node-pty",
         findManifestComponent(manifest, "node-pty").version,
@@ -4304,7 +4305,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       serverVersion: () => remoteServerVersion,
       commandPlans: [
         {
-          matcher: /command mv -f .*mcode-server\.cjs\.new.*mcode-server\.cjs/u,
+          matcher: /command mv -f .*zcode-server\.cjs\.new.*zcode-server\.cjs/u,
           exitCode: 0,
           onExec: () => {
             remoteServerVersion = MCODE_VERSION;
@@ -4315,7 +4316,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
           exitCode: 0,
           onExec: () => {
             backend.remoteFiles.set(
-              "~/.mcode/server/.asset-components/glm.json",
+              "~/.zcode/server/.asset-components/glm.json",
               JSON.stringify({
                 id: "glm",
                 platformArch: "linux-arm64",
@@ -4342,7 +4343,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(remoteServerVersion).toBe(MCODE_VERSION);
       expect(
         backend.remoteFiles.get(
-          "~/.mcode/server/.asset-components/glm.json",
+          "~/.zcode/server/.asset-components/glm.json",
         ),
       ).toContain("pendingRefreshAppVersion");
       expect(
@@ -4357,7 +4358,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       const serverReplaceCommandIndex = firstAttemptCommands.findIndex(
         (command) =>
           command.includes("command mv -f ") &&
-          command.includes("mcode-server.cjs.new"),
+          command.includes("zcode-server.cjs.new"),
       );
       expect(refreshPendingCommandIndex).toBeGreaterThanOrEqual(0);
       expect(serverReplaceCommandIndex).toBeGreaterThan(
@@ -4390,13 +4391,13 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         hasUploadForStagingTarget(
           backend,
-          "~/.mcode/server/agents/glm/mcode.cjs.new",
+          "~/.zcode/server/agents/glm/zcode.cjs.new",
         ),
       ).toBe(true);
       expect(
         hasUploadForStagingTarget(
           backend,
-          "~/.mcode/server/agents/glm/packages.tar.gz",
+          "~/.zcode/server/agents/glm/packages.tar.gz",
         ),
       ).toBe(true);
       expect(
@@ -4424,8 +4425,8 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     const cdnServer = await createStaticFileServer(cdnRoot);
     const serverBundle = findManifestComponent(manifest, "server-bundle");
     const glm = findManifestComponent(manifest, "glm");
-    const serverBundleCacheDir = `~/.mcode/server/asset-cache/components/linux-arm64/server-bundle/${serverBundle.sha256}`;
-    const glmCacheDir = `~/.mcode/server/asset-cache/components/linux-arm64/glm/${glm.sha256}`;
+    const serverBundleCacheDir = `~/.zcode/server/asset-cache/components/linux-arm64/server-bundle/${serverBundle.sha256}`;
+    const glmCacheDir = `~/.zcode/server/asset-cache/components/linux-arm64/glm/${glm.sha256}`;
     const remoteFiles = createFullyDeployedRemoteFiles("linux-arm64");
     addMatchingGlmAndServerArtifactIdentities(
       remoteFiles,
@@ -4434,13 +4435,13 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     );
     remoteFiles[`${serverBundleCacheDir}/.ready`] = "ready";
     remoteFiles[`${glmCacheDir}/.ready`] = "ready";
-    remoteFiles["~/.mcode/server/.asset-components/node-runtime.json"] =
+    remoteFiles["~/.zcode/server/.asset-components/node-runtime.json"] =
       createRemoteAssetComponentMeta(
         "node-runtime",
         findManifestComponent(manifest, "node-runtime").version,
         "linux-arm64",
       );
-    remoteFiles["~/.mcode/server/.asset-components/node-pty.json"] =
+    remoteFiles["~/.zcode/server/.asset-components/node-pty.json"] =
       createRemoteAssetComponentMeta(
         "node-pty",
         findManifestComponent(manifest, "node-pty").version,
@@ -4478,7 +4479,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         backend.commands.some((command) =>
           command.includes(
-            `rm -rf "$HOME"'/.mcode/server/asset-cache/components/linux-arm64/server-bundle/${serverBundle.sha256}'`,
+            `rm -rf "$HOME"'/.zcode/server/asset-cache/components/linux-arm64/server-bundle/${serverBundle.sha256}'`,
           ),
         ),
       ).toBe(true);
@@ -4493,7 +4494,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         backend.commands.some((command) =>
           command.includes(
-            `rm -rf "$HOME"'/.mcode/server/asset-cache/components/linux-arm64/glm/${glm.sha256}'`,
+            `rm -rf "$HOME"'/.zcode/server/asset-cache/components/linux-arm64/glm/${glm.sha256}'`,
           ),
         ),
       ).toBe(true);
@@ -4525,12 +4526,12 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       "linux-arm64",
     );
     remoteFiles[
-      `~/.mcode/server/asset-cache/components/linux-arm64/server-bundle/${serverBundle.sha256}/.ready`
+      `~/.zcode/server/asset-cache/components/linux-arm64/server-bundle/${serverBundle.sha256}/.ready`
     ] = "ready";
     remoteFiles[
-      `~/.mcode/server/asset-cache/components/linux-arm64/glm/${glm.sha256}/.ready`
+      `~/.zcode/server/asset-cache/components/linux-arm64/glm/${glm.sha256}/.ready`
     ] = "ready";
-    remoteFiles["~/.mcode/server/.asset-components/node-runtime.json"] =
+    remoteFiles["~/.zcode/server/.asset-components/node-runtime.json"] =
       createRemoteAssetComponentMeta(
         "node-runtime",
         findManifestComponent(manifest, "node-runtime").version,
@@ -4547,7 +4548,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
           stdoutText: "download=curl\ntar=tar\nsha256=sha256sum\n",
         },
         {
-          matcher: /command mv -f .*mcode-server\.cjs\.new.*mcode-server\.cjs/u,
+          matcher: /command mv -f .*zcode-server\.cjs\.new.*zcode-server\.cjs/u,
           exitCode: 0,
           onExec: () => {
             remoteServerVersion = MCODE_VERSION;
@@ -4558,7 +4559,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
           exitCode: 0,
           onExec: () => {
             backend.remoteFiles.set(
-              "~/.mcode/server/.asset-components/glm.json",
+              "~/.zcode/server/.asset-components/glm.json",
               JSON.stringify({
                 id: "glm",
                 platformArch: "linux-arm64",
@@ -4606,7 +4607,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         backend.commands.some((command) =>
           command.includes(
-            `rm -rf "$HOME"'/.mcode/server/asset-cache/components/linux-arm64/glm/${glm.sha256}'`,
+            `rm -rf "$HOME"'/.zcode/server/asset-cache/components/linux-arm64/glm/${glm.sha256}'`,
           ),
         ),
       ).toBe(true);
@@ -4636,7 +4637,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       const backend = new FakeRemoteBackend(
         {
           ...createFullyDeployedRemoteFiles("linux-arm64"),
-          "~/.mcode/server/.asset-components/node-runtime.json":
+          "~/.zcode/server/.asset-components/node-runtime.json":
             createRemoteAssetComponentMeta(
               "node-runtime",
               nodeRuntime.version,
@@ -4658,7 +4659,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       );
 
       expect(backend.uploads.map((upload) => upload.remotePath)).not.toContain(
-        "~/.mcode/server/node.new",
+        "~/.zcode/server/node.new",
       );
       const warnLines = warnSpy.mock.calls.map((args) =>
         args.map((arg) => String(arg)).join(" "),
@@ -4697,13 +4698,13 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       const backend = new FakeRemoteBackend(
         {
           ...createFullyDeployedRemoteFiles("linux-arm64"),
-          "~/.mcode/server/.asset-components/node-runtime.json":
+          "~/.zcode/server/.asset-components/node-runtime.json":
             createRemoteAssetComponentMeta(
               "node-runtime",
               "old-node-version",
               "linux-arm64",
             ),
-          "~/.mcode/server/.asset-components/node-pty.json":
+          "~/.zcode/server/.asset-components/node-pty.json":
             createRemoteAssetComponentMeta(
               "node-pty",
               "1.0.0-node-pty",
@@ -4726,7 +4727,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       );
 
       expect(
-        hasUploadForStagingTarget(backend, "~/.mcode/server/node.new"),
+        hasUploadForStagingTarget(backend, "~/.zcode/server/node.new"),
       ).toBe(true);
       expect(
         cdnServer.getRequestCount(
@@ -4763,7 +4764,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     await stageRemoteRuntimeRelease(mockCdnDir);
 
     const remoteFiles = createFullyDeployedRemoteFiles("linux-arm64");
-    delete remoteFiles["~/.mcode/server/tools/ripgrep/rg"];
+    delete remoteFiles["~/.zcode/server/tools/ripgrep/rg"];
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     try {
       const backend = new FakeRemoteBackend(remoteFiles);
@@ -4780,7 +4781,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         hasUploadForStagingTarget(
           backend,
-          "~/.mcode/server/tools/ripgrep/rg.new",
+          "~/.zcode/server/tools/ripgrep/rg.new",
         ),
       ).toBe(true);
       const warnLines = warnSpy.mock.calls.map((args) =>
@@ -4815,7 +4816,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       manifest,
       "linux-arm64",
     );
-    delete remoteFiles["~/.mcode/server/agents/glm/mcode-agent"];
+    delete remoteFiles["~/.zcode/server/agents/glm/zcode-agent"];
     const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
     try {
       const backend = new FakeRemoteBackend(remoteFiles);
@@ -4832,7 +4833,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         hasUploadForStagingTarget(
           backend,
-          "~/.mcode/server/agents/glm/mcode.cjs.new",
+          "~/.zcode/server/agents/glm/zcode.cjs.new",
         ),
       ).toBe(true);
       const warnLines = warnSpy.mock.calls.map((args) =>
@@ -4882,7 +4883,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(
       hasUploadForStagingTarget(
         backend,
-        "~/.mcode/server/agents/glm/mcode.cjs.new",
+        "~/.zcode/server/agents/glm/zcode.cjs.new",
       ),
     ).toBe(false);
     expect(
@@ -4893,7 +4894,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     expect(
       backend.uploads.some(
         (upload) =>
-          upload.remotePath === "~/.mcode/server/agents/opencode/opencode.new",
+          upload.remotePath === "~/.zcode/server/agents/opencode/opencode.new",
       ),
     ).toBe(false);
   });
@@ -5136,7 +5137,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
           MCODE_VERSION,
           "glm",
           "linux-arm64",
-          "mcode.cjs",
+          "zcode.cjs",
         ),
         "glm bundle republished with the same semantic version",
         "utf8",
@@ -5167,7 +5168,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         hasUploadForStagingTarget(
           backend,
-          "~/.mcode/server/agents/glm/mcode.cjs.new",
+          "~/.zcode/server/agents/glm/zcode.cjs.new",
         ),
       ).toBe(true);
       expect(
@@ -5205,7 +5206,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     await mkdir(legacyServerCacheDir, { recursive: true });
     await writeFile(join(legacyServerCacheDir, ".ready"), "ready\n", "utf8");
     await writeFile(
-      join(legacyServerCacheDir, "mcode-server.cjs"),
+      join(legacyServerCacheDir, "zcode-server.cjs"),
       "// stale semantic-version server cache\n",
       "utf8",
     );
@@ -5227,12 +5228,12 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(
         hasUploadForStagingTarget(
           backend,
-          "~/.mcode/server/mcode-server.cjs.new",
+          "~/.zcode/server/zcode-server.cjs.new",
         ),
       ).toBe(true);
       const initialServerUpload = findUploadForStagingTarget(
         backend,
-        "~/.mcode/server/mcode-server.cjs.new",
+        "~/.zcode/server/zcode-server.cjs.new",
       );
       await expect(
         readFile(initialServerUpload?.localPath ?? "", "utf8"),
@@ -5244,8 +5245,8 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
         "linux-arm64",
       );
       backend.remoteFiles.set(
-        "~/.mcode/server/.asset-components/server-bundle.json",
-        remoteFiles["~/.mcode/server/.asset-components/server-bundle.json"] ??
+        "~/.zcode/server/.asset-components/server-bundle.json",
+        remoteFiles["~/.zcode/server/.asset-components/server-bundle.json"] ??
           "",
       );
 
@@ -5255,7 +5256,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
           "releases",
           MCODE_VERSION,
           "server",
-          "mcode-server.cjs",
+          "zcode-server.cjs",
         ),
         "// server bundle republished under the same App version\n",
         "utf8",
@@ -5279,7 +5280,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
 
       const serverUpload = findUploadForStagingTarget(
         backend,
-        "~/.mcode/server/mcode-server.cjs.new",
+        "~/.zcode/server/zcode-server.cjs.new",
       );
       expect(serverUpload).toBeDefined();
       await expect(readFile(serverUpload?.localPath ?? "", "utf8")).resolves
@@ -5424,7 +5425,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
         MCODE_VERSION,
         "glm",
         "linux-arm64",
-        "mcode.cjs",
+        "zcode.cjs",
       ),
       "new GLM bytes under the same semantic version",
       "utf8",
@@ -5528,7 +5529,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       platformArch: "linux-arm64",
       componentIds: ["glm"],
       requiredReleasePaths: [
-        "glm/linux-arm64/mcode.cjs",
+        "glm/linux-arm64/zcode.cjs",
         ...OFFICIAL_PLUGIN_REQUIRED_RELATIVE_PATHS.map(
           (relativePath) => `glm/linux-arm64/packages/${relativePath}`,
         ),
@@ -5569,7 +5570,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       expect(cdnServer.getRequestCount(artifactRequestPath)).toBe(1);
       await expect(
         readFile(
-          join(forceReleaseDir, "glm", "linux-arm64", "mcode.cjs"),
+          join(forceReleaseDir, "glm", "linux-arm64", "zcode.cjs"),
           "utf8",
         ),
       ).resolves.toBe("glm bundle");
@@ -5977,7 +5978,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
       await expect(
         deployServer(
           new FakeRemoteBackend({
-            "~/.mcode/server/agents/codex/.version": "0.0.0\n",
+            "~/.zcode/server/agents/codex/.version": "0.0.0\n",
           }),
           { platform: "linux", arch: "arm64" },
           {
@@ -6012,7 +6013,7 @@ describe("deployServer legacy agent node-script bundle deployment", () => {
     try {
       await deployServer(
         new FakeRemoteBackend({
-          "~/.mcode/server/agents/codex/.version": "0.0.0\n",
+          "~/.zcode/server/agents/codex/.version": "0.0.0\n",
         }),
         { platform: "linux", arch: "arm64" },
         {

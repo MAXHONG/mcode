@@ -328,7 +328,7 @@ describe("HighspeedCardService", () => {
     );
     const waits: Array<() => void> = [];
     const auth: HighspeedInferenceAuth = {
-      mcodeJwt: "mcode-jwt",
+      zcodeJwt: "mcode-jwt",
       family: "zai",
       codingPlanAuthorization: "coding-plan-jwt",
       targetType: "PERSONAL",
@@ -380,7 +380,7 @@ describe("HighspeedCardService", () => {
       resolveInferenceAuth: async () => {
         resolveAuthCalls += 1;
         return {
-          mcodeJwt: "must-not-be-used",
+          zcodeJwt: "must-not-be-used",
           family: "zai",
           codingPlanAuthorization: "must-not-be-used",
           targetType: "PERSONAL",
@@ -461,7 +461,7 @@ describe("HighspeedCardService", () => {
       transport,
       now: () => now,
       resolveInferenceAuth: async () => ({
-        mcodeJwt: "mcode-jwt",
+        zcodeJwt: "mcode-jwt",
         family: "bigmodel",
         codingPlanAuthorization: "maas-jwt",
         targetType: "PERSONAL",
@@ -514,7 +514,7 @@ describe("HighspeedCardService", () => {
       // BigModel Team：加速推理与 draw 走同一 highspeed 网关，必须带上 Coding Plan 业务 JWT
       // 与 Team 身份头，来自同一次 selected connection 解析。
       resolveInferenceAuth: async () => ({
-        mcodeJwt: "mcode-jwt",
+        zcodeJwt: "mcode-jwt",
         family: "bigmodel",
         codingPlanAuthorization: "maas-jwt",
         targetType: "TEAM",
@@ -712,7 +712,7 @@ describe("Highspeed HTTP contract", () => {
   it("builds the shared Coding Plan headers for personal and team plans", () => {
     expect(
       buildHighspeedCodingPlanAuthHeaders({
-        mcodeJwt: "mcode-jwt",
+        zcodeJwt: "mcode-jwt",
         codingPlanAuthorization: "maas-jwt",
         targetType: "PERSONAL",
       }),
@@ -725,7 +725,7 @@ describe("Highspeed HTTP contract", () => {
 
     expect(
       buildHighspeedCodingPlanAuthHeaders({
-        mcodeJwt: "Bearer mcode-jwt",
+        zcodeJwt: "Bearer mcode-jwt",
         codingPlanAuthorization: "team-maas-jwt",
         targetType: "TEAM",
         organizationId: "org-1",
@@ -742,7 +742,7 @@ describe("Highspeed HTTP contract", () => {
     // 已带前缀的凭据不能重复加 Bearer。
     expect(
       buildHighspeedCodingPlanAuthHeaders({
-        mcodeJwt: "mcode-jwt",
+        zcodeJwt: "mcode-jwt",
         codingPlanAuthorization: "Bearer already-prefixed",
         targetType: "PERSONAL",
       }),

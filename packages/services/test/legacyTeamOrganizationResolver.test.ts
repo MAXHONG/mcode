@@ -20,7 +20,7 @@ describe("旧 Team 组织查询", () => {
       );
       const load = vi.fn(async () => ({
         accessToken: "oauth-only",
-        mcodeJwtToken: "different-jwt",
+        zcodeJwtToken: "different-jwt",
       }));
       const resolve = createLegacyTeamOrganizationResolver({
         apiClient: { request },

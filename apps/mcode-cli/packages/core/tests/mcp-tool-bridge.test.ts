@@ -13,7 +13,7 @@ import {
 import {
   resetCapturedMcodeCuaBrokerCredentialsForTest,
   MCODE_CUA_OFFICIAL_MCP_NAMESPACE_NAME as MCODE_CUA_OFFICIAL_MCP_SERVER_NAME,
-  sanitizeMcodeRuntimeEnv,
+  sanitizeZCodeRuntimeEnv,
   MCODE_CUA_OFFICIAL_PLUGIN_ID,
   MCODE_CUA_PLUGIN_AUTHORITY_ENV_KEY,
   MCODE_PLUGIN_ID_ENV_KEY,
@@ -81,7 +81,7 @@ function cuaActionReceipt(overrides: Record<string, unknown> = {}): string {
 // computeOfficialCuaServerNames 只信任本进程私有捕获的 authority；测试必须走与生产同一条
 // capture 路径（sanitize 时捕获完整凭据组）来播种，绝不能直接改写内部状态。
 function seedCapturedBrokerCredentials(): void {
-  sanitizeMcodeRuntimeEnv({
+  sanitizeZCodeRuntimeEnv({
     MCODE_CUA_PERMISSION_BROKER_SOCKET: "/tmp/mcode-cua-test.sock",
     MCODE_CUA_PERMISSION_BROKER_TOKEN: "test-broker-token",
     [MCODE_CUA_PLUGIN_AUTHORITY_ENV_KEY]: TEST_PLUGIN_AUTHORITY,

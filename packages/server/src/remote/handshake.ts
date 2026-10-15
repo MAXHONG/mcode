@@ -12,9 +12,9 @@ export interface HandshakeResult {
 
 /**
  * Perform the client-side handshake:
- * 1. Read lines from stdout until we find a mcode-hello JSON
+ * 1. Read lines from stdout until we find a zcode-hello JSON
  *    (skip SSH banner/motd lines)
- * 2. Send a mcode-hello-ack to stdin
+ * 2. Send a zcode-hello-ack to stdin
  * 3. Return the hello info and any remaining data
  */
 export function performHandshake(
@@ -46,7 +46,7 @@ export function performHandshake(
     };
 
     const timeout = setTimeout(() => {
-      rejectWithDiagnostics("Handshake timeout: no mcode-hello received within timeout");
+      rejectWithDiagnostics("Handshake timeout: no zcode-hello received within timeout");
     }, timeoutMs);
 
     const onData = (chunk: Buffer) => {
@@ -76,7 +76,7 @@ export function performHandshake(
 
               // Send ack
               const ack: HelloAckMessage = {
-                type: "mcode-hello-ack",
+                type: "zcode-hello-ack",
                 version: MCODE_VERSION,
                 clientId,
               };
@@ -92,9 +92,9 @@ export function performHandshake(
               rawValue &&
               typeof rawValue === "object" &&
               "type" in rawValue &&
-              (rawValue as { type?: unknown }).type === "mcode-hello"
+              (rawValue as { type?: unknown }).type === "zcode-hello"
             ) {
-              rejectWithDiagnostics(`Invalid mcode-hello: ${formatZodError(result.error)}`);
+              rejectWithDiagnostics(`Invalid zcode-hello: ${formatZodError(result.error)}`);
               return;
             }
           } catch {

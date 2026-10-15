@@ -122,7 +122,7 @@ export function useDraftConfigControl(params: {
   } = params;
   const workspaceKey = workspaceIdentity?.trim() || workspacePath;
   const displayProvider = provider ?? MCODE_AGENT_PROVIDER;
-  const mcodeSessionService = useMcodeSessionService(workspacePath, null, workspaceIdentity);
+  const zcodeSessionService = useMcodeSessionService(workspacePath, null, workspaceIdentity);
   const { settings: sharedSettings } = useSettings();
   const appFollowupMode = resolveAppFollowupMode(sharedSettings);
   const scopeId = sessionId ?? V4_DRAFT_SCOPE_ROOT;
@@ -364,7 +364,7 @@ export function useDraftConfigControl(params: {
       workspacePath,
       workspaceIdentity,
       provider: displayProvider,
-      mcodeSessionService,
+      zcodeSessionService,
     })
       .then((prepareResult) => {
         const baseOptions = prepareResult.configOptions ?? [];
@@ -404,7 +404,7 @@ export function useDraftConfigControl(params: {
     workspaceIdentity,
     workspaceKey,
     workspacePath,
-    mcodeSessionService,
+    zcodeSessionService,
   ]);
 
   const handleDraftSelectModel = useCallback(

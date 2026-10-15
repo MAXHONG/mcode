@@ -99,7 +99,7 @@ export function useWorkspaceSessionsIndexItems(
   scopes: WorkspaceSessionsIndexScope[],
 ): WorkspaceSessionsIndexItemsResult {
   const baseServices = useBaseWorkspaceServices();
-  const baseAgentService = baseServices.mcodeAgentService;
+  const baseAgentService = baseServices.zcodeAgentService;
 
   // scope 签名稳定化，避免每渲染重算协调；effect/memo 通过 ref 读取内容等价的最新 scopes。
   // endpointKey、workspacePath 或 agentService generation 变化都会换签名。
@@ -131,7 +131,7 @@ export function useWorkspaceSessionsIndexItems(
   useEffect(() => {
     const bindings: WorkspaceSessionsIndexBinding[] = [];
     for (const scope of scopesRef.current) {
-      // 防御：测试/降级环境可能没有 mcodeAgentService（sessions-index 传输面），此时不订阅该 scope。
+      // 防御：测试/降级环境可能没有 zcodeAgentService（sessions-index 传输面），此时不订阅该 scope。
       const agentService = scope.agentService ?? baseAgentService;
       if (!agentService) {
         continue;

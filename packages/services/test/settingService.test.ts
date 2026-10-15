@@ -682,16 +682,16 @@ describe("settingService", () => {
     const settingsFile = join(home, ".mcode", "v2", "setting.json");
     const service = await createSettingServiceInHome(home);
 
-    await service.update({ mcodeEndpointOrigin: "https://zcode.z.ai/path" });
+    await service.update({ zcodeEndpointOrigin: "https://zcode.z.ai/path" });
     await expect(service.get()).resolves.toMatchObject({
-      mcodeEndpointOrigin: "https://zcode.z.ai",
+      zcodeEndpointOrigin: "https://zcode.z.ai",
     });
 
-    await service.update({ mcodeEndpointOrigin: "" });
+    await service.update({ zcodeEndpointOrigin: "" });
 
-    await expect(service.get()).resolves.not.toHaveProperty("mcodeEndpointOrigin");
+    await expect(service.get()).resolves.not.toHaveProperty("zcodeEndpointOrigin");
     expect(JSON.parse(readFileSync(settingsFile, "utf-8"))).not.toHaveProperty(
-      "mcodeEndpointOrigin",
+      "zcodeEndpointOrigin",
     );
   });
 
@@ -705,7 +705,7 @@ describe("settingService", () => {
       JSON.stringify({
         locale: "en-US",
         recentProjects: ["/tmp/demo"],
-        mcodeEndpointOrigin: ["ftp://invalid.example"],
+        zcodeEndpointOrigin: ["ftp://invalid.example"],
       }),
       "utf-8",
     );
@@ -716,7 +716,7 @@ describe("settingService", () => {
       locale: "en-US",
       recentProjects: ["/tmp/demo"],
     });
-    await expect(service.get()).resolves.not.toHaveProperty("mcodeEndpointOrigin");
+    await expect(service.get()).resolves.not.toHaveProperty("zcodeEndpointOrigin");
   });
 
   it("会持久化 task 自动归档配置", async () => {
@@ -779,11 +779,11 @@ describe("settingService", () => {
     const service = await createSettingServiceInHome(home);
 
     await service.update({
-      mcodeInteractionBehavior: "guide",
+      zcodeInteractionBehavior: "guide",
     });
 
     await expect(service.get()).resolves.toMatchObject({
-      mcodeInteractionBehavior: "guide",
+      zcodeInteractionBehavior: "guide",
     });
   });
 

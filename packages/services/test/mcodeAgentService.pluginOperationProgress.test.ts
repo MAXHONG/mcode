@@ -5,7 +5,7 @@ import {
   type McodePluginOperationProgressNotification,
 } from "@mcode/shared";
 
-describe("mcodeAgentService Plugin operation progress", () => {
+describe("zcodeAgentService Plugin operation progress", () => {
   it("projects a validated Agent progress notification by operationId", async () => {
     let notificationListener:
       | ((notification: { method: string; params?: unknown }) => void)

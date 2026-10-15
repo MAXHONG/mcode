@@ -143,7 +143,7 @@ async function materializeRegisteredArtifacts(options: {
 }
 
 async function discoverPreviewArtifacts(options: {
-  mcodeAgentService: Pick<
+  zcodeAgentService: Pick<
     IMcodeAgentService,
     "conversationFileChangesV4" | "conversationAttachmentReadV4"
   >;
@@ -212,7 +212,7 @@ async function discoverPreviewArtifacts(options: {
       }
       let result: Awaited<ReturnType<IMcodeAgentService["conversationFileChangesV4"]>>;
       try {
-        result = await options.mcodeAgentService.conversationFileChangesV4({
+        result = await options.zcodeAgentService.conversationFileChangesV4({
           workspacePath: options.input.workspacePath,
           ...(options.input.workspaceIdentity
             ? { workspaceIdentity: options.input.workspaceIdentity }
@@ -402,7 +402,7 @@ async function discoverPreviewArtifacts(options: {
 }
 
 async function readInputAttachment(options: {
-  mcodeAgentService: Pick<IMcodeAgentService, "conversationAttachmentReadV4">;
+  zcodeAgentService: Pick<IMcodeAgentService, "conversationAttachmentReadV4">;
   input: PublishTextConversationInput;
   row: Extract<ConversationRow, { kind: "userInput" }>;
   attachmentIndex: number;
@@ -420,7 +420,7 @@ async function readInputAttachment(options: {
   let totalBytes: number | undefined;
   let mediaType = attachment.mime;
   while (true) {
-    const result = await options.mcodeAgentService.conversationAttachmentReadV4({
+    const result = await options.zcodeAgentService.conversationAttachmentReadV4({
       workspacePath: options.input.workspacePath,
       ...(options.input.workspaceIdentity
         ? { workspaceIdentity: options.input.workspaceIdentity }
@@ -477,7 +477,7 @@ async function readInputAttachment(options: {
 }
 
 async function discoverInputAttachments(options: {
-  mcodeAgentService: Pick<IMcodeAgentService, "conversationAttachmentReadV4">;
+  zcodeAgentService: Pick<IMcodeAgentService, "conversationAttachmentReadV4">;
   input: PublishTextConversationInput;
   selectedRows: ConversationRow[];
   capabilities: ConversationShareCapabilities;
@@ -531,7 +531,7 @@ async function discoverInputAttachments(options: {
       }
       try {
         const materialized = await readInputAttachment({
-          mcodeAgentService: options.mcodeAgentService,
+          zcodeAgentService: options.zcodeAgentService,
           input: options.input,
           row,
           attachmentIndex,
@@ -659,7 +659,7 @@ function insertDiscoveredArtifacts(
 }
 
 export async function buildConversationShareArtifactSnapshot(options: {
-  mcodeAgentService: Pick<
+  zcodeAgentService: Pick<
     IMcodeAgentService,
     "conversationFileChangesV4" | "conversationAttachmentReadV4"
   >;
@@ -678,7 +678,7 @@ export async function buildConversationShareArtifactSnapshot(options: {
   const issues: ConversationShareFailureIssue[] = [];
   const warnings: ConversationShareFailureIssue[] = [];
   const inputAttachments = await discoverInputAttachments({
-    mcodeAgentService: options.mcodeAgentService,
+    zcodeAgentService: options.zcodeAgentService,
     input: options.input,
     selectedRows: options.selectedRows,
     capabilities: options.capabilities,

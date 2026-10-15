@@ -201,7 +201,7 @@ const mocks = vi.hoisted(() => ({
     onDidChange: vi.fn(() => ({ dispose: vi.fn() })),
     validate: vi.fn(),
   },
-  mcodeSessionService: {
+  zcodeSessionService: {
     getWorkspaceRuntimeIdentity: vi.fn(async () => ({
       identity: "runtime-1",
       workspaceKey: "remote:ssh:dev:/workspace",
@@ -216,7 +216,7 @@ const mocks = vi.hoisted(() => ({
       slashCommands: [],
     })),
   },
-  mcodeTaskService: {
+  zcodeTaskService: {
     restartWorkspaceProcess: vi.fn(async () => {}),
   },
   toast: vi.fn(),
@@ -249,8 +249,8 @@ vi.mock("@/hooks/useServices.js", () => ({
   useServices: () => ({
     highspeedCardService: mocks.highspeedCardService,
     modelSelectionService: mocks.modelSelectionService,
-    mcodeSessionService: mocks.mcodeSessionService,
-    mcodeTaskService: mocks.mcodeTaskService,
+    zcodeSessionService: mocks.zcodeSessionService,
+    zcodeTaskService: mocks.zcodeTaskService,
   }),
 }));
 
@@ -288,7 +288,7 @@ vi.mock("@/hooks/useSettingService.js", () => ({
   useSettings: () => ({
     settings: {
       modelProviderFamilySelectedKeys: { bigmodel: "team-plan-key" },
-      mcodeInteractionBehavior: "queue",
+      zcodeInteractionBehavior: "queue",
     },
     loading: false,
     error: null,
@@ -1394,7 +1394,7 @@ describe("SessionPane remote provider admission", () => {
     mocks.sendCommand.mockImplementation(async (envelope: CommandEnvelope) =>
       ackFor(envelope, { status: "accepted" }),
     );
-    mocks.mcodeSessionService.updateProviderRegistry.mockClear();
+    mocks.zcodeSessionService.updateProviderRegistry.mockClear();
     mocks.sendCommand.mockClear();
 
     const root = await renderPane({ workspaceIdentity, remoteSessionId });
@@ -1404,7 +1404,7 @@ describe("SessionPane remote provider admission", () => {
         await flushMicrotasks();
       });
 
-      expect(mocks.mcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
+      expect(mocks.zcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
       expect(mocks.sendCommand).toHaveBeenCalledWith(expect.objectContaining({ type: "sendText" }));
     } finally {
       await act(async () => root.unmount());
@@ -1423,7 +1423,7 @@ describe("SessionPane remote provider admission", () => {
     mocks.sendCommand.mockImplementation(async (envelope: CommandEnvelope) =>
       ackFor(envelope, { status: "accepted" }),
     );
-    mocks.mcodeSessionService.updateProviderRegistry.mockClear();
+    mocks.zcodeSessionService.updateProviderRegistry.mockClear();
 
     const root = await renderPane();
     try {
@@ -1432,7 +1432,7 @@ describe("SessionPane remote provider admission", () => {
         await flushMicrotasks();
       });
 
-      expect(mocks.mcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
+      expect(mocks.zcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
       expect(mocks.sendCommand).toHaveBeenCalledWith(expect.objectContaining({ type: "sendText" }));
     } finally {
       await act(async () => root.unmount());
@@ -1451,7 +1451,7 @@ describe("SessionPane remote provider admission", () => {
     mocks.sendCommand.mockImplementation(async (envelope: CommandEnvelope) =>
       ackFor(envelope, { status: "accepted" }),
     );
-    mocks.mcodeSessionService.updateProviderRegistry.mockClear();
+    mocks.zcodeSessionService.updateProviderRegistry.mockClear();
 
     const root = await renderPane({
       workspaceIdentity: "remote:ssh:dev:/workspace",
@@ -1464,7 +1464,7 @@ describe("SessionPane remote provider admission", () => {
         await flushMicrotasks();
       });
 
-      expect(mocks.mcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
+      expect(mocks.zcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
       expect(mocks.sendCommand).toHaveBeenCalledWith(expect.objectContaining({ type: "sendText" }));
     } finally {
       await act(async () => root.unmount());
@@ -2371,7 +2371,7 @@ describe("SessionPane model switch recovery", () => {
     });
 
     expect(mocks.sendCommand).not.toHaveBeenCalled();
-    expect(mocks.mcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
+    expect(mocks.zcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
     await act(async () => {
       root.unmount();
     });
@@ -2408,7 +2408,7 @@ describe("SessionPane model switch recovery", () => {
     });
 
     expect(mocks.sendCommand).toHaveBeenCalledTimes(1);
-    expect(mocks.mcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
+    expect(mocks.zcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
     await act(async () => {
       root.unmount();
     });
@@ -2453,7 +2453,7 @@ describe("SessionPane model switch recovery", () => {
     });
 
     expect(mocks.sendCommand).toHaveBeenCalledTimes(1);
-    expect(mocks.mcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
+    expect(mocks.zcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
     await act(async () => {
       root.unmount();
     });
@@ -2492,13 +2492,13 @@ describe("SessionPane model switch recovery", () => {
       "alternate-provider",
       "deepseek-v4-pro",
     );
-    expect(mocks.mcodeTaskService.restartWorkspaceProcess).toHaveBeenCalledWith({
+    expect(mocks.zcodeTaskService.restartWorkspaceProcess).toHaveBeenCalledWith({
       workspacePath: "/workspace",
       workspaceIdentity: undefined,
       provider: "glm",
       bumpRuntimeEpoch: true,
     });
-    expect(mocks.mcodeTaskService.restartWorkspaceProcess.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(mocks.zcodeTaskService.restartWorkspaceProcess.mock.invocationCallOrder[0]).toBeLessThan(
       draftConfigMock.handleDraftSelectModel.mock.invocationCallOrder[0] ?? 0,
     );
 

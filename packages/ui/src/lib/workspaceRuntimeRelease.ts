@@ -4,13 +4,13 @@ import { logger } from "@/logger.js";
 
 export function releaseWorkspaceRuntimeAfterProjectRemoval({
   tab,
-  mcodeTaskService,
+  zcodeTaskService,
 }: {
   tab: Pick<WorkspaceTabState, "workspacePath" | "workspaceIdentity">;
-  mcodeTaskService: Pick<IMcodeTaskService, "releaseWorkspacePreparation">;
+  zcodeTaskService: Pick<IMcodeTaskService, "releaseWorkspacePreparation">;
 }): void {
   const workspaceIdentity = tab.workspaceIdentity?.trim() || undefined;
-  void mcodeTaskService
+  void zcodeTaskService
     .releaseWorkspacePreparation({
       workspacePath: tab.workspacePath,
       ...(workspaceIdentity ? { workspaceIdentity } : {}),

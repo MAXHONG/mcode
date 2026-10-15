@@ -163,7 +163,7 @@ async function createPreparedOwner(
       env.MCODE_RUNTIME_ENV ??
       resourceAttributesFromEnv(env)["deployment.environment.name"],
     installationId: normalizeTelemetryDeviceMid(env.MCODE_TELEMETRY_DEVICE_MID),
-    productVersion: normalizeVersion(options.productVersion ?? env.MCODE_APP_VERSION),
+    productVersion: normalizeVersion(options.productVersion ?? env.ZCODE_APP_VERSION),
     runtimeDistribution:
       options.runtimeDistribution ??
       resolveRuntimeDistribution(env.MCODE_TELEMETRY_RUNTIME_DISTRIBUTION),

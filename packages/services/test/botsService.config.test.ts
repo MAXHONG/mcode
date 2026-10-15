@@ -427,7 +427,7 @@ describe("botsService config", () => {
       remoteWorkspaceService: {
         isConnected: vi.fn(async () => true),
         ensureConnected: vi.fn(async () => ({ ok: true })),
-        getMcodeTaskService: vi.fn(async () => f.createLegacyTaskService()),
+        getZCodeTaskService: vi.fn(async () => f.createLegacyTaskService()),
         getModelSelectionService: getRemote,
       },
       credentialService: f.createCredentialService({ "secret-1": "secret" }),

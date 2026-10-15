@@ -289,7 +289,7 @@ export function WebRemoteControlTaskIndex({
       const pinned = !task.pinned;
       setPendingArchiveTaskKey(null);
       setMutatingTaskKey(rowKey);
-      void workspaceServices.services.mcodeTaskService
+      void workspaceServices.services.zcodeTaskService
         .setTaskPinned({
           taskId: task.taskId,
           workspacePath: task.workspacePath,
@@ -333,7 +333,7 @@ export function WebRemoteControlTaskIndex({
 
       setPendingArchiveTaskKey(null);
       setMutatingTaskKey(rowKey);
-      void workspaceServices.services.mcodeTaskService
+      void workspaceServices.services.zcodeTaskService
         .archiveTask({
           taskId: task.taskId,
           workspacePath: task.workspacePath,
@@ -375,7 +375,7 @@ export function WebRemoteControlTaskIndex({
       const rowKey = buildWebRemoteControlTaskRowKey(task);
       setPendingArchiveTaskKey(null);
       setMutatingTaskKey(rowKey);
-      void workspaceServices.services.mcodeTaskService
+      void workspaceServices.services.zcodeTaskService
         .unarchiveTask({
           taskId: task.taskId,
           workspacePath: task.workspacePath,
@@ -424,7 +424,7 @@ export function WebRemoteControlTaskIndex({
         setPendingArchiveTaskKey(null);
         setMutatingTaskKey(rowKey);
         try {
-          await workspaceServices.services.mcodeTaskService.deleteTask({
+          await workspaceServices.services.zcodeTaskService.deleteTask({
             taskId: task.taskId,
             workspacePath: task.workspacePath,
             ...(task.workspaceIdentity ? { workspaceIdentity: task.workspaceIdentity } : {}),
@@ -513,7 +513,7 @@ export function WebRemoteControlTaskIndex({
               workspace.connectionState === "reconnecting"
                 ? undefined
                 : workspaceServiceLookup.get(resolveWebRemoteControlWorkspaceKey(workspace))
-                    ?.services.mcodeTaskService,
+                    ?.services.zcodeTaskService,
           }))}
           onDeleted={(target) => {
             setResult((current) => ({

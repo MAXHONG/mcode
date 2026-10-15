@@ -162,7 +162,7 @@ async function waitForToolBlock() {
 }
 
 async function ensureQueueInteractionBehavior() {
-  if ((await readSettings()).mcodeInteractionBehavior === "queue") {
+  if ((await readSettings()).zcodeInteractionBehavior === "queue") {
     return;
   }
 
@@ -182,7 +182,7 @@ async function ensureQueueInteractionBehavior() {
   await clickInteractionBehaviorSelect();
   await clickInteractionBehaviorQueueOption();
 
-  await browser.waitUntil(async () => (await readSettings()).mcodeInteractionBehavior === "queue", {
+  await browser.waitUntil(async () => (await readSettings()).zcodeInteractionBehavior === "queue", {
     timeout: 15000,
     timeoutMsg: "turn steer: 交互行为没有保存为 queue",
   });

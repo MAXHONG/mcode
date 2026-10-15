@@ -205,7 +205,7 @@ export function groupCommandsByPlugin(
 
 export function filterLocalMcpServers(servers: McodeMcpServer[], query: string): McodeMcpServer[] {
   return servers.filter((server) => {
-    if (server.source !== "mcodeagentmcp") {
+    if (server.source !== "zcodeagentmcp") {
       return false;
     }
     return normalizedQueryMatches(query, [server.name, server.config.url, server.config.command]);

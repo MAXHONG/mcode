@@ -1,5 +1,5 @@
 // 全局工作流组的状态与动作。抽成 hook 让组件文件守住
-// max-lines 400；载体是 `useServices().mcodeAgentService`，RPC 一律带 `{ scope: "global" }`。
+// max-lines 400；载体是 `useServices().zcodeAgentService`，RPC 一律带 `{ scope: "global" }`。
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { McodeSavedWorkflowEntry, McodeSavedWorkflowRun } from "@mcode/shared";
 import { toast } from "@/components/ui/toast.js";
@@ -66,7 +66,7 @@ export function useSavedWorkflowGlobalGroup({
 }: UseSavedWorkflowGlobalGroupParams) {
   const { intl, locale } = useMcodeIntl();
   const requestConfirmation = useConfirmDialog();
-  const { mcodeAgentService: agentService, fileWatcherService } = useServices();
+  const { zcodeAgentService: agentService, fileWatcherService } = useServices();
 
   const state = useSavedWorkflowStore((store) =>
     selectSavedWorkflowState(store, GLOBAL_SAVED_WORKFLOW_TARGET),

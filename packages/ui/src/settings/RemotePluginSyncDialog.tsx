@@ -171,8 +171,8 @@ interface RemotePluginSyncDialogProps {
   onOpenChange: (open: boolean) => void;
   localPluginSyncService: IPluginSyncService;
   remotePluginSyncService: IPluginSyncService;
-  localMcodeAgentService?: RemotePluginSyncAgentService | null;
-  remoteMcodeAgentService?: RemotePluginSyncAgentService | null;
+  localZCodeAgentService?: RemotePluginSyncAgentService | null;
+  remoteZCodeAgentService?: RemotePluginSyncAgentService | null;
   remoteTarget: RemoteTarget;
   localWorkspacePath?: string;
   workspacePath: string;
@@ -432,11 +432,11 @@ function buildMarketplaceSourceSyncInfo(
 async function loadRemotePluginSyncCandidates(params: {
   localPluginSyncService: IPluginSyncService;
   localWorkspacePath: string;
-  localMcodeAgentService?: RemotePluginSyncAgentService | null;
+  localZCodeAgentService?: RemotePluginSyncAgentService | null;
   remotePluginSyncService: IPluginSyncService;
   remoteWorkspaceIdentity?: string;
   remoteWorkspacePath: string;
-  remoteMcodeAgentService?: RemotePluginSyncAgentService | null;
+  remoteZCodeAgentService?: RemotePluginSyncAgentService | null;
 }): Promise<{
   candidates: RemotePluginSyncCandidate[];
   statuses: RemotePluginSyncCandidateStatus[];
@@ -459,18 +459,18 @@ async function loadRemotePluginSyncCandidates(params: {
     ...(row.reason ? { reason: row.reason } : {}),
   }));
 
-  if (!params.localMcodeAgentService || !params.remoteMcodeAgentService) {
+  if (!params.localZCodeAgentService || !params.remoteZCodeAgentService) {
     return { candidates: inlineCandidates, statuses: inlineStatuses };
   }
 
   const [localOverview, localPluginsResult, remoteOverview] = await Promise.all([
-    params.localMcodeAgentService.getPluginsOverview({
+    params.localZCodeAgentService.getPluginsOverview({
       workspacePath: params.localWorkspacePath,
     }),
-    params.localMcodeAgentService.listPlugins({
+    params.localZCodeAgentService.listPlugins({
       workspacePath: params.localWorkspacePath,
     }),
-    params.remoteMcodeAgentService.getPluginsOverview({
+    params.remoteZCodeAgentService.getPluginsOverview({
       workspacePath: params.remoteWorkspacePath,
       ...(params.remoteWorkspaceIdentity
         ? { workspaceIdentity: params.remoteWorkspaceIdentity }
@@ -685,7 +685,7 @@ async function syncPortablePluginOptions(
     onItemProgress?: (event: RemotePluginSyncProgressEvent) => void;
     remoteWorkspaceIdentity?: string;
     remoteWorkspacePath: string;
-    remoteMcodeAgentService?: RemotePluginSyncAgentService | null;
+    remoteZCodeAgentService?: RemotePluginSyncAgentService | null;
     signal?: AbortSignal;
     stopControl?: RemotePluginSyncStopControl;
   },
@@ -695,8 +695,8 @@ async function syncPortablePluginOptions(
   if (!localOptions || Object.keys(localOptions.configuredOptions).length === 0) {
     return;
   }
-  const remoteMcodeAgentService = params.remoteMcodeAgentService;
-  if (!remoteMcodeAgentService) {
+  const remoteZCodeAgentService = params.remoteZCodeAgentService;
+  if (!remoteZCodeAgentService) {
     emitRemotePluginSyncProgress(
       params,
       row,
@@ -715,7 +715,7 @@ async function syncPortablePluginOptions(
     params,
     row,
     `RPC plugins/list for options ${row.candidate.pluginId}`,
-    () => remoteMcodeAgentService.listPlugins(workspace),
+    () => remoteZCodeAgentService.listPlugins(workspace),
   );
   const remotePlugin = remotePlugins.plugins.find(
     (plugin) => plugin.id === row.candidate.pluginId,
@@ -765,7 +765,7 @@ async function syncPortablePluginOptions(
     params,
     row,
     `RPC plugins/configure ${portableCount} portable option(s) for ${row.candidate.pluginId}`,
-    () => remoteMcodeAgentService.configurePlugin({
+    () => remoteZCodeAgentService.configurePlugin({
       ...workspace,
       options: mergedOptions,
       pluginId: row.candidate.pluginId,
@@ -780,7 +780,7 @@ export async function syncSelectedRemotePlugins(params: {
   remotePluginSyncService: IPluginSyncService;
   remoteWorkspaceIdentity?: string;
   remoteWorkspacePath: string;
-  remoteMcodeAgentService?: RemotePluginSyncAgentService | null;
+  remoteZCodeAgentService?: RemotePluginSyncAgentService | null;
   rows: readonly RemotePluginSyncRow[];
   signal?: AbortSignal;
   stopControl?: RemotePluginSyncStopControl;
@@ -870,7 +870,7 @@ async function syncMarketplaceRemotePlugin(
     remotePluginSyncService: IPluginSyncService;
     remoteWorkspaceIdentity?: string;
     remoteWorkspacePath: string;
-    remoteMcodeAgentService?: RemotePluginSyncAgentService | null;
+    remoteZCodeAgentService?: RemotePluginSyncAgentService | null;
     selectedMarketplacePluginNames: ReadonlyMap<string, string[]>;
     signal?: AbortSignal;
     stopControl?: RemotePluginSyncStopControl;
@@ -882,10 +882,10 @@ async function syncMarketplaceRemotePlugin(
   const directoryName = `${candidate.marketplace}/${candidate.name}`;
   try {
     throwIfRemotePluginSyncStopped(params, row);
-    if (!params.remoteMcodeAgentService || !marketplacePlugin) {
+    if (!params.remoteZCodeAgentService || !marketplacePlugin) {
       throw new Error("remote plugin install service is not available");
     }
-    const remoteMcodeAgentService = params.remoteMcodeAgentService;
+    const remoteZCodeAgentService = params.remoteZCodeAgentService;
     const workspace = {
       workspacePath: params.remoteWorkspacePath,
       ...(params.remoteWorkspaceIdentity
@@ -901,7 +901,7 @@ async function syncMarketplaceRemotePlugin(
           localPluginSyncService: params.localPluginSyncService,
           onItemProgress: params.onItemProgress,
           remotePluginSyncService: params.remotePluginSyncService,
-          remoteMcodeAgentService,
+          remoteZCodeAgentService,
           selectedMarketplacePluginNames: params.selectedMarketplacePluginNames,
           signal: params.signal,
           stopControl: params.stopControl,
@@ -915,7 +915,7 @@ async function syncMarketplaceRemotePlugin(
       params,
       row,
       `RPC plugins/install ${candidate.pluginId}`,
-      (operationId) => remoteMcodeAgentService.installPlugin({
+      (operationId) => remoteZCodeAgentService.installPlugin({
         ...workspace,
         marketplace: candidate.marketplace,
         operationId,
@@ -938,7 +938,7 @@ async function syncMarketplaceRemotePlugin(
       params,
       row,
       `RPC plugins/setEnabled enabled=${String(candidate.enabled)} for ${candidate.pluginId}`,
-      () => remoteMcodeAgentService.setPluginEnabled({
+      () => remoteZCodeAgentService.setPluginEnabled({
         ...workspace,
         enabled: candidate.enabled,
         pluginId: candidate.pluginId,
@@ -991,7 +991,7 @@ async function prepareRemoteMarketplaceSource(
     localPluginSyncService: IPluginSyncService;
     onItemProgress?: (event: RemotePluginSyncProgressEvent) => void;
     remotePluginSyncService: IPluginSyncService;
-    remoteMcodeAgentService: RemotePluginSyncAgentService;
+    remoteZCodeAgentService: RemotePluginSyncAgentService;
     selectedMarketplacePluginNames: ReadonlyMap<string, string[]>;
     signal?: AbortSignal;
     stopControl?: RemotePluginSyncStopControl;
@@ -1010,7 +1010,7 @@ async function prepareRemoteMarketplaceSource(
       params,
       row,
       `RPC plugins/marketplace/add ${candidate.marketplace} from ${marketplaceSourceInput}`,
-      (operationId) => params.remoteMcodeAgentService.addPluginMarketplace({
+      (operationId) => params.remoteZCodeAgentService.addPluginMarketplace({
         ...workspace,
         operationId,
         source: marketplaceSourceInput,
@@ -1048,7 +1048,7 @@ async function prepareRemoteMarketplaceSource(
     params,
     row,
     `RPC plugins/marketplace/add mirrored ${candidate.marketplace} from ${imported.path}`,
-    (operationId) => params.remoteMcodeAgentService.addPluginMarketplace({
+    (operationId) => params.remoteZCodeAgentService.addPluginMarketplace({
       ...workspace,
       operationId,
       source: imported.path,
@@ -1570,12 +1570,12 @@ export function RemotePluginSyncDialog(props: RemotePluginSyncDialogProps) {
   const {
     localPluginSyncService,
     localWorkspacePath,
-    localMcodeAgentService,
+    localZCodeAgentService,
     onOpenChange,
     onSynced,
     open,
     remotePluginSyncService,
-    remoteMcodeAgentService,
+    remoteZCodeAgentService,
     remoteTarget,
     workspacePath,
     workspaceIdentity,
@@ -1620,11 +1620,11 @@ export function RemotePluginSyncDialog(props: RemotePluginSyncDialogProps) {
         const { candidates, statuses } = await loadRemotePluginSyncCandidates({
           localPluginSyncService,
           localWorkspacePath: localWorkspacePath ?? workspacePath,
-          localMcodeAgentService,
+          localZCodeAgentService,
           remotePluginSyncService,
           remoteWorkspaceIdentity: workspaceIdentity,
           remoteWorkspacePath: workspacePath,
-          remoteMcodeAgentService,
+          remoteZCodeAgentService,
         });
         if (cancelled) {
           return;
@@ -1652,10 +1652,10 @@ export function RemotePluginSyncDialog(props: RemotePluginSyncDialogProps) {
   }, [
     localPluginSyncService,
     localWorkspacePath,
-    localMcodeAgentService,
+    localZCodeAgentService,
     open,
     remotePluginSyncService,
-    remoteMcodeAgentService,
+    remoteZCodeAgentService,
     workspaceIdentity,
     workspacePath,
   ]);
@@ -1828,15 +1828,15 @@ export function RemotePluginSyncDialog(props: RemotePluginSyncDialogProps) {
         remotePluginSyncService,
         remoteWorkspaceIdentity: workspaceIdentity,
         remoteWorkspacePath: workspacePath,
-        remoteMcodeAgentService,
+        remoteZCodeAgentService,
         rows: selectedRows,
         signal: syncAbortController.signal,
         stopControl: {
           cancelOperation: async (operationId) => {
-            if (!remoteMcodeAgentService?.cancelPluginOperation) {
+            if (!remoteZCodeAgentService?.cancelPluginOperation) {
               return;
             }
-            await remoteMcodeAgentService.cancelPluginOperation({ operationId });
+            await remoteZCodeAgentService.cancelPluginOperation({ operationId });
           },
           isStopped: (candidateId) => stopRequestedRef.current.has(candidateId),
           waitForStop: (candidateId) => {

@@ -1527,7 +1527,7 @@ export function createMcodeAgentService(
           mcodeProtocolMethods.providerUpdateAccountConfig,
           {
             revision: snapshot.revision,
-            basedOnMcodeBuiltinRevision: snapshot.basedOnMcodeBuiltinRevision,
+            basedOnZCodeBuiltinRevision: snapshot.basedOnZCodeBuiltinRevision,
             // Account 是运行时事实信封，不是磁盘 Provider 规则集合；保持原有协议字典。
             providers: Object.fromEntries(
               [...snapshot.providers.entries()].map(([providerId, config]) => [

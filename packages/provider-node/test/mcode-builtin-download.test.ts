@@ -67,7 +67,7 @@ describe("Built-in 共用 URL 下载边界", () => {
   it("缺省与旧内联字段不下载、不当清空", async () => {
     const request = vi.fn(
       async () =>
-        new Response(JSON.stringify({ code: 0, data: { configs: { mcodeBuiltin: release } } })),
+        new Response(JSON.stringify({ code: 0, data: { configs: { zcodeBuiltin: release } } })),
     );
     await expect(downloadMcodeBuiltinRelease({ ...input, request })).resolves.toBeNull();
     expect(request).toHaveBeenCalledTimes(1);

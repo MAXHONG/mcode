@@ -2837,7 +2837,7 @@ interface AiSdkWarningGlobal {
 }
 
 async function createProtocolProviderEnv(root: string): Promise<Record<string, string>> {
-  const mcodeBuiltinFilePath = join(root, "mcode-builtin.json");
+  const zcodeBuiltinFilePath = join(root, "mcode-builtin.json");
   const personalFilePath = join(root, "provider-personal.json");
   const emptyBuiltinRelease = JSON.stringify({
     // 此处测试启动/存储顺序，不测试旧版 Release 迁移；使用当前正式结构。
@@ -2855,10 +2855,10 @@ async function createProtocolProviderEnv(root: string): Promise<Record<string, s
     modelConfigRules: [],
   });
   await Promise.all([
-    writeFile(mcodeBuiltinFilePath, emptyBuiltinRelease),
+    writeFile(zcodeBuiltinFilePath, emptyBuiltinRelease),
     writeFile(personalFilePath, emptyPersonalConfig),
   ]);
-  return createNodeProviderRuntimePathEnv({ mcodeBuiltinFilePath, personalFilePath });
+  return createNodeProviderRuntimePathEnv({ zcodeBuiltinFilePath, personalFilePath });
 }
 
 async function readLogEntries(logDir: string): Promise<LogEntry[]> {

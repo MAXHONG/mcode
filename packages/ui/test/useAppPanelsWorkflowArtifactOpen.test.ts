@@ -28,8 +28,8 @@ const { conversationWorkflowRunArtifactsV4 } = vi.hoisted(() => ({
 
 vi.mock("@/hooks/useServices.js", () => ({
   useServices: () => ({
-    mcodeAgentService: { conversationWorkflowRunArtifactsV4 },
-    mcodeSessionService: { closeSession: vi.fn(async () => {}) },
+    zcodeAgentService: { conversationWorkflowRunArtifactsV4 },
+    zcodeSessionService: { closeSession: vi.fn(async () => {}) },
   }),
 }));
 

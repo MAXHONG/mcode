@@ -75,7 +75,7 @@ describe("Todo104 规则集合读写与应用", () => {
       ],
     };
     const rules = parseMcodeBuiltinModelConfigRules(source);
-    expect(rules.toMcodeBuiltinJSON()).toEqual(source);
+    expect(rules.toZCodeBuiltinJSON()).toEqual(source);
     expect(rules.resolve(input).properties?.contextWindow).toBe(60_000);
     expect(rules.resolve({ ...input, providerId: "other" }).properties?.contextWindow).toBe(50_000);
     expect(
@@ -193,7 +193,7 @@ describe("Todo104 规则集合读写与应用", () => {
       ),
     );
     const rules = parseMcodeBuiltinModelConfigRules(release.config.modelConfigRules);
-    expect(rules.toMcodeBuiltinJSON()).toEqual(release.config.modelConfigRules);
+    expect(rules.toZCodeBuiltinJSON()).toEqual(release.config.modelConfigRules);
     const resolve = (baseUrl: string, modelId = "unknown-model", apiType = "anthropic-messages") =>
       rules.resolve({
         providerId: "custom:site-test",

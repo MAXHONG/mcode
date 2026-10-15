@@ -1106,7 +1106,7 @@ export function WorkspaceGroupedTasksSection({
     }
 
     try {
-      const meta = await workspaceServices.services.mcodeTaskService.renameTask(
+      const meta = await workspaceServices.services.zcodeTaskService.renameTask(
         {
           taskId: task.taskId,
           workspacePath: task.workspacePath,
@@ -1158,7 +1158,7 @@ export function WorkspaceGroupedTasksSection({
         return;
       }
 
-      void workspaceServices.services.mcodeTaskService
+      void workspaceServices.services.zcodeTaskService
         .setTaskUnread({
           taskId: task.taskId,
           workspacePath: task.workspacePath,
@@ -1217,7 +1217,7 @@ export function WorkspaceGroupedTasksSection({
         return new Set(current).add(closingTaskKey);
       });
 
-      void workspaceServices.services.mcodeTaskService
+      void workspaceServices.services.zcodeTaskService
         .archiveTask({
           taskId: task.taskId,
           workspacePath: task.workspacePath,

@@ -63,11 +63,11 @@ export async function startProcessProviderRegistryRuntime(
     ...paths,
     ...(bundledFile
       ? {
-          mcodeBuiltinFilePath: bundledFile,
-          mcodeBuiltinActiveFilePath: paths.mcodeBuiltinFilePath,
-          mcodeBuiltinRemote: {
+          zcodeBuiltinFilePath: bundledFile,
+          zcodeBuiltinActiveFilePath: paths.zcodeBuiltinFilePath,
+          zcodeBuiltinRemote: {
             controlFilePath: join(
-              dirname(paths.mcodeBuiltinFilePath),
+              dirname(paths.zcodeBuiltinFilePath),
               "mcode-builtin-refresh.json",
             ),
             resolveEndpointKey: () => resolveRuntimeMcodeEndpointOrigin(env),
@@ -83,7 +83,7 @@ export async function startProcessProviderRegistryRuntime(
           },
         }
       : {}),
-    onMcodeBuiltinRefreshError: options.standalone?.onBuiltinRefreshError,
+    onZCodeBuiltinRefreshError: options.standalone?.onBuiltinRefreshError,
     accountSource,
     ...(credentialStore
       ? {
@@ -129,12 +129,12 @@ export async function startProcessProviderRegistryRuntime(
       : {}),
   });
   const disposeRecovery = standaloneAccount
-    ? runtime.onDidCheckMcodeBuiltin(async () => {
+    ? runtime.onDidCheckZCodeBuiltin(async () => {
         const [config, account] = await Promise.all([
           runtime.configService.read(),
           standaloneAccount!.read(),
         ]);
-        if (config.mcodeBuiltinRevision !== account.basedOnMcodeBuiltinRevision)
+        if (config.zcodeBuiltinRevision !== account.basedOnZCodeBuiltinRevision)
           await standaloneAccount!.refresh("builtin-account-recovery");
       })
     : undefined;
@@ -201,14 +201,14 @@ export async function startProcessProviderRegistryRuntime(
 /** 把协议信封解析为进程 Registry 使用的第三层 Account Config Overlay。 */
 export function parseProcessAccountProviderConfigSnapshot(input: {
   readonly revision: string;
-  readonly basedOnMcodeBuiltinRevision: string;
+  readonly basedOnZCodeBuiltinRevision: string;
   readonly providers: unknown;
   readonly states?: AccountProviderStates;
 }): AccountProviderConfigSnapshot {
   const revision = input.revision.trim();
   if (!revision) throw new Error("Account Config revision 不能为空");
-  const basedOnMcodeBuiltinRevision = input.basedOnMcodeBuiltinRevision.trim();
-  if (!basedOnMcodeBuiltinRevision) {
+  const basedOnZCodeBuiltinRevision = input.basedOnZCodeBuiltinRevision.trim();
+  if (!basedOnZCodeBuiltinRevision) {
     throw new Error("Account Config Built-in revision 不能为空");
   }
   const providers = parseAccountProviderConfigMap(input.providers);
@@ -225,7 +225,7 @@ export function parseProcessAccountProviderConfigSnapshot(input: {
   }
   return Object.freeze({
     revision,
-    basedOnMcodeBuiltinRevision,
+    basedOnZCodeBuiltinRevision,
     providers,
     // 与 Overlay 属于同一快照；不能只更新 revision 却丢掉当前连接事实。
     ...(input.states ? { states: input.states } : {}),

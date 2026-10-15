@@ -68,7 +68,7 @@ describe("BOT-E2E-TP-03 topic interaction routing", () => {
         };
         const botId = `${provider}-topic-card-e2e`;
         const h = createBotsServiceHarness({ config: createFeishuConfig(provider, botId) });
-        h.mcodeTaskService.submitBotGroupInput = async (params: { commandId: string }) => ({
+        h.zcodeTaskService.submitBotGroupInput = async (params: { commandId: string }) => ({
           commandId: params.commandId,
           status: "accepted",
           revisionAtDecision: 1,

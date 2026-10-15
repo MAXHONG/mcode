@@ -23,7 +23,7 @@ import {
   MCODE_RUNTIME_ENV_KEY,
   resolveWorkspaceKey,
   resolveMcodeRuntimeEnv,
-  sanitizeMcodeRuntimeEnv,
+  sanitizeZCodeRuntimeEnv,
 } from "@mcode/shared";
 import {
   findMcodeAgentRuntimeBinary,
@@ -396,11 +396,11 @@ function resolveDeployedMcodeAgentBinaryCommand(
   context: McodeAgentCommandResolverContext,
 ): McodeAgentCommand | null {
   // 旧 resolver 只识别 MCODE_AGENT_SERVER_COMMAND env 和 monorepo 源码树。
-  // SSH 远端把 mcode-server.cjs 单文件部署到 ~/.mcode/server/，宿主进程的 cwd 不在仓库内、
-  // env 也不会被 ssh exec 继承，即使 mcode-agent 已经部署到 ~/.mcode/server/agents/glm/，
+  // SSH 远端把 zcode-server.cjs 单文件部署到 ~/.zcode/server/，宿主进程的 cwd 不在仓库内、
+  // env 也不会被 ssh exec 继承，即使 mcode-agent 已经部署到 ~/.zcode/server/agents/glm/，
   // resolver 也找不到，第一次 getClient 就抛 "Mcode agent server command is not configured"。
   // 这里复用 findMcodeAgentRuntimeBinary 的候选链（含 GLM_BINARY_PATH env、
-  // packagedResourcesPath、~/.mcode/server/agents/glm、bundled-agents 等），
+  // packagedResourcesPath、~/.zcode/server/agents/glm、bundled-agents 等），
   // 把已部署的原生 binary 当成最终兜底，远端/桌面打包形态都能命中。
   const binaryPath = findMcodeAgentRuntimeBinary();
   if (!binaryPath) {
@@ -1031,7 +1031,7 @@ export class McodeAgentProcessManager {
       // 关闭时才能按进程树整体回收；Windows 保持非 detached，交给 taskkill /T 处理。
       detached: shouldSpawnInDetachedProcessGroup(),
       env: {
-        ...sanitizeMcodeRuntimeEnv(process.env),
+        ...sanitizeZCodeRuntimeEnv(process.env),
         [MCODE_RUNTIME_ENV_KEY]: runtimeEnv,
         ...spawnEnv,
         ...effectiveCommand.env,

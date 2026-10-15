@@ -143,14 +143,14 @@ describe("zcode-file-citation parser", () => {
   it("streaming 在 citation 名称尚未闭合前暂存协议前缀", () => {
     expect(projectMcodeFileCitations("正文\n::", { streaming: true }).visibleText).toBe("正文\n");
     expect(
-      projectMcodeFileCitations("正文\n::mcode-file-cit", { streaming: true }).visibleText,
+      projectMcodeFileCitations("正文\n::zcode-file-cit", { streaming: true }).visibleText,
     ).toBe("正文\n");
     expect(projectMcodeFileCitations("正文\n:", { streaming: true }).visibleText).toBe("正文\n:");
     expect(
-      projectMcodeFileCitations("正文\n:mcode-file-cit", { streaming: true }).visibleText,
+      projectMcodeFileCitations("正文\n:zcode-file-cit", { streaming: true }).visibleText,
     ).toBe("正文\n");
     expect(
-      projectMcodeFileCitations("正文\n:::mcode-file-cit", { streaming: true }).visibleText,
+      projectMcodeFileCitations("正文\n:::zcode-file-cit", { streaming: true }).visibleText,
     ).toBe("正文\n");
     expect(
       projectMcodeFileCitations("正文\n::zcode-file-citationX", { streaming: true }).visibleText,

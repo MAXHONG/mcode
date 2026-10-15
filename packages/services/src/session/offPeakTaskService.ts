@@ -104,9 +104,9 @@ export function classifyOffPeakCreateFailure(
   } else if (failureStage === "local_persist") {
     errorCategory = "local_persist";
   } else if (error instanceof OffPeakServerError) {
-    errorCode = error.bimCode === undefined ? "" : String(error.bimCode);
-    if (error.bimCode === 3101) errorCategory = "eligibility_3101";
-    else if (error.bimCode === 3103) errorCategory = "quota_3103";
+    errorCode = error.bizCode === undefined ? "" : String(error.bizCode);
+    if (error.bizCode === 3101) errorCategory = "eligibility_3101";
+    else if (error.bizCode === 3103) errorCategory = "quota_3103";
   } else if (error instanceof ZodError) {
     errorCategory = "invalid_response";
   } else {

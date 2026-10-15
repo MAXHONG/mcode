@@ -88,7 +88,7 @@ function createBridge(port: ParentPortMock, autoResolutionEnabled = true) {
       providerCount: 0,
     })),
   };
-  const remoteMcodeAgentService = {
+  const remoteZCodeAgentService = {
     syncAppRuntimePreferences: vi.fn(async () => undefined),
   };
   const remoteModelSelectionService = {
@@ -121,15 +121,15 @@ function createBridge(port: ParentPortMock, autoResolutionEnabled = true) {
       load: vi.fn(async () => null),
     } as never,
     createRuntimeServicesFromPort: vi.fn(() => ({
-      mcodeAgentService: remoteMcodeAgentService,
-      mcodeTaskService: {},
-      mcodeSessionService: remoteMcodeSessionService,
+      zcodeAgentService: remoteZCodeAgentService,
+      zcodeTaskService: {},
+      zcodeSessionService: remoteMcodeSessionService,
       modelSelectionService: remoteModelSelectionService,
     })) as never,
   });
   return {
     bridge,
-    remoteMcodeAgentService,
+    remoteZCodeAgentService,
     remoteModelSelectionService,
     remoteMcodeSessionService,
   };
@@ -176,7 +176,7 @@ describe("createBotRemoteWorkspaceService", () => {
       workspaceIdentity: "remote:docker:demo:/workspace/link",
     };
 
-    await expect(bridge.getMcodeTaskService(target)).resolves.toBeTruthy();
+    await expect(bridge.getZCodeTaskService(target)).resolves.toBeTruthy();
     await expect(bridge.getModelSelectionService(target)).resolves.toBeTruthy();
 
     expect(runtimePortRequestCount(port)).toBe(1);
@@ -201,7 +201,7 @@ describe("createBotRemoteWorkspaceService", () => {
       workspaceIdentity: "remote:docker:demo:/workspace/link",
     };
 
-    await bridge.getMcodeTaskService(target);
+    await bridge.getZCodeTaskService(target);
     await bridge.getModelSelectionService(target);
 
     expect(runtimePortRequestCount(port)).toBe(1);
@@ -211,16 +211,16 @@ describe("createBotRemoteWorkspaceService", () => {
 
   it("applies the app preference before exposing a new remote Bot runtime", async () => {
     const port = new ParentPortMock();
-    const { bridge, remoteMcodeAgentService } = createBridge(port, false);
+    const { bridge, remoteZCodeAgentService } = createBridge(port, false);
     const target = {
       workspacePath: "/workspace/link",
       workspaceIdentity: "remote:docker:demo:/workspace/link",
     };
 
-    await bridge.getMcodeTaskService(target);
+    await bridge.getZCodeTaskService(target);
 
     // settings 未配置 modelIoFullRetentionEnabled 时按默认关闭（=== true → false）下发
-    expect(remoteMcodeAgentService.syncAppRuntimePreferences).toHaveBeenCalledWith({
+    expect(remoteZCodeAgentService.syncAppRuntimePreferences).toHaveBeenCalledWith({
       askUserQuestionAutoResolutionEnabled: false,
       modelIoFullRetentionEnabled: false,
     });
@@ -228,7 +228,7 @@ describe("createBotRemoteWorkspaceService", () => {
 
   it("syncs only cached remote Bot runtimes without spawning another runtime", async () => {
     const port = new ParentPortMock();
-    const { bridge, remoteMcodeAgentService } = createBridge(port);
+    const { bridge, remoteZCodeAgentService } = createBridge(port);
     const target = {
       workspacePath: "/workspace/link",
       workspaceIdentity: "remote:docker:demo:/workspace/link",
@@ -239,14 +239,14 @@ describe("createBotRemoteWorkspaceService", () => {
     });
     expect(runtimePortRequestCount(port)).toBe(0);
 
-    await bridge.getMcodeTaskService(target);
-    remoteMcodeAgentService.syncAppRuntimePreferences.mockClear();
+    await bridge.getZCodeTaskService(target);
+    remoteZCodeAgentService.syncAppRuntimePreferences.mockClear();
     await bridge.syncAppRuntimePreferences({
       askUserQuestionAutoResolutionEnabled: false,
     });
 
     expect(runtimePortRequestCount(port)).toBe(1);
-    expect(remoteMcodeAgentService.syncAppRuntimePreferences).toHaveBeenCalledWith({
+    expect(remoteZCodeAgentService.syncAppRuntimePreferences).toHaveBeenCalledWith({
       askUserQuestionAutoResolutionEnabled: false,
     });
   });

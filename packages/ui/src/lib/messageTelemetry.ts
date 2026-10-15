@@ -1174,7 +1174,7 @@ export function recordAgentStepTelemetryEvent(input: {
       return finalized;
 
     case "agent_message_chunk":
-      if (input.event.mcodeTimeline) {
+      if (input.event.zcodeTimeline) {
         return finalized;
       }
       if (input.event.parentToolUseId) {

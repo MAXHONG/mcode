@@ -35,7 +35,7 @@ interface DirectoryMcpDescriptor {
 }
 
 const MCODE_MCP_DESCRIPTOR: DirectoryMcpDescriptor = {
-  source: "mcodeagentmcp",
+  source: "zcodeagentmcp",
   directorySource: "mcode",
   userConfigDirSegments: [".mcode", "cli"],
   workspaceConfigDirSegments: [".mcode"],
@@ -50,7 +50,7 @@ const ENABLED_KEY = "enabled";
 const LEGACY_ENABLE_KEY = "enable";
 
 const AGENTS_MCP_DESCRIPTOR: DirectoryMcpDescriptor = {
-  source: "mcodeagentmcp",
+  source: "zcodeagentmcp",
   directorySource: "agents",
   userConfigDirSegments: [".agents"],
   workspaceConfigDirSegments: [".agents"],

@@ -511,7 +511,7 @@ const mcodeMcpTelemetryBaseSchema = z
     platform: mcodeMcpTelemetryPlatformSchema,
   })
   .strict();
-const mcodeMcpProcessTelemetryBaseShape = {
+const zcodeMcpProcessTelemetryBaseShape = {
   mcpId: z
     .string()
     .regex(
@@ -526,13 +526,13 @@ export const mcodeMcpTelemetryEventSchema = z.discriminatedUnion("kind", [
   mcodeMcpTelemetryBaseSchema
     .extend({
       kind: z.literal("process_start"),
-      ...mcodeMcpProcessTelemetryBaseShape,
+      ...zcodeMcpProcessTelemetryBaseShape,
     })
     .strict(),
   mcodeMcpTelemetryBaseSchema
     .extend({
       kind: z.literal("process_crash"),
-      ...mcodeMcpProcessTelemetryBaseShape,
+      ...zcodeMcpProcessTelemetryBaseShape,
       affectedSessionCount: z.number().int().nonnegative().max(10_000),
       exitCode: z.number().int().nullable(),
       signal: nonEmptyString.nullable(),
@@ -552,7 +552,7 @@ export const mcodeMcpTelemetryEventSchema = z.discriminatedUnion("kind", [
   mcodeMcpTelemetryBaseSchema
     .extend({
       kind: z.literal("memory"),
-      ...mcodeMcpProcessTelemetryBaseShape,
+      ...zcodeMcpProcessTelemetryBaseShape,
       memoryKb: z.number().finite().nonnegative().max(Number.MAX_SAFE_INTEGER),
       memoryScope: z.enum(["process_tree", "direct_process"]),
       orphanSuspected: z.boolean(),
@@ -568,7 +568,7 @@ export const MCODE_MCP_RESOURCE_SAMPLE_INTERVAL_MS = 5 * 60_000;
 
 export const mcodeMcpResourceSampleSchema = z
   .object({
-    mcpId: mcodeMcpProcessTelemetryBaseShape.mcpId,
+    mcpId: zcodeMcpProcessTelemetryBaseShape.mcpId,
     instanceToken: z.string().regex(/^[A-Za-z0-9_-]{8,64}$/),
     sampledAt: z.number().int().nonnegative(),
     intervalMs: z.number().finite().positive(),
@@ -851,7 +851,7 @@ export const mcodeMcpUiOpenInstanceParamsSchema = z
   .strict();
 export const mcodeMcpUiOpenInstanceResultSchema = mcpAppInstanceSchema;
 export type McodeMcpUiOpenInstanceParams = z.infer<typeof mcodeMcpUiOpenInstanceParamsSchema>;
-const mcodeMcpUiPluginScopeShape = {
+const zcodeMcpUiPluginScopeShape = {
   instance: mcpAppInstanceSchema,
 
   workspace: mcodeWorkspaceRefSchema,
@@ -860,11 +860,11 @@ const mcodeMcpUiPluginScopeShape = {
   serverName: nonEmptyString,
 };
 export const mcodeMcpUiCloseInstanceParamsSchema = z
-  .object({ ...mcodeMcpUiPluginScopeShape, onlyIfIdle: z.boolean().optional() })
+  .object({ ...zcodeMcpUiPluginScopeShape, onlyIfIdle: z.boolean().optional() })
   .strict();
 export const mcodeMcpUiCloseInstanceResultSchema = z.object({ closed: z.boolean() }).strict();
 export const mcodeMcpReadResourceParamsSchema = z
-  .object({ ...mcodeMcpUiPluginScopeShape, uri: nonEmptyString.max(2048) })
+  .object({ ...zcodeMcpUiPluginScopeShape, uri: nonEmptyString.max(2048) })
   .strict();
 export type McodeMcpReadResourceParams = z.infer<typeof mcodeMcpReadResourceParamsSchema>;
 export const mcodeMcpResourceContentSchema = z
@@ -902,13 +902,13 @@ export type McodeMcpUiReadResourceResult = z.infer<typeof mcodeMcpUiReadResource
 
 export const mcodeMcpUiSamplingParamsSchema = z
   .object({
-    ...mcodeMcpUiPluginScopeShape,
+    ...zcodeMcpUiPluginScopeShape,
     operationId: nonEmptyString.max(128),
     request: mcpAppsSamplingParamsSchema,
   })
   .strict();
 export const mcodeMcpUiCancelSamplingParamsSchema = z
-  .object({ ...mcodeMcpUiPluginScopeShape, operationId: nonEmptyString.max(128) })
+  .object({ ...zcodeMcpUiPluginScopeShape, operationId: nonEmptyString.max(128) })
   .strict();
 export const mcodeMcpUiSamplingResultSchema = mcpAppsSamplingResultSchema;
 export type McodeMcpUiSamplingParams = z.infer<typeof mcodeMcpUiSamplingParamsSchema>;
@@ -916,7 +916,7 @@ export type McodeMcpUiCancelSamplingParams = z.infer<typeof mcodeMcpUiCancelSamp
 
 export const mcodeMcpUiCallToolParamsSchema = z
   .object({
-    ...mcodeMcpUiPluginScopeShape,
+    ...zcodeMcpUiPluginScopeShape,
     toolName: nonEmptyString,
     arguments: z.record(z.string(), z.unknown()).optional(),
     /** 宿主生成的调用 id，配合 `mcp/uiCancelCall` 取消进行中的调用。 */
@@ -926,14 +926,14 @@ export const mcodeMcpUiCallToolParamsSchema = z
 export type McodeMcpUiCallToolParams = z.infer<typeof mcodeMcpUiCallToolParamsSchema>;
 /** 取消页面发起的工具调用（卡片卸载、会话切换）；agent 侧 abort 到 MCP client。 */
 export const mcodeMcpUiCancelCallParamsSchema = z
-  .object({ ...mcodeMcpUiPluginScopeShape, callId: nonEmptyString.max(128) })
+  .object({ ...zcodeMcpUiPluginScopeShape, callId: nonEmptyString.max(128) })
   .strict();
 export type McodeMcpUiCancelCallParams = z.infer<typeof mcodeMcpUiCancelCallParamsSchema>;
 export const mcodeMcpUiCancelCallResultSchema = z.object({ cancelled: z.boolean() }).strict();
 export type McodeMcpUiCancelCallResult = z.infer<typeof mcodeMcpUiCancelCallResultSchema>;
 /** 页面发起的 resources/list、resources/templates/list、subscribe、unsubscribe 代理。 */
 export const mcodeMcpUiListResourcesParamsSchema = z
-  .object({ ...mcodeMcpUiPluginScopeShape, cursor: nonEmptyString.max(2048).optional() })
+  .object({ ...zcodeMcpUiPluginScopeShape, cursor: nonEmptyString.max(2048).optional() })
   .strict();
 export type McodeMcpUiListResourcesParams = z.infer<typeof mcodeMcpUiListResourcesParamsSchema>;
 const mcodeMcpUiResourceDescriptorSchema = z
@@ -976,7 +976,7 @@ export type McodeMcpUiListResourceTemplatesResult = z.infer<
 /** 订阅者身份 = 会话 + 沙箱作用域 + 实例代际（initId）；dispose 只退订本代际，新实例不受影响。 */
 export const mcodeMcpUiResourceSubscriptionParamsSchema = z
   .object({
-    ...mcodeMcpUiPluginScopeShape,
+    ...zcodeMcpUiPluginScopeShape,
     scopeId: nonEmptyString.max(256),
     generation: z.number().int().nonnegative(),
     uri: nonEmptyString.max(2048),
@@ -990,14 +990,14 @@ export const mcodeMcpUiResourceSubscriptionResultSchema = z.object({}).strict();
  * App-Provided Tools：实例身份 = 会话 + 沙箱作用域 + 代际（与资源订阅同一三元组）。
  * 登记按实例整体替换；调用认领 / 回传按 callId 幂等。
  */
-const mcodeMcpUiAppToolInstanceShape = {
-  ...mcodeMcpUiPluginScopeShape,
+const zcodeMcpUiAppToolInstanceShape = {
+  ...zcodeMcpUiPluginScopeShape,
   scopeId: nonEmptyString.max(256),
   generation: z.number().int().nonnegative(),
 };
 export const mcodeMcpUiRegisterAppToolsParamsSchema = z
   .object({
-    ...mcodeMcpUiAppToolInstanceShape,
+    ...zcodeMcpUiAppToolInstanceShape,
     tools: z.array(mcpAppsAppToolDescriptorSchema).max(MCP_APPS_APP_TOOLS_MAX_PER_INSTANCE),
   })
   .strict();
@@ -1011,7 +1011,7 @@ export type McodeMcpUiRegisterAppToolsResult = z.infer<
   typeof mcodeMcpUiRegisterAppToolsResultSchema
 >;
 export const mcodeMcpUiUnregisterAppToolsParamsSchema = z
-  .object(mcodeMcpUiAppToolInstanceShape)
+  .object(zcodeMcpUiAppToolInstanceShape)
   .strict();
 export type McodeMcpUiUnregisterAppToolsParams = z.infer<
   typeof mcodeMcpUiUnregisterAppToolsParamsSchema
@@ -1024,7 +1024,7 @@ export type McodeMcpUiUnregisterAppToolsResult = z.infer<
 >;
 export const mcodeMcpUiClaimAppToolCallParamsSchema = z
   .object({
-    ...mcodeMcpUiAppToolInstanceShape,
+    ...zcodeMcpUiAppToolInstanceShape,
     callId: nonEmptyString.max(MCP_APPS_APP_TOOL_CALL_ID_MAX_CHARS),
   })
   .strict();
@@ -1035,7 +1035,7 @@ export const mcodeMcpUiAppToolAcceptedResultSchema = z.object({ accepted: z.bool
 export type McodeMcpUiAppToolAcceptedResult = z.infer<typeof mcodeMcpUiAppToolAcceptedResultSchema>;
 export const mcodeMcpUiResolveAppToolCallParamsSchema = z
   .object({
-    ...mcodeMcpUiAppToolInstanceShape,
+    ...zcodeMcpUiAppToolInstanceShape,
     callId: nonEmptyString.max(MCP_APPS_APP_TOOL_CALL_ID_MAX_CHARS),
     result: mcpAppsAppToolCallResultSchema.optional(),
     error: z
@@ -2516,7 +2516,7 @@ export type McodeProviderTestModelConnectivityResult = z.infer<
 export const mcodeProviderUpdateAccountConfigParamsSchema = z
   .object({
     revision: nonEmptyString,
-    basedOnMcodeBuiltinRevision: nonEmptyString,
+    basedOnZCodeBuiltinRevision: nonEmptyString,
     // Provider Config 的字段校验由 @mcode/provider 负责；协议层只约束可传输信封。
     providers: z.record(z.string(), z.unknown()),
     // 账号状态与 Overlay 必须一起传递，否则 Worker 会丢失非当前套餐的执行门禁。
@@ -4101,11 +4101,11 @@ export const mcodeProtocolMethods = {
   sessionCompact: "session/compact",
   sessionGoal: "session/goal",
   sessionClose: "session/close",
-  // setModel 仍被 mcodeSessionService 的 desktop 旧链路消费；replayable
+  // setModel 仍被 zcodeSessionService 的 desktop 旧链路消费；replayable
   // switchModelConfig 已直接由目标 Environment Registry 解析 Selection。
   sessionSetModel: "session/setModel",
   // replayable facade 的思考深度/模式已收敛 v4 switchModelConfig/
-  // switchCollaborationMode；剩余消费 = mcodeSessionService（desktop 旧链路，随
+  // switchCollaborationMode；剩余消费 = zcodeSessionService（desktop 旧链路，随
   // 桌面 v4 UI 收口清零）与 setMode 的 auto 值残留（v4 值域刻意排除 auto）。
   sessionSetThoughtLevel: "session/setThoughtLevel",
   sessionSetMode: "session/setMode",
@@ -4187,7 +4187,7 @@ export const mcodeProtocolMethods = {
   // Off-Peak 会话内创建：与 automation 兄弟并列的独立方法族。
   offPeakCreate: "offPeak/create",
   offPeakList: "offPeak/list",
-  // @deprecated：host 消费已清零（mcodeAgentService 改走 v4/usage/stats）。
+  // @deprecated：host 消费已清零（zcodeAgentService 改走 v4/usage/stats）。
   // 仅剩 CLI server 的 wire 兼容 case；随旧词整体删除时一并移除。
   usageStats: "usage/stats",
   // Mcode Protocol 对 agent 只暴露 session-first 方法；task 是 UI 投影概念，不能泄露进协议方法名。

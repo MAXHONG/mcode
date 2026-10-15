@@ -238,10 +238,10 @@ async function validateSelectedTeamPlanAvailability(
   if (!token) {
     return { kind: "unavailable", reason: "coding_plan_not_connected" };
   }
-  const mcodeJwtToken = (await context.credentialService?.load(MCODE_JWT_TOKEN_KEY))?.trim();
+  const zcodeJwtToken = (await context.credentialService?.load(MCODE_JWT_TOKEN_KEY))?.trim();
   // BigModel 旧版本可能把 zcodejwttoken 误写进 oauth access token；
   // 但 Z.ai 的 business JWT 本身就是合法 Bearer token，不能套用这个 stale-token 防御。
-  if (family === "bigmodel" && mcodeJwtToken && token === mcodeJwtToken) {
+  if (family === "bigmodel" && zcodeJwtToken && token === zcodeJwtToken) {
     return { kind: "unavailable", reason: "coding_plan_not_connected" };
   }
 
@@ -442,12 +442,12 @@ async function resolveStartPlanAuthorization(
   context: CodingPlanAvailabilityContext,
 ): Promise<StartPlanAuthorization> {
   if (provider.family === "bigmodel") {
-    const mcodeJwtToken = await resolveBigModelStartPlanMcodeJwt({
+    const zcodeJwtToken = await resolveBigModelStartPlanMcodeJwt({
       credentialService: context.credentialService,
       provider,
     });
     return {
-      value: mcodeJwtToken ? `Bearer ${mcodeJwtToken}` : "",
+      value: zcodeJwtToken ? `Bearer ${zcodeJwtToken}` : "",
       missingReason: "coding_plan_not_authenticated",
     };
   }

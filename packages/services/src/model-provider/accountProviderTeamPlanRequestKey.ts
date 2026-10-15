@@ -45,8 +45,8 @@ export async function resolveAccountTeamPlanRuntimeMaterial(
     });
     return null;
   }
-  const mcodeJwtToken = (await params.credentialService?.load(MCODE_JWT_TOKEN_KEY))?.trim() ?? "";
-  if (family === "bigmodel" && mcodeJwtToken && token === mcodeJwtToken) {
+  const zcodeJwtToken = (await params.credentialService?.load(MCODE_JWT_TOKEN_KEY))?.trim() ?? "";
+  if (family === "bigmodel" && zcodeJwtToken && token === zcodeJwtToken) {
     // BigModel /api/biz 只接受登录 access token，不能使用旧版本误存的 Mcode JWT。
     log.warn(undefined, "Team Plan runtime key projection skipped: stale mcode JWT token", {
       family,

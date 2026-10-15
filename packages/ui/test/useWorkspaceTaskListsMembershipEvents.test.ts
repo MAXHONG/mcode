@@ -198,7 +198,7 @@ describe("useWorkspaceTaskLists membership events (tasks-index 行 + session det
     const workspaceEventListeners = new Map<string, (event: McodeWorkspaceEvent) => void>();
     const setTaskUnread = vi.fn(async () => ({ ...task, unreadAt: 123 }));
     const services = {
-      mcodeTaskService: {
+      zcodeTaskService: {
         listPinnedTaskIds: vi.fn(async (): Promise<string[]> => []),
         listArchivedTasks: vi.fn(async (): Promise<McodeTaskMeta[]> => []),
         listTasks: vi.fn(async (): Promise<McodeTaskMeta[]> => [task]),
@@ -211,7 +211,7 @@ describe("useWorkspaceTaskLists membership events (tasks-index 行 + session det
             return { dispose() {} };
           },
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         ...v4Handshake("connection-cross-workspace-unread"),
         subscribeSessionsIndexV4: vi.fn(async ({ workspacePath }: { workspacePath: string }) => ({
           ack: {
@@ -331,7 +331,7 @@ describe("useWorkspaceTaskLists membership events (tasks-index 行 + session det
     const listDeletedTaskIds = vi.fn(async () => deletedIds);
     const listTasks = vi.fn(async (): Promise<McodeTaskMeta[]> => activeTasks);
     const services = {
-      mcodeTaskService: {
+      zcodeTaskService: {
         listWorkspaceTaskLists,
         listPinnedTaskIds,
         listArchivedTasks,
@@ -345,7 +345,7 @@ describe("useWorkspaceTaskLists membership events (tasks-index 行 + session det
           };
         },
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         ...v4Handshake("connection-local"),
         subscribeSessionsIndexV4: vi.fn(async () => {
           const initial = snapshotFrame([createSession()]);
@@ -528,7 +528,7 @@ describe("useWorkspaceTaskLists membership events (tasks-index 行 + session det
           : Promise.resolve([createTaskMeta()] as McodeTaskMeta[]),
       );
       const services = {
-        mcodeTaskService: {
+        zcodeTaskService: {
           listPinnedTaskIds: vi.fn(async (): Promise<string[]> => []),
           listArchivedTasks: vi.fn(async (): Promise<McodeTaskMeta[]> => []),
           listTasks,
@@ -538,7 +538,7 @@ describe("useWorkspaceTaskLists membership events (tasks-index 行 + session det
             return { dispose() {} };
           },
         },
-        mcodeAgentService: {
+        zcodeAgentService: {
           ...v4Handshake("connection-race"),
           subscribeSessionsIndexV4: vi.fn(async () => {
             const initial = snapshotFrame([
@@ -704,14 +704,14 @@ describe("useWorkspaceTaskLists membership events (tasks-index 行 + session det
       ],
     );
     const remoteServices = {
-      mcodeTaskService: {
+      zcodeTaskService: {
         listPinnedTaskIds: vi.fn(async (): Promise<string[]> => []),
         listArchivedTasks: vi.fn(async (): Promise<McodeTaskMeta[]> => []),
         listTasks: remoteListTasks,
         listPinnedTasks: vi.fn(async (): Promise<McodeTaskMeta[]> => []),
         onDynamicWorkspaceEvent: () => () => ({ dispose() {} }),
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         ...v4Handshake("connection-remote"),
         subscribeSessionsIndexV4: remoteSubscribe,
         unsubscribeSessionsIndexV4: vi.fn(async () => {}),
@@ -724,14 +724,14 @@ describe("useWorkspaceTaskLists membership events (tasks-index 行 + session det
     } as unknown as IServiceAccessor;
     const baseFrameListeners: Array<(frame: SessionsIndexTopicWireFrame) => void> = [];
     const baseServices = {
-      mcodeTaskService: {
+      zcodeTaskService: {
         listPinnedTaskIds: vi.fn(async (): Promise<string[]> => []),
         listArchivedTasks: vi.fn(async (): Promise<McodeTaskMeta[]> => []),
         listTasks: vi.fn(async (): Promise<McodeTaskMeta[]> => [createTaskMeta()]),
         listPinnedTasks: vi.fn(async (): Promise<McodeTaskMeta[]> => []),
         onDynamicWorkspaceEvent: () => () => ({ dispose() {} }),
       },
-      mcodeAgentService: {
+      zcodeAgentService: {
         ...v4Handshake("connection-base"),
         subscribeSessionsIndexV4: vi.fn(async () => {
           const initial = snapshotFrame([createSession()]);

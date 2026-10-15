@@ -161,14 +161,14 @@ describe("official MCP trust: host and agent must agree on the Mcode API origin"
   /** host 口径：env + settings 覆盖（node.ts resolveCurrentMcodeEndpointOrigin）。 */
   function hostRegistry(env: Record<string, string>, overrideOrigin: string | undefined) {
     return createOfficialMcpTrustedOriginRegistry({
-      resolveMcodeApiOrigin: () => resolveRuntimeMcodeEndpointOrigin(env, { overrideOrigin }),
+      resolveZCodeApiOrigin: () => resolveRuntimeMcodeEndpointOrigin(env, { overrideOrigin }),
     });
   }
 
   /** agent 口径：只有 env（mcode-protocol-entrypoint.ts）。 */
   function agentRegistry(env: Record<string, string>) {
     return createOfficialMcpTrustedOriginRegistry({
-      resolveMcodeApiOrigin: () => resolveRuntimeMcodeEndpointOrigin(env),
+      resolveZCodeApiOrigin: () => resolveRuntimeMcodeEndpointOrigin(env),
     });
   }
 

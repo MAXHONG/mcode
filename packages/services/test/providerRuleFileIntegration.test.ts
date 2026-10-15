@@ -47,7 +47,7 @@ describe("Todo104 Services 规则读写完整链路", () => {
       ),
     );
     const runtime = createProviderRuntime({
-      mcodeBuiltinFilePath: fileURLToPath(
+      zcodeBuiltinFilePath: fileURLToPath(
         new URL("../../../config/provider/mcode-builtin.json", import.meta.url),
       ),
       personalFilePath,

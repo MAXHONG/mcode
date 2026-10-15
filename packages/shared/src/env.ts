@@ -27,20 +27,20 @@ export const MCODE_ENV = normalizeMcodeEnv(
  */
 export function normalizeMcodeProductFlavor(
   value: string | undefined,
-  mcodeEnv: McodeEnv,
+  zcodeEnv: McodeEnv,
 ): McodeProductFlavor {
   const normalized = value?.trim().toLowerCase();
   if (normalized === "production" || normalized === "preview") {
     return normalized;
   }
-  return mcodeEnv === "production" ? "production" : "preview";
+  return zcodeEnv === "production" ? "production" : "preview";
 }
 
 export const MCODE_PRODUCT_FLAVOR = normalizeMcodeProductFlavor(
   typeof __MCODE_PRODUCT_FLAVOR__ !== "undefined" ? __MCODE_PRODUCT_FLAVOR__ : undefined,
   MCODE_ENV,
 );
-export const MCODE_APP_VERSION_ENV = "MCODE_APP_VERSION" as const;
+export const MCODE_APP_VERSION_ENV = "ZCODE_APP_VERSION" as const;
 export const MCODE_BUILD_COMMIT_ID_ENV = "MCODE_BUILD_COMMIT_ID" as const;
 
 // ── 运行时环境变量（不经过编译打包，启动时从 process.env 读取） ──

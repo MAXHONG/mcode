@@ -4,7 +4,7 @@ import type { McodeProvider } from "./mcode-task-types-core.js";
 
 export const MCODE_AGENT_PROVIDER = "glm" satisfies McodeProvider;
 export const MCODE_AGENT_PROVIDER_LABEL = "Mcode Agent";
-export const MCODE_COMMAND_AGENT_SOURCE = "mcodeAgent" satisfies CommandAgentSource;
+export const MCODE_COMMAND_AGENT_SOURCE = "zcodeAgent" satisfies CommandAgentSource;
 
 /**
  * 解析持久化/relay 数据时的 provider 归一 schema：

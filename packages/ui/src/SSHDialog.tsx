@@ -621,9 +621,9 @@ export function RemoteConnectionDialog({
                       remoteMcpSyncService={directoryBrowserServices?.mcpSyncService ?? null}
                       localPluginSyncService={baseServices.pluginSyncService}
                       remotePluginSyncService={directoryBrowserServices?.pluginSyncService ?? null}
-                      localMcodeAgentService={baseServices.mcodeAgentService}
-                      remoteMcodeAgentService={
-                        directoryBrowserServices?.mcodeAgentService ?? null
+                      localZCodeAgentService={baseServices.zcodeAgentService}
+                      remoteZCodeAgentService={
+                        directoryBrowserServices?.zcodeAgentService ?? null
                       }
                       localWorkspacePath={localWorkspacePath}
                       selecting={selectingDirectory}

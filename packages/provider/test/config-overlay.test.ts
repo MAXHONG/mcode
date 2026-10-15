@@ -68,7 +68,7 @@ describe("ProviderConfigMap overlay", () => {
     expect(spec.validateComplete()).toContainEqual(expect.objectContaining({ path: ["max"] }));
   });
   it("保留 McodeBuiltin key 的位置，并按 Personal 顺序追加新 key", () => {
-    const mcodeBuiltin = new ProviderConfigMap([
+    const zcodeBuiltin = new ProviderConfigMap([
       {
         providerId: "A",
         providerName: "McodeBuiltin A",
@@ -96,7 +96,7 @@ describe("ProviderConfigMap overlay", () => {
       },
     ]);
 
-    const effective = mcodeBuiltin.overlay(personal);
+    const effective = zcodeBuiltin.overlay(personal);
 
     expect(effective.keys()).toEqual(["A", "B", "C", "Y", "X"]);
     expect(effective.get("A")?.builtinModelIds).toEqual(["m1", "m2"]);
@@ -110,7 +110,7 @@ describe("ProviderConfigMap overlay", () => {
     ).toBe("https://personal.example/api-keys");
     expect(effective.get("C")?.api?.baseUrl).toBe("https://c.example");
     expect(effective.getRule("C")?.providerName).toBe("Personal C");
-    expect(mcodeBuiltin.get("A")?.builtinModelIds).toEqual(["m1", "m2"]);
+    expect(zcodeBuiltin.get("A")?.builtinModelIds).toEqual(["m1", "m2"]);
     expect(personal.keys()).toEqual(["Y", "C", "X", "A"]);
   });
 

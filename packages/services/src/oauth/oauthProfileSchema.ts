@@ -24,7 +24,7 @@ function getCachedProfileSchemaVersion(profile: OAuthUserProfile): number | null
     return null;
   }
 
-  const version = (rawProfile as { mcodeProfileSchemaVersion?: unknown }).mcodeProfileSchemaVersion;
+  const version = (rawProfile as { zcodeProfileSchemaVersion?: unknown }).zcodeProfileSchemaVersion;
   return typeof version === "number" ? version : null;
 }
 
@@ -34,8 +34,8 @@ function getCachedProfileMigrationRetryAfter(profile: OAuthUserProfile): number 
     return null;
   }
 
-  const retryAfter = (rawProfile as { mcodeProfileMigrationRetryAfter?: unknown })
-    .mcodeProfileMigrationRetryAfter;
+  const retryAfter = (rawProfile as { zcodeProfileMigrationRetryAfter?: unknown })
+    .zcodeProfileMigrationRetryAfter;
   return typeof retryAfter === "number" ? retryAfter : null;
 }
 
@@ -68,13 +68,13 @@ export function withProviderProfileSchema(
   const rawProfile =
     profile.rawProfile && typeof profile.rawProfile === "object" ? profile.rawProfile : {};
   const nextRawProfile = { ...(rawProfile as Record<string, unknown>) };
-  delete nextRawProfile.mcodeProfileMigrationRetryAfter;
+  delete nextRawProfile.zcodeProfileMigrationRetryAfter;
 
   return {
     ...profile,
     rawProfile: {
       ...nextRawProfile,
-      mcodeProfileSchemaVersion: BIGMODEL_PROFILE_SCHEMA_VERSION,
+      zcodeProfileSchemaVersion: BIGMODEL_PROFILE_SCHEMA_VERSION,
     },
   };
 }
@@ -90,7 +90,7 @@ function withBigModelProfileMigrationRetryAfter(
     ...profile,
     rawProfile: {
       ...(rawProfile as Record<string, unknown>),
-      mcodeProfileMigrationRetryAfter: now + BIGMODEL_PROFILE_MIGRATION_RETRY_DELAY_MS,
+      zcodeProfileMigrationRetryAfter: now + BIGMODEL_PROFILE_MIGRATION_RETRY_DELAY_MS,
     },
   };
 }

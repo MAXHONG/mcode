@@ -63,11 +63,11 @@ export interface IServiceAccessor {
   readonly onboardingRecordService?: IOnboardingRecordService;
   readonly credentialService: ICredentialService;
   readonly broadcastService: IBroadcastService;
-  readonly mcodeTaskService: IMcodeTaskService;
+  readonly zcodeTaskService: IMcodeTaskService;
   /** 窗口 Host 聚合面；旧 server wire 或测试 double 可暂不提供。 */
   readonly windowControllerService?: IWindowControllerService;
-  readonly mcodeAgentService: IMcodeAgentService;
-  readonly mcodeSessionService: IMcodeSessionService;
+  readonly zcodeAgentService: IMcodeAgentService;
+  readonly zcodeSessionService: IMcodeSessionService;
   // CUA 是 opt-in 内测特性：local macOS host 提供，远端 等 host 没有。可选避免连锁必填。
   readonly cuaPermissionService?: ICuaPermissionService;
   readonly conversationShareService: IConversationShareService;
@@ -97,7 +97,7 @@ export interface IServiceAccessor {
   readonly pluginUiAppToolsService?: IPluginUiAppToolsService;
   readonly pluginSyncService: IPluginSyncService;
   readonly pluginsService: IPluginsService;
-  /** 设置页插件管理（UI 不再直触 mcodeAgentService 的 plugins/* 面） */
+  /** 设置页插件管理（UI 不再直触 zcodeAgentService 的 plugins/* 面） */
   readonly pluginManagementService: IPluginManagementService;
   readonly subagentsService: ISubagentsService;
   readonly commandsService: ICommandsService;

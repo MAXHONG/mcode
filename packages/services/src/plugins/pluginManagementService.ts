@@ -6,7 +6,7 @@ import type { IMcodeAgentService } from "../mcode-agent/mcodeAgent.js";
 import type { IPluginManagementService } from "./pluginManagement.js";
 
 export interface PluginManagementServiceDependencies {
-  mcodeAgentService: Pick<
+  zcodeAgentService: Pick<
     IMcodeAgentService,
     | "listPlugins"
     | "getPluginReferenceCatalog"
@@ -32,7 +32,7 @@ export interface PluginManagementServiceDependencies {
 export function createPluginManagementService(
   dependencies: PluginManagementServiceDependencies,
 ): IPluginManagementService {
-  const agent = dependencies.mcodeAgentService;
+  const agent = dependencies.zcodeAgentService;
   return {
     listPlugins: (params) => agent.listPlugins(params),
     getPluginReferenceCatalog: (params) => agent.getPluginReferenceCatalog(params),

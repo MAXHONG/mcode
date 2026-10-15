@@ -363,6 +363,9 @@ export const OFFICIAL_PLUGIN_DEFINITIONS: readonly OfficialPluginDefinition[] = 
       "../mcode-guide-plugin",
       "../../mcode-guide-plugin",
       "../../../mcode-guide-plugin",
+      // 远端 glm 组件沿用上游目录名（packages/zcode-guide-plugin）。
+      "packages/zcode-guide-plugin",
+      "../zcode-guide-plugin",
     ],
     version: "0.3.0",
   },
@@ -396,6 +399,9 @@ export const OFFICIAL_PLUGIN_DEFINITIONS: readonly OfficialPluginDefinition[] = 
       "../mcode-cua-plugin",
       "../../mcode-cua-plugin",
       "../../../mcode-cua-plugin",
+      // 远端 glm 组件沿用上游目录名（packages/zcode-cua-plugin）。
+      "packages/zcode-cua-plugin",
+      "../zcode-cua-plugin",
     ],
     requiredSeedPaths: OFFICIAL_CUA_REQUIRED_SEED_PATHS,
     // Bug 根因：迁移 node_repl 时把旧 MCP launcher 与 SDK 仍需的 Sharp runtime 一并裁掉了。

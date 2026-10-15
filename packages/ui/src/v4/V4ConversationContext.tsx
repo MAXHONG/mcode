@@ -117,10 +117,10 @@ function ReadyV4ConversationProvider({
   services: IServiceAccessor;
   remoteSessionId: string | null;
 }) {
-  const { mcodeAgentService } = services;
+  const { zcodeAgentService } = services;
   const platform = usePlatform();
   const bundle = useMemo(() => {
-    const transport = createAgentConversationTransport(mcodeAgentService, {
+    const transport = createAgentConversationTransport(zcodeAgentService, {
       workspacePath,
       workspaceIdentity,
       // 主 workspace resolver 已识别远端 endpoint，但这里曾丢弃
@@ -166,7 +166,7 @@ function ReadyV4ConversationProvider({
     remoteSessionId,
     workspacePath,
     workspaceIdentity,
-    mcodeAgentService,
+    zcodeAgentService,
   ]);
 
   useEffect(() => {
@@ -275,7 +275,7 @@ function ReadyV4PaneConversationProvider({
 }: Pick<V4PaneConversationProviderProps, "scope" | "children"> & {
   services: IServiceAccessor;
 }) {
-  const agentService = services.mcodeAgentService;
+  const agentService = services.zcodeAgentService;
   const platform = usePlatform();
 
   // 与 V4ConversationProvider 相同的 useMemo 同步建连模式（renderer 无 StrictMode，

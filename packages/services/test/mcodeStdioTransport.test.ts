@@ -366,7 +366,7 @@ setInterval(() => {}, 1000);
 
     await expect(
       transport.send({
-        type: "mcode-hello-ack",
+        type: "zcode-hello-ack",
         version: 1,
         clientId: "test",
       } as never),

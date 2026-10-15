@@ -37,7 +37,7 @@ const broadcastService = { onMessage: Event.None, send: async () => {} };
 const connectionServices = new Proxy(
   {
     onboardingRecordService: serverRecord,
-    mcodeAgentService: { onDynamicSessionRuntimePreferencesRequest: () => Event.None },
+    zcodeAgentService: { onDynamicSessionRuntimePreferencesRequest: () => Event.None },
   },
   { get: (target, key) => target[key] ?? {} },
 );

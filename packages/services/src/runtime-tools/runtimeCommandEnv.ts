@@ -1,6 +1,6 @@
 import { existsSync } from "node:fs";
 import { delimiter } from "node:path";
-import { buildMcodeToolEnvPassthroughEnv, sanitizeMcodeRuntimeEnvInPlace } from "@mcode/shared";
+import { buildZCodeToolEnvPassthroughEnv, sanitizeMcodeRuntimeEnvInPlace } from "@mcode/shared";
 import { appendPathEntries, buildRuntimeToolEnvPatch } from "./runtimeToolResolver.js";
 import {
   buildShellBootstrapPath,
@@ -121,7 +121,7 @@ export function buildLoginShellEnvPatch(
 
   return {
     ...patch,
-    ...buildMcodeToolEnvPassthroughEnv(snapshot),
+    ...buildZCodeToolEnvPassthroughEnv(snapshot),
   };
 }
 
@@ -164,7 +164,7 @@ export function buildRuntimeProcessEnvPatch(
   const normalizedBaseEnv = normalizeRuntimeProcessEnv(baseEnv, platform);
   const loginShellPath = loginShellSnapshot?.PATH?.trim() || null;
   const loginShellEnvPatch = loginShellSnapshot ? buildLoginShellEnvPatch(loginShellSnapshot) : {};
-  const toolEnvPassthroughPatch = buildMcodeToolEnvPassthroughEnv({
+  const toolEnvPassthroughPatch = buildZCodeToolEnvPassthroughEnv({
     ...normalizedBaseEnv,
     ...loginShellEnvPatch,
   });

@@ -73,10 +73,10 @@ const mocks = vi.hoisted(() => ({
     })),
     onDidChangeProviderRegistry: vi.fn(() => ({ dispose: vi.fn() })),
   },
-  mcodeSessionService: {
+  zcodeSessionService: {
     readWorkspaceState: vi.fn(),
   },
-  mcodeTaskService: {
+  zcodeTaskService: {
     restartWorkspaceProcess: vi.fn(async () => {}),
   },
   toast: vi.fn(),
@@ -107,8 +107,8 @@ vi.mock("@/hooks/useServices.js", () => ({
     broadcastService: mocks.broadcastService,
     highspeedCardService: mocks.highspeedCardService,
     modelProviderService: mocks.modelProviderService,
-    mcodeSessionService: mocks.mcodeSessionService,
-    mcodeTaskService: mocks.mcodeTaskService,
+    zcodeSessionService: mocks.zcodeSessionService,
+    zcodeTaskService: mocks.zcodeTaskService,
   }),
   // SessionPane 渲染链里的 useStartPlanRecommendation 走可选服务降级，
   // 本用例只验证到期采样，无服务上下文按 null 处理即可（与其它 SessionPane 用例一致）。
@@ -134,7 +134,7 @@ vi.mock("@/store/StoreProvider.js", () => ({
 
 vi.mock("@/hooks/useSettingService.js", () => ({
   useSettings: () => ({
-    settings: { mcodeInteractionBehavior: "queue" },
+    settings: { zcodeInteractionBehavior: "queue" },
     loading: false,
     error: null,
     update: vi.fn(async () => {}),

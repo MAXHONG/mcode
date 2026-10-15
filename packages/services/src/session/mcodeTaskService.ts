@@ -843,5 +843,5 @@ export interface IMcodeTaskService {
 }
 
 export const IMcodeTaskService = createServiceDescriptor<IMcodeTaskService>(
-  ServiceChannels.McodeTask,
+  ServiceChannels.ZCodeTask,
 );

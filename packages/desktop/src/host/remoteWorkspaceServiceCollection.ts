@@ -246,14 +246,14 @@ export function createRemoteWorkspaceServiceCollection(params: {
       (await localCredentialService.load(MCODE_JWT_TOKEN_KEY))?.trim() || null,
   });
   const conversationShareService = new ConversationShareService({
-    mcodeAgentService: params.connectionServices.mcodeAgentService,
+    zcodeAgentService: params.connectionServices.zcodeAgentService,
     client: conversationShareClient,
     artifactSource: createRemoteConversationShareArtifactSource(
       params.connectionServices.fileService,
     ),
   });
   const reportingRemoteMcodeTaskService = params.createReportingRemoteMcodeTaskService(
-    params.connectionServices.mcodeTaskService,
+    params.connectionServices.zcodeTaskService,
   );
   // 手机 remote 的 replayable mirror 在 reporting wrapper 中发布用户消息；
   // 附件物化必须包在 reporting 外层，确保 mirror 和真正发给远端 agent 的 prompt 使用同一份远端路径。
@@ -261,7 +261,7 @@ export function createRemoteWorkspaceServiceCollection(params: {
     reportingRemoteMcodeTaskService,
   );
   const remoteMcodeSessionService = params.createRemotePromptAttachmentSessionService(
-    params.connectionServices.mcodeSessionService,
+    params.connectionServices.zcodeSessionService,
   );
   const remoteProviderProvisioningService =
     createRemoteProviderProvisioningExecutorFromWorkspace(params);
@@ -269,7 +269,7 @@ export function createRemoteWorkspaceServiceCollection(params: {
   // desktop-attached remote 的 Agent 运行在远端，但 app-global 设置权威仍在
   // desktop shared Host。通过窄化的 runtime-preferences 请求原路返回，避免远端读取自己的 setting。
   const { onError } = params.runtimePreferencesBridge;
-  params.connectionServices.mcodeAgentService.onDynamicSessionRuntimePreferencesRequest()(
+  params.connectionServices.zcodeAgentService.onDynamicSessionRuntimePreferencesRequest()(
     (request) => {
       const startedAt = Date.now();
       const requestContext = {
@@ -346,7 +346,7 @@ export function createRemoteWorkspaceServiceCollection(params: {
           });
         }
         // 只把设置读取失败编码为 -32603；发送失败交给最终 onError 记录，不能重试同一请求。
-        await params.connectionServices.mcodeAgentService.respondSessionRuntimePreferences({
+        await params.connectionServices.zcodeAgentService.respondSessionRuntimePreferences({
           requestId: request.requestId,
           resolution,
         });
@@ -382,14 +382,14 @@ export function createRemoteWorkspaceServiceCollection(params: {
     .register(ICredentialService, localCredentialService)
     .register(IBroadcastService, localBroadcastService)
     .register(IMcodeTaskService, remoteMcodeTaskService)
-    .register(IMcodeAgentService, params.connectionServices.mcodeAgentService)
+    .register(IMcodeAgentService, params.connectionServices.zcodeAgentService)
     .register(IMcodeSessionService, remoteMcodeSessionService)
     .register(IConversationShareService, conversationShareService)
     .register(
       IBotsService,
       createBotsService({
         credentialService: localCredentialService,
-        mcodeTaskService: remoteMcodeTaskService,
+        zcodeTaskService: remoteMcodeTaskService,
         broadcastService: localBroadcastService,
         settingService: localSettingService,
         modelSelectionService: params.connectionServices.modelSelectionService,
@@ -416,7 +416,7 @@ export function createRemoteWorkspaceServiceCollection(params: {
         apiClient: localApiClient,
         accountRequestAuthService: localAccountRequestAuthService,
         credentialService: localCredentialService,
-        mcodeAgentService: params.connectionServices.mcodeAgentService,
+        zcodeAgentService: params.connectionServices.zcodeAgentService,
       }),
     )
     .register(ICodingPlanSubscriptionService, localCodingPlanSubscriptionService)
@@ -470,9 +470,9 @@ export function createServerRemoteWorkspaceServiceCollection(params: {
     .register(ISettingService, params.connectionServices.settingService)
     .register(ICredentialService, params.connectionServices.credentialService)
     .register(IBroadcastService, params.connectionServices.broadcastService)
-    .register(IMcodeTaskService, params.connectionServices.mcodeTaskService)
-    .register(IMcodeAgentService, params.connectionServices.mcodeAgentService)
-    .register(IMcodeSessionService, params.connectionServices.mcodeSessionService)
+    .register(IMcodeTaskService, params.connectionServices.zcodeTaskService)
+    .register(IMcodeAgentService, params.connectionServices.zcodeAgentService)
+    .register(IMcodeSessionService, params.connectionServices.zcodeSessionService)
     .register(IConversationShareService, createUnsupportedRemoteConversationShareService())
     .register(IBotsService, params.connectionServices.botsService)
     .register(IFileWatcherService, params.connectionServices.fileWatcherService)

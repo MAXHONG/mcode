@@ -21,9 +21,9 @@ function createFixture(provider = "zai", env: NodeJS.ProcessEnv = { MCODE_ENV: "
   const fetchImpl = vi.fn(async () => new Response("", { status: 401 }));
   const client = createNodeApiClient({
     fetchImpl,
-    isMcodeJwtRequest: observe,
+    isZcodeJwtRequest: observe,
     isBusinessUnauthorizedRequest: observeBusiness,
-    onMcodeJwtInvalid: notified,
+    onZcodeJwtInvalid: notified,
   });
   return { credentials, credentialService, observe, notified, fetchImpl, client };
 }

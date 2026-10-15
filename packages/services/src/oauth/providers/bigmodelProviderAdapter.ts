@@ -119,14 +119,14 @@ export class BigModelProviderAdapter implements OAuthProviderAdapter {
     params: OAuthCallbackParams,
     _context: OAuthProviderContext,
   ): Promise<OAuthTokenSet> {
-    const tokenSet = await this.exchangeMcodeJwtToken(params, _context);
+    const tokenSet = await this.exchangeZcodeJwtToken(params, _context);
 
     return {
       ...tokenSet,
     };
   }
 
-  private async exchangeMcodeJwtToken(
+  private async exchangeZcodeJwtToken(
     params: OAuthCallbackParams,
     context: OAuthProviderContext,
   ): Promise<OAuthTokenSet> {
@@ -173,8 +173,8 @@ export class BigModelProviderAdapter implements OAuthProviderAdapter {
           payload.msg?.trim() || `BigModel mcode token 交换失败（code: ${payload.code}）`,
         );
       }
-      const mcodeJwtToken = payload.data?.token?.trim() || "";
-      if (!mcodeJwtToken) {
+      const zcodeJwtToken = payload.data?.token?.trim() || "";
+      if (!zcodeJwtToken) {
         log.warn(undefined, "mcode token response missing data.token", {
           code: payload.code,
           msg: payload.msg,
@@ -200,7 +200,7 @@ export class BigModelProviderAdapter implements OAuthProviderAdapter {
       return {
         accessToken,
         ...(refreshToken ? { refreshToken } : {}),
-        mcodeJwtToken,
+        zcodeJwtToken,
       };
     } catch (error) {
       // BigModel callback code 是一次性的，客户端不能再先调用
@@ -224,7 +224,7 @@ export class BigModelProviderAdapter implements OAuthProviderAdapter {
     tokenSet: OAuthTokenSet,
     _context: OAuthProviderContext,
   ): Promise<OAuthUserProfile> {
-    if (tokenSet.mcodeJwtToken && tokenSet.accessToken === tokenSet.mcodeJwtToken) {
+    if (tokenSet.zcodeJwtToken && tokenSet.accessToken === tokenSet.zcodeJwtToken) {
       // 移除 tokenByAuthCode 后 callback 阶段没有 BigModel access token。
       // mcode JWT 不能调用 bigmodel.cn 的 customer 接口，避免无意义的鉴权失败请求。
       return {

@@ -37,7 +37,7 @@ interface ContinuousStreamCoalescer {
 function isContinuousCoalescibleChunk(event: McodeStreamEvent): event is ContinuousCoalescibleChunk {
   return (
     event.type === "agent_thought_chunk" ||
-    (event.type === "agent_message_chunk" && !event.mcodeTimeline)
+    (event.type === "agent_message_chunk" && !event.zcodeTimeline)
   );
 }
 

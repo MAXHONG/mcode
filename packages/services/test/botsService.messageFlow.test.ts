@@ -861,13 +861,13 @@ describe("botsService messageFlow", () => {
       { ...configOptions[1]!, currentValue: "plan" },
     ]);
     const broadcastService = f.createBroadcastService();
-    const mcodeSessionService = f.createMcodeSessionService(
+    const zcodeSessionService = f.createMcodeSessionService(
       f.createMcodeSessionSettingsFromConfigOptions(configOptions),
     );
     const service = f.createBotsService({
       credentialService: f.createCredentialService({ "weixin-token": "token" }),
       legacyTaskService,
-      mcodeSessionService,
+      zcodeSessionService,
       broadcastService,
       modelSelectionService: f.createModelSelectionService([
         {
@@ -992,7 +992,7 @@ describe("botsService messageFlow", () => {
         currentValue: encodeCustomModelValue(providerId, modelId),
       },
     ]);
-    const mcodeSessionService = Object.assign(
+    const zcodeSessionService = Object.assign(
       f.createMcodeSessionService(f.createMcodeSessionSettingsFromConfigOptions(configOptions)),
       {
         updateProviderRegistry: vi.fn(async () => undefined),
@@ -1001,7 +1001,7 @@ describe("botsService messageFlow", () => {
     const service = f.createBotsService({
       credentialService: f.createCredentialService({ "weixin-token": "token" }),
       legacyTaskService,
-      mcodeSessionService,
+      zcodeSessionService,
       modelSelectionService: {
         getView: vi.fn(async () => ({
           revision: 1,
@@ -1039,7 +1039,7 @@ describe("botsService messageFlow", () => {
       actor: weixinActor,
     });
 
-    expect(mcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
+    expect(zcodeSessionService.updateProviderRegistry).not.toHaveBeenCalled();
     expect(legacyTaskService.setModel).toHaveBeenCalledWith(
       expect.objectContaining({
         taskId: "task-1",
@@ -1065,7 +1065,7 @@ describe("botsService messageFlow", () => {
         },
       },
     });
-    const mcodeTaskService = f.createLegacyTaskService();
+    const zcodeTaskService = f.createLegacyTaskService();
     const configOptions = [
       {
         id: "model",
@@ -1075,8 +1075,8 @@ describe("botsService messageFlow", () => {
         options: [{ value: "glm-4.6", name: "GLM 4.6" }],
       },
     ];
-    vi.mocked(mcodeTaskService.getTaskConfigOptions).mockResolvedValue(configOptions);
-    vi.mocked(mcodeTaskService.listTasks).mockResolvedValue([
+    vi.mocked(zcodeTaskService.getTaskConfigOptions).mockResolvedValue(configOptions);
+    vi.mocked(zcodeTaskService.listTasks).mockResolvedValue([
       {
         taskId: "task-1",
         title: "Active task",
@@ -1086,13 +1086,13 @@ describe("botsService messageFlow", () => {
         status: "completed",
       },
     ]);
-    vi.mocked(mcodeTaskService.setModel).mockResolvedValue(configOptions);
-    const mcodeSessionService = f.createMcodeSessionService();
-    const updateProviderRegistry = vi.mocked(mcodeSessionService.updateProviderRegistry);
+    vi.mocked(zcodeTaskService.setModel).mockResolvedValue(configOptions);
+    const zcodeSessionService = f.createMcodeSessionService();
+    const updateProviderRegistry = vi.mocked(zcodeSessionService.updateProviderRegistry);
     const service = f.createBotsService({
       credentialService: f.createCredentialService({ "weixin-token": "token" }),
-      mcodeTaskService,
-      mcodeSessionService,
+      zcodeTaskService,
+      zcodeSessionService,
       settingService: f.createSettingService({
         locale: "zh-CN",
         lastWorkspaceSession: [{ kind: "local", workspacePath: "/tmp/workspace" }],
@@ -1134,7 +1134,7 @@ describe("botsService messageFlow", () => {
     });
     expect(modelReplies[0]?.text).toContain("工作区:");
 
-    expect(mcodeTaskService.setModel).toHaveBeenCalledWith(
+    expect(zcodeTaskService.setModel).toHaveBeenCalledWith(
       expect.objectContaining({
         taskId: "task-1",
         modelSelection: { providerId, modelId, options: { reasoningLevel: "max" } },
@@ -1349,7 +1349,7 @@ describe("botsService messageFlow", () => {
         status: "completed",
       },
     ]);
-    const mcodeSessionService = f.createMcodeSessionService(
+    const zcodeSessionService = f.createMcodeSessionService(
       f.createMcodeSessionSettingsFromConfigOptions([
         {
           id: "model",
@@ -1370,7 +1370,7 @@ describe("botsService messageFlow", () => {
     const service = f.createBotsService({
       credentialService: f.createCredentialService({ "weixin-token": "token" }),
       legacyTaskService,
-      mcodeSessionService,
+      zcodeSessionService,
       modelSelectionService: {
         getView: vi.fn(async () => ({
           revision: 7,
@@ -1684,7 +1684,7 @@ describe("botsService messageFlow", () => {
       remoteWorkspaceService: {
         isConnected: vi.fn(async () => true),
         ensureConnected: vi.fn(async () => ({ ok: true })),
-        getMcodeTaskService: vi.fn(async () => legacyTaskService),
+        getZCodeTaskService: vi.fn(async () => legacyTaskService),
         getModelSelectionService: vi.fn(async () => remoteModelSelectionService),
       },
       repo: repo as never,
@@ -2451,7 +2451,7 @@ describe("botsService messageFlow", () => {
               type: "callback",
               value: {
                 command: `/elicitation ${token} approve`,
-                mcodeCardText: "Review this implementation plan.",
+                zcodeCardText: "Review this implementation plan.",
               },
             },
           ],
@@ -3031,7 +3031,7 @@ describe("botsService messageFlow", () => {
               type: "callback",
               value: {
                 command: `/elicitation ${token} base`,
-                mcodeCardText: "Question",
+                zcodeCardText: "Question",
               },
             },
           ],
@@ -3057,7 +3057,7 @@ describe("botsService messageFlow", () => {
               type: "callback",
               value: {
                 command: `/elicitation ${token} __custom__`,
-                mcodeCardText: "Question",
+                zcodeCardText: "Question",
               },
             },
           ],
@@ -3090,7 +3090,7 @@ describe("botsService messageFlow", () => {
               type: "callback",
               value: {
                 command: `/elicitation ${token} __form__:`,
-                mcodeCardText: "Question",
+                zcodeCardText: "Question",
               },
             },
           ],
@@ -3237,7 +3237,7 @@ describe("botsService messageFlow", () => {
               type: "callback",
               value: {
                 command: `/elicitation ${token} web`,
-                mcodeCardText: "Question",
+                zcodeCardText: "Question",
               },
             },
           ],
@@ -3361,7 +3361,7 @@ describe("botsService messageFlow", () => {
               type: "callback",
               value: {
                 command: `/elicitation ${token} web`,
-                mcodeCardText: "Question",
+                zcodeCardText: "Question",
               },
             },
           ],
@@ -4221,7 +4221,7 @@ describe("botsService messageFlow", () => {
       remoteWorkspaceService: {
         isConnected,
         ensureConnected,
-        getMcodeTaskService: vi.fn(async () => legacyTaskService),
+        getZCodeTaskService: vi.fn(async () => legacyTaskService),
       },
       repo: repo as never,
     });
@@ -4393,7 +4393,7 @@ describe("botsService messageFlow", () => {
       remoteWorkspaceService: {
         isConnected: vi.fn(async () => true),
         ensureConnected: vi.fn(async () => ({ ok: true })),
-        getMcodeTaskService: vi.fn(async () => legacyTaskService),
+        getZCodeTaskService: vi.fn(async () => legacyTaskService),
         getModelSelectionService: vi.fn(async () =>
           f.createModelSelectionService([{ id: "glm", name: "GLM", models: ["default"] }]),
         ),
@@ -4512,7 +4512,7 @@ describe("botsService messageFlow", () => {
         options: [{ value: "medium", name: "Medium" }],
       },
     ]);
-    const mcodeSessionService = f.createMcodeSessionService(
+    const zcodeSessionService = f.createMcodeSessionService(
       f.createMcodeSessionSettingsFromConfigOptions([
         {
           id: "mode",
@@ -4533,7 +4533,7 @@ describe("botsService messageFlow", () => {
     const service = f.createBotsService({
       credentialService: f.createCredentialService({ "secret-1": "secret" }),
       legacyTaskService,
-      mcodeSessionService,
+      zcodeSessionService,
       repo: repo as never,
     });
     await bind(service);
@@ -4886,7 +4886,7 @@ describe("botsService messageFlow", () => {
         options: [{ value: "medium", name: "Medium" }],
       },
     ]);
-    const mcodeSessionService = f.createMcodeSessionService(
+    const zcodeSessionService = f.createMcodeSessionService(
       f.createMcodeSessionSettingsFromConfigOptions([
         {
           id: "model",
@@ -4917,7 +4917,7 @@ describe("botsService messageFlow", () => {
     const service = f.createBotsService({
       credentialService: f.createCredentialService({ "weixin-token": "token" }),
       legacyTaskService,
-      mcodeSessionService,
+      zcodeSessionService,
       modelSelectionService: f.createModelSelectionService([
         {
           id: "runtime-provider",
@@ -5241,7 +5241,7 @@ describe("botsService messageFlow", () => {
           behaviors: [
             {
               type: "callback",
-              value: { command: `/elicitation ${token} __custom__`, mcodeCardText: "Plan" },
+              value: { command: `/elicitation ${token} __custom__`, zcodeCardText: "Plan" },
             },
           ],
         },

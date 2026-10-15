@@ -58,7 +58,7 @@ describe("conversation share service composition", () => {
   });
 
   it("registers a real API-backed service for a local desktop host", async () => {
-    const mcodeBuiltinProviderConfigFilePath = await createProviderFixture(
+    const zcodeBuiltinProviderConfigFilePath = await createProviderFixture(
       "mcode-conversation-share-",
     );
     const [nodeModule, servicesModule] = await Promise.all([
@@ -66,7 +66,7 @@ describe("conversation share service composition", () => {
       import("@mcode/services"),
     ]);
 
-    const services = nodeModule.createLocalServices({ mcodeBuiltinProviderConfigFilePath });
+    const services = nodeModule.createLocalServices({ zcodeBuiltinProviderConfigFilePath });
     try {
       await expect(
         services.get(servicesModule.IModelSelectionService).getView(),
@@ -84,7 +84,7 @@ describe("conversation share service composition", () => {
   });
 
   it("keeps desktop-attached remote hosts behind the publishing boundary", async () => {
-    const mcodeBuiltinProviderConfigFilePath = await createProviderFixture(
+    const zcodeBuiltinProviderConfigFilePath = await createProviderFixture(
       "mcode-conversation-share-remote-",
     );
     const [nodeModule, servicesModule] = await Promise.all([
@@ -93,7 +93,7 @@ describe("conversation share service composition", () => {
     ]);
 
     const services = nodeModule.createLocalServices({
-      mcodeBuiltinProviderConfigFilePath,
+      zcodeBuiltinProviderConfigFilePath,
       serviceAuthorityMode: "desktop-attached-remote",
     });
     try {

@@ -507,7 +507,7 @@ describe("useGroupedTaskView remote data refresh", () => {
     const listPinnedTasks = vi.fn(async (): Promise<McodeTaskMeta[]> => []);
     const listDeletedTaskIds = vi.fn(async (): Promise<string[]> => []);
     const services = {
-      mcodeTaskService: {
+      zcodeTaskService: {
         listGroupedTaskViewStructure,
         listPinnedTaskIds,
         listArchivedTasks,

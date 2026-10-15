@@ -72,7 +72,7 @@ export function useOnboardingAgentsFileMigration(params: {
   );
 
   const copy = useCallback(async () => {
-    const result = await settingsSyncService.copyClaudeAgentsFileToMcodeAgentsFile({
+    const result = await settingsSyncService.copyClaudeAgentsFileToZcodeAgentsFile({
       workspacePath: params.workspacePath,
       workspaceIdentity: params.workspaceIdentity,
       overwrite: true,

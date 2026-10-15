@@ -443,7 +443,7 @@ export function createOfficialMcpAuthHeadersResolver(deps: OfficialMcpCredential
   let pending: Promise<OfficialMcpAuthHeadersOutcome> | null = null;
 
   return {
-    // request 仅为契约对齐（host handler 已在此之前完成可信校验，见 mcodeAgentService）；
+    // request 仅为契约对齐（host handler 已在此之前完成可信校验，见 zcodeAgentService）；
     // 凭据是 host 全局状态，**不**按 plugin/mcpKey/workspace 分桶——分桶只会削弱 in-flight
     // 去重而不增加隔离。参数保留是为了将来审计需要时不必再改接口。
     resolveHeaders(_request?: OfficialMcpAuthHeadersRequestContext) {

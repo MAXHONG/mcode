@@ -54,7 +54,7 @@ export interface BotsServiceHarness {
     params: Record<string, unknown>;
     listener: (event: McodeStreamEvent) => Promise<void> | void;
   }>;
-  mcodeTaskService: Record<string, unknown>;
+  zcodeTaskService: Record<string, unknown>;
 }
 
 export function createBotModelSelectionView(): ModelSelectionView {
@@ -123,7 +123,7 @@ export function createBotsServiceHarness(options: BotsServiceHarnessOptions): Bo
     listener: (event: McodeStreamEvent) => Promise<void> | void;
   }> = [];
 
-  const mcodeTaskService = {
+  const zcodeTaskService = {
     listTasks: async () => [],
     listDeletedTaskIds: async () => [],
     createTask: async (params: unknown) => {
@@ -188,7 +188,7 @@ export function createBotsServiceHarness(options: BotsServiceHarnessOptions): Bo
       save: async () => undefined,
       delete: async () => undefined,
     },
-    mcodeTaskService,
+    zcodeTaskService,
     settingService: {
       get: async () => ({
         locale: "zh-CN",
@@ -224,7 +224,7 @@ export function createBotsServiceHarness(options: BotsServiceHarnessOptions): Bo
     sendPromptCalls,
     service,
     subscriptions,
-    mcodeTaskService,
+    zcodeTaskService,
   };
 }
 

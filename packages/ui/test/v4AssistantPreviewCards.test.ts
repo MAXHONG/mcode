@@ -149,7 +149,7 @@ vi.mock("@/hooks/useSettingService.js", () => ({
     error: null,
     loading: false,
     refresh: vi.fn(async () => {}),
-    settings: { mcodeInteractionBehavior: "queue" },
+    settings: { zcodeInteractionBehavior: "queue" },
     update: vi.fn(async () => {}),
   }),
 }));
@@ -159,10 +159,10 @@ vi.mock("@/hooks/useServices.js", () => ({
   // Vitest 的整模块 mock 未同步新导出，导致组件进入业务断言前就直接失败。
   useOptionalServices: () => null,
   useServices: () => ({
-    mcodeSessionService: {
+    zcodeSessionService: {
       updateProviderRegistry: vi.fn(),
     },
-    mcodeTaskService: {
+    zcodeTaskService: {
       restartWorkspaceProcess: vi.fn(),
     },
   }),

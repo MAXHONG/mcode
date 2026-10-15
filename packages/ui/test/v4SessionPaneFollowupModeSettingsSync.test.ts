@@ -73,11 +73,11 @@ const servicesMock = vi.hoisted(() => ({
     share: vi.fn(),
   },
   // 修复原因：readiness hook 将 service 作为 effect 依赖；每次 render 重建会导致无限重渲染直至 OOM。
-  mcodeSessionService: {
+  zcodeSessionService: {
     updateProviderRegistry: vi.fn(),
     readSession: vi.fn(async () => ({})),
   },
-  mcodeTaskService: {
+  zcodeTaskService: {
     restartWorkspaceProcess: vi.fn(),
   },
 }));
@@ -90,7 +90,7 @@ vi.mock("@/v4/BotGroupDeliveryAction.js", () => ({
 
 vi.mock("@/hooks/useSettingService.js", () => ({
   useSettings: () => ({
-    settings: { mcodeInteractionBehavior: "guide" },
+    settings: { zcodeInteractionBehavior: "guide" },
     loading: false,
     error: null,
     update: vi.fn(async () => {}),

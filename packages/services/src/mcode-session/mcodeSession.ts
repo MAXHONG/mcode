@@ -169,5 +169,5 @@ export interface IMcodeSessionService {
 }
 
 export const IMcodeSessionService = createServiceDescriptor<IMcodeSessionService>(
-  ServiceChannels.McodeSession,
+  ServiceChannels.ZCodeSession,
 );

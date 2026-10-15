@@ -53,7 +53,7 @@ function writeLegacyZapiConfig(home: string): void {
 function writeMcodeBuiltinProviderConfig(home: string): string {
   const configDir = join(home, ".mcode", "provider-test");
   mkdirSync(configDir, { recursive: true });
-  const filePath = join(configDir, "mcodeBuiltin.json");
+  const filePath = join(configDir, "zcodeBuiltin.json");
   writeFileSync(
     filePath,
     JSON.stringify({
@@ -110,7 +110,7 @@ describe("createLocalServices remote authority", () => {
     const [{ createLocalServices, disposeServiceResources }, { IModelSelectionService }] =
       await Promise.all([import("../src/node.js"), import("../src/index.js")]);
     const services = createLocalServices({
-      mcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
+      zcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
       serviceAuthorityMode: "desktop-attached-remote",
     });
 
@@ -134,7 +134,7 @@ describe("createLocalServices remote authority", () => {
 
     const { createLocalServices, disposeServiceResources } = await import("../src/node.js");
     const services = createLocalServices({
-      mcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
+      zcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
       serviceAuthorityMode: "desktop-attached-remote",
     });
 
@@ -152,7 +152,7 @@ describe("createLocalServices remote authority", () => {
   it("provider runtime services do not refresh legacy model presets on startup", async () => {
     const home = makeTempHome();
     process.env.HOME = home;
-    const mcodeBuiltinProviderConfigFilePath = writeMcodeBuiltinProviderConfig(home);
+    const zcodeBuiltinProviderConfigFilePath = writeMcodeBuiltinProviderConfig(home);
     const fetchImpl = vi.fn(
       async () =>
         new Response(JSON.stringify({ code: 0, data: { configs: {} } }), {
@@ -163,7 +163,7 @@ describe("createLocalServices remote authority", () => {
     vi.spyOn(globalThis, "fetch").mockImplementation(fetchImpl);
 
     const { createLocalServices, disposeServiceResources } = await import("../src/node.js");
-    const services = createLocalServices({ mcodeBuiltinProviderConfigFilePath });
+    const services = createLocalServices({ zcodeBuiltinProviderConfigFilePath });
 
     try {
       await new Promise((resolve) => setTimeout(resolve, 50));
@@ -178,14 +178,14 @@ describe("createLocalServices remote authority", () => {
   it("desktop-attached remote 使用远端 Registry 的就绪状态，不等待 Desktop 推送", async () => {
     const home = makeTempHome();
     process.env.HOME = home;
-    const mcodeBuiltinProviderConfigFilePath = writeMcodeBuiltinProviderConfig(home);
+    const zcodeBuiltinProviderConfigFilePath = writeMcodeBuiltinProviderConfig(home);
     const commandResolver = vi.fn(() => null);
     const [{ createLocalServices, disposeServiceResources }, { IMcodeAgentService }] =
       await Promise.all([import("../src/node.js"), import("../src/index.js")]);
     const services = createLocalServices({
-      mcodeBuiltinProviderConfigFilePath,
+      zcodeBuiltinProviderConfigFilePath,
       serviceAuthorityMode: "desktop-attached-remote",
-      mcodeAgentCommandResolver: commandResolver,
+      zcodeAgentCommandResolver: commandResolver,
     });
 
     try {
@@ -204,11 +204,11 @@ describe("createLocalServices remote authority", () => {
     const { createLocalServices, disposeServiceResources } = await import("../src/node.js");
     const { IProviderProvisioningTargetService } = await import("../src/index.js");
     const remoteServices = createLocalServices({
-      mcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
+      zcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
       serviceAuthorityMode: "desktop-attached-remote",
     });
     const localServices = createLocalServices({
-      mcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
+      zcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
       serviceAuthorityMode: "desktop-local",
     });
 
@@ -229,7 +229,7 @@ describe("createLocalServices remote authority", () => {
     const [{ createLocalServices, disposeServiceResources }, serviceDescriptors] =
       await Promise.all([import("../src/node.js"), import("../src/index.js")]);
     const services = createLocalServices({
-      mcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
+      zcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
       onProviderProvisioningSourceChanged,
     });
 
@@ -294,7 +294,7 @@ describe("createLocalServices remote authority", () => {
     } = await import("../src/node.js");
     const { ICredentialService, ISettingService } = await import("../src/index.js");
     const services = createLocalServices({
-      mcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
+      zcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
       serviceAuthorityMode: "desktop-attached-remote",
       hostApiNetworkTransport: {
         fetch: fetchToken,
@@ -404,7 +404,7 @@ describe("createLocalServices remote authority", () => {
     const [{ createLocalServices, disposeServiceResources }, { IPluginSyncService }] =
       await Promise.all([import("../src/node.js"), import("../src/index.js")]);
     const services = createLocalServices({
-      mcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
+      zcodeBuiltinProviderConfigFilePath: writeMcodeBuiltinProviderConfig(home),
       serviceAuthorityMode: "desktop-attached-remote",
     });
     const [clientProtocol, serverProtocol] = createQueuePair();

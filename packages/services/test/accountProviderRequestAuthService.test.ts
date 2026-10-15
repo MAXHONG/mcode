@@ -12,7 +12,7 @@ function createService(overrides: Record<string, unknown> = {}) {
       family: access.accountType,
       planKind: access.mode === "off-peak" ? ("individual-coding-plan" as const) : access.mode,
     })),
-    loadOAuthTokenSet: vi.fn(async () => ({ accessToken: "oauth", mcodeJwtToken: "jwt" })),
+    loadOAuthTokenSet: vi.fn(async () => ({ accessToken: "oauth", zcodeJwtToken: "jwt" })),
     loadIndividualPlanMaterial: vi.fn(async () => null),
     resolveTeamPlanMaterial: vi.fn(async () => null),
     ...overrides,
@@ -29,7 +29,7 @@ function individualAccess(): McodeProviderAccountAccess {
 
 describe("AccountProviderRequestAuthService", () => {
   it("reads the provider-specific mcode jwt for start plan requests", async () => {
-    const loadOAuthTokenSet = vi.fn(async () => ({ mcodeJwtToken: "zai-mcode-jwt" }));
+    const loadOAuthTokenSet = vi.fn(async () => ({ zcodeJwtToken: "zai-mcode-jwt" }));
     const service = createService({ loadOAuthTokenSet });
     await expect(
       service.resolveCurrent({

@@ -286,7 +286,7 @@ function buildApplicationMenuTemplate(options: {
                 type: "checkbox" as const,
                 checked: stdioTapState.enabled,
                 click: () =>
-                  void options.executeDesktopCommand(DesktopCommandIds.ToggleMcodeStdioTapDevProxy),
+                  void options.executeDesktopCommand(DesktopCommandIds.ToggleZCodeStdioTapDevProxy),
               },
               { type: "separator" as const },
             ]
@@ -303,7 +303,7 @@ function buildApplicationMenuTemplate(options: {
                     checked: (options.mcodeEndpointSelection ?? "production") === "production",
                     click: () =>
                       void options.executeDesktopCommand(
-                        DesktopCommandIds.SetMcodeEndpointProduction,
+                        DesktopCommandIds.SetZCodeEndpointProduction,
                       ),
                   },
                   {
@@ -312,18 +312,18 @@ function buildApplicationMenuTemplate(options: {
                     type: "radio" as const,
                     checked: options.mcodeEndpointSelection === "test",
                     click: () =>
-                      void options.executeDesktopCommand(DesktopCommandIds.SetMcodeEndpointTest),
+                      void options.executeDesktopCommand(DesktopCommandIds.SetZCodeEndpointTest),
                   },
                   { type: "separator" as const },
                   {
                     label: getLabel(desktopMenuMessageIds.helpMcodeEndpointCustom),
                     click: () =>
-                      void options.executeDesktopCommand(DesktopCommandIds.SetMcodeEndpointCustom),
+                      void options.executeDesktopCommand(DesktopCommandIds.SetZCodeEndpointCustom),
                   },
                   {
                     label: getLabel(desktopMenuMessageIds.helpMcodeEndpointReset),
                     click: () =>
-                      void options.executeDesktopCommand(DesktopCommandIds.ResetMcodeEndpoint),
+                      void options.executeDesktopCommand(DesktopCommandIds.ResetZCodeEndpoint),
                   },
                 ],
               },

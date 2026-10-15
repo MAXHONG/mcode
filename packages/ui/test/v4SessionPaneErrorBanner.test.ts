@@ -36,7 +36,7 @@ vi.mock("@/store/StoreProvider.js", () => ({
 
 vi.mock("@/hooks/useSettingService.js", () => ({
   useSettings: () => ({
-    settings: { mcodeInteractionBehavior: "queue" },
+    settings: { zcodeInteractionBehavior: "queue" },
     loading: false,
     error: null,
     update: vi.fn(async () => {}),
@@ -47,10 +47,10 @@ vi.mock("@/hooks/useSettingService.js", () => ({
 vi.mock("@/hooks/useServices.js", () => ({
   useOptionalServices: () => null,
   useServices: () => ({
-    mcodeSessionService: {
+    zcodeSessionService: {
       updateProviderRegistry: vi.fn(),
     },
-    mcodeTaskService: {
+    zcodeTaskService: {
       restartWorkspaceProcess: vi.fn(),
     },
   }),

@@ -3305,7 +3305,7 @@ function seedE2EStartupState(specs: string[] = []) {
           ? {
               // steer 相关复现需要从当前 worker 的初始 settings 进入 guide 模式；
               // 运行中再改 setting.json 会被 app 启动态写回覆盖，导致实际仍跑 queue。
-              mcodeInteractionBehavior: "guide",
+              zcodeInteractionBehavior: "guide",
             }
           : {}),
         providerFamilyConnectionSelections: shouldUseBigmodelAuth

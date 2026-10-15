@@ -15,7 +15,7 @@ describe("Mcode API endpoints", () => {
         });
         return new Response('{"code":0,"msg":"","data":[]}', { status: 200 });
       },
-      resolveMcodeEndpointOrigin: () => TEST_MCODE_ENDPOINT_ORIGIN,
+      resolveZCodeEndpointOrigin: () => TEST_MCODE_ENDPOINT_ORIGIN,
     });
 
     await client.request(MCODE_CLIENT_SCENES_URL, { method: "GET" });

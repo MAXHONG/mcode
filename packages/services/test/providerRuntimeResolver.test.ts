@@ -99,7 +99,7 @@ describe("providerRuntimeResolver glm workdir discovery", () => {
     const sandboxRoot = mkdtempSync(join(tmpdir(), "mcode-glm-binary-"));
     createdDirs.push(sandboxRoot);
     // Keep the fallback test hermetic: a developer may already have a valid
-    // ~/.mcode/server/agents runtime, which intentionally outranks repository
+    // ~/.zcode/server/agents runtime, which intentionally outranks repository
     // bundled resources in production.
     process.env.HOME = sandboxRoot;
 

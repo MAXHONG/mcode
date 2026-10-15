@@ -77,7 +77,7 @@ import {
   MCODE_VERSION,
   buildMcodeEndpointUrls,
   resolveWebRemoteControlRelayWsUrl,
-  resolveMcodeEndpointOrigin,
+  resolveZCodeEndpointOrigin,
   shouldEnableE2ETestBridge,
   type UpdateStatePayload,
   type TelemetryEventPayload,
@@ -711,10 +711,10 @@ const appLaunchGate = createAppLaunchGate();
 const appLaunchCoordinator = createAppLaunchCoordinator(appLaunchGate);
 const appTelemetryCredentialService = createCredentialService();
 async function resolveCurrentMcodeEndpointOrigin() {
-  return resolveMcodeEndpointOrigin({
+  return resolveZCodeEndpointOrigin({
     env: MCODE_ENV,
     envBaseOrigin: resolveMcodeEndpointEnvBaseOrigin(hostProcessLocalEnv),
-    overrideOrigin: (await mainSettingService.get()).mcodeEndpointOrigin,
+    overrideOrigin: (await mainSettingService.get()).zcodeEndpointOrigin,
   });
 }
 let desktopContextPromptRollout: ReturnType<typeof createDesktopContextPromptRollout> | undefined;
@@ -767,7 +767,7 @@ const appTelemetryCore = createTelemetryCore({
   loadUserId: createTelemetryUserIdLoader(appTelemetryCredentialService),
   loadAuthorization: createTelemetryAuthorizationLoader(appTelemetryCredentialService),
   loadMarketingParams: createTelemetryMarketingParamsLoader(appTelemetryCredentialService),
-  resolveMcodeEndpointOrigin: resolveCurrentMcodeEndpointOrigin,
+  resolveZCodeEndpointOrigin: resolveCurrentMcodeEndpointOrigin,
   fetchImpl: createDesktopTelemetryFetch(net),
 });
 const appTelemetryRuntime = createAppTelemetryRuntime({
@@ -1854,7 +1854,7 @@ function createWindowInstance(startupBootstrap: StartupWindowBootstrap = {}) {
         label,
         {
           ...initMessage,
-          mcodeBuiltinProviderConfigFilePath: resolveMcodeBuiltinProviderConfigFilePath(),
+          zcodeBuiltinProviderConfigFilePath: resolveMcodeBuiltinProviderConfigFilePath(),
         },
         {
           hostProcessLocalEnv,

@@ -214,7 +214,7 @@ describe("WebRemoteControlMobileShell", () => {
   it("restores chat from browser history state after refreshing on the chat page", () => {
     vi.stubGlobal("window", {
       history: {
-        state: { mcodeMobilePage: "chat" },
+        state: { zcodeMobilePage: "chat" },
         back: vi.fn(),
         pushState: vi.fn(),
       },
@@ -353,8 +353,8 @@ describe("WebRemoteControlMobileShell", () => {
   });
 
   it("recognizes only the mobile chat browser history state", () => {
-    expect(isWebRemoteControlMobileChatHistoryState({ mcodeMobilePage: "chat" })).toBe(true);
-    expect(isWebRemoteControlMobileChatHistoryState({ mcodeMobilePage: "home" })).toBe(false);
+    expect(isWebRemoteControlMobileChatHistoryState({ zcodeMobilePage: "chat" })).toBe(true);
+    expect(isWebRemoteControlMobileChatHistoryState({ zcodeMobilePage: "home" })).toBe(false);
     expect(isWebRemoteControlMobileChatHistoryState(null)).toBe(false);
   });
 });

@@ -1150,18 +1150,18 @@ export function createLocalServices(options: {
   onOffPeakSchedulerWakeRequested?: () => void;
   // 注入点：默认 resolver 已能覆盖 dev/桌面/SSH 远端三类形态；
   // 测试或特殊宿主想强制走自定义 binary/参数时从这里注入。
-  mcodeAgentCommandResolver?: McodeAgentCommandResolver;
+  zcodeAgentCommandResolver?: McodeAgentCommandResolver;
   /** Desktop Main 提前异步采集的本机 runtime 环境；Local Host 注入后不再同步启动 login shell。 */
   runtimeProcessEnvPatch?: Record<string, string>;
   /** 本地桌面上次 workspace 缺失时，仅用于 Agent 子进程 spawn.cwd 兜底。 */
-  mcodeAgentSpawnFallbackCwd?: string;
+  zcodeAgentSpawnFallbackCwd?: string;
   /** desktop-attached remote server 从 Desktop Host 收到的一次性 Agent 网络配置。 */
   remoteAgentNetwork?: {
     httpProxy?: string;
     noProxy?: string;
   };
   /** 所属 Environment 的 Mcode Built-in Provider Config 物理路径。 */
-  mcodeBuiltinProviderConfigFilePath: string;
+  zcodeBuiltinProviderConfigFilePath: string;
   /** HTTP Server 只有在调用方明确配置认证时才暴露跨 Environment Provisioning target。 */
   providerProvisioningTargetEnabled?: boolean;
   /** Desktop Host 私有通知；只在 Source 成功持久化后请求 Main 调度远端镜像。 */
@@ -1236,7 +1236,7 @@ export function createLocalServices(options: {
   );
   const resolveCurrentMcodeEndpointOrigin = async () =>
     resolveRuntimeMcodeEndpointOrigin(process.env, {
-      overrideOrigin: (await settingService.get()).mcodeEndpointOrigin,
+      overrideOrigin: (await settingService.get()).zcodeEndpointOrigin,
     });
   let invalidateProjectTokens = () => {};
   let invalidatePluginUiAccounts: (() => void) | undefined;
@@ -1271,12 +1271,12 @@ export function createLocalServices(options: {
   } = { current: null };
   const apiClient = createNodeApiClient({
     fetchImpl: hostApiNetworkTransport.fetch,
-    onMcodeJwtInvalid: (input, headers) => mcodeJwtLogoutHandlerRef.current?.(input, headers),
-    isMcodeJwtRequest: (input, headers) =>
+    onZcodeJwtInvalid: (input, headers) => mcodeJwtLogoutHandlerRef.current?.(input, headers),
+    isZcodeJwtRequest: (input, headers) =>
       isCurrentOAuthCredentialRequest({ input, headers, credentialService }),
     isBusinessUnauthorizedRequest: (input, _headers) =>
       isOAuthBusinessRequest({ input, credentialService }),
-    resolveMcodeEndpointOrigin: resolveCurrentMcodeEndpointOrigin,
+    resolveZCodeEndpointOrigin: resolveCurrentMcodeEndpointOrigin,
   });
   const systemService = createSystemService();
   // onboarding 资格与任务列表共用同一份全局 tasks-index；repo 懒加载数据库，提前构造不会
@@ -1381,8 +1381,8 @@ export function createLocalServices(options: {
   const providerConfigLog = createServiceLogger("provider-config");
   const clientConfigPlatform = resolveClientConfigPlatform();
   const providerConfigRuntime = createProviderConfigRuntime({
-    mcodeBuiltinFilePath: options.mcodeBuiltinProviderConfigFilePath,
-    mcodeBuiltinEnvironment: {
+    zcodeBuiltinFilePath: options.zcodeBuiltinProviderConfigFilePath,
+    zcodeBuiltinEnvironment: {
       environmentConfigRoot: resolveAppConfigDir(),
       platform: clientConfigPlatform,
       appVersion: MCODE_VERSION,
@@ -1401,7 +1401,7 @@ export function createLocalServices(options: {
           platform: clientConfigPlatform,
         }),
     },
-    onMcodeBuiltinRefreshError: (error) => {
+    onZCodeBuiltinRefreshError: (error) => {
       providerConfigLog.warn(undefined, "Mcode Built-in Config 远端刷新失败", { error });
     },
     onPersonalConfigRecovery: (event) => {
@@ -1519,11 +1519,11 @@ export function createLocalServices(options: {
         modelSelectionService: providerRuntime.modelSelection,
       }),
   };
-  // mcpSync/hooks 里引用 mcodeAgentService 的闭包是惰性调用，声明顺序不影响初始化。
+  // mcpSync/hooks 里引用 zcodeAgentService 的闭包是惰性调用，声明顺序不影响初始化。
   const skillsService = createSkillsService({ isDesktopRuntime: true });
   const mcpSyncService = createMcpSyncService({
     // mcp/list 的 host 消费点收拢到 mcpSync 服务；真实状态检查仍在 agent 进程。
-    listMcpServerStatuses: (params) => mcodeAgentService.listMcpServerStatuses(params),
+    listMcpServerStatuses: (params) => zcodeAgentService.listMcpServerStatuses(params),
   });
   const pluginSyncService = createPluginSyncService();
   const pluginUiAccounts = createPluginUiAccountBindings({
@@ -1532,45 +1532,45 @@ export function createLocalServices(options: {
       const profile = provider ? await oauthCredentialRepo.loadUserProfile(provider) : null;
       return [provider, profile?.id ?? null];
     },
-    open: (params) => mcodeAgentService.openMcpUiInstance(params),
-    close: (params) => mcodeAgentService.closeMcpUiInstance(params),
+    open: (params) => zcodeAgentService.openMcpUiInstance(params),
+    close: (params) => zcodeAgentService.closeMcpUiInstance(params),
   });
   invalidatePluginUiAccounts = () => pluginUiAccounts.invalidate();
   const pluginUiBridgeService = createPluginUiBridgeService({
     openInstance: (params) => pluginUiAccounts.open(params),
     closeInstance: (params) => pluginUiAccounts.close(params),
-    validateInstance: (params) => mcodeAgentService.validateMcpUiInstance(params),
-    recycleInstance: (params) => mcodeAgentService.recycleMcpUiInstance(params),
+    validateInstance: (params) => zcodeAgentService.validateMcpUiInstance(params),
+    recycleInstance: (params) => zcodeAgentService.recycleMcpUiInstance(params),
     // 插件 UI：资源读取与 UI 工具调用都发生在 session 所在的 agent 进程；host 只做校验与登记。
-    readMcpResource: (params) => mcodeAgentService.readMcpResource(params),
-    callMcpToolForUi: (params) => mcodeAgentService.callMcpToolForUi(params),
-    cancelMcpToolCallForUi: (params) => mcodeAgentService.cancelMcpToolCallForUi(params),
-    readMcpResourceForUi: (params) => mcodeAgentService.readMcpResourceForUi(params),
-    listMcpResourcesForUi: (params) => mcodeAgentService.listMcpResourcesForUi(params),
+    readMcpResource: (params) => zcodeAgentService.readMcpResource(params),
+    callMcpToolForUi: (params) => zcodeAgentService.callMcpToolForUi(params),
+    cancelMcpToolCallForUi: (params) => zcodeAgentService.cancelMcpToolCallForUi(params),
+    readMcpResourceForUi: (params) => zcodeAgentService.readMcpResourceForUi(params),
+    listMcpResourcesForUi: (params) => zcodeAgentService.listMcpResourcesForUi(params),
     listMcpResourceTemplatesForUi: (params) =>
-      mcodeAgentService.listMcpResourceTemplatesForUi(params),
-    subscribeMcpResourceForUi: (params) => mcodeAgentService.subscribeMcpResourceForUi(params),
-    unsubscribeMcpResourceForUi: (params) => mcodeAgentService.unsubscribeMcpResourceForUi(params),
-    listPluginUiSurfaces: (params) => mcodeAgentService.listPluginUiSurfaces(params),
+      zcodeAgentService.listMcpResourceTemplatesForUi(params),
+    subscribeMcpResourceForUi: (params) => zcodeAgentService.subscribeMcpResourceForUi(params),
+    unsubscribeMcpResourceForUi: (params) => zcodeAgentService.unsubscribeMcpResourceForUi(params),
+    listPluginUiSurfaces: (params) => zcodeAgentService.listPluginUiSurfaces(params),
     registerSandbox: options?.registerPluginSandbox,
   });
   // App-Provided Tools：页面工具登记与模型调用的认领 / 回传都发生在 session 所在的 agent 进程。
   const pluginUiSamplingService = createPluginUiSamplingService({
-    sample: (params) => mcodeAgentService.sampleMcpApp(params),
-    cancelSampling: (params) => mcodeAgentService.cancelMcpAppSampling(params),
+    sample: (params) => zcodeAgentService.sampleMcpApp(params),
+    cancelSampling: (params) => zcodeAgentService.cancelMcpAppSampling(params),
   });
   const pluginUiAppToolsService = createPluginUiAppToolsService({
-    registerAppToolsForUi: (params) => mcodeAgentService.registerAppToolsForUi(params),
-    unregisterAppToolsForUi: (params) => mcodeAgentService.unregisterAppToolsForUi(params),
-    claimAppToolCallForUi: (params) => mcodeAgentService.claimAppToolCallForUi(params),
-    resolveAppToolCallForUi: (params) => mcodeAgentService.resolveAppToolCallForUi(params),
+    registerAppToolsForUi: (params) => zcodeAgentService.registerAppToolsForUi(params),
+    unregisterAppToolsForUi: (params) => zcodeAgentService.unregisterAppToolsForUi(params),
+    claimAppToolCallForUi: (params) => zcodeAgentService.claimAppToolCallForUi(params),
+    resolveAppToolCallForUi: (params) => zcodeAgentService.resolveAppToolCallForUi(params),
   });
   const subagentsService = createSubagentsService({
     isDesktopRuntime: true,
   });
   const commandsService = createCommandsService({ isDesktopRuntime: true });
   const hooksService = createHooksService({
-    grantWorkspaceHookTrust: (params) => mcodeAgentService.grantWorkspaceHookTrust(params),
+    grantWorkspaceHookTrust: (params) => zcodeAgentService.grantWorkspaceHookTrust(params),
   });
   const memoryService = createMemoryService();
   // 只要当前进程已经装配 Provider Runtime，就由该 Environment 自己的 Selection View
@@ -1581,8 +1581,8 @@ export function createLocalServices(options: {
   // 约束：lifecycle coordinator 懒获取 + 代际 fence（dispose 仅来自显式 workspace 生命周期）；
   // 不创建定时健康探测；Helper restart 尽可能复用 host transport，既有 Agent 的 session、
   // 进程与 MCP stream 保持不变。
-  // P1-a mitigation：createDefaultCuaProductHelper() 在 mcodeAgentService 存在之前就要组装 resolver，
-  // 但"是否有活跃 turn"这个信号只有 mcodeAgentService 建好之后才能查询。用前向引用占位——resolver 真正
+  // P1-a mitigation：createDefaultCuaProductHelper() 在 zcodeAgentService 存在之前就要组装 resolver，
+  // 但"是否有活跃 turn"这个信号只有 zcodeAgentService 建好之后才能查询。用前向引用占位——resolver 真正
   // 调用 hasActiveTurn() 发生在后续某次 resolveMcpServers（异步），那时 hasActiveTurnRef 早已被赋值。
   // 先用前向引用连接 agent service 的 CUA turn tracker，避免在活跃 CUA 请求中途重启 Helper；
   // service 创建完成后再赋值。Helper recovery 始终不能回收 Agent。
@@ -1605,7 +1605,7 @@ export function createLocalServices(options: {
     context?: CuaProductMcpServerResolverContext,
   ): ManagedDefaultCuaProductHelper | undefined => {
     const helper = createDefaultCuaProductHelper({
-      // 转发活跃-turn 查询（前向引用，mcodeAgentService 建好后赋值）。
+      // 转发活跃-turn 查询（前向引用，zcodeAgentService 建好后赋值）。
       hasActiveTurn: () => hasActiveTurnRef?.() ?? false,
     });
     if (!helper) return undefined;
@@ -1967,7 +1967,7 @@ export function createLocalServices(options: {
   };
   // 动态工作流的用户选择（docs/dynamic-workflow/launch.md「The user's choice」）：本机设置文件是唯一来源，
   // 每次使用时读取。desktop-attached remote Host 读不到桌面的设置，选择由 desktop 推送
-  // （mcodeAgentService.syncDynamicWorkflowUserMode），这里不注入。读取失败按「跟随」处理。
+  // （zcodeAgentService.syncDynamicWorkflowUserMode），这里不注入。读取失败按「跟随」处理。
   const resolveDynamicWorkflowUserMode = isDesktopAttachedRemote
     ? undefined
     : async () => (await settingService.get()).dynamicWorkflowMode;
@@ -1991,7 +1991,7 @@ export function createLocalServices(options: {
           resolveOffPeakClientConfig: () => codingPlanSubscriptionService.getOffPeakClientConfig(),
           resolveOffPeakTaskService: () => offPeakTaskServiceForAgent,
         };
-  const mcodeAgentService = createMcodeAgentService({
+  const zcodeAgentService = createMcodeAgentService({
     ...(agentAccountProviderConfigSource
       ? { accountProviderConfigSource: agentAccountProviderConfigSource }
       : {}),
@@ -2006,7 +2006,7 @@ export function createLocalServices(options: {
       codingPlanSubscriptionService.getDynamicWorkflowClientConfig(),
     ...(resolveDynamicWorkflowUserMode ? { resolveDynamicWorkflowUserMode } : {}),
     forwardDynamicWorkflowUserMode: options?.forwardDynamicWorkflowUserMode,
-    commandResolver: options?.mcodeAgentCommandResolver,
+    commandResolver: options?.zcodeAgentCommandResolver,
     presentationSurface: resolveMcodeAgentPresentationSurface({
       runtimeSurface: options?.agentTelemetry?.runtimeSurface,
       serviceAuthorityMode: options?.serviceAuthorityMode,
@@ -2017,7 +2017,7 @@ export function createLocalServices(options: {
     // McodeAgentProcessManager，导致 host 永远不向 main 上报 Agent spawn/exit，进程监控器
     // 因而看不到实际运行的 Agent，也无法验证只读到可写升级是否复用同一进程。
     processLifecycleReporter: options?.processLifecycleReporter,
-    spawnFallbackCwd: options?.mcodeAgentSpawnFallbackCwd,
+    spawnFallbackCwd: options?.zcodeAgentSpawnFallbackCwd,
     // browser-use：host→main 执行桥透传给 agent service 的 onRequest browserExecute 路由。
     browserControlExecutor: options?.browserControlExecutor,
     // 机器人凭据只归属于授权 Host；远端独立服务不能借用本机配置扩大读取范围。
@@ -2080,7 +2080,7 @@ export function createLocalServices(options: {
     // dev 开关必须同样传入，否则本地自测会被 host 单方面拒绝。
     officialMcpTrustedOrigins: createOfficialMcpTrustedOriginRegistry({
       devTrustedOriginsRaw: process.env[OFFICIAL_MCP_DEV_TRUSTED_ORIGINS_ENV],
-      resolveMcodeApiOrigin: resolveCurrentMcodeEndpointOrigin,
+      resolveZCodeApiOrigin: resolveCurrentMcodeEndpointOrigin,
     }),
     cuaOperationStateReporter: shouldEnableCuaOperationStateReporter({
       serviceAuthorityMode: options?.serviceAuthorityMode,
@@ -2167,7 +2167,7 @@ export function createLocalServices(options: {
         ...createNodeProviderRuntimePathEnv({
           // Built-in Active 路径按当前 Endpoint 隔离，不能通过同步的固定路径
           // getter 读取；Agent spawn 必须等待本轮 Endpoint Source 完成解析和物化。
-          mcodeBuiltinFilePath: await providerConfigRuntime.resolveMcodeBuiltinActiveFilePath(),
+          zcodeBuiltinFilePath: await providerConfigRuntime.resolveZCodeBuiltinActiveFilePath(),
           personalFilePath: join(resolveAppConfigDir(), PERSONAL_PROVIDER_CONFIG_FILE_NAME),
         }),
       };
@@ -2198,16 +2198,16 @@ export function createLocalServices(options: {
           },
         }),
   });
-  providerConnectivityAgentService = mcodeAgentService;
+  providerConnectivityAgentService = zcodeAgentService;
   // Helper health probe 短暂超时不应在 Computer Use turn 中途回收 Agent。resolver 会把 restart
   // 推迟到下一个 request/turn 边界；若 broker 确实已失效，当前 turn 会自然失败并由下一次请求恢复。
-  hasActiveTurnRef = () => mcodeAgentService.hasActiveCuaOperationTurn();
-  // desktop-continuous UI 直接订阅 mcodeSessionService，绕开 Mcode task adapter 的
+  hasActiveTurnRef = () => zcodeAgentService.hasActiveCuaOperationTurn();
+  // desktop-continuous UI 直接订阅 zcodeSessionService，绕开 Mcode task adapter 的
   // mapServiceEvent 路径，导致 task_complete 永远不会写回 sqlite，侧边栏 spinner 不停。
   // 在 services 层装配一个共享的 taskIndexRepo + syncer，session 任意入口都会唤醒
   // shadow 订阅，把 runtime 终态收敛进 sqlite。
   const mcodeTaskIndexSyncer = createMcodeTaskIndexSyncer({
-    agentService: mcodeAgentService,
+    agentService: zcodeAgentService,
     taskIndexRepo,
   });
   // The plugin can be toggled at runtime. Do not let a previously created resolver continue
@@ -2227,8 +2227,8 @@ export function createLocalServices(options: {
   });
   const cuaProductMcpServerResolver =
     options?.cuaProductMcpServerResolver ?? defaultCuaProductMcpServerResolver;
-  const mcodeSessionService = createMcodeSessionService({
-    agentService: mcodeAgentService,
+  const zcodeSessionService = createMcodeSessionService({
+    agentService: zcodeAgentService,
     taskIndexSyncer: mcodeTaskIndexSyncer,
     cuaProductMcpServerResolver,
   });
@@ -2242,7 +2242,7 @@ export function createLocalServices(options: {
     },
     textGenerator: {
       async generateText(params) {
-        return await mcodeAgentService.generateWorkspaceText({
+        return await zcodeAgentService.generateWorkspaceText({
           workspacePath: params.workspacePath,
           ...(params.workspaceIdentity ? { workspaceIdentity: params.workspaceIdentity } : {}),
           selection: params.selection,
@@ -2257,8 +2257,8 @@ export function createLocalServices(options: {
     commitMessageGenerator: gitCommitMessageGenerator,
   });
   // task wrapper 由 Mcode task service adapter 提供；核心 session 状态由 Mcode agent server 维护。
-  const mcodeTaskService = createMcodeTaskServiceAdapter({
-    mcodeAgentService,
+  const zcodeTaskService = createMcodeTaskServiceAdapter({
+    zcodeAgentService,
     taskIndexRepo,
     taskIndexSyncer: mcodeTaskIndexSyncer,
     settingService,
@@ -2344,7 +2344,7 @@ export function createLocalServices(options: {
         return null;
       }
       const tokenSet = await oauthCredentialRepo.loadTokenSet(activeProvider);
-      return tokenSet?.mcodeJwtToken ?? tokenSet?.accessToken ?? null;
+      return tokenSet?.zcodeJwtToken ?? tokenSet?.accessToken ?? null;
     },
   });
   const conversationShareService: IConversationShareServiceType = isDesktopAttachedRemote
@@ -2352,8 +2352,8 @@ export function createLocalServices(options: {
         message: "Conversation publishing is not available for remote workspaces",
       })
     : new ConversationShareService({
-        mcodeAgentService,
-        mcodeSessionService,
+        zcodeAgentService,
+        zcodeSessionService,
         client: conversationShareClient,
         artifactSource: createLocalConversationShareArtifactSource(),
       });
@@ -2392,9 +2392,9 @@ export function createLocalServices(options: {
     .register(IOnboardingRecordService, onboardingRecordService)
     .register(ICredentialService, credentialService)
     .register(IBroadcastService, broadcastService)
-    .register(IMcodeTaskService, mcodeTaskService)
-    .register(IMcodeAgentService, mcodeAgentService)
-    .register(IMcodeSessionService, mcodeSessionService)
+    .register(IMcodeTaskService, zcodeTaskService)
+    .register(IMcodeAgentService, zcodeAgentService)
+    .register(IMcodeSessionService, zcodeSessionService)
     .register(ICuaPermissionService, cuaPermissionService)
     .register(ICuaPipSessionService, cuaPipSessionService)
     .register(IConversationShareService, conversationShareService)
@@ -2402,7 +2402,7 @@ export function createLocalServices(options: {
       IBotsService,
       createBotsService({
         credentialService,
-        mcodeTaskService,
+        zcodeTaskService,
         broadcastService,
         settingService,
         modelSelectionService: providerRuntime.modelSelection,
@@ -2420,7 +2420,7 @@ export function createLocalServices(options: {
         apiClient,
         accountRequestAuthService,
         credentialService,
-        mcodeAgentService,
+        zcodeAgentService,
         officialMcpCredentialSource,
       }),
     )
@@ -2502,7 +2502,7 @@ export function createLocalServices(options: {
           logger: offPeakLogger,
           requestSchedulerWake: options?.onOffPeakSchedulerWakeRequested,
           stopRunningTask: async (params) => {
-            await mcodeTaskService.stopGeneration({
+            await zcodeTaskService.stopGeneration({
               taskId: params.conversationId,
               workspacePath: params.workspacePath,
               ...(params.workspaceIdentity ? { workspaceIdentity: params.workspaceIdentity } : {}),
@@ -2513,7 +2513,7 @@ export function createLocalServices(options: {
           },
         });
         offPeakTaskService.startSync();
-        // 回写前向引用，供 mcodeAgentService 的 offPeak/create、offPeak/list 协议 handler 调用。
+        // 回写前向引用，供 zcodeAgentService 的 offPeak/create、offPeak/list 协议 handler 调用。
         offPeakTaskServiceForAgent = offPeakTaskService;
         return offPeakTaskService;
       })(),
@@ -2553,7 +2553,7 @@ export function createLocalServices(options: {
                     await credentialService.load(`oauth:${credentials.providerFamily}:access_token`)
                   )?.trim() ?? "";
                 return buildHighspeedCodingPlanAuthHeaders({
-                  mcodeJwt: credentials.jwt,
+                  zcodeJwt: credentials.jwt,
                   codingPlanAuthorization,
                   targetType:
                     credentials.organizationId && credentials.projectId ? "TEAM" : "PERSONAL",
@@ -2595,7 +2595,7 @@ export function createLocalServices(options: {
                 await credentialService.load(`oauth:${credentials.providerFamily}:access_token`)
               )?.trim() ?? "";
             return {
-              mcodeJwt: credentials.jwt,
+              zcodeJwt: credentials.jwt,
               family: credentials.providerFamily,
               codingPlanAuthorization,
               targetType: credentials.organizationId && credentials.projectId ? "TEAM" : "PERSONAL",
@@ -2621,13 +2621,13 @@ export function createLocalServices(options: {
     .register(IPluginSyncService, pluginSyncService)
     .register(IPluginsService, createPluginsService({ isDesktopRuntime: true }))
     // 设置页插件管理薄服务——plugins/* 旧协议词的 host 侧唯一消费点。
-    .register(IPluginManagementService, createPluginManagementService({ mcodeAgentService }))
+    .register(IPluginManagementService, createPluginManagementService({ zcodeAgentService }))
     .register(ISubagentsService, subagentsService)
     .register(ICommandsService, createCommandsService({ isDesktopRuntime: true }))
     .register(
       IHooksService,
       createHooksService({
-        grantWorkspaceHookTrust: (params) => mcodeAgentService.grantWorkspaceHookTrust(params),
+        grantWorkspaceHookTrust: (params) => zcodeAgentService.grantWorkspaceHookTrust(params),
       }),
     )
     .register(IMemoryService, createMemoryService())

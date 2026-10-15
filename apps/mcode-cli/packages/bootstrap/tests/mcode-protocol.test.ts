@@ -4787,7 +4787,7 @@ describe("McodeProtocolAgentServer", () => {
       method: mcodeProtocolMethods.providerUpdateAccountConfig,
       params: {
         revision: "account-1",
-        basedOnMcodeBuiltinRevision: "mcode-builtin:1",
+        basedOnZCodeBuiltinRevision: "mcode-builtin:1",
         states: {
           "account:zai-individual-coding-plan": {
             availability: "available",
@@ -4812,7 +4812,7 @@ describe("McodeProtocolAgentServer", () => {
     expect(syncAccountProviderConfig).toHaveBeenCalledTimes(1);
     const snapshot = syncAccountProviderConfig.mock.calls[0]?.[0];
     expect(snapshot?.revision).toBe("account-1");
-    expect(snapshot?.basedOnMcodeBuiltinRevision).toBe("mcode-builtin:1");
+    expect(snapshot?.basedOnZCodeBuiltinRevision).toBe("mcode-builtin:1");
     expect(snapshot?.states?.["account:zai-individual-coding-plan"].current).toBe(false);
     expect(snapshot?.providers.toJSON()).toEqual({
       "account:zai-individual-coding-plan": {

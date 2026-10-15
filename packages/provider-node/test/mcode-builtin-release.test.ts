@@ -126,19 +126,19 @@ describe("Mcode Built-in Release", () => {
       environmentConfigRoot: "/environment",
       platform: "darwin-aarch64",
       appVersion: "3.0.0",
-      mcodeEndpointOrigin: "https://EXAMPLE.com/",
+      zcodeEndpointOrigin: "https://EXAMPLE.com/",
     });
     const equivalent = resolveMcodeBuiltinCachePaths({
       environmentConfigRoot: "/environment",
       platform: "darwin-aarch64",
       appVersion: "3.0.0",
-      mcodeEndpointOrigin: "https://example.com",
+      zcodeEndpointOrigin: "https://example.com",
     });
     const second = resolveMcodeBuiltinCachePaths({
       environmentConfigRoot: "/environment",
       platform: "darwin-aarch64",
       appVersion: "3.0.0",
-      mcodeEndpointOrigin: "https://staging.example.com",
+      zcodeEndpointOrigin: "https://staging.example.com",
     });
     expect(first).toEqual(equivalent);
     // 路径断言保留全部隔离层级，不能用 POSIX 分隔符让 Windows 正确实现误报。
@@ -156,7 +156,7 @@ describe("Mcode Built-in Release", () => {
         environmentConfigRoot: "/environment",
         platform: "../other",
         appVersion: "3.0.0",
-        mcodeEndpointOrigin: "https://example.com",
+        zcodeEndpointOrigin: "https://example.com",
       }),
     ).toThrow("platform");
   });
@@ -428,7 +428,7 @@ describe("Mcode Built-in Release", () => {
       pollingIntervalMs: false,
     });
     const config = new ProviderConfigService({
-      mcodeBuiltinSource: source,
+      zcodeBuiltinSource: source,
       personalRepository: personal,
     });
     const registry = new ProviderRegistryService({
@@ -446,7 +446,7 @@ describe("Mcode Built-in Release", () => {
       await source.refresh({ force: true });
       const second = await registry.refresh("endpoint-switch");
       expect(second.sourceRevisions.config).not.toBe(first.sourceRevisions.config);
-      expect(second.account.basedOnMcodeBuiltinRevision).toBe(second.config.mcodeBuiltinRevision);
+      expect(second.account.basedOnZCodeBuiltinRevision).toBe(second.config.zcodeBuiltinRevision);
       expect(second.resolution.resolvedProviders[0]?.models.map((model) => model.modelId)).toEqual([
         "model-b",
       ]);
@@ -456,12 +456,12 @@ describe("Mcode Built-in Release", () => {
         watch: false,
       });
       try {
-        expect((await worker.read()).revision).toBe(second.config.mcodeBuiltinRevision);
+        expect((await worker.read()).revision).toBe(second.config.zcodeBuiltinRevision);
       } finally {
         worker.dispose();
       }
       endpoint = "https://A.example.com/";
-      expect((await source.read()).revision).toBe(first.config.mcodeBuiltinRevision);
+      expect((await source.read()).revision).toBe(first.config.zcodeBuiltinRevision);
       // 等待来源通知触发的刷新完成后再拆除临时目录，不与后台文件锁竞争清理。
       await registry.refresh("endpoint-back");
     } finally {

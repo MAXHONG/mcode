@@ -133,9 +133,9 @@ export interface CreateMcpAdapterOptions {
     /**
      * 当前 Mcode API origin。stdio 形态没有 `url` 可供校验，targetOrigin 只能由宿主给出
      * ——插件因此无法把身份头导向别的 origin。
-     * 与 trustedOrigins 的 `resolveMcodeApiOrigin` 必须同源，否则两侧判定会分叉。
+     * 与 trustedOrigins 的 `resolveZCodeApiOrigin` 必须同源，否则两侧判定会分叉。
      */
-    resolveMcodeApiOrigin?: () => string;
+    resolveZCodeApiOrigin?: () => string;
     workspaceIdentity?: string;
   };
   workingDirectory?: string;
@@ -987,7 +987,7 @@ class NodeMcpAdapter implements McpPort {
     const official = config.official;
     const authHeadersPort = this.officialMcpAuth?.authHeadersPort;
     const trustedOrigins = this.officialMcpAuth?.trustedOrigins;
-    const resolveMcodeApiOrigin = this.officialMcpAuth?.resolveMcodeApiOrigin;
+    const resolveZCodeApiOrigin = this.officialMcpAuth?.resolveZCodeApiOrigin;
     const logBase = {
       event: "mcp.official_auth.stdio_meta",
       mcpKey: official.mcpKey,
@@ -1009,7 +1009,7 @@ class NodeMcpAdapter implements McpPort {
 
     // standalone CLI 没有 host auth port。不静默省略该键：插件区分不了"宿主不支持"与
     // "宿主支持但我没登录"，只有显式 reason 才能给出正确的用户提示。
-    if (!authHeadersPort || !trustedOrigins || !resolveMcodeApiOrigin) {
+    if (!authHeadersPort || !trustedOrigins || !resolveZCodeApiOrigin) {
       return fail("official_auth_unavailable");
     }
 
@@ -1024,7 +1024,7 @@ class NodeMcpAdapter implements McpPort {
     let targetOrigin: string;
     let trust: Awaited<ReturnType<OfficialMcpTrustedOriginRegistry["isTrusted"]>>;
     try {
-      targetOrigin = resolveMcodeApiOrigin();
+      targetOrigin = resolveZCodeApiOrigin();
       trust = await trustedOrigins.isTrusted({
         mcpKey: official.mcpKey,
         origin: targetOrigin,

@@ -30,7 +30,7 @@ const services = {
       return response.json();
     },
   },
-  mcodeAgentService: { onAgentRuntimeRestarted: () => ({ dispose() {} }) },
+  zcodeAgentService: { onAgentRuntimeRestarted: () => ({ dispose() {} }) },
   clientConfigService: {
     getSnapshot: async () => {
       const response = await fetch("/order");

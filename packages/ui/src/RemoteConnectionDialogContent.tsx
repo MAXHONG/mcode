@@ -365,8 +365,8 @@ export function RemoteConnectionDirectoryStep({
   remoteMcpSyncService,
   localPluginSyncService,
   remotePluginSyncService,
-  localMcodeAgentService,
-  remoteMcodeAgentService,
+  localZCodeAgentService,
+  remoteZCodeAgentService,
   localWorkspacePath,
   selecting = false,
   onSelect,
@@ -384,8 +384,8 @@ export function RemoteConnectionDirectoryStep({
   remoteMcpSyncService?: IMcpSyncService | null;
   localPluginSyncService?: IPluginSyncService;
   remotePluginSyncService?: IPluginSyncService | null;
-  localMcodeAgentService?: IMcodeAgentService;
-  remoteMcodeAgentService?: IMcodeAgentService | null;
+  localZCodeAgentService?: IMcodeAgentService;
+  remoteZCodeAgentService?: IMcodeAgentService | null;
   localWorkspacePath?: string;
   selecting?: boolean;
   onSelect: (path: string) => void;
@@ -516,8 +516,8 @@ export function RemoteConnectionDirectoryStep({
         remoteMcpSyncService={remoteMcpSyncService}
         localPluginSyncService={localPluginSyncService}
         remotePluginSyncService={remotePluginSyncService}
-        localMcodeAgentService={localMcodeAgentService}
-        remoteMcodeAgentService={remoteMcodeAgentService}
+        localZCodeAgentService={localZCodeAgentService}
+        remoteZCodeAgentService={remoteZCodeAgentService}
         remoteTarget={remoteTarget}
         skillWorkspacePath=""
         mcpWorkspacePath={selectedPath.trim()}

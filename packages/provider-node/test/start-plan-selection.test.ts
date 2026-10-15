@@ -18,7 +18,7 @@ it("Host/Worker 共用 facade：Start 与付费并存，Start 不映射或迁移
   let available = true;
   let account!: AccountProviderService;
   const runtime = new NodeProviderRegistryRuntime({
-    mcodeBuiltinFilePath: fileURLToPath(
+    zcodeBuiltinFilePath: fileURLToPath(
       new URL("../../../config/provider/mcode-builtin.json", import.meta.url),
     ),
     personalFilePath: join(root, "personal.json"),

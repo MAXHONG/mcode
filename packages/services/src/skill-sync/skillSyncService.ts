@@ -146,7 +146,7 @@ async function collectUserSkillCandidates(): Promise<SkillSyncCandidate[]> {
   const mcodeSkillNameKeys = new Set(
     rawMcodeCandidates.map((candidate) => normalizeSkillNameKey(candidate.name)),
   );
-  const mcodeCandidates = await dedupeCandidatesByCanonicalSkillPath(
+  const zcodeCandidates = await dedupeCandidatesByCanonicalSkillPath(
     rawMcodeCandidates,
     seenSkillRealpaths,
   );
@@ -159,7 +159,7 @@ async function collectUserSkillCandidates(): Promise<SkillSyncCandidate[]> {
     seenSkillRealpaths,
   );
 
-  return [...mcodeCandidates, ...agentsCandidates].sort((left, right) =>
+  return [...zcodeCandidates, ...agentsCandidates].sort((left, right) =>
     left.directoryName.localeCompare(right.directoryName),
   );
 }

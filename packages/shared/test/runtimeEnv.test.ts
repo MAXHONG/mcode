@@ -4,14 +4,14 @@ import {
   MCODE_REMOTE_HTTP_PROXY_ENV_KEY,
   MCODE_REMOTE_NO_PROXY_ENV_KEY,
   MCODE_REMOTE_RUNTIME_NETWORK_AUTHORITY_ENV_KEY,
-  buildMcodeToolEnvPassthroughEnv,
+  buildZCodeToolEnvPassthroughEnv,
   getCapturedMcodeCuaBrokerCredentials,
   isCuaDevModeRequested,
   isMcodeCuaInternalFeatureEnabled,
   readMcodeAgentTelemetryEnv,
   readMcodeToolEnvPassthroughEnv,
   resetCapturedMcodeCuaBrokerCredentialsForTest,
-  sanitizeMcodeRuntimeEnv,
+  sanitizeZCodeRuntimeEnv,
   getCapturedMcodeAgentTelemetryEnv,
   resetCapturedMcodeAgentTelemetryEnvForTest,
 } from "../src/runtimeEnv.js";
@@ -51,8 +51,8 @@ describe("runtimeEnv", () => {
       npm_config_proxy: "http://npm-proxy.example:8080",
     };
 
-    const sanitized = sanitizeMcodeRuntimeEnv(sourceEnv);
-    const passthroughEnv = buildMcodeToolEnvPassthroughEnv(sourceEnv);
+    const sanitized = sanitizeZCodeRuntimeEnv(sourceEnv);
+    const passthroughEnv = buildZCodeToolEnvPassthroughEnv(sourceEnv);
     const captured = readMcodeToolEnvPassthroughEnv(passthroughEnv);
 
     expect(sanitized).toEqual({ PATH: "/usr/bin:/bin" });
@@ -92,10 +92,10 @@ describe("runtimeEnv", () => {
       MCODE_CUA_PERMISSION_BROKER_REFRESH_MARKER:
         "/tmp/mcode-cua-me/broker-abc.sock.permission-refresh.json",
     };
-    const sanitized = sanitizeMcodeRuntimeEnv(sourceEnv);
+    const sanitized = sanitizeZCodeRuntimeEnv(sourceEnv);
     expect(sanitized).toEqual({ PATH: "/usr/bin:/bin" });
 
-    const captured = readMcodeToolEnvPassthroughEnv(buildMcodeToolEnvPassthroughEnv(sourceEnv));
+    const captured = readMcodeToolEnvPassthroughEnv(buildZCodeToolEnvPassthroughEnv(sourceEnv));
     expect(captured).not.toHaveProperty("MCODE_CUA_PERMISSION_BROKER_SOCKET");
     expect(captured).not.toHaveProperty("MCODE_CUA_PERMISSION_BROKER_SOCKET");
     expect(captured).not.toHaveProperty("MCODE_CUA_PERMISSION_BROKER_REFRESH_MARKER");
@@ -109,14 +109,14 @@ describe("runtimeEnv", () => {
       [MCODE_REMOTE_NO_PROXY_ENV_KEY]: "localhost,127.0.0.1",
     };
 
-    expect(sanitizeMcodeRuntimeEnv(sourceEnv)).toEqual({ PATH: "/usr/bin:/bin" });
-    expect(readMcodeToolEnvPassthroughEnv(buildMcodeToolEnvPassthroughEnv(sourceEnv))).toEqual({});
+    expect(sanitizeZCodeRuntimeEnv(sourceEnv)).toEqual({ PATH: "/usr/bin:/bin" });
+    expect(readMcodeToolEnvPassthroughEnv(buildZCodeToolEnvPassthroughEnv(sourceEnv))).toEqual({});
   });
 
   it("captures broker credentials as one atomic pair and clears stale state on partial rotation", () => {
     resetCapturedMcodeCuaBrokerCredentialsForTest();
     try {
-      sanitizeMcodeRuntimeEnv({
+      sanitizeZCodeRuntimeEnv({
         MCODE_CUA_PERMISSION_BROKER_SOCKET: "/tmp/broker-a.sock",
         MCODE_CUA_PLUGIN_AUTHORITY: "authority-a",
       });
@@ -125,7 +125,7 @@ describe("runtimeEnv", () => {
         pluginAuthority: "authority-a",
       });
 
-      sanitizeMcodeRuntimeEnv({
+      sanitizeZCodeRuntimeEnv({
         MCODE_CUA_PERMISSION_BROKER_SOCKET: "/tmp/broker-b.sock",
       });
       expect(getCapturedMcodeCuaBrokerCredentials()).toEqual({
@@ -133,7 +133,7 @@ describe("runtimeEnv", () => {
         pluginAuthority: undefined,
       });
 
-      sanitizeMcodeRuntimeEnv({
+      sanitizeZCodeRuntimeEnv({
         MCODE_CUA_PERMISSION_BROKER_SOCKET: "/tmp/broker-b.sock",
         MCODE_CUA_PLUGIN_AUTHORITY: "authority-b",
       });
@@ -156,7 +156,7 @@ describe("runtimeEnv", () => {
       PATH: "/usr/bin:/bin",
       MCODE_TELEMETRY_USER_SUBJECT_ID: "opaque-user",
     };
-    expect(sanitizeMcodeRuntimeEnv(sourceEnv)).toEqual({ PATH: "/usr/bin:/bin" });
+    expect(sanitizeZCodeRuntimeEnv(sourceEnv)).toEqual({ PATH: "/usr/bin:/bin" });
     expect(getCapturedMcodeAgentTelemetryEnv()).toMatchObject({
       OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "https://arms.example.com/v1/traces",
       OTEL_EXPORTER_OTLP_TRACES_HEADERS: "Authorization=secret",
@@ -164,7 +164,7 @@ describe("runtimeEnv", () => {
       OTEL_EXPORTER_OTLP_METRICS_HEADERS: "Authorization=metric-secret",
       MCODE_TELEMETRY_USER_SUBJECT_ID: "opaque-user",
     });
-    const toolEnv = readMcodeToolEnvPassthroughEnv(buildMcodeToolEnvPassthroughEnv(sourceEnv));
+    const toolEnv = readMcodeToolEnvPassthroughEnv(buildZCodeToolEnvPassthroughEnv(sourceEnv));
     expect(toolEnv).not.toHaveProperty("OTEL_EXPORTER_OTLP_TRACES_HEADERS");
     expect(toolEnv).not.toHaveProperty("OTEL_EXPORTER_OTLP_METRICS_HEADERS");
     expect(toolEnv).not.toHaveProperty("MCODE_TELEMETRY_USER_SUBJECT_ID");

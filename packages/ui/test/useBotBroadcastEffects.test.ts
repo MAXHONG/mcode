@@ -49,19 +49,19 @@ describe("useBotBroadcastEffects", () => {
         ],
       },
     ];
-    const mcodeSessionStore = {
+    const zcodeSessionStore = {
       setTaskConfigOptions: vi.fn(),
     };
 
     syncBotTaskConfigOptionsToStore({
-      mcodeSessionStore,
+      zcodeSessionStore,
       workspacePath: "/repo",
       workspaceIdentity: "ssh://host/repo",
       taskId: "task-1",
       configOptions,
     });
 
-    expect(mcodeSessionStore.setTaskConfigOptions).toHaveBeenCalledWith(
+    expect(zcodeSessionStore.setTaskConfigOptions).toHaveBeenCalledWith(
       "/repo",
       "task-1",
       configOptions,

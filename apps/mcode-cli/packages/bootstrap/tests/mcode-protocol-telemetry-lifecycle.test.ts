@@ -291,7 +291,7 @@ async function runProtocolAgent(
 }
 
 async function createProtocolProviderEnv(root: string): Promise<Record<string, string>> {
-  const mcodeBuiltinFilePath = join(root, "mcode-builtin.json");
+  const zcodeBuiltinFilePath = join(root, "mcode-builtin.json");
   const personalFilePath = join(root, "provider-personal.json");
   const emptyBuiltinRelease = JSON.stringify({
     // 旧 fixture 使用已退出的 v2 展开结构，导致生命周期尚未启动就被 schema 拒绝。
@@ -314,8 +314,8 @@ async function createProtocolProviderEnv(root: string): Promise<Record<string, s
     modelConfigRules: [],
   });
   await Promise.all([
-    writeFile(mcodeBuiltinFilePath, emptyBuiltinRelease),
+    writeFile(zcodeBuiltinFilePath, emptyBuiltinRelease),
     writeFile(personalFilePath, emptyPersonalConfig),
   ]);
-  return createNodeProviderRuntimePathEnv({ mcodeBuiltinFilePath, personalFilePath });
+  return createNodeProviderRuntimePathEnv({ zcodeBuiltinFilePath, personalFilePath });
 }

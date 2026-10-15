@@ -6,12 +6,12 @@ import {
 
 describe("commands settings source filter", () => {
   it("keeps built-in command sources in stable display order", () => {
-    expect(COMMAND_AGENT_SOURCES).toEqual(["mcodeAgent"]);
+    expect(COMMAND_AGENT_SOURCES).toEqual(["zcodeAgent"]);
   });
 
   it("maps command sources to user-facing metadata", () => {
-    expect(COMMAND_AGENT_SOURCE_META.mcodeAgent).toMatchObject({
-      labelId: "settings.commands.source.mcodeAgent",
+    expect(COMMAND_AGENT_SOURCE_META.zcodeAgent).toMatchObject({
+      labelId: "settings.commands.source.zcodeAgent",
       pathHint: "~/.mcode/commands",
       provider: "glm",
     });

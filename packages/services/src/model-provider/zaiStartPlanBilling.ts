@@ -9,7 +9,7 @@ import { readApiJson } from "../providers/api/apiJson.js";
 const REQUEST_TIMEOUT_MS = 15_000;
 const ZAI_START_PLAN_BALANCE_URL = buildRuntimeMcodeEndpointUrls(
   process.env,
-).mcodePlanBillingBalanceUrl;
+).zcodePlanBillingBalanceUrl;
 
 export interface ZaiStartPlanPlan {
   // user_plan_id 标识用户套餐实例；额度提醒用它关联同一实例的 entitlement 周期类型。

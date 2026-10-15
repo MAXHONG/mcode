@@ -2955,7 +2955,7 @@ describe("mcodeSessionProjection", () => {
         traceId: "trace_goal_verify",
         messageId: "mcode-goal-verification-target_1-2",
         content: "",
-        mcodeTimeline: {
+        zcodeTimeline: {
           version: 1,
           kind: "synthetic",
           type: "goal_verification",
@@ -3004,7 +3004,7 @@ describe("mcodeSessionProjection", () => {
         traceId: "trace_goal_verify",
         messageId: "mcode-goal-verification-target_1-3",
         content: "",
-        mcodeTimeline: {
+        zcodeTimeline: {
           version: 1,
           kind: "synthetic",
           type: "goal_verification",
@@ -5416,7 +5416,7 @@ describe("mcodeSessionProjection", () => {
         inputId: "input-compact",
         messageId: "msg-compact-1",
         content: "",
-        mcodeTimeline: {
+        zcodeTimeline: {
           version: 1,
           kind: "synthetic",
           type: "context_compaction",
@@ -5470,7 +5470,7 @@ describe("mcodeSessionProjection", () => {
       inputId: "input-compact",
       messageId: "msg-compact-1",
       content: "",
-      mcodeTimeline: {
+      zcodeTimeline: {
         type: "context_compaction",
         operationId: "cmp-1",
         status: "retrying",
@@ -5517,7 +5517,7 @@ describe("mcodeSessionProjection", () => {
       inputId: "input-compact",
       messageId: "msg-compact-skipped",
       content: "",
-      mcodeTimeline: {
+      zcodeTimeline: {
         type: "context_compaction",
         operationId: "cmp-skipped",
         status: "skipped",
@@ -5570,7 +5570,7 @@ describe("mcodeSessionProjection", () => {
         traceId: "trace_fork",
         messageId: "msg_fork_notice",
         content: "",
-        mcodeTimeline: {
+        zcodeTimeline: {
           version: 1,
           kind: "synthetic",
           type: "session_fork",
@@ -5618,7 +5618,7 @@ describe("mcodeSessionProjection", () => {
       taskId: "sess_1",
       traceId: "input-compact",
       inputId: "input-compact",
-      mcodeTimeline: {
+      zcodeTimeline: {
         type: "context_compaction",
         status: "failed",
         inputId: "input-compact",

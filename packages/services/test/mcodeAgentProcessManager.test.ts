@@ -309,9 +309,9 @@ describe("resolveDefaultMcodeAgentCommand", () => {
     delete process.env.MCODE_AGENT_SERVER_ARGS_JSON;
     delete process.env.MCODE_AGENT_SERVER_CWD;
 
-    // Bugfix: SSH 远端把 mcode-server.cjs 部署到 ~/.mcode/server/，cwd 不在仓库内、
+    // Bugfix: SSH 远端把 zcode-server.cjs 部署到 ~/.zcode/server/，cwd 不在仓库内、
     // MCODE_AGENT_SERVER_COMMAND 也没设；旧 resolver 只识别 env 和 monorepo 源码树，
-    // 即使 mcode-agent 已部署到 ~/.mcode/server/agents/glm/，resolver 也找不到。
+    // 即使 mcode-agent 已部署到 ~/.zcode/server/agents/glm/，resolver 也找不到。
     // 这里用 GLM_BINARY_PATH（=runtime.binaryEnvVar）模拟该部署场景，
     // 验证 resolver 复用 findMcodeAgentRuntimeBinary 命中已部署 binary。
     const sandboxRoot = mkdtempSync(join(tmpdir(), "mcode-agent-deployed-binary-"));
@@ -481,7 +481,7 @@ describe("resolveDefaultMcodeAgentCommand", () => {
     const workspacePath = mkdtempSync(join(tmpdir(), "mcode-agent-manager-provider-env-"));
     createdDirs.push(workspacePath);
     const markerPath = join(workspacePath, "provider-env.json");
-    const mcodeBuiltinFilePath = join(workspacePath, "mcode-builtin.json");
+    const zcodeBuiltinFilePath = join(workspacePath, "mcode-builtin.json");
     const personalFilePath = join(workspacePath, "personal.json");
     const manager = new McodeAgentProcessManager({
       commandResolver: () => ({
@@ -493,7 +493,7 @@ describe("resolveDefaultMcodeAgentCommand", () => {
         cwd: workspacePath,
       }),
       resolveSpawnEnv: () => ({
-        MCODE_BUILTIN_PROVIDER_CONFIG_FILE: mcodeBuiltinFilePath,
+        MCODE_BUILTIN_PROVIDER_CONFIG_FILE: zcodeBuiltinFilePath,
         MCODE_PERSONAL_PROVIDER_CONFIG_FILE: personalFilePath,
       }),
     });
@@ -502,7 +502,7 @@ describe("resolveDefaultMcodeAgentCommand", () => {
       await manager.getClient({ workspacePath });
       await vi.waitFor(() => expect(existsSync(markerPath)).toBe(true));
       expect(JSON.parse(readFileSync(markerPath, "utf8"))).toEqual({
-        official: mcodeBuiltinFilePath,
+        official: zcodeBuiltinFilePath,
         personal: personalFilePath,
       });
     } finally {

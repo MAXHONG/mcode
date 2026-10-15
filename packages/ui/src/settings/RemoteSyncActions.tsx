@@ -240,8 +240,8 @@ export function RemoteSyncDialogs({
   remoteMcpSyncService,
   localPluginSyncService,
   remotePluginSyncService,
-  localMcodeAgentService,
-  remoteMcodeAgentService,
+  localZCodeAgentService,
+  remoteZCodeAgentService,
   remoteTarget,
   skillWorkspacePath,
   mcpWorkspacePath,
@@ -268,8 +268,8 @@ export function RemoteSyncDialogs({
   remoteMcpSyncService?: IMcpSyncService | null;
   localPluginSyncService?: IPluginSyncService | null;
   remotePluginSyncService?: IPluginSyncService | null;
-  localMcodeAgentService?: IMcodeAgentService | null;
-  remoteMcodeAgentService?: IMcodeAgentService | null;
+  localZCodeAgentService?: IMcodeAgentService | null;
+  remoteZCodeAgentService?: IMcodeAgentService | null;
   remoteTarget?: RemoteTarget | null;
   skillWorkspacePath: string;
   mcpWorkspacePath: string;
@@ -350,8 +350,8 @@ export function RemoteSyncDialogs({
           onOpenChange={onPluginOpenChange ?? (() => {})}
           localPluginSyncService={pluginDialogProps.localPluginSyncService}
           remotePluginSyncService={pluginDialogProps.remotePluginSyncService}
-          localMcodeAgentService={localMcodeAgentService}
-          remoteMcodeAgentService={remoteMcodeAgentService}
+          localZCodeAgentService={localZCodeAgentService}
+          remoteZCodeAgentService={remoteZCodeAgentService}
           remoteTarget={pluginDialogProps.remoteTarget}
           localWorkspacePath={pluginLocalWorkspacePath}
           workspacePath={pluginWorkspacePath ?? mcpWorkspacePath}

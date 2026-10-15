@@ -12,7 +12,7 @@ import {
   normalizeMcodeEndpointOrigin,
   PlatformChannels,
   resolveHelpAppConfig,
-  resolveMcodeEndpointOrigin,
+  resolveZCodeEndpointOrigin,
   MCODE_ENV,
   MCODE_PRODUCT_FLAVOR,
   type AppSettings,
@@ -409,7 +409,7 @@ function showMcodeEndpointPromptWindow(options: {
 
 async function setMcodeEndpointOverride(options: {
   value: string | undefined;
-  settingService: { update(patch: { mcodeEndpointOrigin?: string | undefined }): Promise<void> };
+  settingService: { update(patch: { zcodeEndpointOrigin?: string | undefined }): Promise<void> };
   onMcodeEndpointChanged: () => Promise<void> | void;
   logger: { warn: (...args: unknown[]) => void };
 }) {
@@ -417,7 +417,7 @@ async function setMcodeEndpointOverride(options: {
     return;
   }
   const normalized = options.value ? normalizeMcodeEndpointOrigin(options.value) : undefined;
-  await options.settingService.update({ mcodeEndpointOrigin: normalized });
+  await options.settingService.update({ zcodeEndpointOrigin: normalized });
   await options.onMcodeEndpointChanged();
 }
 
@@ -467,14 +467,14 @@ export async function openChangelog(
 }
 
 async function resolveCurrentMcodeEndpointOrigin(settingService: {
-  get(): Promise<{ mcodeEndpointOrigin?: string }>;
+  get(): Promise<{ zcodeEndpointOrigin?: string }>;
   envBaseOrigin?: string | null;
 }): Promise<string> {
   const settings = await settingService.get();
-  return resolveMcodeEndpointOrigin({
+  return resolveZCodeEndpointOrigin({
     env: MCODE_ENV,
     envBaseOrigin: settingService.envBaseOrigin,
-    overrideOrigin: settings.mcodeEndpointOrigin,
+    overrideOrigin: settings.zcodeEndpointOrigin,
   });
 }
 
@@ -492,9 +492,9 @@ export async function executeDesktopCommand(options: {
   onMcodeEndpointChanged: () => Promise<void> | void;
   onRelaunchApp: () => Promise<void>;
   settingService: {
-    get(): Promise<Pick<AppSettings, "mcodeEndpointOrigin" | "desktopZoomLevel">>;
+    get(): Promise<Pick<AppSettings, "zcodeEndpointOrigin" | "desktopZoomLevel">>;
     update(
-      patch: Partial<Pick<AppSettings, "mcodeEndpointOrigin" | "desktopZoomLevel">>,
+      patch: Partial<Pick<AppSettings, "zcodeEndpointOrigin" | "desktopZoomLevel">>,
     ): Promise<void>;
   };
   mcodeEndpointEnvBaseOrigin?: string | null;
@@ -622,13 +622,13 @@ export async function executeDesktopCommand(options: {
     case DesktopCommandIds.OpenResourceManager:
       openResourceManager();
       return;
-    case DesktopCommandIds.ToggleMcodeStdioTapDevProxy:
+    case DesktopCommandIds.ToggleZCodeStdioTapDevProxy:
       toggleMcodeStdioTapDevProxy({
         logger: options.logger,
         updateMcodeStdioTapDevMenuState: options.updateMcodeStdioTapDevMenuState,
       });
       return;
-    case DesktopCommandIds.SetMcodeEndpointProduction:
+    case DesktopCommandIds.SetZCodeEndpointProduction:
       await setMcodeEndpointOverride({
         value: DEFAULT_MCODE_ENDPOINT_ORIGIN,
         settingService: options.settingService,
@@ -636,7 +636,7 @@ export async function executeDesktopCommand(options: {
         logger: options.logger,
       });
       return;
-    case DesktopCommandIds.SetMcodeEndpointTest:
+    case DesktopCommandIds.SetZCodeEndpointTest:
       await setMcodeEndpointOverride({
         value: TEST_MCODE_ENDPOINT_ORIGIN,
         settingService: options.settingService,
@@ -644,9 +644,9 @@ export async function executeDesktopCommand(options: {
         logger: options.logger,
       });
       return;
-    case DesktopCommandIds.SetMcodeEndpointCustom: {
+    case DesktopCommandIds.SetZCodeEndpointCustom: {
       const current =
-        (await options.settingService.get()).mcodeEndpointOrigin ?? DEFAULT_MCODE_ENDPOINT_ORIGIN;
+        (await options.settingService.get()).zcodeEndpointOrigin ?? DEFAULT_MCODE_ENDPOINT_ORIGIN;
       const value = await promptCustomMcodeEndpoint(targetWindow, current);
       if (!value) {
         return;
@@ -668,7 +668,7 @@ export async function executeDesktopCommand(options: {
       }
       return;
     }
-    case DesktopCommandIds.ResetMcodeEndpoint:
+    case DesktopCommandIds.ResetZCodeEndpoint:
       await setMcodeEndpointOverride({
         value: undefined,
         settingService: options.settingService,

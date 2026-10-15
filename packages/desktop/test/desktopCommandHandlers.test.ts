@@ -288,7 +288,7 @@ describe("desktopCommandHandlers resolveFeedbackUrl", () => {
     const { executeDesktopCommand } = await import("../src/main/desktopCommandHandlers.js");
     const { shell } = await import("electron");
     const commandOptions = createCommandOptions({
-      settings: { mcodeEndpointOrigin: "https://zcode.z.ai" },
+      settings: { zcodeEndpointOrigin: "https://zcode.z.ai" },
     });
 
     await executeDesktopCommand({
@@ -337,18 +337,18 @@ describe("desktopCommandHandlers resolveFeedbackUrl", () => {
 
     await executeDesktopCommand({
       ...commandOptions,
-      command: DesktopCommandIds.SetMcodeEndpointTest,
+      command: DesktopCommandIds.SetZCodeEndpointTest,
     });
     expect(commandOptions.settingService.update).toHaveBeenLastCalledWith({
-      mcodeEndpointOrigin: "https://zcode.z.ai",
+      zcodeEndpointOrigin: "https://zcode.z.ai",
     });
 
     await executeDesktopCommand({
       ...commandOptions,
-      command: DesktopCommandIds.ResetMcodeEndpoint,
+      command: DesktopCommandIds.ResetZCodeEndpoint,
     });
     expect(commandOptions.settingService.update).toHaveBeenLastCalledWith({
-      mcodeEndpointOrigin: undefined,
+      zcodeEndpointOrigin: undefined,
     });
     expect(onMcodeEndpointChanged).toHaveBeenCalledTimes(2);
   });
@@ -360,7 +360,7 @@ describe("desktopCommandHandlers resolveFeedbackUrl", () => {
 
     const commandPromise = executeDesktopCommand({
       ...commandOptions,
-      command: DesktopCommandIds.SetMcodeEndpointCustom,
+      command: DesktopCommandIds.SetZCodeEndpointCustom,
     });
     await vi.waitFor(() => expect(BrowserWindowMock).toHaveBeenCalledTimes(1));
     const promptWindow = browserWindowInstances[0];
@@ -372,7 +372,7 @@ describe("desktopCommandHandlers resolveFeedbackUrl", () => {
     await commandPromise;
 
     expect(commandOptions.settingService.update).toHaveBeenCalledWith({
-      mcodeEndpointOrigin: "http://localhost:3030",
+      zcodeEndpointOrigin: "http://localhost:3030",
     });
     expect(onMcodeEndpointChanged).toHaveBeenCalledTimes(1);
   });
@@ -542,7 +542,7 @@ function createCommandOptions(options?: {
   onDesktopZoomChanged?: () => void;
   onRelaunchApp?: () => Promise<void>;
   onMcodeEndpointChanged?: () => void;
-  settings?: { mcodeEndpointOrigin?: string; desktopZoomLevel?: number };
+  settings?: { zcodeEndpointOrigin?: string; desktopZoomLevel?: number };
 }) {
   return {
     command: DesktopCommandIds.OpenChangelog,

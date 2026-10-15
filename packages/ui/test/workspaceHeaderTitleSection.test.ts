@@ -108,7 +108,7 @@ vi.mock("@/hooks/useWorkspaceServices.js", () => ({
     skillSyncService: {},
     mcpSyncService: {},
     pluginSyncService: {},
-    mcodeTaskService: {
+    zcodeTaskService: {
       archiveTask: vi.fn(),
       renameTask: vi.fn(),
       setTaskPinned: vi.fn(),

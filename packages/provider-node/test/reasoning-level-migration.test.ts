@@ -32,17 +32,17 @@ afterAll(() => source.dispose());
 function view(modelId: string, level: string, personalModels = ModelConfigRules.empty()) {
   const config = {
     revision: "c",
-    mcodeBuiltinRevision: "b",
+    zcodeBuiltinRevision: "b",
     personalRevision: "p",
-    mcodeBuiltinProviders: builtin.providers,
-    mcodeBuiltinProviderTemplates: builtin.templates,
+    zcodeBuiltinProviders: builtin.providers,
+    zcodeBuiltinProviderTemplates: builtin.templates,
     personalProviders: ProviderConfigMap.empty(),
-    mcodeBuiltinModelRules: builtin.models,
+    zcodeBuiltinModelRules: builtin.models,
     personalModels,
   };
   const account = {
     revision: "a",
-    basedOnMcodeBuiltinRevision: "b",
+    basedOnZCodeBuiltinRevision: "b",
     providers: new ProviderConfigMap([
       [
         "account:bigmodel-individual-coding-plan",

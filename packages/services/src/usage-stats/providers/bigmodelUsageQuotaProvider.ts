@@ -161,7 +161,7 @@ interface TeamPlanContext {
 }
 
 interface CodingPlanResetAuthorization {
-  mcodeAuthorization: string;
+  zcodeAuthorization: string;
   codingPlanAuthorization: string;
   teamContext: TeamPlanContext | null;
 }
@@ -657,8 +657,8 @@ export class BigModelUsageQuotaProvider {
       providerId: request.preferredProviderId,
       accountAccess,
     });
-    const mcodeJwt = (await this.credentialService?.load(MCODE_JWT_TOKEN_KEY))?.trim() ?? "";
-    if (!mcodeJwt) {
+    const zcodeJwt = (await this.credentialService?.load(MCODE_JWT_TOKEN_KEY))?.trim() ?? "";
+    if (!zcodeJwt) {
       throw new Error("coding_plan_reset_mcode_jwt_required");
     }
     // reset 同时支持 Z.ai 与 BigModel Coding Plan。固定读取 oauth:bigmodel:access_token
@@ -671,7 +671,7 @@ export class BigModelUsageQuotaProvider {
       throw new Error("coding_plan_reset_maas_jwt_required");
     }
     return {
-      mcodeAuthorization: /^Bearer\s/i.test(mcodeJwt) ? mcodeJwt : `Bearer ${mcodeJwt}`,
+      zcodeAuthorization: /^Bearer\s/i.test(zcodeJwt) ? zcodeJwt : `Bearer ${zcodeJwt}`,
       codingPlanAuthorization: codingPlanJwt,
       teamContext: resolveTeamPlanContext(accountAccess),
     };
@@ -984,7 +984,7 @@ function createCodingPlanResetHeaders(
   includeTargetScope: boolean,
 ): Record<string, string> {
   const headers: Record<string, string> = {
-    Authorization: authorization.mcodeAuthorization,
+    Authorization: authorization.zcodeAuthorization,
     "X-Bigmodel-Authorization": authorization.codingPlanAuthorization,
   };
   if (!includeTargetScope) {

@@ -130,7 +130,7 @@ export async function loginMcodeCli(
         const displayName = readyData.user.name || readyData.user.email || readyData.user.user_id;
         await credentialStore.saveMany({
           [SHARED_MCODE_CREDENTIAL_KEYS.activeProvider]: providerId,
-          [SHARED_MCODE_CREDENTIAL_KEYS.mcodeJwtToken]: readyData.token,
+          [SHARED_MCODE_CREDENTIAL_KEYS.zcodeJwtToken]: readyData.token,
           [SHARED_MCODE_CREDENTIAL_KEYS.bigmodelAccessToken]: readyData.accessToken,
           ...(readyData.refreshToken
             ? { [SHARED_MCODE_CREDENTIAL_KEYS.bigmodelRefreshToken]: readyData.refreshToken }

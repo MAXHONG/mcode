@@ -22,7 +22,7 @@ import { useWebRemoteControlTerminalTransportState } from "@/webRemoteControlTer
 type WebRemoteControlMobilePage = "home" | "chat";
 
 interface WebRemoteControlMobileHistoryState {
-  mcodeMobilePage?: WebRemoteControlMobilePage;
+  zcodeMobilePage?: WebRemoteControlMobilePage;
 }
 
 export function isWebRemoteControlMobileChatHistoryState(
@@ -31,7 +31,7 @@ export function isWebRemoteControlMobileChatHistoryState(
   return (
     typeof state === "object" &&
     state !== null &&
-    (state as WebRemoteControlMobileHistoryState).mcodeMobilePage === "chat"
+    (state as WebRemoteControlMobileHistoryState).zcodeMobilePage === "chat"
   );
 }
 
@@ -44,7 +44,7 @@ function pushWebRemoteControlMobileChatHistory() {
     return;
   }
 
-  window.history.pushState({ mcodeMobilePage: "chat" }, "");
+  window.history.pushState({ zcodeMobilePage: "chat" }, "");
 }
 
 function resolveInitialWebRemoteControlMobilePage(

@@ -186,7 +186,7 @@ describe("createAccountProviderConnectionResolver", () => {
     });
     const parsed = mcodeProviderUpdateAccountConfigParamsSchema.parse({
       revision: "account-1",
-      basedOnMcodeBuiltinRevision: "builtin-1",
+      basedOnZCodeBuiltinRevision: "builtin-1",
       providers: {},
       states: result.states,
     });

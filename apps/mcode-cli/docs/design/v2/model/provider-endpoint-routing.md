@@ -141,7 +141,7 @@ ProviderEndpointRoutingPort.resolve
 它不得经过 provider endpoint routing，避免 `/agent/configs` 自递归。
 
 请求为无参数 GET。除 `Accept` 外，来源标识必须复用与
-`buildMcodeSourceHeaders` 相同的共享构造规则，发送：
+`buildZCodeSourceHeaders` 相同的共享构造规则，发送：
 
 - `Accept: application/json`
 - `HTTP-Referer`，跟随当前 runtime Mcode endpoint origin

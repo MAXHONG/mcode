@@ -40,7 +40,7 @@ interface UsageStatsServiceDependencies {
   credentialService?: Pick<ICredentialService, "load">;
   env?: NodeJS.ProcessEnv;
   /** App Usage 经 Mcode Protocol 读取 agent 数据库真实统计。 */
-  mcodeAgentService: Pick<IMcodeAgentService, "getAppUsageStats">;
+  zcodeAgentService: Pick<IMcodeAgentService, "getAppUsageStats">;
   /**
    * 官方 Server MCP 额度的凭证来源（与 server MCP 调用同一套 5 个身份头）。
    * 缺省时 entitlement 快照不含 MCP 额度。
@@ -87,7 +87,7 @@ export function createUsageStatsService(
     async getAppUsageSnapshot(request: AppUsageRequest): Promise<AppUsageSnapshot> {
       // App Usage 现读取 agent 数据库真实统计（model_usage/turn_usage/tool_usage），
       // 经 Mcode Protocol usage/stats 取回。不再读本地 session JSON 估算。
-      return dependencies.mcodeAgentService.getAppUsageStats({
+      return dependencies.zcodeAgentService.getAppUsageStats({
         range: request.range,
         timeZone: request.timeZone,
       });

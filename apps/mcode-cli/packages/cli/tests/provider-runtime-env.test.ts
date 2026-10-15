@@ -40,12 +40,12 @@ test("preserves explicitly injected provider runtime paths", async () => {
 test("resolves the development Mcode Built-in Config and shared Personal Config", async () => {
   const root = await temporaryDirectory();
   const entrypoint = join(root, "apps/mcode-cli/packages/cli/src/main.ts");
-  const mcodeBuiltinFilePath = join(root, "config/provider/mcode-builtin.json");
+  const zcodeBuiltinFilePath = join(root, "config/provider/mcode-builtin.json");
   await mkdir(dirname(entrypoint), { recursive: true });
-  await mkdir(dirname(mcodeBuiltinFilePath), { recursive: true });
+  await mkdir(dirname(zcodeBuiltinFilePath), { recursive: true });
   // 随包配置按入口真实路径（解析软链接后）定位，入口文件必须真实存在。
   await writeFile(entrypoint, "");
-  await writeFile(mcodeBuiltinFilePath, EMPTY_RELEASE);
+  await writeFile(zcodeBuiltinFilePath, EMPTY_RELEASE);
 
   const prepared = await prepareCliProviderRuntimeEnv({
     argv: ["tui"],
@@ -84,7 +84,7 @@ test("resolves the development Mcode Built-in Config and shared Personal Config"
   // 临时目录本身可能经过软链接（macOS 的 /tmp、/var），随包配置报告的是真实路径。
   assert.equal(
     prepared.MCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE,
-    await realpath(mcodeBuiltinFilePath),
+    await realpath(zcodeBuiltinFilePath),
   );
   await assert.rejects(access(join(dirname(activeFilePath!), "mcode-builtin-refresh.json")));
 });
@@ -110,11 +110,11 @@ test("materializes the SEA config in the fixed environment resource path, separa
     platform: "test-platform",
   });
 
-  const mcodeBuiltinFilePath = prepared[MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV];
-  assert.ok(mcodeBuiltinFilePath);
-  assertActiveConfigPath(mcodeBuiltinFilePath, root);
+  const zcodeBuiltinFilePath = prepared[MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV];
+  assert.ok(zcodeBuiltinFilePath);
+  assertActiveConfigPath(zcodeBuiltinFilePath, root);
   assert.deepEqual(
-    JSON.parse(await readFile(mcodeBuiltinFilePath, "utf8")),
+    JSON.parse(await readFile(zcodeBuiltinFilePath, "utf8")),
     JSON.parse(mcodeBuiltinContent),
   );
   assert.equal(reads, 1);
@@ -127,10 +127,10 @@ test("materializes the SEA config in the fixed environment resource path, separa
     "bundled",
     "mcode-builtin.json",
   );
-  assert.notEqual(resource, mcodeBuiltinFilePath);
+  assert.notEqual(resource, zcodeBuiltinFilePath);
   assert.deepEqual(JSON.parse(await readFile(resource, "utf8")), JSON.parse(mcodeBuiltinContent));
   assert.equal(prepared.MCODE_BUILTIN_PROVIDER_BUNDLED_CONFIG_FILE, resource);
-  await assert.rejects(access(join(dirname(mcodeBuiltinFilePath), "mcode-builtin-refresh.json")));
+  await assert.rejects(access(join(dirname(zcodeBuiltinFilePath), "mcode-builtin-refresh.json")));
 });
 
 test("does not resolve provider assets for commands that do not run Core", async () => {

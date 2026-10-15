@@ -26,7 +26,7 @@ export function useWorkspaceShellMcodeState(workspaceAbsPath: string, workspaceI
   // App 之前直接订阅整个 workspaceMcodeState，streaming 每个 chunk 都会改 taskMessagesByTaskId。
   // 这会把侧边栏、Header、Git 派生逻辑一起拖进同步重渲染，性能 trace 里那串 long task 就是这样被放大的。
   // 这里把外壳真正依赖的字段收敛成浅比较选择器，避免消息流惊动无关 UI。
-  const workspaceShellMcodeState = useMcodeSessionStore(
+  const workspaceShellZCodeState = useMcodeSessionStore(
     useShallow((state): WorkspaceShellMcodeState => {
       const workspaceState = selectWorkspaceMcodeState(state, workspaceAbsPath, workspaceIdentity);
       const displayedTaskState = getWorkspaceDisplayedTaskState(workspaceState);
@@ -58,5 +58,5 @@ export function useWorkspaceShellMcodeState(workspaceAbsPath: string, workspaceI
     );
   });
 
-  return { workspaceShellMcodeState, reloadSessionDisabled };
+  return { workspaceShellZCodeState, reloadSessionDisabled };
 }

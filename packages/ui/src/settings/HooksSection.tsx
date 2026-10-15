@@ -169,7 +169,7 @@ export function HooksSection({ workspacePath, workspaceIdentity }: HooksSectionP
   // Scope 切到另一个远程 workspace 后，路径已切换但 hooks/plugin 服务仍来自
   // 当前激活 workspace。这里让服务 host 与 target 身份同源，等待连接时不发送越界 RPC。
   const { hooksService, pluginManagementService } = targetServiceResolution.services;
-  const mcodeSessionService = useMcodeSessionService(
+  const zcodeSessionService = useMcodeSessionService(
     targetWorkspacePath ?? undefined,
     undefined,
     targetWorkspaceIdentity,
@@ -329,10 +329,10 @@ export function HooksSection({ workspacePath, workspaceIdentity }: HooksSectionP
         reason,
         workspaceIdentity: targetWorkspaceIdentity,
         workspacePath: targetWorkspacePath,
-        mcodeSessionService,
+        zcodeSessionService,
       });
     },
-    [targetWorkspaceIdentity, targetWorkspacePath, mcodeSessionService],
+    [targetWorkspaceIdentity, targetWorkspacePath, zcodeSessionService],
   );
 
   const handleSaveHook = useCallback(

@@ -76,7 +76,7 @@ export function useWorkspaceShellLifecycle({
         .getState()
         .setWorkspaceInitState(workspaceAbsPath, "idle", null, workspaceIdentity);
 
-      void services.mcodeTaskService
+      void services.zcodeTaskService
         .releaseWorkspacePreparation({
           workspacePath: workspaceAbsPath,
           ...(workspaceIdentity ? { workspaceIdentity } : {}),
@@ -89,5 +89,5 @@ export function useWorkspaceShellLifecycle({
           );
         });
     };
-  }, [services.mcodeTaskService, workspaceIdentity, workspaceAbsPath]);
+  }, [services.zcodeTaskService, workspaceIdentity, workspaceAbsPath]);
 }

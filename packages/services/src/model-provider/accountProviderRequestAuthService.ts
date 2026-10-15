@@ -51,7 +51,7 @@ interface AccountProviderRequestAuthServiceOptions {
   ): Promise<McodeAccountAccess | null>;
   loadOAuthTokenSet(providerId: OAuthProviderId): Promise<{
     accessToken?: string | null;
-    mcodeJwtToken?: string | null;
+    zcodeJwtToken?: string | null;
   } | null>;
   loadIndividualPlanMaterial(
     providerId: string,
@@ -82,7 +82,7 @@ class AccountProviderRequestAuthService implements AccountRequestAuthResolver {
 
     if (access.planKind === "start-plan") {
       const tokenSet = await this.#options.loadOAuthTokenSet(resolveOAuthProviderId(access.family));
-      return { apiKey: requireApiKey(tokenSet?.mcodeJwtToken, providerId) };
+      return { apiKey: requireApiKey(tokenSet?.zcodeJwtToken, providerId) };
     }
 
     const scoped = input.reason !== "usage" || input.expectedAccountScope !== undefined;
@@ -128,7 +128,7 @@ class AccountProviderRequestAuthService implements AccountRequestAuthResolver {
             ? [access.organizationId, access.projectId, access.productId]
             : null,
           login.accessToken.trim(),
-          login.mcodeJwtToken?.trim() ?? null,
+          login.zcodeJwtToken?.trim() ?? null,
         ]),
       )
       .digest("hex");

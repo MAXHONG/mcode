@@ -41,7 +41,7 @@ if (process.argv.includes("--version")) {
 async function main() {
   // Phase 1: Send hello message
   const hello: HelloMessage = {
-    type: "mcode-hello",
+    type: "zcode-hello",
     version: MCODE_VERSION,
     platform: process.platform,
     arch: process.arch,
@@ -60,13 +60,13 @@ async function main() {
 
   // Phase 3: Initialize services and start stdio RPC server
   let topicResourceChannel: IChannel | undefined;
-  const mcodeBuiltinProviderConfigFilePath = await materializeBundledMcodeBuiltinProviderConfig({
+  const zcodeBuiltinProviderConfigFilePath = await materializeBundledMcodeBuiltinProviderConfig({
     environmentConfigRoot: getAppConfigDir(),
     content: readBundledMcodeBuiltinProviderConfig(),
   });
   const { authorityModeParseResult, services } = createStdioServices({
     env: process.env,
-    mcodeBuiltinProviderConfigFilePath,
+    zcodeBuiltinProviderConfigFilePath,
     topicResourceRelayChannel: () => {
       if (!topicResourceChannel) throw new Error("Desktop topic resource channel is unavailable");
       return topicResourceChannel;

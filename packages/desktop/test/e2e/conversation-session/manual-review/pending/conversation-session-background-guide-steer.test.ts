@@ -37,7 +37,7 @@ describe("会话区 Background Guide Steer E2E", () => {
     this.timeout(BACKGROUND_GUIDE_STEER_TIMEOUT_MS);
 
     await prepareConversationE2E();
-    expect((await readSettings()).mcodeInteractionBehavior).toBe("guide");
+    expect((await readSettings()).zcodeInteractionBehavior).toBe("guide");
     await startNewTask();
 
     const runId = Date.now();

@@ -14,12 +14,12 @@ const { stageThirdPartyNotices } = await import(
 const rootPackageJsonPath = resolve(import.meta.dirname, "../../package.json");
 const { version } = JSON.parse(readFileSync(rootPackageJsonPath, "utf-8"));
 
-const { environment: mcodeEnv, content: mcodeBuiltinProviderConfigJson } =
+const { environment: zcodeEnv, content: mcodeBuiltinProviderConfigJson } =
   await loadBuiltinProviderConfig();
 
 export const SERVER_HTTP_DEFINES = {
   __MCODE_VERSION__: JSON.stringify(version),
-  __MCODE_ENV__: JSON.stringify(mcodeEnv),
+  __MCODE_ENV__: JSON.stringify(zcodeEnv),
   __MCODE_BUILTIN_PROVIDER_CONFIG_JSON__: JSON.stringify(mcodeBuiltinProviderConfigJson),
 };
 

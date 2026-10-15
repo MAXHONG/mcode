@@ -1360,7 +1360,7 @@ function parseIntegratedTerminalShellSelection(
 
 `session/create`、`session/resume` 和 `session/send` 都携带
 `integratedTerminalShell?: IntegratedTerminalShellSelection`。Host 侧
-`mcodeAgentService` 每次请求前读取 `settingService.get().integratedTerminalShell`：
+`zcodeAgentService` 每次请求前读取 `settingService.get().integratedTerminalShell`：
 
 - 读到具体 shell：发送 `{ mode: "shell", ... }`。
 - 读到 `undefined`：发送 `{ mode: "auto" }`，用于清空已存在 runtime 的旧 override。

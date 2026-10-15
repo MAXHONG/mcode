@@ -50,7 +50,7 @@ const MCODE_PLUGIN_MANIFEST_PATH = join(".zcode-plugin", "plugin.json");
 const CLAUDE_PLUGIN_MANIFEST_PATH = join(".claude-plugin", "plugin.json");
 const CODEX_PLUGIN_MANIFEST_PATH = join(".codex-plugin", "plugin.json");
 const MCODE_COMMAND_DESCRIPTOR: CommandAgentSourceDescriptor = {
-  agentSource: "mcodeAgent",
+  agentSource: "zcodeAgent",
   directorySource: "mcode",
   userDirectorySegments: [".mcode", "commands"],
   workspaceDirectorySegments: [".mcode", "commands"],
@@ -61,7 +61,7 @@ const MCODE_COMMAND_DESCRIPTOR: CommandAgentSourceDescriptor = {
 };
 
 const COMMAND_AGENT_SOURCE_DESCRIPTORS: Record<CommandAgentSource, CommandAgentSourceDescriptor> = {
-  mcodeAgent: MCODE_COMMAND_DESCRIPTOR,
+  zcodeAgent: MCODE_COMMAND_DESCRIPTOR,
 };
 
 const COMMAND_DIRECTORY_SOURCE_DESCRIPTORS: readonly CommandAgentSourceDescriptor[] = [

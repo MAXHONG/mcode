@@ -14,7 +14,7 @@ interface RemoteTimelineTaskState {
   refreshWorkspace: (params: {
     workspacePath: string;
     workspaceIdentity?: string;
-    mcodeTaskService: Pick<IMcodeTaskService, "listTaskList">;
+    zcodeTaskService: Pick<IMcodeTaskService, "listTaskList">;
     sortBy: McodeTaskListSortBy;
     limit?: number;
   }) => Promise<void>;
@@ -57,7 +57,7 @@ export const useRemoteTimelineTaskStore = create<RemoteTimelineTaskState>()((set
   hasMoreByWorkspaceKey: {},
   loadingByWorkspaceKey: {},
   errorByWorkspaceKey: {},
-  async refreshWorkspace({ workspacePath, workspaceIdentity, mcodeTaskService, sortBy, limit }) {
+  async refreshWorkspace({ workspacePath, workspaceIdentity, zcodeTaskService, sortBy, limit }) {
     const workspaceKey = getWorkspaceKey(workspacePath, workspaceIdentity);
     set((state) => ({
       loadingByWorkspaceKey: {
@@ -71,7 +71,7 @@ export const useRemoteTimelineTaskStore = create<RemoteTimelineTaskState>()((set
     }));
 
     try {
-      const result = await mcodeTaskService.listTaskList({
+      const result = await zcodeTaskService.listTaskList({
         kind: "timeline",
         workspaceScopes: [
           {
@@ -207,7 +207,7 @@ export async function refreshRemoteTimelineTasksForSession({
   await useRemoteTimelineTaskStore.getState().refreshWorkspace({
     workspacePath,
     workspaceIdentity,
-    mcodeTaskService: session.services.mcodeTaskService,
+    zcodeTaskService: session.services.zcodeTaskService,
     sortBy,
     limit,
   });

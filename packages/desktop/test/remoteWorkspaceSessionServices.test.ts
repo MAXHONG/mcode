@@ -14,9 +14,9 @@ function makeServices(id: string): IServiceAccessor {
     systemService: { id, service: "system" },
     terminalService: { id, service: "terminal" },
     promptAttachmentTransferService: { id, service: "prompt-attachment-transfer" },
-    mcodeAgentService: { id, service: "mcode-agent" },
-    mcodeTaskService: { id, service: "mcode-task" },
-    mcodeSessionService: { id, service: "mcode-session" },
+    zcodeAgentService: { id, service: "mcode-agent" },
+    zcodeTaskService: { id, service: "mcode-task" },
+    zcodeSessionService: { id, service: "mcode-session" },
     conversationShareService: { id, service: "conversation-share" },
     fileWatcherService: { id, service: "fileWatcher" },
     skillsService: { id, service: "skills" },
@@ -51,9 +51,9 @@ describe("buildRemoteWorkspaceSessionServices", () => {
     expect(merged.promptAttachmentTransferService).toBe(
       remoteServices.promptAttachmentTransferService,
     );
-    expect(merged.mcodeAgentService).toBe(remoteServices.mcodeAgentService);
-    expect(merged.mcodeTaskService).toBe(remoteServices.mcodeTaskService);
-    expect(merged.mcodeSessionService).toBe(remoteServices.mcodeSessionService);
+    expect(merged.zcodeAgentService).toBe(remoteServices.zcodeAgentService);
+    expect(merged.zcodeTaskService).toBe(remoteServices.zcodeTaskService);
+    expect(merged.zcodeSessionService).toBe(remoteServices.zcodeSessionService);
     expect(merged.conversationShareService).toBe(remoteServices.conversationShareService);
     expect(merged.fileWatcherService).toBe(remoteServices.fileWatcherService);
     // Provider/Model View 属于目标 Remote Environment；不能随 ...baseServices 回落到本地。
@@ -84,7 +84,7 @@ describe("buildRemoteWorkspaceSessionServices", () => {
     const merged = buildServerRemoteWorkspaceSessionServices(baseServices, remoteServices);
 
     expect(merged.fileService).toBe(remoteServices.fileService);
-    expect(merged.mcodeTaskService).toBe(remoteServices.mcodeTaskService);
+    expect(merged.zcodeTaskService).toBe(remoteServices.zcodeTaskService);
     expect(merged.promptAttachmentTransferService).toBe(
       remoteServices.promptAttachmentTransferService,
     );

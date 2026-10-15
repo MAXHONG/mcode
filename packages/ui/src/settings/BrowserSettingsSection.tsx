@@ -82,7 +82,7 @@ export function BrowserSettingsSection({
   const { intl } = useMcodeIntl();
   const platform = usePlatform();
   const { pluginManagementService, skillsService } = useServices();
-  const mcodeSessionService = useMcodeSessionService(
+  const zcodeSessionService = useMcodeSessionService(
     workspacePath ?? undefined,
     undefined,
     workspaceIdentity,
@@ -120,7 +120,7 @@ export function BrowserSettingsSection({
 
   const refreshAfterPluginChange = useCallback(async () => {
     await invalidateDeferredDraftSessionForSkillChange({
-      mcodeSessionService,
+      zcodeSessionService,
       workspacePath,
       workspaceIdentity: normalizedWorkspaceIdentity ?? undefined,
       reason: "settings-browser-use-plugin-enabled",
@@ -139,7 +139,7 @@ export function BrowserSettingsSection({
     skillStoreWorkspacePath,
     skillsService,
     workspacePath,
-    mcodeSessionService,
+    zcodeSessionService,
   ]);
 
   const handleBrowserEnabledChange = useCallback(

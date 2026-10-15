@@ -76,7 +76,7 @@ describe("sessionsIndexRegistry scope endpoint mismatch 观测", () => {
     remoteService = mockAgentService();
     registerRemoteWorkspaceSession({
       sessionId: remoteSessionId,
-      services: { mcodeAgentService: remoteService } as unknown as IServiceAccessor,
+      services: { zcodeAgentService: remoteService } as unknown as IServiceAccessor,
     });
   });
 

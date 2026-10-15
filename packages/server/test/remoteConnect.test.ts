@@ -59,7 +59,7 @@ class FakeConnectBackend implements IRemoteBackend {
       queueMicrotask(() => {
         stdout.write(
           `${JSON.stringify({
-            type: "mcode-hello",
+            type: "zcode-hello",
             version: MCODE_VERSION,
             platform: "linux",
             arch: "arm64",
@@ -278,7 +278,7 @@ describe("connectRemote", () => {
     });
     connection.dispose();
 
-    expect(backend.commands[0]).toContain('MCODE_SERVER_RUNTIME_ROOT="$HOME/.mcode/server"');
+    expect(backend.commands[0]).toContain('ZCODE_SERVER_RUNTIME_ROOT="$HOME/.zcode/server"');
     expect(backend.commands[0]).not.toContain(retiredProxyEnvName);
   });
 
@@ -291,7 +291,7 @@ describe("connectRemote", () => {
     });
     connection.dispose();
 
-    expect(backend.commands[0]).toContain('MCODE_SERVICE_AUTHORITY_MODE="desktop-attached-remote"');
+    expect(backend.commands[0]).toContain('ZCODE_SERVICE_AUTHORITY_MODE="desktop-attached-remote"');
   });
 
   it("启动远端 server 时 shell quote 注入 app version", async () => {
@@ -304,7 +304,7 @@ describe("connectRemote", () => {
     });
     connection.dispose();
 
-    expect(backend.commands[0]).toContain(`MCODE_APP_VERSION='2.13.1+build'"'"'7'`);
+    expect(backend.commands[0]).toContain(`ZCODE_APP_VERSION='2.13.1+build'"'"'7'`);
   });
 
   it("启动远端 server 时只注入受控的测试环境 endpoint 变量", async () => {
@@ -323,8 +323,8 @@ describe("connectRemote", () => {
     });
     connection.dispose();
 
-    expect(backend.commands[0]).toContain("MCODE_ENV='test'");
-    expect(backend.commands[0]).toContain("MCODE_BASE_URL='https://zcode.z.ai/api/v1'");
+    expect(backend.commands[0]).toContain("ZCODE_ENV='test'");
+    expect(backend.commands[0]).toContain("ZCODE_BASE_URL='https://zcode.z.ai/api/v1'");
     expect(backend.commands[0]).toContain("ZAI_OAUTH_ORIGIN='https://chat.z.ai'");
     expect(backend.commands[0]).toContain(`ZAI_OAUTH_CLIENT_ID='client_'"'"'test'`);
     expect(backend.commands[0]).not.toContain("ZAI_OAUTH_APP_SECRET");
@@ -349,9 +349,9 @@ describe("connectRemote", () => {
     connection.dispose();
 
     expect(resolveRuntimeProxy).toHaveBeenCalledWith("http://127.0.0.1:7890");
-    expect(backend.commands[0]).toContain("MCODE_REMOTE_RUNTIME_NETWORK_AUTHORITY='1'");
-    expect(backend.commands[0]).toContain("MCODE_REMOTE_HTTP_PROXY='http://172.21.240.1:7890/'");
-    expect(backend.commands[0]).toContain("MCODE_REMOTE_NO_PROXY='localhost,127.0.0.1'");
+    expect(backend.commands[0]).toContain("ZCODE_REMOTE_RUNTIME_NETWORK_AUTHORITY='1'");
+    expect(backend.commands[0]).toContain("ZCODE_REMOTE_HTTP_PROXY='http://172.21.240.1:7890/'");
+    expect(backend.commands[0]).toContain("ZCODE_REMOTE_NO_PROXY='localhost,127.0.0.1'");
   });
 
   it("backend 断连时即使 stdio 未关闭也应上报远端关闭", async () => {
@@ -418,7 +418,7 @@ describe("connectRemote", () => {
   it("远端 server 握手前退出时应把 stderr 和退出码带到错误信息", async () => {
     const backend = new FakeConnectBackend({
       code: 126,
-      stderr: "/bin/sh: 1: /root/.mcode/server/node: Text file busy\n",
+      stderr: "/bin/sh: 1: /root/.zcode/server/node: Text file busy\n",
     });
 
     await expect(

@@ -151,7 +151,7 @@ describe("taskRealtimeBridge", () => {
         {
           type: HostMessageTypes.InitLocal,
           hostId: "host-b",
-          mcodeBuiltinProviderConfigFilePath: "/repo/config/provider/mcode-builtin.json",
+          zcodeBuiltinProviderConfigFilePath: "/repo/config/provider/mcode-builtin.json",
         },
         parentPort,
       )?.hostId,
@@ -165,7 +165,7 @@ describe("taskRealtimeBridge", () => {
         type: HostMessageTypes.InitLocal,
         hostId: "host-relay",
         deliveryKind: "relay_bridge",
-        mcodeBuiltinProviderConfigFilePath: "/repo/config/provider/mcode-builtin.json",
+        zcodeBuiltinProviderConfigFilePath: "/repo/config/provider/mcode-builtin.json",
       },
       parentPort,
     );

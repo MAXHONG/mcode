@@ -82,7 +82,7 @@ export function GeneralSectionContent({
   toolGroupingExploreEnabled,
   toolGroupingTerminalEnabled,
   toolGroupingChangesEnabled,
-  mcodeInteractionBehavior,
+  zcodeInteractionBehavior,
   askUserQuestionAutoResolutionEnabled = true,
   modelIoFullRetentionEnabled = false,
   onDataBaseDirChange,
@@ -106,7 +106,7 @@ export function GeneralSectionContent({
   onToolGroupingExploreEnabledChange,
   onToolGroupingTerminalEnabledChange,
   onToolGroupingChangesEnabledChange,
-  onMcodeInteractionBehaviorChange,
+  onZCodeInteractionBehaviorChange,
   onAskUserQuestionAutoResolutionEnabledChange = async () => {},
   onModelIoFullRetentionEnabledChange = async () => {},
   onOpenOnboardingDialog,
@@ -156,7 +156,7 @@ export function GeneralSectionContent({
   toolGroupingExploreEnabled: boolean;
   toolGroupingTerminalEnabled: boolean;
   toolGroupingChangesEnabled: boolean;
-  mcodeInteractionBehavior: McodeInteractionBehavior;
+  zcodeInteractionBehavior: McodeInteractionBehavior;
   askUserQuestionAutoResolutionEnabled?: boolean;
   modelIoFullRetentionEnabled?: boolean;
   onDataBaseDirChange: (dir: string) => Promise<void>;
@@ -180,7 +180,7 @@ export function GeneralSectionContent({
   onToolGroupingExploreEnabledChange: (enabled: boolean) => Promise<void>;
   onToolGroupingTerminalEnabledChange: (enabled: boolean) => Promise<void>;
   onToolGroupingChangesEnabledChange: (enabled: boolean) => Promise<void>;
-  onMcodeInteractionBehaviorChange: (behavior: McodeInteractionBehavior) => Promise<void>;
+  onZCodeInteractionBehaviorChange: (behavior: McodeInteractionBehavior) => Promise<void>;
   onAskUserQuestionAutoResolutionEnabledChange?: (enabled: boolean) => Promise<void>;
   onModelIoFullRetentionEnabledChange?: (enabled: boolean) => Promise<void>;
   onOpenOnboardingDialog: () => void;
@@ -694,15 +694,15 @@ export function GeneralSectionContent({
 
       <SettingsGroupCard>
         <SettingsRow
-          label={intl.formatMessage({ id: "settings.mcodeInteractionBehavior" })}
+          label={intl.formatMessage({ id: "settings.zcodeInteractionBehavior" })}
           description={intl.formatMessage({
             id: "settings.mcodeInteractionBehaviorDescription",
           })}
           control={
             <Select
-              value={mcodeInteractionBehavior}
+              value={zcodeInteractionBehavior}
               onValueChange={(value) => {
-                void onMcodeInteractionBehaviorChange(value as McodeInteractionBehavior);
+                void onZCodeInteractionBehaviorChange(value as McodeInteractionBehavior);
               }}
             >
               <SelectTrigger size="lg" className="w-[260px] min-w-0 justify-between">
@@ -712,7 +712,7 @@ export function GeneralSectionContent({
                 {MCODE_INTERACTION_BEHAVIOR_OPTIONS.map((behavior) => (
                   <SelectItem key={behavior} value={behavior}>
                     {intl.formatMessage({
-                      id: `settings.mcodeInteractionBehavior.option.${behavior}`,
+                      id: `settings.zcodeInteractionBehavior.option.${behavior}`,
                     })}
                   </SelectItem>
                 ))}

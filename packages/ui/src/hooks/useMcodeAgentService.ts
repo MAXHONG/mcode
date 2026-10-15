@@ -10,5 +10,5 @@ export function useMcodeAgentService(
   const services = workspacePath
     ? useWorkspaceServices(workspacePath, preferredRemoteSessionId, workspaceIdentity)
     : useServices();
-  return services.mcodeAgentService;
+  return services.zcodeAgentService;
 }

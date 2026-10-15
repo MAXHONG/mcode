@@ -191,28 +191,28 @@ describe("coding plan embedded webview bridge", () => {
       resolveCodingPlanEmbeddedOrigin({
         dev: true,
         endpointOrigin: "https://zcode.z.ai",
-        mcodeEnv: "test",
+        zcodeEnv: "test",
       }),
     ).toBe("http://localhost:3000");
     expect(
       resolveCodingPlanEmbeddedOrigin({
         dev: true,
         endpointOrigin: "https://zcode.z.ai",
-        mcodeEnv: "production",
+        zcodeEnv: "production",
       }),
     ).toBe("https://zcode.z.ai");
     expect(
       resolveCodingPlanEmbeddedOrigin({
         dev: false,
         endpointOrigin: "https://zcode.z.ai",
-        mcodeEnv: "production",
+        zcodeEnv: "production",
       }),
     ).toBe("https://zcode.z.ai");
     expect(
       resolveCodingPlanEmbeddedOrigin({
         dev: true,
         endpointOrigin: "https://zcode.z.ai",
-        mcodeEnv: "test",
+        zcodeEnv: "test",
         overrideOrigin: "https://example.test/path",
       }),
     ).toBe("http://localhost:3000");
@@ -287,7 +287,7 @@ describe("coding plan embedded webview bridge", () => {
       locale: "en-US",
       credentials: {
         zaiAccessToken: "zai-business-token",
-        mcodeJwtToken: "mcode-jwt",
+        zcodeJwtToken: "mcode-jwt",
       },
       reportContext: {
         purchase_funnel_id: "funnel-app",
@@ -309,7 +309,7 @@ describe("coding plan embedded webview bridge", () => {
     expect(script).toContain('"app_version":"9.8.7"');
     expect(script).toContain("reportContext: mcodeReportContext");
     expect(script).toContain('document.documentElement.classList.toggle("dark"');
-    expect(script).toContain('localStorage.setItem("mcode-theme", mcodeTheme)');
+    expect(script).toContain('localStorage.setItem("zcode-theme", mcodeTheme)');
     expect(script).toContain('localStorage.removeItem("oauth:bigmodel:access_token")');
   });
 
@@ -322,7 +322,7 @@ describe("coding plan embedded webview bridge", () => {
       locale: "zh-CN",
       credentials: {
         bigmodelAccessToken: "bigmodel-business-token",
-        mcodeJwtToken: "mcode-jwt",
+        zcodeJwtToken: "mcode-jwt",
       },
     });
 

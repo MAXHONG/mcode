@@ -60,8 +60,8 @@ function createWorkspaceTab(
 
 describe("bindRemoteWorkspaceContextAndGetSession", () => {
   it("bind 完成后重新读取同一 session 的新 attachment services", async () => {
-    const firstServices = { mcodeSessionService: { attachment: "A" } } as never;
-    const secondServices = { mcodeSessionService: { attachment: "B" } } as never;
+    const firstServices = { zcodeSessionService: { attachment: "A" } } as never;
+    const secondServices = { zcodeSessionService: { attachment: "B" } } as never;
     registerRemoteWorkspaceSession({
       sessionId: "remote-session-1",
       services: firstServices,

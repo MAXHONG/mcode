@@ -444,7 +444,7 @@ function createService(options?: {
   });
 
   const service = createMcodeTaskServiceAdapter({
-    mcodeAgentService: agent,
+    zcodeAgentService: agent,
     taskIndexRepo,
     taskIndexSyncer,
     ...(settingService ? { settingService } : {}),

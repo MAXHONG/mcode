@@ -110,40 +110,40 @@ describe("resolveWorkspaceProviderConfigMcodeService", () => {
   });
 
   it("workspace 作用域始终使用 workspace Mcode session service", () => {
-    const workspaceMcodeService = createMockMcodeService("workspace");
-    const baseMcodeService = createMockMcodeService("base");
+    const workspaceZCodeService = createMockMcodeService("workspace");
+    const baseZCodeService = createMockMcodeService("base");
 
     const resolved = resolveWorkspaceProviderConfigMcodeService({
       configuredServiceScope: "workspace",
-      workspaceMcodeService,
-      baseMcodeService,
+      workspaceZCodeService,
+      baseZCodeService,
       remoteSessionId: "remote-session-1",
     });
 
-    expect(resolved).toBe(workspaceMcodeService);
+    expect(resolved).toBe(workspaceZCodeService);
   });
 
   it("base 作用域优先使用 base Mcode session service", () => {
-    const workspaceMcodeService = createMockMcodeService("workspace");
-    const baseMcodeService = createMockMcodeService("base");
+    const workspaceZCodeService = createMockMcodeService("workspace");
+    const baseZCodeService = createMockMcodeService("base");
 
     const resolved = resolveWorkspaceProviderConfigMcodeService({
       configuredServiceScope: "base",
-      workspaceMcodeService,
-      baseMcodeService,
+      workspaceZCodeService,
+      baseZCodeService,
       remoteSessionId: "remote-session-1",
     });
 
-    expect(resolved).toBe(baseMcodeService);
+    expect(resolved).toBe(baseZCodeService);
   });
 
   it("base 作用域在远程会话且 base service 缺失时返回 null，避免误回退远程路径", () => {
-    const workspaceMcodeService = createMockMcodeService("workspace");
+    const workspaceZCodeService = createMockMcodeService("workspace");
 
     const resolved = resolveWorkspaceProviderConfigMcodeService({
       configuredServiceScope: "base",
-      workspaceMcodeService,
-      baseMcodeService: null,
+      workspaceZCodeService,
+      baseZCodeService: null,
       remoteSessionId: "remote-session-1",
     });
 
@@ -151,16 +151,16 @@ describe("resolveWorkspaceProviderConfigMcodeService", () => {
   });
 
   it("base 作用域在本地会话且 base service 缺失时回退 workspace service", () => {
-    const workspaceMcodeService = createMockMcodeService("workspace");
+    const workspaceZCodeService = createMockMcodeService("workspace");
 
     const resolved = resolveWorkspaceProviderConfigMcodeService({
       configuredServiceScope: "base",
-      workspaceMcodeService,
-      baseMcodeService: null,
+      workspaceZCodeService,
+      baseZCodeService: null,
       remoteSessionId: null,
     });
 
-    expect(resolved).toBe(workspaceMcodeService);
+    expect(resolved).toBe(workspaceZCodeService);
   });
 
   it("memoizes the returned provider config object across parent rerenders when fields are unchanged", () => {

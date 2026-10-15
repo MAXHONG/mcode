@@ -86,11 +86,11 @@ const DOS_MAGIC = 0x5a4d;
 test("includes the production Mcode Built-in Provider Config as a SEA asset", async () => {
   const root = fileURLToPath(new URL("../../../../..", import.meta.url));
   const assets = await collectSeaProviderConfigAssets({ root, env: { MCODE_ENV: "production" } });
-  const mcodeBuiltinFilePath = assets[SEA_MCODE_BUILTIN_PROVIDER_CONFIG_ASSET_KEY];
+  const zcodeBuiltinFilePath = assets[SEA_MCODE_BUILTIN_PROVIDER_CONFIG_ASSET_KEY];
 
-  assert.ok(mcodeBuiltinFilePath);
+  assert.ok(zcodeBuiltinFilePath);
   assert.deepEqual(
-    JSON.parse(await readFile(mcodeBuiltinFilePath, "utf8")),
+    JSON.parse(await readFile(zcodeBuiltinFilePath, "utf8")),
     JSON.parse(
       await readFile(
         new URL("../../../../../config/provider/mcode-builtin.json", import.meta.url),

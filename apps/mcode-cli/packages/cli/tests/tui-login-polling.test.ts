@@ -169,7 +169,7 @@ for (const providerId of ["zai", "bigmodel"] as const) {
     assert.equal(result.user.user_id, "test-account");
     assert.equal(attempts, 5);
     assert.deepEqual(f.sleeps, [1000, 1000, 1000, 1000]);
-    assert.equal(await f.store.load(keys.mcodeJwtToken), "test-backend-jwt");
+    assert.equal(await f.store.load(keys.zcodeJwtToken), "test-backend-jwt");
     // Z.ai 以账号用户 ID 为连接身份；BigModel 以组织与项目的稳定摘要为连接身份。
     const expectedIdentity =
       providerId === "zai"

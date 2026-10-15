@@ -357,7 +357,7 @@ function RootInner({
   useDynamicWorkflowUserModeSync({
     settingsLoaded: Boolean(appSettings),
     userMode: appSettings?.dynamicWorkflowMode,
-    mcodeAgentService: services.mcodeAgentService,
+    zcodeAgentService: services.zcodeAgentService,
     codingPlanSubscriptionService: services.codingPlanSubscriptionService,
   });
   const [welcomeScreenOpenReason, setWelcomeScreenOpenReason] =
@@ -423,7 +423,7 @@ function RootInner({
           return;
         }
         void refreshAppSettings();
-        void services.mcodeAgentService.syncAppRuntimePreferences(parsed.data).catch((error) => {
+        void services.zcodeAgentService.syncAppRuntimePreferences(parsed.data).catch((error) => {
           logger.warn("[settings] 同步跨窗口运行时偏好失败", error);
         });
         void services.botsService.syncAppRuntimePreferences(parsed.data).catch((error) => {
@@ -464,14 +464,14 @@ function RootInner({
     refreshAppSettings,
     services.botsService,
     services.broadcastService,
-    services.mcodeAgentService,
+    services.zcodeAgentService,
   ]);
 
   useEffect(() => {
     if (!appSettings) {
       return;
     }
-    void services.mcodeAgentService
+    void services.zcodeAgentService
       .syncAppRuntimePreferences({
         askUserQuestionAutoResolutionEnabled:
           appSettings.askUserQuestionAutoResolutionEnabled !== false,
@@ -493,7 +493,7 @@ function RootInner({
     appSettings?.askUserQuestionAutoResolutionEnabled,
     appSettings?.modelIoFullRetentionEnabled,
     services.botsService,
-    services.mcodeAgentService,
+    services.zcodeAgentService,
   ]);
 
   const tabs = useTabStore((state) => state.tabs);

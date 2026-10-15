@@ -15,7 +15,7 @@ function fixture() {
       projectId,
       productId: "product",
     }),
-    loadOAuthTokenSet: async () => ({ accessToken: login, mcodeJwtToken: "mcode-jwt" }),
+    loadOAuthTokenSet: async () => ({ accessToken: login, zcodeJwtToken: "mcode-jwt" }),
     loadIndividualPlanMaterial: async () => null,
     resolveTeamPlanMaterial: async () => {
       duringIssue?.();

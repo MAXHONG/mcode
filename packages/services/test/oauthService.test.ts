@@ -1608,7 +1608,7 @@ describe("oauthService", () => {
       ),
     ).resolves.toEqual({
       accessToken: "zai_business_access_token",
-      mcodeJwtToken: "mcode_backend_jwt",
+      zcodeJwtToken: "mcode_backend_jwt",
       expiresAt: now + 86400 * 1000,
     });
   });
@@ -1868,7 +1868,7 @@ describe("oauthService", () => {
     expect(await credentialServiceStub.load("oauth:bigmodel:user_info")).toBe(
       JSON.stringify({
         ...result.userInfo,
-        rawProfile: { mcodeProfileSchemaVersion: 2 },
+        rawProfile: { zcodeProfileSchemaVersion: 2 },
       }),
     );
     expect(await credentialServiceStub.load("oauth:active_provider")).toBe(BIGMODEL_PROVIDER_ID);
@@ -1901,7 +1901,7 @@ describe("oauthService", () => {
     expect(await credentialServiceStub.load("oauth:bigmodel:user_info")).toBe(
       JSON.stringify({
         ...result.userInfo,
-        rawProfile: { mcodeProfileSchemaVersion: 2 },
+        rawProfile: { zcodeProfileSchemaVersion: 2 },
       }),
     );
   });
@@ -2117,9 +2117,9 @@ describe("oauthService", () => {
             state: new URL(url).searchParams.get("state") ?? "",
           }),
           exchangeToken: async () => exchangeStarted,
-          normalizePolledTokenSet: async ({ accessToken, mcodeJwtToken }) => ({
+          normalizePolledTokenSet: async ({ accessToken, zcodeJwtToken }) => ({
             accessToken,
-            mcodeJwtToken,
+            zcodeJwtToken,
           }),
           normalizeError: (error: unknown) => (error instanceof Error ? error : new Error(String(error))),
         },
@@ -2340,7 +2340,7 @@ describe("oauthService", () => {
         id: "bigmodel-u-001",
         username: "BigModel User",
         displayName: "BigModel User",
-        rawProfile: { mcodeProfileSchemaVersion: 2 },
+        rawProfile: { zcodeProfileSchemaVersion: 2 },
       }),
     );
     expect(await credentialServiceStub.load("oauth:active_provider")).toBe(BIGMODEL_PROVIDER_ID);
@@ -2610,7 +2610,7 @@ describe("oauthService", () => {
       id: "u-cached-001",
       username: "CachedNick",
       displayName: "CachedNick",
-      rawProfile: { mcodeProfileSchemaVersion: 2 },
+      rawProfile: { zcodeProfileSchemaVersion: 2 },
     };
 
     await credentialServiceStub.save("oauth:active_provider", BIGMODEL_PROVIDER_ID);
@@ -2635,7 +2635,7 @@ describe("oauthService", () => {
       id: "u-cached-001",
       username: "FutureName",
       displayName: "FutureName",
-      rawProfile: { mcodeProfileSchemaVersion: 3, futureField: "keep" },
+      rawProfile: { zcodeProfileSchemaVersion: 3, futureField: "keep" },
     };
 
     await credentialServiceStub.save("oauth:active_provider", BIGMODEL_PROVIDER_ID);
@@ -2695,7 +2695,7 @@ describe("oauthService", () => {
           id: "bigmodel-u-001",
           username: "Account Center Name",
           displayName: "Account Center Name",
-          rawProfile: { mcodeProfileSchemaVersion: 2 },
+          rawProfile: { zcodeProfileSchemaVersion: 2 },
         }),
       );
     });
@@ -2732,7 +2732,7 @@ describe("oauthService", () => {
       expect(await credentialServiceStub.load("oauth:bigmodel:user_info")).toBe(
         JSON.stringify({
           ...cachedUser,
-          rawProfile: { mcodeProfileSchemaVersion: 2 },
+          rawProfile: { zcodeProfileSchemaVersion: 2 },
         }),
       );
     });
@@ -2767,7 +2767,7 @@ describe("oauthService", () => {
       expect(await credentialServiceStub.load("oauth:bigmodel:user_info")).toBe(
         JSON.stringify({
           ...cachedUser,
-          rawProfile: { mcodeProfileSchemaVersion: 2 },
+          rawProfile: { zcodeProfileSchemaVersion: 2 },
         }),
       );
     });
@@ -2806,11 +2806,11 @@ describe("oauthService", () => {
         (await credentialServiceStub.load("oauth:bigmodel:user_info")) ?? "{}",
       ) as OAuthUserProfile;
       retryAfter =
-        typeof stored.rawProfile?.mcodeProfileMigrationRetryAfter === "number"
-          ? stored.rawProfile.mcodeProfileMigrationRetryAfter
+        typeof stored.rawProfile?.zcodeProfileMigrationRetryAfter === "number"
+          ? stored.rawProfile.zcodeProfileMigrationRetryAfter
           : 0;
       expect(retryAfter).toBeGreaterThan(now);
-      expect(stored.rawProfile?.mcodeProfileSchemaVersion).toBeUndefined();
+      expect(stored.rawProfile?.zcodeProfileSchemaVersion).toBeUndefined();
     });
 
     fetchMock.mockClear();
@@ -2829,7 +2829,7 @@ describe("oauthService", () => {
           id: "bigmodel-u-001",
           username: "Account Center Name",
           displayName: "Account Center Name",
-          rawProfile: { mcodeProfileSchemaVersion: 2 },
+          rawProfile: { zcodeProfileSchemaVersion: 2 },
         }),
       );
     });

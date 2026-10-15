@@ -243,7 +243,7 @@ describe("offPeakServerClient × offPeakMockGateway 契约联测", () => {
     expect(((await unknown.json()) as { code: number }).code).toBe(3102);
   });
 
-  it("客户端错误映射：非 2xx 抛 OffPeakServerError 携带 bimCode", async () => {
+  it("客户端错误映射：非 2xx 抛 OffPeakServerError 携带 bizCode", async () => {
     // 手写一个只回 429/3103 的假服务端
     const denyServer = createServer((_req, res) => {
       res.writeHead(429, { "content-type": "application/json" });
@@ -263,7 +263,7 @@ describe("offPeakServerClient × offPeakMockGateway 契约联测", () => {
       const error = await client.takeTicket("task-x").catch((e: unknown) => e);
       expect(error).toBeInstanceOf(OffPeakServerError);
       expect((error as OffPeakServerError).httpStatus).toBe(429);
-      expect((error as OffPeakServerError).bimCode).toBe(3103);
+      expect((error as OffPeakServerError).bizCode).toBe(3103);
       expect((error as OffPeakServerError).nextTakeAt).toBe(1234);
     } finally {
       await new Promise<void>((resolve) => denyServer.close(() => resolve()));
@@ -310,7 +310,7 @@ describe("offPeakServerClient × offPeakMockGateway 契约联测", () => {
     expect(availabilityError).toBeInstanceOf(OffPeakServerError);
     expect(availabilityError).toMatchObject({
       httpStatus: 500,
-      bimCode: 2007,
+      bizCode: 2007,
       requestId: "req-team-availability",
     });
 
@@ -318,7 +318,7 @@ describe("offPeakServerClient × offPeakMockGateway 契约联测", () => {
     expect(takeError).toBeInstanceOf(OffPeakServerError);
     expect(takeError).toMatchObject({
       httpStatus: 429,
-      bimCode: undefined,
+      bizCode: undefined,
       requestId: "req-team-take",
     });
 

@@ -267,7 +267,7 @@ function createDependencies(rows = completedRows(), pollOptions: PollOptions = {
     })),
   };
   const service = new ConversationShareService({
-    mcodeAgentService: {
+    zcodeAgentService: {
       conversationRowsRangeV4,
       conversationFileChangesV4,
       conversationAttachmentReadV4,

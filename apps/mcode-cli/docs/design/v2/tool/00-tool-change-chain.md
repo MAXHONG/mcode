@@ -1378,7 +1378,7 @@ activation」（DWG-09 ～ DWG-13）。链路：
 
 - **协议**：`dynamicWorkflowMode` 与 `dynamicWorkflowEnabled` 同行——shared 的
   `workspace/updateDynamicWorkflowPolicy`、`session/create`、`session/resume`（strict）与 v4
-  `createSession` payload（additive）。Host（`mcodeAgentService`）的 `resolveDynamicWorkflowGate`
+  `createSession` payload（additive）。Host（`zcodeAgentService`）的 `resolveDynamicWorkflowGate`
   返回 mode 而不是布尔，三条创建路径经 `resolveDynamicWorkflowSessionFlags` 同源下发；只认布尔的旧
   CLI 走已有的 compat 省略重试，按 alwaysOn 行事。
 - **协议服务端**：`appRuntimePreferences.dynamicWorkflowMode` 与布尔并存；`createRecord` 经

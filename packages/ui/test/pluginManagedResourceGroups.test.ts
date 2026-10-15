@@ -92,12 +92,12 @@ describe("pluginManagedResourceGroups", () => {
   it("groups user and plugin commands separately", () => {
     const commands: McodeCommand[] = [
       {
-        agentSource: "mcodeAgent",
+        agentSource: "zcodeAgent",
         content: "local",
         description: "local command",
         enabled: true,
         filePath: "/home/.mcode/commands/review.md",
-        id: "mcodeAgent:mcode:global:/review",
+        id: "zcodeAgent:mcode:global:/review",
         location: {
           directoryPath: "/home/.mcode/commands",
           scope: "user",
@@ -135,10 +135,10 @@ describe("pluginManagedResourceGroups", () => {
       {
         config: { command: "npx", type: "stdio" },
         enabled: true,
-        id: "mcodeagentmcp-global-memory",
+        id: "zcodeagentmcp-global-memory",
         name: "memory",
         scope: "user",
-        source: "mcodeagentmcp",
+        source: "zcodeagentmcp",
       },
       {
         config: { command: "npx", type: "stdio" },

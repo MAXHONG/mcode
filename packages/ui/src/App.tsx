@@ -205,11 +205,11 @@ export function App({
   const workspaceReadOnlyReason = workspaceReadOnly
     ? intl.formatMessage({ id: "workspaceSidebar.unavailableLocalDirectory" })
     : undefined;
-  const { workspaceShellMcodeState, reloadSessionDisabled } = useWorkspaceShellMcodeState(
+  const { workspaceShellZCodeState, reloadSessionDisabled } = useWorkspaceShellMcodeState(
     workspaceAbsPath,
     workspaceIdentity,
   );
-  const activeTaskId = workspaceShellMcodeState.activeTaskId;
+  const activeTaskId = workspaceShellZCodeState.activeTaskId;
   // 右侧栏按对话隔离的归属 id：草稿态 activeTaskId 为 null，用 draftSessionId 兜底
   //（draftSessionId 稳定、每个新对话唯一、发首条消息后会变成 activeTaskId），
   // 从而新建对话不会串到上一个对话/草稿留下的 tab，且草稿转正后 tab 归属无缝衔接。
@@ -219,7 +219,7 @@ export function App({
   const sidePaneOwnerId = activeTaskId ?? draftSessionId ?? null;
   const [summaryPanelVariantOverride, setSummaryPanelVariantOverride] =
     useState<ChatViewSummaryPanelVariant | null>(null);
-  const draftFocusVersion = workspaceShellMcodeState.draftFocusVersion;
+  const draftFocusVersion = workspaceShellZCodeState.draftFocusVersion;
   const {
     isTerminalOpen,
     setIsTerminalOpen,
@@ -406,7 +406,7 @@ export function App({
     activeTaskId,
     workspaceRemoteSessionId,
     workspaceIdentity,
-    selectedProvider: workspaceShellMcodeState.selectedProvider,
+    selectedProvider: workspaceShellZCodeState.selectedProvider,
     intl,
   });
   const providerConfigFile = useWorkspaceProviderConfigFile(
@@ -740,7 +740,7 @@ export function App({
         return;
       }
       const targetSelectedProvider = resolveWorkspaceSwitchDraftProvider({
-        currentSelectedProvider: workspaceShellMcodeState.selectedProvider,
+        currentSelectedProvider: workspaceShellZCodeState.selectedProvider,
         targetWorkspacePath,
         targetWorkspaceIdentity: resolvedTargetWorkspaceIdentity,
         workspaces: store.workspaces,
@@ -812,7 +812,7 @@ export function App({
       tabs,
       workspaceAbsPath,
       workspaceIdentity,
-      workspaceShellMcodeState.selectedProvider,
+      workspaceShellZCodeState.selectedProvider,
       webRemoteControlWorkspaceSwitcher,
     ],
   );
@@ -832,9 +832,9 @@ export function App({
       ...taskListE2EActions,
       sendBotMessage: (message) => services.botsService.handleInboundMessage(message),
       submitBotGroupInput: (params) => {
-        const submit = services.mcodeTaskService.submitBotGroupInput;
+        const submit = services.zcodeTaskService.submitBotGroupInput;
         if (!submit) throw new Error("Task material admission unavailable");
-        return submit.call(services.mcodeTaskService, params);
+        return submit.call(services.zcodeTaskService, params);
       },
       getTheme: () => theme,
       setTheme,
@@ -844,20 +844,20 @@ export function App({
         setTestMessages([...messages]);
       },
       getChatMessageCount: () => testMessages?.length ?? 0,
-      getPluginsOverview: (params) => services.mcodeAgentService.getPluginsOverview(params),
-      addPluginMarketplace: (params) => services.mcodeAgentService.addPluginMarketplace(params),
+      getPluginsOverview: (params) => services.zcodeAgentService.getPluginsOverview(params),
+      addPluginMarketplace: (params) => services.zcodeAgentService.addPluginMarketplace(params),
       updatePluginMarketplace: (params) =>
-        services.mcodeAgentService.updatePluginMarketplace(params),
-      installPlugin: (params) => services.mcodeAgentService.installPlugin(params),
-      listPlugins: (params) => services.mcodeAgentService.listPlugins(params),
+        services.zcodeAgentService.updatePluginMarketplace(params),
+      installPlugin: (params) => services.zcodeAgentService.installPlugin(params),
+      listPlugins: (params) => services.zcodeAgentService.listPlugins(params),
       getPluginReferenceCatalog: (params) =>
-        services.mcodeAgentService.getPluginReferenceCatalog(params),
+        services.zcodeAgentService.getPluginReferenceCatalog(params),
     }),
     [
       locale,
       services.botsService,
-      services.mcodeTaskService,
-      services.mcodeAgentService,
+      services.zcodeTaskService,
+      services.zcodeAgentService,
       setLocale,
       theme,
       setTheme,
@@ -1243,7 +1243,7 @@ export function App({
           isDesktop={isDesktop}
           isMacDesktop={isMacDesktop}
           isWindowsDesktop={isWindowsDesktop}
-          workspaceShellMcodeState={workspaceShellMcodeState}
+          workspaceShellZCodeState={workspaceShellZCodeState}
           theme={theme}
           isMacFullscreen={isMacFullscreen}
           desktopWindowChromeState={desktopWindowChromeState}

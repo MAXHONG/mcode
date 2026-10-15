@@ -37,12 +37,12 @@ async function readStandaloneCodingPlanCatalog(
   env: Readonly<Record<string, string | undefined>>,
   config?: Pick<ProviderConfigLayerSnapshot, "revision" | "providers">,
 ): Promise<{
-  readonly mcodeBuiltinRevision: string;
+  readonly zcodeBuiltinRevision: string;
   readonly providers: readonly StandaloneCodingPlanProvider[];
 }> {
   if (config)
     return {
-      mcodeBuiltinRevision: config.revision,
+      zcodeBuiltinRevision: config.revision,
       providers: config.providers.entries().flatMap(([providerId, provider]) => {
         const access = provider.access;
         const modelId = provider.builtinModelIds?.find((candidate) => candidate.trim())?.trim();
@@ -178,7 +178,7 @@ export async function readStandaloneAccountProviderConfigSnapshot(
       ] as const;
     }),
   );
-  return createAccountProviderConfigSnapshot(catalog.mcodeBuiltinRevision, providers);
+  return createAccountProviderConfigSnapshot(catalog.zcodeBuiltinRevision, providers);
 }
 
 export async function hasStandaloneCodingPlanAccess(

@@ -44,7 +44,7 @@ async function connectResourcePeer(base: string, onValidate: () => void) {
     dispose: () => socket.close(),
   };
   // WebSocket 可在 open 同一轮分发初始化帧；连接内同步安装 RPC listener，不能先 await open。
-  return new Promise<{ services: { mcodeAgentService: IMcodeAgentService }; dispose(): void }>(
+  return new Promise<{ services: { zcodeAgentService: IMcodeAgentService }; dispose(): void }>(
     (resolve, reject) => {
       socket.once("error", reject);
       socket.once("open", () => {
@@ -62,7 +62,7 @@ async function connectResourcePeer(base: string, onValidate: () => void) {
         });
         const client = new ChannelClient(protocol);
         const services = {
-          mcodeAgentService: ProxyChannel.toService<IMcodeAgentService>(
+          zcodeAgentService: ProxyChannel.toService<IMcodeAgentService>(
             client.getChannel(IMcodeAgentService.channelName),
           ),
         };
@@ -144,11 +144,11 @@ describe("standalone Server Core ingress", () => {
     };
     const other = { ...request, remoteSessionId: "remote-b" };
     try {
-      await first.services.mcodeAgentService.queryConversationCommandsV4({
+      await first.services.zcodeAgentService.queryConversationCommandsV4({
         ...request,
         commands: [],
       });
-      await second.services.mcodeAgentService.queryConversationCommandsV4({
+      await second.services.zcodeAgentService.queryConversationCommandsV4({
         ...other,
         commands: [],
       });

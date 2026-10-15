@@ -13,7 +13,7 @@ const h = vi.hoisted(() => ({
   service: {},
 }));
 vi.mock("@/hooks/useServices.js", () => ({
-  useServices: () => ({ mcodeAgentService: h.service }),
+  useServices: () => ({ zcodeAgentService: h.service }),
 }));
 vi.mock("@/v4/sessionsIndexRegistry.js", () => ({
   acquireSessionsIndex: h.acquire,

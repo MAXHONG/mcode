@@ -62,7 +62,7 @@ function readExistingDeviceMid(): string | undefined {
   }
 }
 
-export function buildMcodeSourceHeaders(
+export function buildZCodeSourceHeaders(
   options: McodeSourceHeaderOptions = {},
 ): Record<string, string> {
   const platform = options.platform ?? process.platform;

@@ -10,8 +10,8 @@ import {
 export interface CreateStdioServicesOptions {
   topicResourceRelayChannel?: () => IChannel;
   env?: Record<string, string | undefined>;
-  mcodeBuiltinProviderConfigFilePath: string;
-  mcodeAgentCommandResolver?: McodeAgentCommandResolver;
+  zcodeBuiltinProviderConfigFilePath: string;
+  zcodeAgentCommandResolver?: McodeAgentCommandResolver;
 }
 
 export interface RemoteAgentNetworkOptions {
@@ -38,10 +38,10 @@ export function createStdioServices(options: CreateStdioServicesOptions) {
   // 远程 Desktop 的呈现能力必须从 stdio 入口收到的 authority mode 进入 Services 推导链。
   // 测试注入 resolver 只用于在 spawn 前观察最终命令，不改变生产默认 resolver。
   const services = createLocalServices({
-    mcodeBuiltinProviderConfigFilePath: options.mcodeBuiltinProviderConfigFilePath,
+    zcodeBuiltinProviderConfigFilePath: options.zcodeBuiltinProviderConfigFilePath,
     topicResourceRelayChannel: options.topicResourceRelayChannel,
     serviceAuthorityMode: authorityModeParseResult.mode,
-    mcodeAgentCommandResolver: options.mcodeAgentCommandResolver,
+    zcodeAgentCommandResolver: options.zcodeAgentCommandResolver,
     remoteAgentNetwork,
   });
 

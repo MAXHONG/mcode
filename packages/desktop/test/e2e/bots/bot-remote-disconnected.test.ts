@@ -77,9 +77,9 @@ describe("Bot remote workspace delivery E2E", () => {
           ensureConnectedCalls += 1;
           return { ok: true };
         },
-        getMcodeTaskService: async () => {
+        getZCodeTaskService: async () => {
           remoteTaskServiceCalls += 1;
-          return harness.mcodeTaskService;
+          return harness.zcodeTaskService;
         },
       },
     });

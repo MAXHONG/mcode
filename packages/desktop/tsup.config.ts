@@ -67,10 +67,10 @@ function loadEnvFiles(): Record<string, string> {
 }
 
 const env = loadEnvFiles();
-const { environment: mcodeEnv } = await loadBuiltinProviderConfig();
+const { environment: zcodeEnv } = await loadBuiltinProviderConfig();
 // 安装包身份与后端环境分轴：MCODE_PREVIEW_IDENTITY=1 让生产后端的构建仍以 Mcode Preview 身份打包运行。
-const mcodeProductFlavor = resolveDesktopProductFlavor({ ...process.env, MCODE_ENV: mcodeEnv });
-console.log(`[tsup] MCODE_ENV=${mcodeEnv} MCODE_PRODUCT_FLAVOR=${mcodeProductFlavor}`);
+const mcodeProductFlavor = resolveDesktopProductFlavor({ ...process.env, MCODE_ENV: zcodeEnv });
+console.log(`[tsup] MCODE_ENV=${zcodeEnv} MCODE_PRODUCT_FLAVOR=${mcodeProductFlavor}`);
 
 function parseCsvEnv(value: string | undefined): string[] {
   return (value ?? "")
@@ -194,7 +194,7 @@ function createSharedDefines() {
     __MCODE_VERSION__: JSON.stringify(buildMetadata.appVersion),
     __MCODE_COMMIT__: JSON.stringify(buildMetadata.buildCommitId),
     __MCODE_BUILD_TIME__: JSON.stringify(buildMetadata.buildTime),
-    __MCODE_ENV__: JSON.stringify(mcodeEnv),
+    __MCODE_ENV__: JSON.stringify(zcodeEnv),
     __MCODE_PRODUCT_FLAVOR__: JSON.stringify(mcodeProductFlavor),
     ...buildTimeConfigDefines,
     // Computer Use Helper build identity — helperInstaller 读它决定下载哪个 Helper bundle。

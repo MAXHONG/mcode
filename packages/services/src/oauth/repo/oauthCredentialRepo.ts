@@ -298,7 +298,7 @@ export class OAuthCredentialRepo {
 
       const refreshToken = await this.credentialService.load(refreshTokenKey(provider));
 
-      const mcodeJwtToken =
+      const zcodeJwtToken =
         provider === ZAI_PROVIDER_ID || provider === BIGMODEL_PROVIDER_ID
           ? await this.credentialService.load(MCODE_JWT_TOKEN_KEY)
           : null;
@@ -306,7 +306,7 @@ export class OAuthCredentialRepo {
       return {
         accessToken,
         ...(refreshToken ? { refreshToken } : {}),
-        ...(mcodeJwtToken ? { mcodeJwtToken } : {}),
+        ...(zcodeJwtToken ? { zcodeJwtToken } : {}),
       };
     } catch (error) {
       if (!isCredentialDecryptError(error)) {
@@ -328,11 +328,11 @@ export class OAuthCredentialRepo {
     }
 
     if (provider === ZAI_PROVIDER_ID || provider === BIGMODEL_PROVIDER_ID) {
-      if (tokenSet.mcodeJwtToken) {
+      if (tokenSet.zcodeJwtToken) {
         // BigModel Start Plan 与 Z.ai Start Plan 一样消费 mcode JWT。
         // JWT 必须在 OAuth callback 阶段随 tokenSet 落盘，后续 balance/runtime 只读取它，
         // 不能再拿 BigModel access token 拼另一个 /oauth/token body 临时兑换。
-        await this.credentialService.save(MCODE_JWT_TOKEN_KEY, tokenSet.mcodeJwtToken);
+        await this.credentialService.save(MCODE_JWT_TOKEN_KEY, tokenSet.zcodeJwtToken);
       } else {
         await this.credentialService.delete(MCODE_JWT_TOKEN_KEY);
       }

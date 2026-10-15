@@ -125,7 +125,7 @@ describe("createContinuousStreamCoalescer", () => {
     });
     const timeline = messageChunk("timeline", {
       messageId: "timeline-1",
-      mcodeTimeline: {
+      zcodeTimeline: {
         version: 1,
         kind: "synthetic",
         type: "context_compaction",

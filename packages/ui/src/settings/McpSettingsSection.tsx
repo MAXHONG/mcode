@@ -88,7 +88,7 @@ import { SettingsSegmentedTabs } from "@/settings/SettingsSegmentedTabs.js";
 import { formatRemoteSkillSyncTarget } from "@/settings/RemoteSkillSyncDialog.js";
 import { selectPluginsForScope } from "@/settings/pluginCapabilityProjection.js";
 
-const DEFAULT_MCP_SOURCE: ServerScope = "mcodeagentmcp";
+const DEFAULT_MCP_SOURCE: ServerScope = "zcodeagentmcp";
 const MCP_OAUTH_AUTHORIZATION_STATUS_REFRESH_MS = 1_000;
 const MCP_OAUTH_AUTHORIZATION_STATUS_REFRESH_DURATION_MS = 5 * 60_000;
 const MCP_OAUTH_AUTHORIZATION_FOLLOWUP_REFRESH_ATTEMPTS = 10;
@@ -140,7 +140,7 @@ export async function refreshMcpServerStatusList({
   requestedWorkspaceKey: string;
   workspaceIdentity?: string;
   workspacePath: string;
-  // mcp/list 收敛到 IMcpSyncService——UI 不直接触达 mcodeAgentService。
+  // mcp/list 收敛到 IMcpSyncService——UI 不直接触达 zcodeAgentService。
   mcpSyncService: Pick<IMcpSyncService, "listWorkspaceMcpServerStatuses">;
 }): Promise<McpServerStatusListRefreshOutcome> {
   if (
@@ -350,7 +350,7 @@ export function buildMcpOAuthAuthorizationStatusRefreshServers(
   const seenNames = new Set<string>();
 
   for (const server of servers) {
-    if (server.source !== "mcodeagentmcp" || !server.enabled) {
+    if (server.source !== "zcodeagentmcp" || !server.enabled) {
       continue;
     }
     const hasPendingAuthorization =
@@ -388,7 +388,7 @@ export function buildMcpOAuthAuthorizationStatusRefreshOptions(
 
 export function buildMcpServerStatusListKey(servers: McodeMcpServer[]): string {
   return servers
-    .filter((server) => server.source === "mcodeagentmcp")
+    .filter((server) => server.source === "zcodeagentmcp")
     .map((server) => {
       const enabledKey = server.enabled ? "enabled" : "disabled";
       return `${server.id}:${enabledKey}:${JSON.stringify(server.config)}`;
@@ -438,7 +438,7 @@ export function buildPendingMcpOAuthAuthorizationRefreshKey(
   const localPendingKeys = servers
     .filter(
       (server) =>
-        server.source === "mcodeagentmcp" &&
+        server.source === "zcodeagentmcp" &&
         server.enabled &&
         Boolean(server.authorization?.authorizationUrl),
     )
@@ -865,7 +865,7 @@ export function McpSettingsSection({
       if (!requestedWorkspacePath) return;
       const requestedMcpServers =
         options?.mcpServers ??
-        useMcpStore.getState().getEnabledMcpServersForMcode("mcode");
+        useMcpStore.getState().getEnabledMcpServersForZCode("mcode");
       await statusListRefreshQueueRef.current?.request(async () => {
         if (!isRequestCurrent()) {
           return;

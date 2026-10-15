@@ -156,7 +156,7 @@ describe("createOfficialMcpTrustedOriginRegistry", () => {
   it("resolves the Mcode API origin per call, so environment switches are picked up", async () => {
     let origin = MCODE_ORIGIN;
     const registry = createOfficialMcpTrustedOriginRegistry({
-      resolveMcodeApiOrigin: () => origin,
+      resolveZCodeApiOrigin: () => origin,
     });
     await expect(
       registry.isTrusted({
@@ -186,7 +186,7 @@ describe("createOfficialMcpTrustedOriginRegistry", () => {
 
   it("fails closed when the origin resolver throws", async () => {
     const registry = createOfficialMcpTrustedOriginRegistry({
-      resolveMcodeApiOrigin: () => {
+      resolveZCodeApiOrigin: () => {
         throw new Error("settings unavailable");
       },
     });
@@ -201,7 +201,7 @@ describe("createOfficialMcpTrustedOriginRegistry", () => {
 
   it("awaits an async origin resolver", async () => {
     const registry = createOfficialMcpTrustedOriginRegistry({
-      resolveMcodeApiOrigin: async () => MCODE_ORIGIN,
+      resolveZCodeApiOrigin: async () => MCODE_ORIGIN,
     });
     await expect(
       registry.isTrusted({
@@ -214,7 +214,7 @@ describe("createOfficialMcpTrustedOriginRegistry", () => {
 
   it("ignores mcpKey entirely (no per-key allowlist any more)", async () => {
     const registry = createOfficialMcpTrustedOriginRegistry({
-      resolveMcodeApiOrigin: () => MCODE_ORIGIN,
+      resolveZCodeApiOrigin: () => MCODE_ORIGIN,
     });
     for (const mcpKey of ["image-search", "brand-new-mcp", ""]) {
       await expect(

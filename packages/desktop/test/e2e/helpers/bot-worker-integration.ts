@@ -89,7 +89,7 @@ export async function createBotWorkerIntegration(baseUrl: string, dropTextContai
     const builtin = resolve("../../config/provider/mcode-builtin.json");
     const runtime = new NodeProviderRegistryRuntime({
       personalFilePath,
-      mcodeBuiltinFilePath: builtin,
+      zcodeBuiltinFilePath: builtin,
       watch: false,
       personalPollingIntervalMs: false,
     });
@@ -205,11 +205,11 @@ export async function createBotWorkerIntegration(baseUrl: string, dropTextContai
     cleanup.push(() => syncer.disposeAll());
     cleanup.push(() => bot.service.disposeAllAndWait());
     const task = createMcodeTaskServiceAdapter({
-      mcodeAgentService: agent,
+      zcodeAgentService: agent,
       taskIndexRepo: repo,
       taskIndexSyncer: syncer,
     });
-    Object.assign(bot.mcodeTaskService, task);
+    Object.assign(bot.zcodeTaskService, task);
     return {
       home,
       workspacePath,

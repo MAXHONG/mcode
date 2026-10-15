@@ -10,7 +10,7 @@ const settingService = {
 const broadcastService = {
   send: vi.fn<(message: { channel: string; payload: unknown }) => Promise<void>>(),
 };
-const mcodeAgentService = {
+const zcodeAgentService = {
   syncAppRuntimePreferences:
     vi.fn<
       (preferences: {
@@ -33,7 +33,7 @@ vi.mock("@/hooks/useServices.js", () => ({
   useServices: () => ({
     broadcastService,
     settingService,
-    mcodeAgentService,
+    zcodeAgentService,
     botsService,
   }),
 }));
@@ -51,7 +51,7 @@ describe("useSettings AskUserQuestion runtime preference", () => {
     } as AppSettings);
     settingService.update.mockResolvedValue(undefined);
     broadcastService.send.mockResolvedValue(undefined);
-    mcodeAgentService.syncAppRuntimePreferences.mockResolvedValue(undefined);
+    zcodeAgentService.syncAppRuntimePreferences.mockResolvedValue(undefined);
     botsService.syncAppRuntimePreferences.mockResolvedValue(undefined);
   });
 
@@ -82,7 +82,7 @@ describe("useSettings AskUserQuestion runtime preference", () => {
     expect(settingService.update).toHaveBeenCalledWith({
       askUserQuestionAutoResolutionEnabled: false,
     });
-    expect(mcodeAgentService.syncAppRuntimePreferences).toHaveBeenCalledWith({
+    expect(zcodeAgentService.syncAppRuntimePreferences).toHaveBeenCalledWith({
       askUserQuestionAutoResolutionEnabled: false,
       modelIoFullRetentionEnabled: false,
     });
@@ -97,7 +97,7 @@ describe("useSettings AskUserQuestion runtime preference", () => {
         modelIoFullRetentionEnabled: false,
       },
     });
-    expect(mcodeAgentService.syncAppRuntimePreferences.mock.invocationCallOrder[0]).toBeLessThan(
+    expect(zcodeAgentService.syncAppRuntimePreferences.mock.invocationCallOrder[0]).toBeLessThan(
       broadcastService.send.mock.invocationCallOrder[0] ?? 0,
     );
     expect(botsService.syncAppRuntimePreferences.mock.invocationCallOrder[0]).toBeLessThan(
@@ -123,7 +123,7 @@ describe("useSettings AskUserQuestion runtime preference", () => {
       askUserQuestionAutoResolutionEnabled: true,
       modelIoFullRetentionEnabled: true,
     };
-    expect(mcodeAgentService.syncAppRuntimePreferences).toHaveBeenCalledWith(preferences);
+    expect(zcodeAgentService.syncAppRuntimePreferences).toHaveBeenCalledWith(preferences);
     expect(botsService.syncAppRuntimePreferences).toHaveBeenCalledWith(preferences);
     expect(broadcastService.send).toHaveBeenCalledWith({
       channel: APP_RUNTIME_PREFERENCES_CHANGED_BROADCAST_CHANNEL,

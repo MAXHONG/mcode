@@ -32,17 +32,17 @@ export interface TestActions extends TaskListE2EActions {
   setChatMessages: (messages: ChatMessage[]) => void;
   /** 获取当前 mock 消息数量 */
   getChatMessageCount: () => number;
-  /** E2E 通过真实 mcodeAgentService 拉取插件 overview */
+  /** E2E 通过真实 zcodeAgentService 拉取插件 overview */
   getPluginsOverview: IMcodeAgentService["getPluginsOverview"];
-  /** E2E 通过真实 mcodeAgentService 添加 marketplace */
+  /** E2E 通过真实 zcodeAgentService 添加 marketplace */
   addPluginMarketplace: IMcodeAgentService["addPluginMarketplace"];
-  /** E2E 通过真实 mcodeAgentService 刷新 marketplace */
+  /** E2E 通过真实 zcodeAgentService 刷新 marketplace */
   updatePluginMarketplace: IMcodeAgentService["updatePluginMarketplace"];
-  /** E2E 通过真实 mcodeAgentService 安装 marketplace plugin */
+  /** E2E 通过真实 zcodeAgentService 安装 marketplace plugin */
   installPlugin: IMcodeAgentService["installPlugin"];
-  /** E2E 通过真实 mcodeAgentService 触发插件 discover */
+  /** E2E 通过真实 zcodeAgentService 触发插件 discover */
   listPlugins: IMcodeAgentService["listPlugins"];
-  /** E2E 通过真实 mcodeAgentService 查询 Workspace/Session Plugin catalog */
+  /** E2E 通过真实 zcodeAgentService 查询 Workspace/Session Plugin catalog */
   getPluginReferenceCatalog: IMcodeAgentService["getPluginReferenceCatalog"];
 }
 

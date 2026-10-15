@@ -193,7 +193,7 @@ vi.mock("@/hooks/useWorkspaceServices.js", () => ({
       archiveWorkspaceTasks,
       setTaskUnread: async () => ({}),
     },
-    mcodeTaskService: {
+    zcodeTaskService: {
       releaseWorkspacePreparation,
     },
   }),

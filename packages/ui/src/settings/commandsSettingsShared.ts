@@ -17,8 +17,8 @@ export const COMMAND_AGENT_SOURCE_META: Record<
     pathHint: string;
   }
 > = {
-  mcodeAgent: {
-    labelId: "settings.commands.source.mcodeAgent",
+  zcodeAgent: {
+    labelId: "settings.commands.source.zcodeAgent",
     pathHint: "~/.mcode/commands",
     provider: MCODE_AGENT_PROVIDER,
   },

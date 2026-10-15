@@ -15,14 +15,14 @@ import {
   MCODE_PRODUCT_FLAVOR,
   MCODE_RUNTIME_ENV_KEY,
   MCODE_VERSION,
-  buildMcodeToolEnvPassthroughEnv,
+  buildZCodeToolEnvPassthroughEnv,
   resolveRuntimeMcodeEndpointOrigin,
   resolveZaiBusinessBaseUrl,
   resolveZaiOAuthClientId,
   resolveZaiOAuthOrigin,
   normalizeDynamicWorkflowMode,
   readMcodeAgentTelemetryEnv,
-  sanitizeMcodeRuntimeEnv,
+  sanitizeZCodeRuntimeEnv,
   type McodeRuntimeEnv,
 } from "@mcode/shared";
 import { resolvePlatformKeyForPackagedApp } from "../../scripts/target-platform.mjs";
@@ -538,8 +538,8 @@ export function buildHostProcessEnv(hostProcessLocalEnv: Record<string, string>)
     delete agentTelemetryEnv[key];
   }
   const inheritedEnv = applySelectedMcodeEnvLinks({
-    ...sanitizeMcodeRuntimeEnv(rawInheritedEnv),
-    ...buildMcodeToolEnvPassthroughEnv(rawInheritedEnv),
+    ...sanitizeZCodeRuntimeEnv(rawInheritedEnv),
+    ...buildZCodeToolEnvPassthroughEnv(rawInheritedEnv),
   });
   // A release app must never inherit the local unsigned-Helper escape hatch.
   // Otherwise a developer shell/launchctl variable can make the signed app

@@ -7,21 +7,21 @@ import {
   type ApiRequestInit,
 } from "@mcode/shared";
 import { createServiceLogger } from "#src/logger/serviceLogger.js";
-import { buildMcodeSourceHeaders } from "../sourceHeaders.js";
+import { buildZCodeSourceHeaders } from "../sourceHeaders.js";
 import { withRequestIdHeader } from "./requestIdHeaders.js";
 
 const log = createServiceLogger("node-api-client");
 
 interface NodeApiClientOptions {
   fetchImpl?: typeof fetch;
-  onMcodeJwtInvalid?: (input: string | URL, headers: Headers) => void;
-  isMcodeJwtRequest?: (input: string | URL, headers: Headers) => boolean | Promise<boolean>;
+  onZcodeJwtInvalid?: (input: string | URL, headers: Headers) => void;
+  isZcodeJwtRequest?: (input: string | URL, headers: Headers) => boolean | Promise<boolean>;
   isBusinessUnauthorizedRequest?: (
     input: string | URL,
     headers: Headers,
   ) => boolean | Promise<boolean>;
   businessUnauthorizedObservationTimeoutMs?: number;
-  resolveMcodeEndpointOrigin?: () => Promise<string> | string;
+  resolveZCodeEndpointOrigin?: () => Promise<string> | string;
 }
 
 const DEFAULT_BUSINESS_UNAUTHORIZED_OBSERVATION_TIMEOUT_MS = 1000;
@@ -123,7 +123,7 @@ function withMcodeEndpointHeaders(
   headers: RequestInit["headers"] | undefined,
   endpointOrigin: string,
 ): RequestInit["headers"] {
-  const next = new Headers(buildMcodeSourceHeaders());
+  const next = new Headers(buildZCodeSourceHeaders());
   if (headers) {
     new Headers(headers).forEach((value, key) => {
       next.set(key, value);
@@ -152,26 +152,26 @@ function resolveRequestHeaders(
 
 export class NodeApiClient implements ApiClient {
   private readonly fetchImpl?: typeof fetch;
-  private readonly resolveMcodeEndpointOrigin?: () => Promise<string> | string;
-  private readonly onMcodeJwtInvalid?: (input: string | URL, headers: Headers) => void;
-  private readonly isMcodeJwtRequest?: NodeApiClientOptions["isMcodeJwtRequest"];
+  private readonly resolveZCodeEndpointOrigin?: () => Promise<string> | string;
+  private readonly onZcodeJwtInvalid?: (input: string | URL, headers: Headers) => void;
+  private readonly isZcodeJwtRequest?: NodeApiClientOptions["isZcodeJwtRequest"];
   private readonly isBusinessUnauthorizedRequest?: NodeApiClientOptions["isBusinessUnauthorizedRequest"];
   private readonly businessUnauthorizedObservationTimeoutMs: number;
 
   constructor(options: NodeApiClientOptions = {}) {
     this.fetchImpl = options.fetchImpl;
-    this.onMcodeJwtInvalid = options.onMcodeJwtInvalid;
-    this.isMcodeJwtRequest = options.isMcodeJwtRequest;
+    this.onZcodeJwtInvalid = options.onZcodeJwtInvalid;
+    this.isZcodeJwtRequest = options.isZcodeJwtRequest;
     this.isBusinessUnauthorizedRequest = options.isBusinessUnauthorizedRequest;
     this.businessUnauthorizedObservationTimeoutMs =
       options.businessUnauthorizedObservationTimeoutMs ??
       DEFAULT_BUSINESS_UNAUTHORIZED_OBSERVATION_TIMEOUT_MS;
-    this.resolveMcodeEndpointOrigin = options.resolveMcodeEndpointOrigin;
+    this.resolveZCodeEndpointOrigin = options.resolveZCodeEndpointOrigin;
   }
 
   async request(input: string | URL, init?: ApiRequestInit): Promise<Response> {
-    const endpointOrigin = this.resolveMcodeEndpointOrigin
-      ? await this.resolveMcodeEndpointOrigin()
+    const endpointOrigin = this.resolveZCodeEndpointOrigin
+      ? await this.resolveZCodeEndpointOrigin()
       : undefined;
     const activeEndpointOrigin = endpointOrigin ?? DEFAULT_MCODE_ENDPOINT_ORIGIN;
     const requestInput = rewriteMcodeEndpointUrl(input, activeEndpointOrigin);
@@ -214,10 +214,10 @@ export class NodeApiClient implements ApiClient {
         headers: requestHeaders,
         ...(signal ? { signal } : {}),
       });
-      if ((response.status === 401 || response.status === 200) && this.onMcodeJwtInvalid) {
+      if ((response.status === 401 || response.status === 200) && this.onZcodeJwtInvalid) {
         try {
           const requestHeadersForObservation = new Headers(requestHeaders);
-          const isCurrentMcodeJwtRequest = await this.isMcodeJwtRequest?.(
+          const isCurrentMcodeJwtRequest = await this.isZcodeJwtRequest?.(
             requestInput,
             requestHeadersForObservation,
           );
@@ -233,7 +233,7 @@ export class NodeApiClient implements ApiClient {
                   this.businessUnauthorizedObservationTimeoutMs,
                 ))))
           ) {
-            this.onMcodeJwtInvalid(requestInput, requestHeadersForObservation);
+            this.onZcodeJwtInvalid(requestInput, requestHeadersForObservation);
           }
         } catch (error) {
           log.warn("mcode jwt invalid response observation failed", { error });

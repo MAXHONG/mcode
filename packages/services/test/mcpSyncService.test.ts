@@ -117,7 +117,7 @@ describe("mcp sync service", () => {
 
     await service.saveMcpToUserDirectory({
       action: "set-enabled",
-      source: "mcodeagentmcp",
+      source: "zcodeagentmcp",
       name: "context7",
       enabled: false,
     });
@@ -130,7 +130,7 @@ describe("mcp sync service", () => {
 
     await service.saveMcpToUserDirectory({
       action: "set-enabled",
-      source: "mcodeagentmcp",
+      source: "zcodeagentmcp",
       name: "context7",
       enabled: true,
     });
@@ -390,7 +390,7 @@ describe("mcp sync service", () => {
 
     await service.saveMcpToUserDirectory({
       action: "upsert",
-      source: "mcodeagentmcp",
+      source: "zcodeagentmcp",
       name: "deepwiki",
       config: {
         type: "http",
@@ -402,7 +402,7 @@ describe("mcp sync service", () => {
 
     expect(result.servers).toMatchObject([
       {
-        source: "mcodeagentmcp",
+        source: "zcodeagentmcp",
         scope: "user",
         name: "deepwiki",
         config: {
