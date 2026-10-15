@@ -4,7 +4,7 @@ import { validateRemoteServerBundle } from "./buildRemoteValidation.js";
 import { loadBuiltinProviderConfig } from "../../scripts/builtin-provider-config.mjs";
 import { stageThirdPartyNotices } from "../../scripts/third-party-notices.mjs";
 
-const { version } = JSON.parse(readFileSync("../../package.json", "utf-8"));
+const { version, mcodeUpstreamVersion } = JSON.parse(readFileSync("../../package.json", "utf-8"));
 const { content: mcodeBuiltinProviderConfigJson } = await loadBuiltinProviderConfig();
 
 /**
@@ -44,6 +44,7 @@ const buildResult = await build({
     "import.meta.url": "__import_meta_url",
     "import.meta.dirname": "__import_meta_dirname",
     __MCODE_VERSION__: JSON.stringify(version),
+    __MCODE_UPSTREAM_VERSION__: JSON.stringify(mcodeUpstreamVersion ?? version),
     __MCODE_BUILTIN_PROVIDER_CONFIG_JSON__: JSON.stringify(mcodeBuiltinProviderConfigJson),
   },
   metafile: true,

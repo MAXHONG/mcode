@@ -12,13 +12,14 @@ const { stageThirdPartyNotices } = await import(
 
 // tsup config 可能从不同 cwd 加载，基于配置文件自身目录解析仓库根 package.json。
 const rootPackageJsonPath = resolve(import.meta.dirname, "../../package.json");
-const { version } = JSON.parse(readFileSync(rootPackageJsonPath, "utf-8"));
+const { version, mcodeUpstreamVersion } = JSON.parse(readFileSync(rootPackageJsonPath, "utf-8"));
 
 const { environment: zcodeEnv, content: mcodeBuiltinProviderConfigJson } =
   await loadBuiltinProviderConfig();
 
 export const SERVER_HTTP_DEFINES = {
   __MCODE_VERSION__: JSON.stringify(version),
+  __MCODE_UPSTREAM_VERSION__: JSON.stringify(mcodeUpstreamVersion ?? version),
   __MCODE_ENV__: JSON.stringify(zcodeEnv),
   __MCODE_BUILTIN_PROVIDER_CONFIG_JSON__: JSON.stringify(mcodeBuiltinProviderConfigJson),
 };

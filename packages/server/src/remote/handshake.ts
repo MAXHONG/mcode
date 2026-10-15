@@ -1,5 +1,5 @@
 import type { HelloMessage, HelloAckMessage } from "@mcode/shared";
-import { MCODE_VERSION, formatZodError, helloMessageSchema } from "@mcode/shared";
+import { MCODE_REMOTE_UPSTREAM_VERSION, formatZodError, helloMessageSchema } from "@mcode/shared";
 import type { StdioStream } from "./backend.js";
 
 const MAX_HANDSHAKE_DIAGNOSTIC_CHARS = 2048;
@@ -77,7 +77,7 @@ export function performHandshake(
               // Send ack
               const ack: HelloAckMessage = {
                 type: "zcode-hello-ack",
-                version: MCODE_VERSION,
+                version: MCODE_REMOTE_UPSTREAM_VERSION,
                 clientId,
               };
               stream.stdin.write(JSON.stringify(ack) + "\n");

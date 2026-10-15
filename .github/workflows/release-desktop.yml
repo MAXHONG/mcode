@@ -30,6 +30,8 @@ env:
   # 连接 Z.ai 正式后端（登录、Coding Plan 等），打正式 Mcode 身份安装包。
   MCODE_ENV: production
   NODE_ENV: production
+  # 启用应用内自动更新：客户端从 GitHub Releases 的 latest*.yml 检查新版本。
+  MCODE_AUTO_UPDATE: "1"
   HUSKY: "0"
   # GitHub Runner 位于海外，使用官方源下载 Electron 与 electron-builder 二进制。
   ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
@@ -126,10 +128,16 @@ jobs:
           mkdir -p release-artifacts
           cd packages/desktop/dist
           ls -la
-          for f in *.dmg *.zip *.exe *.AppImage *.deb *.rpm *.pkg.tar.zst *.blockmap latest*.yml; do
+          for f in *.dmg *.zip *.exe *.AppImage *.deb *.rpm *.pkg.tar.zst *.blockmap; do
             [ -f "$f" ] || continue
             # 发布资产名不带空格，便于下载链接使用
             cp "$f" "../../../release-artifacts/${f// /-}"
+          done
+          # 自动更新清单：同一平台不同架构的文件名会冲突（win x64/arm64 都叫 latest.yml，
+          # mac 两个架构都叫 latest-mac.yml）。这里加架构后缀暂存，发布阶段再合并/还原。
+          for f in latest*.yml; do
+            [ -f "$f" ] || continue
+            cp "$f" "../../../release-artifacts/update-${{ matrix.os }}-${{ matrix.arch }}--$f"
           done
           ls -la ../../../release-artifacts
 
@@ -168,11 +176,18 @@ jobs:
           path: dist-release
           merge-multiple: true
 
+      - name: Assemble auto-update manifests
+        working-directory: dist-release
+        run: |
+          ls -la update-* || true
+          node "$GITHUB_WORKSPACE/scripts/ci/merge-update-manifests.mjs" .
+          rm -f update-*--latest*.yml
+          ls -la latest*.yml
+
       - name: Generate checksums
         working-directory: dist-release
         run: |
-          rm -f latest*.yml
-          sha256sum * > SHA256SUMS.txt
+          sha256sum $(ls | grep -v '^latest.*\.yml$') > SHA256SUMS.txt
           cat SHA256SUMS.txt
 
       - name: Publish release
@@ -191,6 +206,10 @@ jobs:
           - macOS Intel：\`Mcode-*-mac-x64.dmg\`
           - Windows x64：\`Mcode-*-win-x64.exe\`
           - Windows ARM64：\`Mcode-*-win-arm64.exe\`
+
+          ## 自动更新
+          - Windows / Linux：应用内检测到新版本后可直接下载并在重启时安装。
+          - macOS：安装包未签名，应用内提示新版本后会打开本页面，请下载新的 DMG 覆盖安装。
           - Linux x64 / ARM64：\`.deb\`（Debian/Ubuntu）、\`.rpm\`（Fedora/RHEL）、\`.AppImage\`（通用）、\`.pkg.tar.zst\`（Arch）
 
           ## 安装提示
@@ -210,5 +229,6 @@ jobs:
               --title "Mcode ${TAG}" \
               --notes-file "$NOTES_FILE" \
               --target "${{ github.sha }}" \
+              --latest \
               "${FLAGS[@]}"
           fi

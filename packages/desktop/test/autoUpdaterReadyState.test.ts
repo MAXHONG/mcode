@@ -94,6 +94,8 @@ vi.mock("node:child_process", () => ({
   spawn: spawnMock,
 }));
 
+const { shellOpenExternal } = vi.hoisted(() => ({ shellOpenExternal: vi.fn() }));
+
 vi.mock("electron", () => ({
   app: appMock,
   BrowserWindow: {
@@ -105,6 +107,9 @@ vi.mock("electron", () => ({
   },
   dialog: {
     showMessageBox: dialogShowMessageBox,
+  },
+  shell: {
+    openExternal: shellOpenExternal,
   },
   Menu: {
     getApplicationMenu: vi.fn(() => ({
@@ -241,6 +246,9 @@ describe("autoUpdater ready state sync", () => {
       configurable: true,
     });
     delete process.env["TEST_UPDATER_ARCH"];
+    // 既有用例覆盖签名构建下 Squirrel.Mac 的安装链路；未签名分支有独立用例。
+    process.env["MCODE_MAC_SIGNED_UPDATES"] = "1";
+    shellOpenExternal.mockReset();
     delete process.env["MCODE_UPDATE_FEED_URL"];
     delete process.env["MCODE_AUTO_UPDATE_DEV"];
     delete process.env["MCODE_AUTO_UPDATE_DEV_VERSION"];
@@ -289,12 +297,27 @@ describe("autoUpdater ready state sync", () => {
     );
   });
 
-  it("Linux arm64 主更新检查默认使用服务端 manifest provider", async () => {
+  it("未显式配置 feed 时默认使用 GitHub Releases provider", async () => {
     mockProcessPlatform("linux");
     process.env["TEST_UPDATER_ARCH"] = "arm64";
 
     const { initAutoUpdater } = await import("../src/main/autoUpdater.js");
+    const { GitHubReleasesUpdateProvider } = await import("../src/main/manifestUpdateProvider.js");
     initAutoUpdater();
+
+    expect(autoUpdaterMock.setFeedURL).toHaveBeenCalledWith({
+      provider: "custom",
+      updateProvider: GitHubReleasesUpdateProvider,
+    });
+    expect(autoUpdaterMock.checkForUpdates).toHaveBeenCalledTimes(1);
+  });
+
+  it("Linux arm64 显式配置 feed 时使用服务端 manifest provider", async () => {
+    mockProcessPlatform("linux");
+    process.env["TEST_UPDATER_ARCH"] = "arm64";
+
+    const { initAutoUpdater } = await import("../src/main/autoUpdater.js");
+    initAutoUpdater({ updateFeedSource: { url: "https://zcode.z.ai/api/v1/releases/electron/manifest" }, });
 
     expect(autoUpdaterMock.setFeedURL).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -303,6 +326,25 @@ describe("autoUpdater ready state sync", () => {
       }),
     );
     expect(autoUpdaterMock.checkForUpdates).toHaveBeenCalledTimes(1);
+  });
+
+  it("未签名 macOS 构建点击下载时打开 GitHub Release 页面而不是下载安装", async () => {
+    mockProcessPlatform("darwin");
+    delete process.env["MCODE_MAC_SIGNED_UPDATES"];
+    const { downloadAvailableUpdate, getAutoUpdaterState, initAutoUpdater } = await import(
+      "../src/main/autoUpdater.js"
+    );
+    await initAutoUpdater();
+    autoUpdaterMock.emit("update-available", { version: "3.15.9" });
+    await new Promise((resolve) => setTimeout(resolve, 0));
+    expect(getAutoUpdaterState()).toMatchObject({ kind: "update-available", version: "3.15.9" });
+
+    downloadAvailableUpdate("renderer");
+
+    expect(shellOpenExternal).toHaveBeenCalledWith(
+      "https://github.com/MAXHONG/mcode/releases/tag/v3.15.9",
+    );
+    expect(autoUpdaterMock.downloadUpdate).not.toHaveBeenCalled();
   });
 
   it("开发态默认不初始化自动更新", async () => {
@@ -345,6 +387,7 @@ describe("autoUpdater ready state sync", () => {
     const { initAutoUpdater } = await import("../src/main/autoUpdater.js");
 
     initAutoUpdater({
+      updateFeedSource: { url: "https://zcode.z.ai/api/v1/releases/electron/manifest" },
       settingService: settingServiceMock,
       deviceMid: "mid-1",
       resolveEndpointOrigin: () => "https://endpoint.example.test",
@@ -411,7 +454,7 @@ describe("autoUpdater ready state sync", () => {
     const { getAutoUpdaterState, initAutoUpdater, refreshAutoUpdaterReleaseChannel } =
       await import("../src/main/autoUpdater.js");
 
-    initAutoUpdater({ settingService: settingServiceMock });
+    initAutoUpdater({ settingService: settingServiceMock, updateFeedSource: { url: "https://zcode.z.ai/api/v1/releases/electron/manifest" }, });
     const options = autoUpdaterMock.setFeedURL.mock.calls[0]?.[0] as {
       resolveReleaseChannel?: () => Promise<string>;
     };
@@ -583,6 +626,7 @@ describe("autoUpdater ready state sync", () => {
 
   it("冷启动恢复待安装说明后同版本 manifest 仍会重新下载以重建 macOS staging", async () => {
     mockProcessPlatform("darwin");
+
     appMock.getVersion.mockReturnValue("3.5.0");
     const pendingReleaseNotes = {
       version: "3.6.4",
@@ -625,6 +669,7 @@ describe("autoUpdater ready state sync", () => {
 
   it("冷启动恢复的待安装状态被点击时不会执行退出准备而是重新 staging", async () => {
     mockProcessPlatform("darwin");
+
     appMock.getVersion.mockReturnValue("3.5.0");
     const onBeforeQuitAndInstall = vi.fn();
     settingServiceMock.get.mockResolvedValue({

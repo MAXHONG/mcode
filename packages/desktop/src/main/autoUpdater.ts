@@ -1,5 +1,5 @@
 /* eslint-disable max-lines -- autoUpdater 需要集中维护 Electron 事件、菜单状态与 IPC 交互，过度拆分会让更新状态流更难追踪 */
-import { app, BrowserWindow, ipcMain, Menu } from "electron";
+import { app, BrowserWindow, ipcMain, Menu, shell } from "electron";
 import type { ISettingService } from "@mcode/services";
 import pkg, { CancellationToken } from "electron-updater";
 import semver from "semver";
@@ -20,7 +20,11 @@ import {
   type UpdateStatePayload,
 } from "@mcode/shared";
 import { logger } from "./logger.js";
-import { ManifestUpdateProvider, getElectronReleasePlatform } from "./manifestUpdateProvider.js";
+import {
+  GitHubReleasesUpdateProvider,
+  ManifestUpdateProvider,
+  getElectronReleasePlatform,
+} from "./manifestUpdateProvider.js";
 
 export const CHECK_FOR_UPDATE_MENU_ID = "check-for-update";
 const AUTO_UPDATE_POLL_INTERVAL_MS = 15 * 60 * 1000;
@@ -153,6 +157,12 @@ function isDevAutoUpdateEnabled(): boolean {
     isTruthyRuntimeFlag(process.env[DEV_AUTO_UPDATE_ENV]) ||
     readCommandLineSwitchValue(DEV_AUTO_UPDATE_SWITCH) !== null
   );
+}
+
+const MCODE_GITHUB_RELEASES_URL = "https://github.com/MAXHONG/mcode/releases";
+
+function shouldOpenReleasePageInsteadOfInstalling(): boolean {
+  return process.platform === "darwin" && process.env.MCODE_MAC_SIGNED_UPDATES !== "1";
 }
 
 function canUseAutoUpdaterInCurrentRuntime(): boolean {
@@ -782,6 +792,18 @@ async function syncAutoUpdateCheckChannelFromSettings(
 
 function applyManifestUpdateProvider(options: InitAutoUpdaterOptions): void {
   const manifestUrl = options.updateFeedSource?.url.trim();
+  if (!manifestUrl) {
+    // Mcode 不使用 z.ai 的 manifest 服务（那里只分发官方 ZCode 安装包），
+    // 改为读取 GitHub Releases 上由 electron-builder 生成的 latest*.yml。
+    autoUpdater.setFeedURL({
+      provider: "custom",
+      updateProvider: GitHubReleasesUpdateProvider,
+    });
+    logger.info(
+      `[auto-update] GitHub Releases provider applied platform=${getElectronReleasePlatform()}`,
+    );
+    return;
+  }
   autoUpdater.setFeedURL({
     provider: "custom",
     updateProvider: ManifestUpdateProvider,
@@ -1252,6 +1274,15 @@ export function downloadAvailableUpdate(reason = "renderer") {
     return;
   }
 
+  if (shouldOpenReleasePageInsteadOfInstalling()) {
+    // Mcode 的 macOS 安装包未经 Apple 签名，Squirrel.Mac 会拒绝安装未签名更新。
+    // 这里改为打开对应版本的 GitHub Release 页面，由用户下载 DMG 手动替换。
+    const releaseUrl = `${MCODE_GITHUB_RELEASES_URL}/tag/v${menuState.version}`;
+    logger.info(`[auto-update] ${reason}: open release page instead of install ${releaseUrl}`);
+    void shell.openExternal(releaseUrl);
+    return;
+  }
+
   downloadingUpdateVersion = menuState.version;
   downloadingUpdateReleaseNotes = menuState.releaseNotes ?? availableUpdateReleaseNotes;
   downloadingUpdateChannel = menuState.channel ?? availableUpdateChannel;
@@ -1655,7 +1686,10 @@ export async function initAutoUpdater(options: InitAutoUpdaterOptions = {}): Pro
         return;
       }
 
-      if (await shouldAutoDownloadAndInstallUpdates(options.settingService)) {
+      if (
+        !shouldOpenReleasePageInsteadOfInstalling() &&
+        (await shouldAutoDownloadAndInstallUpdates(options.settingService))
+      ) {
         // 功能原因：自动下载偏好属于 main 进程更新状态机，不能依赖 renderer 弹窗是否打开。
         // 检测到更新后复用手动下载入口，保持取消、缓存命中、失败恢复等行为完全一致。
         downloadAvailableUpdate("auto-download");

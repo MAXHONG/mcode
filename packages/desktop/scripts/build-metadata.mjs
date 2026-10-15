@@ -85,6 +85,10 @@ export function collectBuildMetadata() {
 
   return {
     appVersion: normalizeVersion(rootPackageJson.version),
+    // 远程开发锁定的上游 ZCode 组件版本（z.ai CDN 只按上游版本发布 manifest）。
+    upstreamVersion: normalizeVersion(
+      rootPackageJson.mcodeUpstreamVersion ?? rootPackageJson.version,
+    ),
     buildCommitId: resolveCommitId(),
     buildTime: new Date().toISOString(),
     electronBuilderVersion: resolveInstalledPackageVersion(

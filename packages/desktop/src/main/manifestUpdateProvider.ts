@@ -178,6 +178,62 @@ function resolveManifestFiles(
   return resolved;
 }
 
+/**
+ * Mcode 发布到 GitHub Releases：`releases/latest/download/<file>` 永远重定向到最新正式 Release，
+ * 不需要 GitHub API（无速率限制、无需 token）。各平台读取各自的 electron-builder 更新清单。
+ */
+export const GITHUB_RELEASES_LATEST_DOWNLOAD_URL =
+  "https://github.com/MAXHONG/mcode/releases/latest/download/";
+
+export function resolveGitHubReleaseChannelFile(
+  platform: NodeJS.Platform = process.platform,
+  arch = process.env["TEST_UPDATER_ARCH"] || process.arch,
+): string {
+  if (platform === "darwin") return "latest-mac.yml";
+  if (platform === "linux") return arch === "x64" ? "latest-linux.yml" : `latest-linux-${arch}.yml`;
+  return arch === "x64" ? "latest.yml" : `latest-${arch}.yml`;
+}
+
+export interface GitHubReleasesUpdateProviderOptions extends CustomPublishOptions {
+  baseUrl?: string;
+}
+
+export class GitHubReleasesUpdateProvider extends Provider<UpdateInfo> {
+  private readonly baseUrl: URL;
+  private readonly linuxExtensions: readonly string[] | null;
+
+  constructor(
+    options: GitHubReleasesUpdateProviderOptions,
+    updater: AppUpdater,
+    runtimeOptions: ProviderRuntimeOptions,
+  ) {
+    super(runtimeOptions);
+    this.baseUrl = new URL(options.baseUrl?.trim() || GITHUB_RELEASES_LATEST_DOWNLOAD_URL);
+    this.linuxExtensions = getLinuxUpdateExtensions(updater);
+  }
+
+  override get isUseMultipleRangeRequest(): boolean {
+    return false;
+  }
+
+  override async getLatestVersion(): Promise<UpdateInfo> {
+    const channelUrl = new URL(resolveGitHubReleaseChannelFile(), this.baseUrl);
+    const raw = await this.httpRequest(channelUrl, { accept: MANIFEST_ACCEPT_HEADER });
+    if (!raw) {
+      throw new Error(`Empty update manifest: ${channelUrl.toString()}`);
+    }
+    const parsed = parseYaml(raw);
+    if (!isRecord(parsed) || typeof parsed.version !== "string") {
+      throw new Error(`Invalid update manifest: ${channelUrl.toString()}`);
+    }
+    return parsed as unknown as UpdateInfo;
+  }
+
+  override resolveFiles(updateInfo: UpdateInfo): ResolvedUpdateFileInfo[] {
+    return resolveManifestFiles(updateInfo, this.baseUrl, this.linuxExtensions);
+  }
+}
+
 export class ManifestUpdateProvider extends Provider<UpdateInfo> {
   private readonly options: ManifestUpdateProviderOptions;
   private readonly releasePlatform: string;

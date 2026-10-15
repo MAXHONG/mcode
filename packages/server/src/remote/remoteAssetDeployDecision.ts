@@ -1,4 +1,4 @@
-import { MCODE_VERSION } from "@mcode/shared";
+import { MCODE_REMOTE_UPSTREAM_VERSION } from "@mcode/shared";
 import type { IRemoteBackend, RemoteEnvironment } from "@mcode/server/remote/backend.js";
 import {
   REMOTE_BASE,
@@ -300,7 +300,7 @@ async function resolveComponentManifest(
         remoteCdnBaseUrl: options.remoteCdnBaseUrl,
         remoteCdnBaseUrls: options.remoteCdnBaseUrls,
         remoteCacheDir: options.remoteCacheDir,
-        version: MCODE_VERSION,
+        version: MCODE_REMOTE_UPSTREAM_VERSION,
         platformArch: `${env.platform}-${env.arch}`,
         manifestRequestTimeoutMs: options.manifestRequestTimeoutMs,
         remoteAssetNetwork: options.remoteAssetNetwork,

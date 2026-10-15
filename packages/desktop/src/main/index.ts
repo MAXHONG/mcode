@@ -2526,7 +2526,9 @@ app.whenReady().then(async () => {
   // gate 照常生效，对真实用户零影响。
   // Mcode 改名分支：远端 client config 的 minimalVersion 与安装包均属上游 ZCode 发布流，
   // Mcode 安装包不能被 ZCode 的强制升级引导到下载上游安装包，因此仅在构建期启用自动更新时才执行该 gate。
-  const skipForceUpdateForLocalDevRuntime = !app.isPackaged || !MCODE_AUTO_UPDATE_ENABLED;
+  // Mcode 的自动更新走 GitHub Releases；z.ai client config 下发的 minimalVersion 属于上游 ZCode
+  // 发布流，不能据此强制 Mcode 升级，因此打包版也始终跳过该远端强制升级 gate。
+  const skipForceUpdateForLocalDevRuntime = true;
   const forceUpdateGuardResult =
     MCODE_PRODUCT_FLAVOR === "production" && !skipForceUpdateForLocalDevRuntime
       ? await maybeBlockStartupForForceUpdate({

@@ -11,3 +11,14 @@ export const MCODE_COMMIT: string =
   typeof __MCODE_COMMIT__ !== "undefined" ? __MCODE_COMMIT__ : "unknown";
 export const MCODE_BUILD_TIME: string =
   typeof __MCODE_BUILD_TIME__ !== "undefined" ? __MCODE_BUILD_TIME__ : "unknown";
+
+/**
+ * 远程开发（SSH/WSL/Docker）复用 z.ai CDN 上的上游 ZCode 远端组件，CDN 只按上游版本号发布 manifest。
+ * Mcode 自身版本（用于 GitHub Releases 自动更新）可以独立递增，远端契约仍锁定在该上游版本。
+ * 升级上游基线时同步修改这里（以及 package.json 的 `mcodeUpstreamVersion`）。
+ */
+declare const __MCODE_UPSTREAM_VERSION__: string;
+export const MCODE_REMOTE_UPSTREAM_VERSION: string =
+  typeof __MCODE_UPSTREAM_VERSION__ !== "undefined" && __MCODE_UPSTREAM_VERSION__
+    ? __MCODE_UPSTREAM_VERSION__
+    : MCODE_VERSION;
