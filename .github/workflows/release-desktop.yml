@@ -64,6 +64,10 @@ jobs:
       MCODE_TARGET_OS: ${{ matrix.os }}
       MCODE_TARGET_ARCH: ${{ matrix.arch }}
     steps:
+      # Windows 默认 core.autocrlf=true，会改写按哈希校验的资源文件。
+      - name: Disable git autocrlf
+        run: git config --global core.autocrlf false
+
       - name: Checkout
         uses: actions/checkout@v4
 

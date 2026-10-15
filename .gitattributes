@@ -14,3 +14,6 @@ third-party/runtime/*.txt -text -whitespace
 docs/knip/docs/LICENSE -text -whitespace
 docs/knip/docs/licenses/** -text -whitespace
 third-party/inventory.json linguist-generated=true
+
+# Gen UI 离线 vendor 快照按 sha256 校验，必须按字节保存（否则 Windows checkout 转 CRLF 导致哈希不符）。
+apps/mcode-cli/packages/visualize-plugin/skills/visualize/assets/vendor/** -text
