@@ -8,6 +8,8 @@
   <a href="https://github.com/MAXHONG/mcode/releases">下载安装包</a>
 </p>
 
+> **非官方声明**：Mcode 是基于 [ZCode](https://github.com/zai-org/ZCode)（Apache License 2.0）修改的**非官方社区版本**，与 Z.ai / 智谱（Zhipu AI）及 ZCode 官方**没有任何关联**，也未获其认可或授权。"ZCode"、"Z.ai"、"智谱"、"GLM" 等名称和标识归其各自权利人所有，本项目仅为说明兼容性而提及。使用 Z.ai 账号登录、Coding Plan 订阅及相关服务时，须遵守 Z.ai 的用户协议与服务条款；相关服务能否使用由 Z.ai 决定，本项目不作任何保证。修改内容见 [REBRAND.md](REBRAND.md)，原始许可证见 [LICENSE](LICENSE)。
+
 Mcode 是 AI 编程工作台，提供桌面应用、浏览器界面和终端 Agent。本仓库包含客户端、后端服务、共享 UI，以及 Agent CLI 与运行时源码。
 
 > Mcode 基于开源项目 [zai-org/ZCode](https://github.com/zai-org/ZCode)（Apache-2.0）改名构建，仅更换产品名称、品牌资源与核心标识，

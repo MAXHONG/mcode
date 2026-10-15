@@ -8,6 +8,8 @@
   <a href="https://github.com/MAXHONG/mcode/releases">Download</a>
 </p>
 
+> **Unofficial notice**: Mcode is an **unofficial community fork** of [ZCode](https://github.com/zai-org/ZCode) (Apache License 2.0). It is **not affiliated with, endorsed by, or authorized by** Z.ai / Zhipu AI or the official ZCode project. "ZCode", "Z.ai", "Zhipu" and "GLM" are trademarks of their respective owners and are mentioned only to describe compatibility. Signing in with a Z.ai account, Coding Plan subscriptions and related services are subject to Z.ai's terms of service; their availability is decided by Z.ai and is not guaranteed by this project. See [REBRAND.md](REBRAND.md) for the list of modifications and [LICENSE](LICENSE) for the original license.
+
 Mcode is an AI coding workspace with desktop, browser, and terminal interfaces. This repository contains the clients, backend services, shared UI, and Agent CLI and runtime source code.
 
 > Mcode is a renamed build of the open-source [zai-org/ZCode](https://github.com/zai-org/ZCode) project (Apache-2.0). Only the product
