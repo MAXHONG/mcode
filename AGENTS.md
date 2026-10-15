@@ -1,3 +1,16 @@
+## 版本发布铁律（MAXHONG/mcode，必须遵守）
+
+每开发好一个版本并验证没有严重问题后，**必须**完成以下全部步骤，缺一不可；未完成前不得视为该版本开发结束：
+
+1. **验证**：至少执行本文件「实现与验证」要求的检查（`pnpm typecheck`、`pnpm lint`、受影响的单测），以及与改动相关的运行验证（桌面启动、`node --test scripts/mcode-distribution.test.mjs`、`pnpm build:mcode` + `node scripts/mcode-distribution-smoke.mjs <tar.gz>` 等）。存在严重问题时停止发布，先修复。
+2. **版本号**：按语义化版本递增根目录 `package.json` 的 `version`（测试中硬编码的示例版本无需修改；同步上游时才修改 `mcodeUpstreamVersion`）。
+3. **文档**：更新 `README.md` 与 `README.en.md` 的「更新 / Updates」章节（日期、版本、变更摘要），以及所有受影响的文档（`REBRAND.md`、`docs/`、`specs/`、`deploy/` 等），保证文档与代码一致。
+4. **合并到仓库**：在分支上提交 → 推送 → 创建 PR → 合并到 `main`。不得把未合并的代码作为发布版本。
+5. **发布 Release**：在 `main` 合并后的提交上打 `v<version>` 标签并推送，由 `.github/workflows/release-desktop.yml` 构建全部平台桌面安装包与命令行 / Web 发行包，并发布为最新 GitHub Release。
+6. **核对产物**：确认工作流成功，Release 资产齐全（各平台安装包、`latest*.yml`、`SHA256SUMS.txt`、`mcode-<version>.tar.gz`、`latest.json`、`install.sh`），版本号正确。失败时修复后重新发布，不得留下半成品 Release。
+
+令牌、密钥只通过环境变量 / 临时文件使用，绝不写入仓库、提交信息、git 配置或日志。
+
 ## 核心原则
 
 - 新增或修改行为前，先更新对应 spec；目录不存在时按需创建。先明确产品规则、状态所有者、接口和验收场景，再实现代码。

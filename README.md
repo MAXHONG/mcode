@@ -27,8 +27,20 @@ Mcode 是 AI 编程工作台，提供桌面应用、浏览器界面和终端 Age
 | Windows ARM64         | `Mcode-<版本>-win-arm64.exe`                                 |
 | Linux x64             | `.deb`（Debian/Ubuntu）、`.rpm`（Fedora/RHEL）、`.AppImage`、`.pkg.tar.zst`（Arch） |
 | Linux ARM64           | 同上，文件名含 `arm64` / `aarch64`                             |
+| 命令行 / Web（无界面服务器） | `mcode-<版本>.tar.gz` + `install.sh`（需要 Node.js 24+，见下文）    |
 
 安装包未签名：macOS 首次打开被拦截时执行 `sudo xattr -rd com.apple.quarantine /Applications/Mcode.app`；Windows SmartScreen 提示时选择「更多信息 → 仍要运行」。
+
+### 无界面 Linux 服务器（Web 模式）
+
+```bash
+# 需要 Node.js 24+
+curl -fsSL https://github.com/MAXHONG/mcode/releases/latest/download/install.sh | sh
+export PATH="$HOME/.local/bin:$PATH"
+mcode --web --host 0.0.0.0 --port 3030 --no-open --workspace ~/project
+```
+
+用同一内网的浏览器打开终端打印的带 `?token=` 地址即可。仓库私有时需先下载 `install.sh` 与 `mcode-<版本>.tar.gz`，再执行 `MCODE_DIST_ARCHIVE=./mcode-<版本>.tar.gz sh install.sh`。模型配置、systemd 开机自启与安全须知见 [docs/linux-headless-web.md](docs/linux-headless-web.md)。
 
 ### 自动更新
 
@@ -37,18 +49,24 @@ v3.15.2 起，Mcode 启动后会定期检查 [GitHub Releases](https://github.co
 - **Windows / Linux**：提示新版本后可在应用内下载，重启时自动安装。
 - **macOS**：安装包未签名，系统不允许自动安装，提示新版本后会打开发布页，下载新 DMG 覆盖安装即可。
 
-v3.15.1 及更早版本没有该功能，需要手动下载一次 v3.15.2 或更高版本。
+v3.15.1 及更早版本没有该功能，需要手动下载一次 v3.15.2 或更高版本。命令行 / Web 版重新执行 `install.sh` 即可升级。
 
 ## 更新
 
+- 2026-10-16：v3.15.3 — 新增命令行 / Web 发行包（`mcode-<版本>.tar.gz` + `install.sh`，随 Release 发布），可在无界面 Linux 上 `mcode --web` 提供内网浏览器访问，附 systemd 开机自启示例与部署文档；已配置个人模型（如 OpenAI 兼容网关）时不再强制弹出“连接账号”登录页；Web 模式默认始终启用访问令牌、支持 `Authorization: Bearer`、拒绝跨站 WebSocket（CSWSH），令牌比较改为常量时间；`install.sh` 校验 SHA-256、检查 Node.js ≥ 24、支持 GitHub Releases 与离线安装；`pnpm build:mcode` 修复开箱构建失败；发布工作流默认只读权限、构建任务不再持有可写令牌。
 - 2026-10-15：v3.15.2 — 应用内自动更新（GitHub Releases）；新增 Windows ARM64、Linux x64/ARM64 安装包；界面 logo 全部改为 Mcode。
 - 2026-10-14：基于 ZCode v3.15.1 改名为 Mcode v3.15.1。
 
 ## 发布新版本（维护者）
 
-1. 修改根目录 `package.json` 的 `version`（例如 `3.15.3`）并提交。
-2. 推送同名标签：`git tag v3.15.3 && git push origin v3.15.3`。
-3. GitHub Actions「Release Desktop」会编译全部平台并发布为最新 Release；已安装的客户端随后会收到更新提醒。
+**发布铁律**：每个验证没有严重问题的版本，都必须合并到 `main`、更新 README / 文档 / 版本号，并发布 GitHub Release。完整清单见 [AGENTS.md](AGENTS.md#版本发布铁律maxhongmcode必须遵守)。
+
+1. 完成验证：`pnpm typecheck`、`pnpm lint`、受影响单测、`node --test scripts/mcode-distribution.test.mjs`。
+2. 修改根目录 `package.json` 的 `version`，并更新 `README.md` / `README.en.md` 的「更新」章节与相关文档。
+3. 提交到分支 → PR → 合并到 `main`。
+4. 在 `main` 上推送同名标签：`git tag v<版本> && git push origin v<版本>`。
+5. GitHub Actions「Release Desktop」会编译全部平台桌面安装包与命令行 / Web 发行包，并发布为最新 Release；已安装的桌面客户端随后会收到更新提醒。
+6. 检查工作流成功、Release 资产齐全。
 
 `mcodeUpstreamVersion` 表示远程开发（SSH/WSL/Docker）复用的上游 ZCode 组件版本，只有同步上游代码时才需要修改。
 
@@ -133,9 +151,9 @@ mcode --help
 mcode --web --help
 ```
 
-Web 模式默认工作目录为当前目录，监听 `127.0.0.1`，默认不启用访问令牌，自动选择空闲端口并打开浏览器。访问终端输出的地址，按 `Ctrl+C` 停止服务。局域网访问可使用 `--host 0.0.0.0`；监听非本机地址时默认生成访问令牌，使用终端输出的带令牌链接。可通过 `--token` 指定令牌或 `--no-token` 关闭令牌认证。
+Web 模式默认工作目录为当前目录，监听 `127.0.0.1`，自动选择空闲端口并打开浏览器。**v3.15.3 起始终启用访问令牌**（包括本机监听），访问终端输出的带 `?token=` 链接，浏览器随后用 Cookie 保存令牌；按 `Ctrl+C` 停止服务。局域网访问可使用 `--host 0.0.0.0`。可通过 `--token` 或环境变量 `MCODE_WEB_TOKEN` 固定令牌，`--no-token` 关闭令牌认证（仅限可信的单用户机器）。脚本调用 API 时使用 `Authorization: Bearer <token>`。浏览器发起的跨站 WebSocket 会被拒绝；反向代理域名与服务 Host 不一致时，用 `MCODE_SERVER_ALLOWED_ORIGINS` 放行。无界面 Linux 部署见 [docs/linux-headless-web.md](docs/linux-headless-web.md)。
 
-直接启动通用 Web 服务的 HTTP 入口时，通过 `MCODE_SERVER_AUTH_TOKEN` 配置 API／WebSocket 认证；通过程序接口创建服务时，使用 `authToken` 选项。
+直接启动通用 Web 服务的 HTTP 入口时，通过 `MCODE_SERVER_AUTH_TOKEN` 配置 API／WebSocket 认证；通过程序接口创建服务时，使用 `authToken` 选项（额外允许的 WebSocket Origin 用 `allowedOrigins`）。
 
 构建方式见下方打包章节。`pnpm build:mcode` 只生成发行包，不会替换 `PATH` 中已有的 `mcode`。如果命令仍指向旧安装或其他源码目录，macOS / Linux 可用 `command -v mcode` 检查，Windows 可用 `where.exe mcode` 检查。
 
@@ -170,6 +188,8 @@ node apps/mcode-cli/packages/cli/dist/mcode.cjs --help
 | `MCODE_SERVER_WORKSPACE`             | Web 后端的工作区路径                             |
 | `MCODE_BUILTIN_PROVIDER_CONFIG_FILE` | 本地 Provider 配置文件路径；未设置时使用内置配置 |
 | `MCODE_DIST_BASE_URL`                | 命令行安装脚本使用的下载根地址                   |
+| `MCODE_WEB_TOKEN`                    | `mcode --web` 固定访问令牌                       |
+| `MCODE_SERVER_ALLOWED_ORIGINS`       | Web 服务额外允许的浏览器 WebSocket Origin（逗号分隔） |
 
 运行时变量可在启动命令的环境中显式设置。随客户端发布的默认配置见 [config/README.md](config/README.md)。
 
@@ -200,13 +220,13 @@ sudo xattr -rd com.apple.quarantine /Applications/Mcode.app
 
 构建入口为 `pnpm build:mcode`。脚本会依次构建 CLI/TUI、后端和 Web，收集 TUI 的原生库、worker 与运行时依赖，再组装发行包；运行发行包仍需要 Node.js，版本以 `mise.toml` 为准。
 
-打包前必须设置下载根地址 `MCODE_DIST_BASE_URL`（可放在 `.env`、`.env.local` 或环境变量中），也可以通过 `--base-url` 传入。以下地址是占位示例，发布时替换为实际托管地址：
+`install.sh` 默认从本仓库最新 GitHub Release 下载（`https://github.com/MAXHONG/mcode/releases/latest/download/`）。自托管时设置 `MCODE_DIST_BASE_URL`（可放在 `.env`、`.env.local` 或环境变量中）或传入 `--base-url`：
 
 ```bash
-pnpm build:mcode --base-url https://downloads.example.com/mcode/
-
-# 已配置 MCODE_DIST_BASE_URL 时
 pnpm build:mcode
+
+# 自托管下载地址（占位示例）
+pnpm build:mcode --base-url https://downloads.example.com/mcode/
 
 # 仅重新组包，复用已有的 Agent、后端和 Web 构建产物
 pnpm build:mcode --skip-build
@@ -219,9 +239,10 @@ pnpm build:mcode --help
 
 - `releases/<version>/mcode-<version>.tar.gz`：运行包。
 - `releases/<version>/sha256.txt`：校验摘要。
-- `latest.json`、`install.sh`：版本索引和安装脚本。
+- `latest.json`、`install.sh`：版本索引和安装脚本（自托管布局）。
+- `github-release/`：扁平的 Release 资产（运行包、`latest.json`、`install.sh`），发布工作流直接上传。
 
-完整目录可上传到配置的下载根地址。安装脚本从该地址下载运行包，默认安装到 `~/.mcode/runtime`，并在 `~/.local/bin` 创建 `mcode` 命令。安装目录可通过 `MCODE_DIST_HOME` 修改，命令目录可通过 `MCODE_DIST_BIN_DIR` 修改。
+完整目录可上传到配置的下载根地址。安装脚本从该地址下载运行包并按 `latest.json` 校验 SHA-256，要求 Node.js ≥ 24，默认安装到 `~/.mcode/runtime`，并在 `~/.local/bin` 创建 `mcode` 命令。安装目录可通过 `MCODE_DIST_HOME` 修改，命令目录可通过 `MCODE_DIST_BIN_DIR` 修改；离线安装用 `MCODE_DIST_ARCHIVE=<tar.gz 路径>`（可配合 `MCODE_DIST_SHA256`）。
 
 旧 Lite 用户需要改用上述构建命令、环境变量和新的安装脚本。新安装不会删除旧 Lite 目录，也不会迁移或删除已有会话数据。
 
@@ -238,9 +259,12 @@ node dist/mcode/debug/mcode/bin/mcode.mjs
 # 启动 Web
 node dist/mcode/debug/mcode/bin/mcode.mjs --web \
   --workspace "$PWD" --port 3030 --no-open
+
+# 发行包冒烟测试（仓库外解压，验证 TUI、Web、令牌与 WebSocket）
+node scripts/mcode-distribution-smoke.mjs "dist/mcode/releases/$mcode_version/mcode-$mcode_version.tar.gz"
 ```
 
-浏览器打开 `http://127.0.0.1:3030`，即可验证同一后端服务托管 Web 页面和 Agent 的完整链路。该端口需要空闲；如正在运行 `pnpm dev:web`，可改用其他 `--port`。
+浏览器打开终端打印的 `http://127.0.0.1:3030/?token=...`，即可验证同一后端服务托管 Web 页面和 Agent 的完整链路。该端口需要空闲；如正在运行 `pnpm dev:web`，可改用其他 `--port`。
 
 ## 仓库结构
 
@@ -256,6 +280,7 @@ node dist/mcode/debug/mcode/bin/mcode.mjs --web \
 | `packages/provider`、`packages/provider-node`        | Provider 公共能力与 Node 实现              |
 | `apps/mcode-cli`                                     | Agent CLI、TUI、运行时与工具               |
 | `scripts`、`config`、`third-party`                   | 构建维护脚本、内置配置与第三方声明材料     |
+| `deploy/linux`                                       | 无界面 Linux 部署：systemd 服务、配置模板  |
 
 ## 项目声明
 
