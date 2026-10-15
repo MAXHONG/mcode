@@ -60,6 +60,19 @@ jobs:
             runner: windows-latest
             os: win
             arch: x64
+          - name: Windows ARM64
+            runner: windows-11-arm
+            os: win
+            arch: arm64
+          # Linux 在旧 glibc 基线（Ubuntu 22.04）上构建，产物兼容面更广。
+          - name: Linux x64
+            runner: ubuntu-22.04
+            os: linux
+            arch: x64
+          - name: Linux ARM64
+            runner: ubuntu-22.04-arm
+            os: linux
+            arch: arm64
     env:
       MCODE_TARGET_OS: ${{ matrix.os }}
       MCODE_TARGET_ARCH: ${{ matrix.arch }}
@@ -87,6 +100,13 @@ jobs:
         with:
           python-version: "3.12"
 
+      # deb/rpm/pacman 由 fpm 生成，需要 rpmbuild 与 bsdtar。
+      - name: Install Linux packaging tools
+        if: matrix.os == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends rpm libarchive-tools xz-utils
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
@@ -106,7 +126,7 @@ jobs:
           mkdir -p release-artifacts
           cd packages/desktop/dist
           ls -la
-          for f in *.dmg *.zip *.exe *.blockmap latest*.yml; do
+          for f in *.dmg *.zip *.exe *.AppImage *.deb *.rpm *.pkg.tar.zst *.blockmap latest*.yml; do
             [ -f "$f" ] || continue
             # 发布资产名不带空格，便于下载链接使用
             cp "$f" "../../../release-artifacts/${f// /-}"
@@ -170,6 +190,8 @@ jobs:
           - macOS Apple Silicon：\`Mcode-*-mac-arm64.dmg\`
           - macOS Intel：\`Mcode-*-mac-x64.dmg\`
           - Windows x64：\`Mcode-*-win-x64.exe\`
+          - Windows ARM64：\`Mcode-*-win-arm64.exe\`
+          - Linux x64 / ARM64：\`.deb\`（Debian/Ubuntu）、\`.rpm\`（Fedora/RHEL）、\`.AppImage\`（通用）、\`.pkg.tar.zst\`（Arch）
 
           ## 安装提示
           - 本构建未签名。macOS 首次打开若被拦截，执行：
