@@ -267,6 +267,20 @@ function runAsarCommandAndReadStdout(args) {
   });
 }
 
+/**
+ * Mcode 无 Apple 证书发布：mac.identity=null 时 electron-builder 完全跳过签名，.app 里留下的是
+ * Electron 原始 ad-hoc 签名（标识符 "Electron"、绑定的 Info.plist 哈希与改名后的内容不符、
+ * 没有 _CodeSignature 资源封印）。带隔离标记（浏览器下载）首次打开时 Gatekeeper 会判为
+ * “已损坏”。这里在打包最后对整个 .app 重新做 ad-hoc 签名，并立即严格校验，签名不完整直接失败。
+ * 仍未经苹果公证：首次打开需到 系统设置 → 隐私与安全性 点“仍要打开”。
+ */
+function adHocSignMacApp(context) {
+  const appName = `${context.packager?.appInfo?.productFilename ?? "Mcode"}.app`;
+  const appPath = resolve(context.appOutDir, appName);
+  runCommand("codesign", ["--force", "--deep", "--sign", "-", "--timestamp=none", appPath]);
+  runCommand("codesign", ["--verify", "--deep", "--strict", "--verbose=2", appPath]);
+}
+
 function runTimedSync(label, fn) {
   const startMs = Date.now();
   console.log(`[ci][timer] ${label} start`);
@@ -690,6 +704,10 @@ export default {
       runTimedSync("afterPack:signWindowsBrowserImportHelper", () =>
         signWindowsBrowserImportHelper(context),
       );
+    }
+    // 必须放在 afterPack 最后：前面的步骤还会改写 .app 内容（asar 重打包等）。
+    if (context.electronPlatformName === "darwin" && !shouldEnableMacSigning) {
+      runTimedSync("afterPack:adHocSignMacApp", () => adHocSignMacApp(context));
     }
   },
   ...(shouldPackageWindowsBrowserImportHelper

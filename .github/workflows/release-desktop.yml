@@ -21,6 +21,11 @@ on:
         required: false
         default: false
         type: boolean
+      mac_only:
+        description: "只构建 macOS（arm64 + x64）测试包：不构建其他平台、不发布 Release，产物在本次运行的 Artifacts 里"
+        required: false
+        default: false
+        type: boolean
 
 # 安全：默认只读。只有最后的 release job 需要写 Release；构建 job 会执行大量第三方
 # 依赖代码，不能拿到可写的 GITHUB_TOKEN（见各 job 的 permissions 与 persist-credentials）。
@@ -47,39 +52,42 @@ env:
   NODE_OPTIONS: --max-old-space-size=6144
 
 jobs:
+  # 计算构建矩阵：mac_only 手动触发时只构建 macOS，节省 Runner 费用。
+  plan:
+    name: Plan build matrix
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+    steps:
+      - id: plan
+        env:
+          MAC_ONLY: ${{ inputs.mac_only }}
+        run: |
+          ALL='[
+            {"name":"macOS arm64","runner":"macos-14","os":"mac","arch":"arm64"},
+            {"name":"macOS x64","runner":"macos-15-intel","os":"mac","arch":"x64"},
+            {"name":"Windows x64","runner":"windows-latest","os":"win","arch":"x64"},
+            {"name":"Windows ARM64","runner":"windows-11-arm","os":"win","arch":"arm64"},
+            {"name":"Linux x64","runner":"ubuntu-22.04","os":"linux","arch":"x64"},
+            {"name":"Linux ARM64","runner":"ubuntu-22.04-arm","os":"linux","arch":"arm64"}
+          ]'
+          if [ "$MAC_ONLY" = "true" ]; then
+            M=$(echo "$ALL" | jq -c '[.[] | select(.os == "mac")]')
+          else
+            M=$(echo "$ALL" | jq -c '.')
+          fi
+          echo "matrix={\"include\":$M}" >> "$GITHUB_OUTPUT"
+          echo "$M"
+
   build:
     name: Build ${{ matrix.name }}
+    needs: plan
     runs-on: ${{ matrix.runner }}
     timeout-minutes: 120
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - name: macOS arm64
-            runner: macos-14
-            os: mac
-            arch: arm64
-          - name: macOS x64
-            runner: macos-15-intel
-            os: mac
-            arch: x64
-          - name: Windows x64
-            runner: windows-latest
-            os: win
-            arch: x64
-          - name: Windows ARM64
-            runner: windows-11-arm
-            os: win
-            arch: arm64
-          # Linux 在旧 glibc 基线（Ubuntu 22.04）上构建，产物兼容面更广。
-          - name: Linux x64
-            runner: ubuntu-22.04
-            os: linux
-            arch: x64
-          - name: Linux ARM64
-            runner: ubuntu-22.04-arm
-            os: linux
-            arch: arm64
+      # Linux 在旧 glibc 基线（Ubuntu 22.04）上构建，产物兼容面更广。
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
     env:
       MCODE_TARGET_OS: ${{ matrix.os }}
       MCODE_TARGET_ARCH: ${{ matrix.arch }}
@@ -129,6 +137,19 @@ jobs:
       - name: Bundle desktop installer
         run: pnpm bundle:desktop -- --os ${{ matrix.os }} --arch ${{ matrix.arch }} --skip-prepare --skip-build
 
+      # 未签名发布的 .app 必须是完整、一致的 ad-hoc 签名，否则下载后会被 Gatekeeper 判为“已损坏”。
+      - name: Verify macOS app signature
+        if: matrix.os == 'mac'
+        shell: bash
+        run: |
+          shopt -s nullglob
+          apps=(packages/desktop/dist/mac*/*.app)
+          [ ${#apps[@]} -gt 0 ] || { echo "no .app found" >&2; ls -R packages/desktop/dist | head -50; exit 1; }
+          for app in "${apps[@]}"; do
+            codesign --verify --deep --strict --verbose=2 "$app"
+            codesign -dv --verbose=2 "$app" 2>&1 | grep -E "Identifier|Signature|Sealed Resources"
+          done
+
       - name: Collect artifacts
         shell: bash
         run: |
@@ -160,6 +181,7 @@ jobs:
   # 的 x64 与 arm64（原生模块按平台分目录随包分发）。在 Linux 上构建并做发行包冒烟测试。
   build-cli:
     name: Build CLI / Web bundle
+    if: ${{ inputs.mac_only != true }}
     runs-on: ubuntu-22.04
     timeout-minutes: 60
     steps:
@@ -210,6 +232,7 @@ jobs:
   release:
     name: Publish GitHub Release
     needs: [build, build-cli]
+    if: ${{ inputs.mac_only != true }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -313,7 +336,8 @@ jobs:
           - 命令行 / Web 版：重新执行 \`install.sh\` 即升级到最新版本，用户数据保留。
 
           ## 安装提示
-          - 本构建未签名。macOS 首次打开若被拦截，执行：
+          - 本构建没有苹果开发者证书（仅 ad-hoc 签名）。macOS 首次打开提示“无法验证开发者”时，
+            到 系统设置 → 隐私与安全性 点「仍要打开」；若仍提示“已损坏”，执行：
             \`sudo xattr -rd com.apple.quarantine /Applications/Mcode.app\`
           - Windows SmartScreen 提示时选择「更多信息 → 仍要运行」。
 
