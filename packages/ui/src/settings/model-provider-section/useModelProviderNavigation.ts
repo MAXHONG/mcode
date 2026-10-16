@@ -11,7 +11,6 @@ import {
   BUILTIN_MODEL_PROVIDER_IDS,
   isStartPlanModelProviderId,
   resolveModelProviderFamilySpecByProviderId,
-  resolveProviderFamilyDomainFromOAuthProvider,
   type OAuthProviderId,
 } from "@mcode/shared";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";
@@ -328,14 +327,15 @@ export function useModelProviderNavigation({
   };
 }
 
+/**
+ * Mcode：Z.ai 与 BigModel 两家 Coding Plan 入口始终同时展示，用户二选一登录。
+ * 登录其中一家时 OAuthService 会自动退出另一家（互斥身份域），因此这里不再按当前账号域隐藏另一家。
+ */
 function shouldShowCodingPlanForProviderFamilyDomain(
-  oauthProviderId: OAuthProviderId,
-  providerFamilyDomain: ProviderFamilyDomain | null,
+  _oauthProviderId: OAuthProviderId,
+  _providerFamilyDomain: ProviderFamilyDomain | null,
 ): boolean {
-  if (!providerFamilyDomain) {
-    return true;
-  }
-  return resolveProviderFamilyDomainFromOAuthProvider(oauthProviderId) === providerFamilyDomain;
+  return true;
 }
 
 function resolvePresetFamilyStatusProvider({

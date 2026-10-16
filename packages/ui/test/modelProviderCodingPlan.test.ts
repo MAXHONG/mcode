@@ -903,8 +903,10 @@ describe("model provider coding plan", () => {
     renderToStaticMarkup(createElement(Harness));
 
     const presetIds = capturedGroups[0]?.items.map((item) => item.presetId) ?? [];
+    // Mcode：Z.ai 与 BigModel 入口始终同时展示（二选一登录），不再按当前账号域隐藏另一家。
     expect(capturedGroups[0]?.items.map((item) => item.key)).toEqual([
       "preset:account:bigmodel-start-plan",
+      "coding-plan:account:zai-start-plan",
       "coding-plan:account:bigmodel-start-plan",
     ]);
     expect(capturedNavigationItems.map((item) => item.presetId)).toContain(
