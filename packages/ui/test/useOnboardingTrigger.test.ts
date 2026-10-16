@@ -127,11 +127,12 @@ describe("useOnboardingTrigger", () => {
     expect(calls.indexOf("claim")).toBeLessThan(calls.indexOf("shouldOnboard"));
   });
 
-  it("shouldOnboard RPC 挂起时 3 秒超时兜底退回 settings 判定", { timeout: 8000 }, async () => {
+  it("shouldOnboard RPC 挂起时 3 秒超时保守判定为不引导（3.15.3：慢网不卡主界面）", { timeout: 8000 }, async () => {
     const service = createRecordService({
       shouldOnboard: () => new Promise<boolean>(() => {}),
     });
     const { result } = renderTrigger({ service, hasStoredOccupation: false });
-    await waitFor(() => expect(result.current[0]).toBe(true), { timeout: 5000 });
+    expect(result.current[0]).toBe(null);
+    await waitFor(() => expect(result.current[0]).toBe(false), { timeout: 5000 });
   });
 });

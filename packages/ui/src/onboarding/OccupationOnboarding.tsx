@@ -78,6 +78,7 @@ export function OccupationOnboarding({
     onboardingRecord,
     userId,
     hasStoredOccupation: Boolean(settings?.onboardingOccupation),
+    settingsLoaded: Boolean(settings),
     loadDeviceMid,
     update,
   });
