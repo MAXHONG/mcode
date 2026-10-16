@@ -881,15 +881,15 @@ const defaultMcodeEndpointUrls = buildMcodeEndpointUrls(DEFAULT_MCODE_ENDPOINT_O
 });
 const webRemoteControlRelayWsEnvOverride =
   process.env["MCODE_WEB_REMOTE_CONTROL_RELAY_WS_URL"]?.trim();
-// Mcode：手机扫码打开的远控页面默认使用 Mcode 自托管版本（GitHub Pages，Mcode 品牌），
-// 页面仍通过 z.ai relay 与桌面端配对。可用 MCODE_WEB_REMOTE_CONTROL_URL 覆盖，
-// 设置 MCODE_WEB_REMOTE_CONTROL_URL=official 回退到官方页面。
+// Mcode：Mcode 品牌的手机远控页面可自托管在 GitHub Pages（见 .github/workflows/remote-page.yml），
+// 仍通过 z.ai relay 与桌面端配对。仓库为私有时 Pages 不可用，因此默认仍打开官方页面；
+// 设置 MCODE_WEB_REMOTE_CONTROL_URL=mcode 使用自托管页面，或直接填写任意自托管地址。
 const MCODE_HOSTED_WEB_REMOTE_CONTROL_URL = "https://maxhong.github.io/mcode/remote/v4/";
 const webRemoteControlUrlEnv = process.env["MCODE_WEB_REMOTE_CONTROL_URL"]?.trim();
 const webRemoteControlUrlEnvOverride =
-  webRemoteControlUrlEnv === "official"
-    ? undefined
-    : webRemoteControlUrlEnv || MCODE_HOSTED_WEB_REMOTE_CONTROL_URL;
+  webRemoteControlUrlEnv === "mcode"
+    ? MCODE_HOSTED_WEB_REMOTE_CONTROL_URL
+    : webRemoteControlUrlEnv || undefined;
 
 function extractOpenWorkspacePathFromDeepLinkUrl(url: string): string | null {
   try {

@@ -3,15 +3,8 @@ name: Deploy mobile remote page
 # Mcode 品牌的手机远控页面（/remote/v4），部署到 GitHub Pages：
 # https://maxhong.github.io/mcode/remote/v4/
 # 页面通过 z.ai 官方 relay（wss://zcode.z.ai/ws）与桌面端配对，只替换前端品牌。
+# 需要仓库公开（或付费计划）并在 Settings → Pages 选择 "GitHub Actions" 后手动运行。
 on:
-  push:
-    branches: [main]
-    paths:
-      - "packages/web/**"
-      - "packages/ui/**"
-      - "packages/shared/**"
-      - "packages/client/**"
-      - ".github/workflows/remote-page.yml"
   workflow_dispatch:
 
 permissions:
