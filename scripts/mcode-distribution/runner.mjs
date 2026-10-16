@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
-import { randomBytes } from "node:crypto";
-import { access, readFile } from "node:fs/promises";
+import { randomBytes, scrypt as scryptCallback } from "node:crypto";
+import { access, chmod, mkdir, readFile, rename, rm, writeFile } from "node:fs/promises";
 import { createServer } from "node:net";
-import { networkInterfaces } from "node:os";
+import { homedir, networkInterfaces } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
@@ -18,6 +18,7 @@ const MIN_NODE_MAJOR = 24;
 function usage() {
   return `Usage:
   mcode --web [--host <host>] [--port <port>] [--workspace <path>] [--open|--no-open] [--token <token>|--no-token]
+  mcode passwd [--user <name>] [--reset]
   mcode --version
 
 Web options:
@@ -30,6 +31,15 @@ Web options:
 
 An access token is always generated unless --no-token is given. Open the printed
 URL that contains ?token=...; the browser keeps it in a cookie afterwards.
+
+Username / password sign-in (recommended):
+  The first time you open the token URL, the page offers to create a username and
+  password. Once set, the token URL can no longer sign a browser in; only the
+  password can (scripts may still use "Authorization: Bearer <token>").
+  mcode passwd            Set or change the username / password from the terminal
+  mcode passwd --reset    Remove the password (fall back to the access token)
+  Stored in ~/.mcode/v2/web-auth.json (MCODE_WEB_AUTH_FILE overrides).
+  MCODE_WEB_PASSWORD_AUTH=0 disables password sign-in entirely.
 `;
 }
 
@@ -283,11 +293,132 @@ async function serve(options) {
   }
 }
 
+// ---- mcode passwd：与 packages/server/src/webPasswordAuth.ts 相同的存储格式 ----
+function resolveWebAuthFile() {
+  const custom = process.env.MCODE_WEB_AUTH_FILE?.trim();
+  if (custom) return resolve(custom);
+  const base = process.env.MCODE_DATA_BASE_DIR?.trim() || process.env.HOME?.trim() || homedir();
+  return join(base, ".mcode", "v2", "web-auth.json");
+}
+
+function scryptAsync(password, salt, keyLength, params) {
+  return new Promise((resolvePromise, reject) => {
+    scryptCallback(password, salt, keyLength, { ...params, maxmem: 64 * 1024 * 1024 }, (error, key) =>
+      error ? reject(error) : resolvePromise(key),
+    );
+  });
+}
+
+async function hashPassword(password) {
+  const salt = randomBytes(16);
+  const N = 16384;
+  const r = 8;
+  const p = 1;
+  const hash = await scryptAsync(password, salt, 64, { N, r, p });
+  return `scrypt$${N}$${r}$${p}$${salt.toString("base64")}$${hash.toString("base64")}`;
+}
+
+function promptHidden(question) {
+  return new Promise((resolvePromise, reject) => {
+    const stdin = process.stdin;
+    if (!stdin.isTTY) {
+      reject(new Error("mcode passwd needs an interactive terminal (or set MCODE_WEB_PASSWORD)."));
+      return;
+    }
+    process.stdout.write(question);
+    let value = "";
+    stdin.setRawMode(true);
+    stdin.resume();
+    stdin.setEncoding("utf8");
+    const onData = (chunk) => {
+      for (const char of chunk) {
+        if (char === "\r" || char === "\n") {
+          stdin.setRawMode(false);
+          stdin.pause();
+          stdin.off("data", onData);
+          process.stdout.write("\n");
+          resolvePromise(value);
+          return;
+        }
+        if (char === "\u0003") {
+          stdin.setRawMode(false);
+          process.stdout.write("\n");
+          process.exit(130);
+        }
+        if (char === "\u007f" || char === "\b") value = value.slice(0, -1);
+        else value += char;
+      }
+    };
+    stdin.on("data", onData);
+  });
+}
+
+function promptLine(question) {
+  return new Promise((resolvePromise) => {
+    process.stdout.write(question);
+    process.stdin.resume();
+    process.stdin.setEncoding("utf8");
+    process.stdin.once("data", (chunk) => {
+      process.stdin.pause();
+      resolvePromise(String(chunk).split(/\r?\n/)[0].trim());
+    });
+  });
+}
+
+async function runPasswd(argv) {
+  let user;
+  let reset = false;
+  for (let index = 0; index < argv.length; index += 1) {
+    const arg = argv[index];
+    if (arg === "--reset") reset = true;
+    else if (arg === "--user" || arg.startsWith("--user=")) {
+      const parsed = readArgValue(argv, arg, index);
+      user = parsed.value;
+      index = parsed.nextIndex;
+    } else if (arg === "--help" || arg === "-h") {
+      console.log(usage());
+      return;
+    } else throw new Error(`Unknown option "${arg}".\n${usage()}`);
+  }
+  const filePath = resolveWebAuthFile();
+  if (reset) {
+    await rm(filePath, { force: true });
+    console.log(`Removed ${filePath}. Browsers now sign in with the access token again.`);
+    return;
+  }
+  const username = (user ?? process.env.MCODE_WEB_USER ?? (await promptLine("Username: "))).trim();
+  if (!/^[A-Za-z0-9._@-]{1,64}$/.test(username)) {
+    throw new Error("Username may only contain letters, digits and . _ @ - (1-64 characters).");
+  }
+  let password = process.env.MCODE_WEB_PASSWORD;
+  if (!password) {
+    password = await promptHidden("New password: ");
+    const confirm = await promptHidden("Confirm password: ");
+    if (password !== confirm) throw new Error("Passwords do not match.");
+  }
+  if (password.length < 8) throw new Error("Password must be at least 8 characters.");
+  const file = {
+    version: 1,
+    username,
+    passwordHash: await hashPassword(password),
+    sessionSecret: randomBytes(32).toString("base64url"),
+    updatedAt: new Date().toISOString(),
+  };
+  await mkdir(dirname(filePath), { recursive: true, mode: 0o700 });
+  const tempPath = `${filePath}.${process.pid}.tmp`;
+  await writeFile(tempPath, `${JSON.stringify(file, null, 2)}\n`, { mode: 0o600 });
+  await chmod(tempPath, 0o600);
+  await rename(tempPath, filePath);
+  console.log(`Saved ${filePath}. All existing browser sessions are signed out.`);
+}
+
 try {
   const argv = process.argv.slice(2);
   assertNodeVersion();
   if (argv.length === 1 && ["--version", "-v"].includes(argv[0])) {
     console.log(version);
+  } else if (argv[0] === "passwd") {
+    await runPasswd(argv.slice(1));
   } else if (argv[0] === "--web") {
     const options = parseArgs(argv.slice(1));
     if (options.command === "help") console.log(usage());

@@ -44,6 +44,12 @@ import {
 import { connectRemote, createRemoteBackend, type RemoteConnection } from "./remote/index.js";
 import { createHostCapabilityStore } from "./hostCapability.js";
 import type { ServerWebRemoteControl } from "./web-remote-control/serverWebRemoteControl.js";
+import {
+  WEB_AUTH_SESSION_COOKIE,
+  validateWebAuthPassword,
+  validateWebAuthUsername,
+  type WebPasswordAuth,
+} from "./webPasswordAuth.js";
 
 function wrapWebSocket(ws: WebSocket): ISocket {
   const onData = new Emitter<VSBuffer>();
@@ -157,6 +163,8 @@ export interface HttpServerOptions {
   workspaces?: ServerRemoteWorkspaceInfo[];
   /** 手机扫码远控（经 z.ai relay）；仅 Linux Web 发行版注入。 */
   webRemoteControl?: Promise<ServerWebRemoteControl> | ServerWebRemoteControl;
+  /** 账号密码登录（Linux Web 发行版）。设置密码后浏览器必须用账号密码登录，URL 令牌不再生效。 */
+  passwordAuth?: WebPasswordAuth;
 }
 
 function readTrimmedEnv(name: string): string | undefined {
@@ -434,6 +442,200 @@ function registerWebRemoteControlRoutes(
   });
 }
 
+const WEB_AUTH_BASE = "/api/web-auth";
+
+function isPublicWebAuthPath(pathname: string): boolean {
+  return pathname.startsWith(`${WEB_AUTH_BASE}/`);
+}
+
+async function isPasswordConfigured(passwordAuth: WebPasswordAuth | undefined): Promise<boolean> {
+  if (!passwordAuth) return false;
+  try {
+    return await passwordAuth.isConfigured();
+  } catch {
+    // 文件损坏：按“已设置”处理，拒绝令牌登录，避免退化为可被重新注册。
+    return true;
+  }
+}
+
+async function readWebAuthSession(c: Context, passwordAuth: WebPasswordAuth | undefined) {
+  if (!passwordAuth) return null;
+  const raw = parseCookieHeader(c.req.header("cookie")).get(WEB_AUTH_SESSION_COOKIE);
+  return passwordAuth.readSession(raw);
+}
+
+/**
+ * 已设置密码：浏览器只能凭账号密码会话 Cookie 访问；脚本 / 反向代理健康检查仍可用
+ * `Authorization: Bearer <token>`（令牌只出现在服务器本机终端与 web.env 里）。
+ * 未设置密码：保持原有令牌行为（?token= / Cookie / Bearer）。
+ */
+async function isRequestAuthenticated(
+  c: Context,
+  authToken: string | undefined,
+  passwordAuth: WebPasswordAuth | undefined,
+): Promise<boolean> {
+  if (await isPasswordConfigured(passwordAuth)) {
+    if (await readWebAuthSession(c, passwordAuth)) return true;
+    return Boolean(authToken) && tokensEqual(readBearerToken(c), authToken!);
+  }
+  if (!authToken) return true;
+  return hasValidLiteToken(c, authToken);
+}
+
+function hasValidTokenWithoutCookie(c: Context, authToken: string | undefined): boolean {
+  if (!authToken) return false;
+  const url = new URL(c.req.url);
+  return (
+    tokensEqual(url.searchParams.get("token"), authToken) ||
+    tokensEqual(readBearerToken(c), authToken) ||
+    tokensEqual(readCookieToken(c), authToken)
+  );
+}
+
+function readClientKey(c: Context): string {
+  const env = c.env as { incoming?: { socket?: { remoteAddress?: string } } } | undefined;
+  return env?.incoming?.socket?.remoteAddress || "unknown";
+}
+
+function isSecureRequest(c: Context): boolean {
+  if (new URL(c.req.url).protocol === "https:") return true;
+  return c.req.header("x-forwarded-proto")?.split(",")[0]?.trim().toLowerCase() === "https";
+}
+
+function sessionCookieHeader(c: Context, value: string, maxAgeSeconds: number): string {
+  return [
+    `${WEB_AUTH_SESSION_COOKIE}=${value}`,
+    "Path=/",
+    "HttpOnly",
+    "SameSite=Strict",
+    `Max-Age=${maxAgeSeconds}`,
+    ...(isSecureRequest(c) ? ["Secure"] : []),
+  ].join("; ");
+}
+
+/** 写操作要求 JSON 请求体，且浏览器 Origin（若有）必须与 Host 一致，防止跨站表单提交。 */
+function isTrustedAuthMutation(c: Context): boolean {
+  if (!c.req.header("content-type")?.toLowerCase().includes("application/json")) return false;
+  const origin = c.req.header("origin")?.trim();
+  if (!origin) return true;
+  try {
+    const host = c.req.header("x-forwarded-host")?.split(",")[0]?.trim() || c.req.header("host");
+    return Boolean(host) && new URL(origin).host.toLowerCase() === host!.trim().toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
+function registerWebPasswordAuthRoutes(
+  app: Hono,
+  passwordAuth: WebPasswordAuth,
+  authToken: string | undefined,
+): void {
+  app.get(`${WEB_AUTH_BASE}/status`, async (c) => {
+    let configured: boolean;
+    let broken = false;
+    try {
+      configured = await passwordAuth.isConfigured();
+    } catch {
+      configured = true;
+      broken = true;
+    }
+    const session = configured ? await readWebAuthSession(c, passwordAuth) : null;
+    const tokenValid = !configured && (authToken ? hasValidTokenWithoutCookie(c, authToken) : true);
+    if (tokenValid && authToken && !configured) {
+      // 与旧行为一致：首个带 ?token= 的页面请求把令牌写入 Cookie。
+      hasValidLiteToken(c, authToken);
+    }
+    return c.json({
+      passwordConfigured: configured,
+      authenticated: configured ? Boolean(session) : tokenValid,
+      canSetup: !configured && tokenValid,
+      ...(session ? { username: session.username } : {}),
+      ...(broken ? { error: "账号密码文件损坏，请在服务器上执行 mcode passwd 重新设置" } : {}),
+    });
+  });
+
+  app.post(`${WEB_AUTH_BASE}/login`, async (c) => {
+    if (!isTrustedAuthMutation(c)) return c.json({ error: "Forbidden" }, 403);
+    const body = (await c.req.json().catch(() => ({}))) as {
+      username?: unknown;
+      password?: unknown;
+      remember?: unknown;
+    };
+    if (typeof body.username !== "string" || typeof body.password !== "string") {
+      return c.json({ error: "请输入用户名和密码" }, 400);
+    }
+    let result: Awaited<ReturnType<WebPasswordAuth["verifyLogin"]>>;
+    try {
+      result = await passwordAuth.verifyLogin(readClientKey(c), body.username, body.password);
+    } catch {
+      return c.json({ error: "账号密码文件损坏，请在服务器上执行 mcode passwd 重新设置" }, 500);
+    }
+    if (!result.ok) {
+      if (result.reason === "locked") {
+        const seconds = Math.ceil((result.retryAfterMs ?? 0) / 1000);
+        c.header("Retry-After", String(seconds));
+        return c.json({ error: `尝试次数过多，请 ${seconds} 秒后再试`, retryAfterSeconds: seconds }, 429);
+      }
+      if (result.reason === "unconfigured") return c.json({ error: "尚未设置账号密码" }, 409);
+      log("web auth login failed", { client: readClientKey(c) });
+      return c.json({ error: "用户名或密码错误" }, 401);
+    }
+    const cookie = passwordAuth.issueSessionCookieValue(result.file, body.remember === true);
+    c.header("Set-Cookie", sessionCookieHeader(c, cookie.value, cookie.maxAgeSeconds));
+    return c.json({ ok: true, username: result.file.username });
+  });
+
+  app.post(`${WEB_AUTH_BASE}/logout`, (c) => {
+    if (!isTrustedAuthMutation(c)) return c.json({ error: "Forbidden" }, 403);
+    c.header("Set-Cookie", sessionCookieHeader(c, "", 0));
+    return c.json({ ok: true });
+  });
+
+  // 创建或修改账号密码：首次设置需要访问令牌；已设置时需要当前会话 + 旧密码。
+  app.post(`${WEB_AUTH_BASE}/setup`, async (c) => {
+    if (!isTrustedAuthMutation(c)) return c.json({ error: "Forbidden" }, 403);
+    const body = (await c.req.json().catch(() => ({}))) as {
+      username?: unknown;
+      password?: unknown;
+      currentPassword?: unknown;
+    };
+    let configured: boolean;
+    try {
+      configured = await passwordAuth.isConfigured();
+    } catch {
+      return c.json({ error: "账号密码文件损坏，请在服务器上执行 mcode passwd 重新设置" }, 500);
+    }
+    if (configured) {
+      const session = await readWebAuthSession(c, passwordAuth);
+      if (!session) return c.json({ error: "Unauthorized" }, 401);
+      const check = await passwordAuth.verifyLogin(
+        readClientKey(c),
+        session.username,
+        typeof body.currentPassword === "string" ? body.currentPassword : "",
+      );
+      if (!check.ok) {
+        return c.json({ error: check.reason === "locked" ? "尝试次数过多，请稍后再试" : "当前密码错误" }, check.reason === "locked" ? 429 : 401);
+      }
+    } else if (authToken && !hasValidTokenWithoutCookie(c, authToken)) {
+      return c.json({ error: "Unauthorized" }, 401);
+    }
+    const usernameError = validateWebAuthUsername(body.username);
+    if (usernameError) return c.json({ error: usernameError }, 400);
+    const passwordError = validateWebAuthPassword(body.password);
+    if (passwordError) return c.json({ error: passwordError }, 400);
+    const file = await passwordAuth.setCredentials(body.username as string, body.password as string);
+    log("web auth credentials updated", { username: file.username });
+    const cookie = passwordAuth.issueSessionCookieValue(file, false);
+    // 设置成功后清掉旧的令牌 Cookie，浏览器从此只凭账号密码会话访问。
+    c.header("Set-Cookie", sessionCookieHeader(c, cookie.value, cookie.maxAgeSeconds));
+    c.header("Set-Cookie", `${mcodeLiteTokenCookieName}=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0`, {
+      append: true,
+    });
+    return c.json({ ok: true, username: file.username });
+  });
+}
+
 export function createHttpServer(
   services: ServiceCollection,
   port = 3030,
@@ -462,11 +664,22 @@ export function createHttpServer(
   });
 
   const authToken = options.authToken?.trim();
-  if (authToken) {
+  const passwordAuth = options.passwordAuth;
+  if (passwordAuth) {
+    registerWebPasswordAuthRoutes(app, passwordAuth, authToken);
+  }
+  if (authToken || passwordAuth) {
     app.use("*", async (c, next) => {
       const pathname = new URL(c.req.url).pathname;
-      const validToken = hasValidLiteToken(c, authToken);
-      if (!isTokenProtectedPath(pathname) || validToken) {
+      if (!isTokenProtectedPath(pathname) || isPublicWebAuthPath(pathname)) {
+        // 静态页面本身不含机密；但设置密码后不能再让 ?token= 把令牌写进 Cookie。
+        if (authToken && !(await isPasswordConfigured(passwordAuth))) {
+          hasValidLiteToken(c, authToken);
+        }
+        await next();
+        return;
+      }
+      if (await isRequestAuthenticated(c, authToken, passwordAuth)) {
         await next();
         return;
       }
@@ -475,7 +688,12 @@ export function createHttpServer(
   }
 
   app.get("/api/server-info", (c) =>
-    c.json({ ...createServerInfo(options), webRemoteControl: Boolean(options.webRemoteControl) }),
+    c.json({
+      ...createServerInfo(options),
+      // 只在启用时附加，保持 server-info 对旧客户端 / 测试的形状不变。
+      ...(options.webRemoteControl ? { webRemoteControl: true } : {}),
+      ...(options.passwordAuth ? { passwordAuth: true } : {}),
+    }),
   );
   registerWebRemoteControlRoutes(app, options.webRemoteControl);
   app.post("/api/rpc-host-capability", (c) => c.json(hostCapabilities.issue()));
