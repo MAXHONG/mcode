@@ -737,6 +737,12 @@ export interface IPlatformService {
     context: BindRemoteWorkspaceSessionContextRequest,
   ): Promise<void>;
 
+  /**
+   * 非桌面平台（Linux Web 发行版）是否由服务端提供手机扫码远控。
+   * 桌面版始终提供，不需要声明；Web 平台由 /api/server-info 决定。
+   */
+  supportsWebRemoteControl?: boolean;
+
   /** 为当前 workspace 开启 Web 远程控制能力 */
   startWebRemoteControl(
     context: WebRemoteControlContext,

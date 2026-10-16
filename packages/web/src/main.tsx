@@ -257,6 +257,28 @@ interface WebBootstrapResult {
   initialTaskId?: string;
   restoreSession?: boolean;
   allowOpenWorkspace?: boolean;
+  /** Linux Web 发行版服务端提供手机扫码远控（经 z.ai relay）。 */
+  serverWebRemoteControl?: boolean;
+}
+
+/** Linux Web 发行版：调用本服务的 /api/web-remote-control/*，由服务端连接 z.ai relay。 */
+async function requestServerWebRemoteControl<T>(
+  action: "status" | "start" | "refresh" | "stop",
+  body?: unknown,
+): Promise<T> {
+  const response = await fetch(`/api/web-remote-control/${action}`, {
+    method: action === "status" ? "GET" : "POST",
+    cache: "no-store",
+    credentials: "same-origin",
+    ...(action === "status"
+      ? {}
+      : { headers: { "Content-Type": "application/json" }, body: JSON.stringify(body ?? {}) }),
+  });
+  const payload = (await response.json().catch(() => ({}))) as { error?: string };
+  if (!response.ok) {
+    throw new Error(payload.error || `Web remote control request failed (${response.status})`);
+  }
+  return payload as T;
 }
 
 type WebRemoteControlWorkspaceListUpdateListener = (
@@ -611,11 +633,15 @@ async function updateWebRemoteControlMobileViewState(
 function createWebPlatform(options?: {
   webRemoteControlProxy?: WebRemoteControlProxyOptions;
   externalWebRemoteControlProxy?: WebRemoteControlPlatformProxy;
+  serverWebRemoteControl?: boolean;
 }): IPlatformService {
   const webRemoteControlProxy = options?.webRemoteControlProxy;
   const platformProxy = options?.externalWebRemoteControlProxy;
+  const serverWebRemoteControl =
+    options?.serverWebRemoteControl === true && !webRemoteControlProxy && !platformProxy;
 
   return {
+    supportsWebRemoteControl: serverWebRemoteControl,
     canSelectFilePath: false,
     // Web 端无法打开系统目录选择框
     selectDirectory: () => Promise.resolve(null),
@@ -667,16 +693,27 @@ function createWebPlatform(options?: {
       };
     },
     cancelPendingRemoteConnection: (_requestId?: string) => Promise.resolve(),
-    // Web 端不作为 Web 远程控制的发起端，保留空实现以兼容统一接口。
-    startWebRemoteControl: () =>
-      Promise.reject(new Error("Web remote control can only be started from desktop")),
+    // 普通 Web 不作为远控发起端；Linux Web 发行版由服务端连接 z.ai relay 发起。
+    startWebRemoteControl: (context) =>
+      serverWebRemoteControl
+        ? requestServerWebRemoteControl("start", { initialTaskId: context.initialTaskId })
+        : Promise.reject(new Error("Web remote control can only be started from desktop")),
     refreshWebRemoteControlPairing: () =>
-      Promise.reject(new Error("Web remote control pairing can only be refreshed from desktop")),
-    stopWebRemoteControl: () => Promise.resolve(),
+      serverWebRemoteControl
+        ? requestServerWebRemoteControl("refresh")
+        : Promise.reject(
+            new Error("Web remote control pairing can only be refreshed from desktop"),
+          ),
+    stopWebRemoteControl: () =>
+      serverWebRemoteControl
+        ? requestServerWebRemoteControl<unknown>("stop").then(() => undefined)
+        : Promise.resolve(),
     getWebRemoteControlStatus: () =>
-      Promise.resolve<WebRemoteControlStatus>({
-        status: "idle",
-      }),
+      serverWebRemoteControl
+        ? requestServerWebRemoteControl<WebRemoteControlStatus>("status")
+        : Promise.resolve<WebRemoteControlStatus>({
+            status: "idle",
+          }),
     disposeRemoteSession: () => Promise.resolve(),
     isDockerAvailable: () =>
       platformProxy
@@ -887,10 +924,13 @@ async function resolveWebBootstrap(): Promise<WebBootstrapResult> {
     if (!response.ok) {
       return { wsUrl };
     }
-    const serverInfo = (await response.json()) as Partial<ServerRemoteInfo>;
+    const serverInfo = (await response.json()) as Partial<ServerRemoteInfo> & {
+      webRemoteControl?: boolean;
+    };
     const workspace = Array.isArray(serverInfo.workspaces) ? serverInfo.workspaces[0] : undefined;
     return {
       wsUrl,
+      ...(serverInfo.webRemoteControl === true ? { serverWebRemoteControl: true } : {}),
       ...(workspace?.path ? { initialWorkspaceAbsPath: workspace.path } : {}),
       ...(workspace?.workspaceIdentity
         ? { initialWorkspaceIdentity: workspace.workspaceIdentity }
@@ -2481,7 +2521,9 @@ async function bootstrapWebApp() {
     const services = await connectViaWebSocket(bootstrap.wsUrl, {
       onClose: () => {},
     });
-    const platform = createWebPlatform();
+    const platform = createWebPlatform({
+      serverWebRemoteControl: bootstrap.serverWebRemoteControl === true,
+    });
     document.title = "Mcode - Web + Server";
 
     root.render(

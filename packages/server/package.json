@@ -6,7 +6,8 @@
     ".": "./src/index.ts",
     "./stdio": "./src/stdio.ts",
     "./remote": "./src/remote/index.ts",
-    "./remote/*.js": "./src/remote/*.ts"
+    "./remote/*.js": "./src/remote/*.ts",
+    "./web-remote-control/*.js": "./src/web-remote-control/*.ts"
   },
   "scripts": {
     "dev": "tsup --watch --onSuccess 'node dist/entry-http.js'",
