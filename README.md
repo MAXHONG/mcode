@@ -53,6 +53,7 @@ v3.15.1 及更早版本没有该功能，需要手动下载一次 v3.15.2 或更
 
 ## 更新
 
+- 2026-10-16：v3.15.4 — 移植官方 ZCode 3.15.3 修复（登录身份验证失败、重复弹出新手引导、弱网卡住引导判断、多 Agent / 连续调用部分请求失败）；隐私加固：反馈 / 截图 / 诊断日志不再上传 z.ai 与阿里云 OSS（改为 GitHub Issues + 本地导出日志），营销弹窗默认关闭，ARMS / 事件上报 / Agent OTLP 须显式 `MCODE_ALLOW_TELEMETRY=1` 才会编入；设置页同时显示 Z.ai 与 BigModel Coding Plan，二选一登录；新增 Mcode 品牌手机远控页面的 GitHub Pages 自托管工作流（`MCODE_WEB_REMOTE_CONTROL_URL=mcode` 启用）。
 - 2026-10-16：v3.15.3 — 新增命令行 / Web 发行包（`mcode-<版本>.tar.gz` + `install.sh`，随 Release 发布），可在无界面 Linux 上 `mcode --web` 提供内网浏览器访问，附 systemd 开机自启示例与部署文档；已配置个人模型（如 OpenAI 兼容网关）时不再强制弹出“连接账号”登录页；Web 模式默认始终启用访问令牌、支持 `Authorization: Bearer`、拒绝跨站 WebSocket（CSWSH），令牌比较改为常量时间；`install.sh` 校验 SHA-256、检查 Node.js ≥ 24、支持 GitHub Releases 与离线安装；`pnpm build:mcode` 修复开箱构建失败；发布工作流默认只读权限、构建任务不再持有可写令牌。
 - 2026-10-15：v3.15.2 — 应用内自动更新（GitHub Releases）；新增 Windows ARM64、Linux x64/ARM64 安装包；界面 logo 全部改为 Mcode。
 - 2026-10-14：基于 ZCode v3.15.1 改名为 Mcode v3.15.1。
