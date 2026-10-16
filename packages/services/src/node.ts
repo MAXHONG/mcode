@@ -385,6 +385,7 @@ import { createOAuthService } from "./oauth/oauthService.js";
 import {
   isOAuthBusinessRequest,
   isCurrentOAuthCredentialRequest,
+  resolveOAuthBusinessCredentialValidationRequest,
 } from "#src/oauth/oauthUnauthorizedRequest.js";
 import { createOAuthProviderLogoutHandler } from "./oauth/oauthProviderLogout.js";
 import { OAuthCredentialRepo } from "./oauth/repo/oauthCredentialRepo.js";
@@ -1276,6 +1277,8 @@ export function createLocalServices(options: {
       isCurrentOAuthCredentialRequest({ input, headers, credentialService }),
     isBusinessUnauthorizedRequest: (input, _headers) =>
       isOAuthBusinessRequest({ input, credentialService }),
+    resolveBusinessCredentialValidationRequest: (input, headers) =>
+      resolveOAuthBusinessCredentialValidationRequest({ input, headers, credentialService }),
     resolveZCodeEndpointOrigin: resolveCurrentMcodeEndpointOrigin,
   });
   const systemService = createSystemService();
@@ -1292,9 +1295,15 @@ export function createLocalServices(options: {
     onCorruptOAuthSessionCleared: async (providers) => {
       // telemetry 之外的后台路径可能先读到损坏 OAuth 凭据。
       // 这类恢复也必须等价于 logout，复用同一 handler 清理派生模型 provider key。
-      await Promise.all(
+      // 3.15.3：派生 provider 刷新改为后台执行，不能阻塞当前请求（并发 Agent 下会互相卡住）。
+      void Promise.all(
         providers.map((provider) => handleOAuthProviderLogout?.(provider) ?? Promise.resolve()),
-      );
+      ).catch((error) => {
+        createServiceLogger("oauth-credential-recovery").warn(
+          "refresh derived providers after corrupt OAuth cleanup failed",
+          { error },
+        );
+      });
     },
   });
   const projectTokenClient = createAccountProjectTokenClient(apiClient, credentialService);

@@ -17,11 +17,8 @@ function tryResolveHttpUrl(resolve: () => string | URL): URL | null {
   }
 }
 
-const OAUTH_BUSINESS_PATHS = [
-  "/api/biz/customer/getCustomerInfo",
-  "/api/biz/subscription/enterprise/v2/pricing",
-  "/api/biz/team/subscribe/product/querySubscribeDetail",
-] as const;
+// 3.15.3：业务接口按前缀识别（/api/biz/、/api/pay/），不再枚举少数路径。
+const OAUTH_BUSINESS_PREFIXES = ["/api/biz/", "/api/pay/"] as const;
 
 async function isCurrentBusinessOAuthCredentialRequest(options: {
   input: string | URL;
@@ -56,24 +53,66 @@ export async function isOAuthBusinessRequest(options: {
   const env = options.env ?? process.env;
   const requestUrl = tryResolveHttpUrl(() => options.input);
   if (!requestUrl) return false;
-  const urls =
+  const buildBusinessUrl = (path: string) =>
     provider === BIGMODEL_PROVIDER_ID
-      ? [
-          ...OAUTH_BUSINESS_PATHS.map((path) => () => buildBigModelApiUrl(env, path)),
-          () => resolveBigModelUserinfoUrl(env),
-        ]
-      : [
-          ...OAUTH_BUSINESS_PATHS.map((path) => () => buildRuntimeZaiBusinessUrl(env, path)),
-          () => resolveZaiUserinfoUrl(env),
-        ];
-  return urls.some((resolve) => {
-    const expected = tryResolveHttpUrl(resolve);
-    return (
-      expected !== null &&
-      requestUrl.origin === expected.origin &&
-      requestUrl.pathname === expected.pathname
-    );
-  });
+      ? buildBigModelApiUrl(env, path)
+      : buildRuntimeZaiBusinessUrl(env, path);
+  if (
+    OAUTH_BUSINESS_PREFIXES.some((path) => {
+      const expected = tryResolveHttpUrl(() => buildBusinessUrl(path));
+      return (
+        expected !== null &&
+        requestUrl.origin === expected.origin &&
+        requestUrl.pathname.startsWith(expected.pathname)
+      );
+    })
+  )
+    return true;
+  const userinfo = tryResolveHttpUrl(() =>
+    provider === BIGMODEL_PROVIDER_ID ? resolveBigModelUserinfoUrl(env) : resolveZaiUserinfoUrl(env),
+  );
+  return (
+    userinfo !== null &&
+    requestUrl.origin === userinfo.origin &&
+    requestUrl.pathname === userinfo.pathname
+  );
+}
+
+export interface OAuthBusinessCredentialValidationRequest {
+  url: string;
+  authorization: string;
+  emptyBodyMeansInvalid: boolean;
+}
+
+/**
+ * 3.15.3：业务接口返回 403 / 零字节 200 时，不能直接据此清理登录态；
+ * 先用 customerInfo 身份接口复核一次，确认凭证确实失效后才退出。
+ */
+export async function resolveOAuthBusinessCredentialValidationRequest(options: {
+  input: string | URL;
+  headers: Headers;
+  credentialService: Pick<ICredentialService, "load">;
+  env?: NodeJS.ProcessEnv;
+}): Promise<OAuthBusinessCredentialValidationRequest | null> {
+  const provider = await options.credentialService.load("oauth:active_provider");
+  if (provider !== BIGMODEL_PROVIDER_ID && provider !== ZAI_PROVIDER_ID) return null;
+  if (!(await isCurrentBusinessOAuthCredentialRequest(options))) return null;
+  if ((await options.credentialService.load("oauth:active_provider")) !== provider) return null;
+  const env = options.env ?? process.env;
+  const url = tryResolveHttpUrl(() =>
+    provider === BIGMODEL_PROVIDER_ID
+      ? buildBigModelApiUrl(env, "/api/biz/customer/getCustomerInfo")
+      : buildRuntimeZaiBusinessUrl(env, "/api/biz/customer/getCustomerInfo"),
+  );
+  if (!url) return null;
+  const token = (options.headers.get("authorization") ?? "").trim().replace(/^Bearer\s+/i, "");
+  return {
+    url: url.toString(),
+    // 两平台 customerInfo 都要求裸业务 token；加 Bearer 会把格式拒绝误判成登录失效。
+    authorization: token,
+    // BigModel 注销后 customerInfo 返回零字节 200；不扩散到 ZAI 或任意空业务响应。
+    emptyBodyMeansInvalid: provider === BIGMODEL_PROVIDER_ID,
+  };
 }
 
 export async function isCurrentOAuthBusinessCredentialRequest(options: {

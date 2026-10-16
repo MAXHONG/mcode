@@ -21,7 +21,51 @@ interface NodeApiClientOptions {
     headers: Headers,
   ) => boolean | Promise<boolean>;
   businessUnauthorizedObservationTimeoutMs?: number;
+  /** 3.15.3：403/空 200 的业务响应需经身份接口复核后才判定凭证失效。 */
+  resolveBusinessCredentialValidationRequest?: (
+    input: string | URL,
+    headers: Headers,
+  ) =>
+    | Promise<BusinessCredentialValidationRequest | null>
+    | BusinessCredentialValidationRequest
+    | null;
   resolveZCodeEndpointOrigin?: () => Promise<string> | string;
+}
+
+export interface BusinessCredentialValidationRequest {
+  url: string;
+  authorization: string;
+  emptyBodyMeansInvalid: boolean;
+}
+
+type BusinessAuthenticationEvidence = "empty" | "unauthorized" | null;
+
+function abortError(): DOMException {
+  return new DOMException("The operation was aborted.", "AbortError");
+}
+
+/** 让观察/复核链路跟随调用方 signal 中止，避免取消后的请求继续占住并发 Agent 的调用。 */
+function waitWithAbort<T>(promise: Promise<T>, signal?: AbortSignal | null): Promise<T> {
+  if (!signal) return promise;
+  return new Promise<T>((resolve, reject) => {
+    const abort = () => reject(abortError());
+    const cleanup = () => signal.removeEventListener("abort", abort);
+    signal.addEventListener("abort", abort, { once: true });
+    promise.then(
+      (value) => {
+        cleanup();
+        resolve(value);
+      },
+      (error: unknown) => {
+        cleanup();
+        reject(error);
+      },
+    );
+    if (signal.aborted) {
+      cleanup();
+      abort();
+    }
+  });
 }
 
 const DEFAULT_BUSINESS_UNAUTHORIZED_OBSERVATION_TIMEOUT_MS = 1000;
@@ -30,28 +74,15 @@ const MAX_BUSINESS_UNAUTHORIZED_OBSERVATION_BYTES = 64 * 1024;
 function readChunkWithinTimeout(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   timeoutMs: number,
+  signal?: AbortSignal | null,
 ): Promise<{ done: boolean; value?: Uint8Array } | null> {
-  return new Promise((resolve) => {
-    let settled = false;
-    const timer = setTimeout(() => {
-      settled = true;
-      resolve(null);
-    }, timeoutMs);
-    reader.read().then(
-      (result) => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        resolve(result);
-      },
-      () => {
-        if (settled) return;
-        settled = true;
-        clearTimeout(timer);
-        resolve(null);
-      },
-    );
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const timeout = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), timeoutMs);
   });
+  return waitWithAbort(Promise.race([reader.read(), timeout]), signal)
+    .catch(() => null)
+    .finally(() => clearTimeout(timer));
 }
 
 function resolveMethod(init?: ApiRequestInit): string {
@@ -62,18 +93,20 @@ function resolveUrl(input: string | URL): string {
   return typeof input === "string" ? input : input.toString();
 }
 
-async function hasBusinessUnauthorizedCode(
+async function readBusinessAuthenticationResponse(
   response: Response,
   timeoutMs: number,
-): Promise<boolean> {
+  signal?: AbortSignal | null,
+): Promise<BusinessAuthenticationEvidence> {
   // 业务接口把登录过期封装成 HTTP 200，不能只看 status；读副本避免抢走调用方正文。
   // continuous SSE 没有完整 JSON 正文，观察器不能等待流结束或引入恢复语义。
   if (response.headers.get("content-type")?.toLowerCase().startsWith("text/event-stream"))
-    return false;
+    return null;
   let reader: ReadableStreamDefaultReader<Uint8Array> | undefined;
   try {
+    if (signal?.aborted) return null;
     const body = response.clone().body;
-    if (!body) return false;
+    if (!body) return "empty";
     reader = body.getReader();
     const decoder = new TextDecoder();
     const deadline = Date.now() + timeoutMs;
@@ -81,23 +114,27 @@ async function hasBusinessUnauthorizedCode(
     let text = "";
     while (true) {
       const remainingMs = deadline - Date.now();
-      if (remainingMs <= 0) return false;
-      const result = await readChunkWithinTimeout(reader, remainingMs);
-      if (!result) return false;
+      if (remainingMs <= 0) return null;
+      const result = await readChunkWithinTimeout(reader, remainingMs, signal);
+      if (!result) return null;
       if (result.done) break;
-      if (!result.value) return false;
+      if (!result.value) return null;
       bytes += result.value.byteLength;
-      if (bytes > MAX_BUSINESS_UNAUTHORIZED_OBSERVATION_BYTES) return false;
+      if (bytes > MAX_BUSINESS_UNAUTHORIZED_OBSERVATION_BYTES) return null;
       text += decoder.decode(result.value, { stream: true });
     }
     text += decoder.decode();
+    if (bytes === 0) return "empty";
     const payload: unknown = JSON.parse(text);
-    return (
-      typeof payload === "object" && payload !== null && "code" in payload && payload.code === 401
-    );
+    return typeof payload === "object" &&
+      payload !== null &&
+      "code" in payload &&
+      payload.code === 401
+      ? "unauthorized"
+      : null;
   } catch {
-    // 空正文/HTML/损坏 JSON 只能证明请求异常，不能据此清理登录态。
-    return false;
+    // HTML/损坏 JSON 只能证明请求异常，不能据此清理登录态。
+    return null;
   } finally {
     // 观察副本是 best-effort；超时、超限或解析失败时及时取消，不能占用连接。
     if (reader) void reader.cancel().catch(() => undefined);
@@ -157,6 +194,11 @@ export class NodeApiClient implements ApiClient {
   private readonly isZcodeJwtRequest?: NodeApiClientOptions["isZcodeJwtRequest"];
   private readonly isBusinessUnauthorizedRequest?: NodeApiClientOptions["isBusinessUnauthorizedRequest"];
   private readonly businessUnauthorizedObservationTimeoutMs: number;
+  private readonly resolveBusinessCredentialValidationRequest?: NodeApiClientOptions["resolveBusinessCredentialValidationRequest"];
+  private readonly businessValidations = new Map<
+    string,
+    { promise: Promise<boolean>; controller: AbortController; subscribers: number }
+  >();
 
   constructor(options: NodeApiClientOptions = {}) {
     this.fetchImpl = options.fetchImpl;
@@ -167,6 +209,83 @@ export class NodeApiClient implements ApiClient {
       options.businessUnauthorizedObservationTimeoutMs ??
       DEFAULT_BUSINESS_UNAUTHORIZED_OBSERVATION_TIMEOUT_MS;
     this.resolveZCodeEndpointOrigin = options.resolveZCodeEndpointOrigin;
+    this.resolveBusinessCredentialValidationRequest =
+      options.resolveBusinessCredentialValidationRequest;
+  }
+
+  /**
+   * 3.15.3：并发请求共享同一次身份复核（按 url+token 去重），所有订阅者都放弃时才中止复核。
+   * 修复多 Agent / 连续调用时，单个业务请求的 403/空响应误触发登出导致其它请求失败。
+   */
+  private async confirmBusinessCredentialInvalid(
+    input: string | URL,
+    headers: Headers,
+    response: Response,
+    evidence: BusinessAuthenticationEvidence,
+    signal?: AbortSignal | null,
+  ): Promise<boolean> {
+    if (signal?.aborted) return false;
+    const check = await this.resolveBusinessCredentialValidationRequest?.(input, headers);
+    if (!check || signal?.aborted) return false;
+    const requestUrl = new URL(resolveUrl(input));
+    const identityUrl = new URL(check.url);
+    if (requestUrl.origin === identityUrl.origin && requestUrl.pathname === identityUrl.pathname)
+      return response.status === 200 && evidence === "empty" && check.emptyBodyMeansInvalid;
+    const key = JSON.stringify([check.url, check.authorization]);
+    let entry = this.businessValidations.get(key);
+    if (!entry) {
+      const controller = new AbortController();
+      const validationSignal = AbortSignal.any([
+        controller.signal,
+        AbortSignal.timeout(this.businessUnauthorizedObservationTimeoutMs),
+      ]);
+      const validation: Promise<boolean> = Promise.resolve()
+        .then(async () => {
+          try {
+            const identity = await waitWithAbort(
+              (this.fetchImpl ?? globalThis.fetch)(check.url, {
+                method: "GET",
+                redirect: "error",
+                headers: withRequestIdHeader({
+                  Authorization: check.authorization,
+                  "Content-Type": "application/json",
+                }),
+                signal: validationSignal,
+              }),
+              validationSignal,
+            );
+            if (identity.status === 401) return true;
+            if (identity.status !== 200 && identity.status !== 403) return false;
+            const result = await readBusinessAuthenticationResponse(
+              identity,
+              this.businessUnauthorizedObservationTimeoutMs,
+              validationSignal,
+            );
+            return (
+              result === "unauthorized" ||
+              (identity.status === 200 && result === "empty" && check.emptyBodyMeansInvalid)
+            );
+          } catch {
+            return false;
+          }
+        })
+        .finally(() => {
+          if (this.businessValidations.get(key)?.promise === validation)
+            this.businessValidations.delete(key);
+        });
+      entry = { promise: validation, controller, subscribers: 0 };
+      this.businessValidations.set(key, entry);
+    }
+    entry.subscribers += 1;
+    try {
+      return await waitWithAbort(entry.promise, signal);
+    } finally {
+      entry.subscribers -= 1;
+      if (entry.subscribers === 0) {
+        entry.controller.abort();
+        if (this.businessValidations.get(key) === entry) this.businessValidations.delete(key);
+      }
+    }
   }
 
   async request(input: string | URL, init?: ApiRequestInit): Promise<Response> {
@@ -214,31 +333,53 @@ export class NodeApiClient implements ApiClient {
         headers: requestHeaders,
         ...(signal ? { signal } : {}),
       });
-      if ((response.status === 401 || response.status === 200) && this.onZcodeJwtInvalid) {
+      if ([200, 401, 403].includes(response.status) && this.onZcodeJwtInvalid) {
         try {
-          const requestHeadersForObservation = new Headers(requestHeaders);
-          const isCurrentMcodeJwtRequest = await this.isZcodeJwtRequest?.(
-            requestInput,
-            requestHeadersForObservation,
-          );
-          if (
-            isCurrentMcodeJwtRequest &&
-            (response.status === 401 ||
-              ((await this.isBusinessUnauthorizedRequest?.(
+          await waitWithAbort(
+            (async () => {
+              const requestHeadersForObservation = new Headers(requestHeaders);
+              const isCurrentMcodeJwtRequest = await this.isZcodeJwtRequest?.(
                 requestInput,
                 requestHeadersForObservation,
-              )) &&
-                (await hasBusinessUnauthorizedCode(
+              );
+              if (!isCurrentMcodeJwtRequest) return;
+              let invalid = response.status === 401;
+              if (
+                !invalid &&
+                (await this.isBusinessUnauthorizedRequest?.(
+                  requestInput,
+                  requestHeadersForObservation,
+                ))
+              ) {
+                const evidence = await readBusinessAuthenticationResponse(
                   response,
                   this.businessUnauthorizedObservationTimeoutMs,
-                ))))
-          ) {
-            this.onZcodeJwtInvalid(requestInput, requestHeadersForObservation);
-          }
+                  signal,
+                );
+                invalid = evidence === "unauthorized";
+                if (
+                  !invalid &&
+                  (response.status === 403 || (response.status === 200 && evidence === "empty"))
+                )
+                  invalid = await this.confirmBusinessCredentialInvalid(
+                    requestInput,
+                    requestHeadersForObservation,
+                    response,
+                    evidence,
+                    signal,
+                  );
+              }
+              if (invalid && !signal?.aborted)
+                this.onZcodeJwtInvalid?.(requestInput, requestHeadersForObservation);
+            })(),
+            signal,
+          );
         } catch (error) {
+          if (signal?.aborted) throw abortError();
           log.warn("mcode jwt invalid response observation failed", { error });
         }
       }
+      if (signal?.aborted) throw abortError();
       return response;
     } catch (error) {
       if (error instanceof ApiError) {
