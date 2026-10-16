@@ -63,6 +63,27 @@ mcode --web --host 0.0.0.0 --port 3030 --workspace ~/projects/myapp --no-open
 
 - 3.15.3 起 **始终启用访问令牌**（包括只监听 127.0.0.1）。`--token <值>` 或环境变量 `MCODE_WEB_TOKEN` 固定令牌；`--no-token` 关闭（仅限可信的单用户机器）。
 - 脚本 / curl 调用 API 时使用 `Authorization: Bearer <token>`。
+
+### 账号密码登录（推荐）
+
+带令牌的链接会留在浏览器历史、终端输出和 systemd 日志里，谁拿到链接谁就能登录。建议设置账号密码：
+
+1. 第一次用带 `?token=` 的地址打开时，页面会提示 **创建访问账号**（用户名 + 至少 8 位密码）。也可以点“暂不设置”继续只用令牌。
+2. 设置后，**带令牌的链接不能再让浏览器登录**，打开网页只会看到登录页；脚本仍可用 `Authorization: Bearer <token>`。
+3. 之后在侧栏左下角账户菜单里可以 **修改 Web 访问密码** 或 **退出 Web 登录**。修改密码后，所有已登录的浏览器都要重新登录。
+
+在服务器终端里管理（无需重启服务）：
+
+```bash
+mcode passwd            # 设置 / 修改用户名和密码（忘记密码时用）
+mcode passwd --reset    # 删除密码，恢复为只用访问令牌
+```
+
+- 密码用 scrypt 加盐哈希保存在 `~/.mcode/v2/web-auth.json`（权限 600），不存明文；`MCODE_WEB_AUTH_FILE` 可改位置。
+- 连续输错 5 次会临时锁定（30 秒起，逐次翻倍，最长 15 分钟）。
+- 登录会话 Cookie 为 HttpOnly + SameSite=Strict，默认 7 天，勾选“30 天内保持登录”为 30 天；经 HTTPS 反向代理访问时自动加 `Secure`。
+- `MCODE_WEB_PASSWORD_AUTH=0` 完全关闭账号密码功能（只用令牌）。
+- 内网是明文 HTTP，密码同样会被同网段的人嗅探到；跨网络访问仍应走 Tailscale / WireGuard 或 HTTPS 反向代理。
 - 浏览器发起的跨站 WebSocket 会被拒绝（403）。如果在前面加了反向代理且域名与 Mcode 的 Host 不一致，用 `MCODE_SERVER_ALLOWED_ORIGINS=https://mcode.example.com` 放行。
 
 ## 5. 开机自启（systemd 用户服务）
@@ -95,5 +116,6 @@ journalctl --user -u mcode-web -f           # 查看日志
 | `Mcode requires Node.js >= 24`              | 按第 1 步安装 Node 24，并确认 `node -v`                                |
 | `mcode: command not found`                  | `export PATH="$HOME/.local/bin:$PATH"`                                 |
 | 浏览器 401 / 页面空白                       | 用终端打印的带 `?token=` 的完整地址打开                                |
+| 忘记 Web 访问密码                           | 服务器上执行 `mcode passwd` 重新设置，或 `mcode passwd --reset`        |
 | WebSocket 403                               | 反向代理域名与 Host 不一致，设置 `MCODE_SERVER_ALLOWED_ORIGINS`        |
 | 页面提示未配置模型                          | 检查 `~/.mcode/v2/provider_config.json` 格式与权限，或在设置页添加模型 |

@@ -32,6 +32,7 @@ import {
   PencilRuler,
   Globe,
   Gift,
+  KeyRound,
   Loader2,
   LogInIcon,
   LogOut,
@@ -452,6 +453,37 @@ export const WorkspaceSidebarFooter = memo(function WorkspaceSidebarFooterCompon
                   <LogInIcon className="size-4" />
                   {intl.formatMessage({ id: "app.login" })}
                 </DropdownMenuItem>
+              </>
+            ) : null}
+            {platform.webAccount ? (
+              <>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onSelect={() => platform.webAccount?.openSettings()}
+                  data-testid="web-account-settings-item"
+                >
+                  <KeyRound className="size-4" />
+                  {intl.formatMessage(
+                    {
+                      id: platform.webAccount.passwordConfigured
+                        ? "webAccount.changePassword"
+                        : "webAccount.setupPassword",
+                    },
+                    { username: platform.webAccount.username ?? "" },
+                  )}
+                </DropdownMenuItem>
+                {platform.webAccount.passwordConfigured ? (
+                  <DropdownMenuItem
+                    onSelect={() => void platform.webAccount?.logout()}
+                    data-testid="web-account-logout-item"
+                  >
+                    <LogOut className="size-4" />
+                    {intl.formatMessage(
+                      { id: "webAccount.logout" },
+                      { username: platform.webAccount.username ?? "" },
+                    )}
+                  </DropdownMenuItem>
+                ) : null}
               </>
             ) : null}
             {onLogout ? <DropdownMenuSeparator /> : null}

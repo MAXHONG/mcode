@@ -2,6 +2,19 @@ import { sessionCreateTelemetrySchema, type RendererTelemetryEventPayload } from
 /* eslint-disable max-lines -- Web 远程控制启动、错误页和 web 平台桥接暂时集中在入口编排。 */
 import { createRoot } from "react-dom/client";
 import {
+  WebPasswordAuthPage,
+  type WebPasswordAuthPageMode,
+} from "./auth/WebPasswordAuthPage.js";
+import {
+  fetchWebPasswordAuthStatus,
+  isWebPasswordSetupSkipped,
+  logoutWebPasswordAuth,
+  markWebPasswordSetupSkipped,
+  stripTokenFromLocation,
+  type WebPasswordAuthStatus,
+} from "./auth/webPasswordAuthClient.js";
+import { getWebPasswordAuthCopy } from "./auth/webPasswordAuthLocale.js";
+import {
   AppErrorBoundary,
   Root,
   McodeIntlProvider,
@@ -634,6 +647,7 @@ function createWebPlatform(options?: {
   webRemoteControlProxy?: WebRemoteControlProxyOptions;
   externalWebRemoteControlProxy?: WebRemoteControlPlatformProxy;
   serverWebRemoteControl?: boolean;
+  webAccount?: IPlatformService["webAccount"];
 }): IPlatformService {
   const webRemoteControlProxy = options?.webRemoteControlProxy;
   const platformProxy = options?.externalWebRemoteControlProxy;
@@ -641,6 +655,7 @@ function createWebPlatform(options?: {
     options?.serverWebRemoteControl === true && !webRemoteControlProxy && !platformProxy;
 
   return {
+    ...(options?.webAccount ? { webAccount: options.webAccount } : {}),
     supportsWebRemoteControl: serverWebRemoteControl,
     canSelectFilePath: false,
     // Web 端无法打开系统目录选择框
@@ -2502,6 +2517,12 @@ async function bootstrapWebApp() {
     return;
   }
 
+  // Linux Web 发行版：账号密码登录闸门（服务端未启用时返回 null，保持旧的令牌行为）。
+  const passwordAuthStatus = await fetchWebPasswordAuthStatus();
+  if (passwordAuthStatus && !(await passWebPasswordAuthGate(passwordAuthStatus))) {
+    return;
+  }
+
   let bootstrap: WebBootstrapResult;
   try {
     bootstrap = await resolveWebBootstrap();
@@ -2523,6 +2544,7 @@ async function bootstrapWebApp() {
     });
     const platform = createWebPlatform({
       serverWebRemoteControl: bootstrap.serverWebRemoteControl === true,
+      ...(passwordAuthStatus ? { webAccount: createWebAccount(passwordAuthStatus) } : {}),
     });
     document.title = "Mcode - Web + Server";
 
@@ -2557,6 +2579,78 @@ async function bootstrapWebApp() {
           ),
     );
   }
+}
+
+function renderWebPasswordAuthPage(
+  mode: WebPasswordAuthPageMode,
+  status: WebPasswordAuthStatus,
+  extra: { onCancel?: () => void; onSkipSetup?: () => void } = {},
+): void {
+  root.render(
+    <WebPasswordAuthPage
+      mode={mode}
+      status={status}
+      onAuthenticated={() => {
+        stripTokenFromLocation();
+        window.location.reload();
+      }}
+      {...extra}
+    />,
+  );
+}
+
+function renderWebPasswordUnauthorizedPage(): void {
+  const copy = getWebPasswordAuthCopy();
+  root.render(
+    <main className="flex min-h-dvh items-center justify-center bg-background px-4 py-8 text-foreground">
+      <section className="w-full max-w-sm rounded-lg border border-card-border bg-card p-5 shadow-sm">
+        <h1 className="mb-3 text-ui-lg font-medium text-foreground">{copy.unauthorizedTitle}</h1>
+        <p className="text-ui-xs leading-6 text-foreground-subtle">{copy.unauthorizedDescription}</p>
+      </section>
+    </main>,
+  );
+}
+
+/** 返回 true 表示可以继续进入工作台；false 表示已渲染登录 / 设置页。 */
+async function passWebPasswordAuthGate(status: WebPasswordAuthStatus): Promise<boolean> {
+  if (status.passwordConfigured) {
+    if (status.authenticated) {
+      stripTokenFromLocation();
+      return true;
+    }
+    renderWebPasswordAuthPage("login", status);
+    return false;
+  }
+  if (!status.authenticated) {
+    renderWebPasswordUnauthorizedPage();
+    return false;
+  }
+  if (status.canSetup && !isWebPasswordSetupSkipped()) {
+    renderWebPasswordAuthPage("setup", status, {
+      onSkipSetup: () => {
+        markWebPasswordSetupSkipped();
+        window.location.reload();
+      },
+    });
+    return false;
+  }
+  return true;
+}
+
+function createWebAccount(status: WebPasswordAuthStatus): NonNullable<IPlatformService["webAccount"]> {
+  return {
+    ...(status.username ? { username: status.username } : {}),
+    passwordConfigured: status.passwordConfigured,
+    openSettings: () => {
+      renderWebPasswordAuthPage(status.passwordConfigured ? "change" : "setup", status, {
+        onCancel: () => window.location.reload(),
+      });
+    },
+    logout: async () => {
+      await logoutWebPasswordAuth().catch(() => {});
+      window.location.reload();
+    },
+  };
 }
 
 void bootstrapWebApp();

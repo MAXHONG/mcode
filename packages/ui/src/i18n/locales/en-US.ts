@@ -1021,6 +1021,9 @@ const enUS: Record<string, string> = {
   "app.currentTheme": "Current: {theme}",
   "app.login": "Connect",
   "app.logout": "Disconnect",
+  "webAccount.setupPassword": "Set Web access password",
+  "webAccount.changePassword": "Change Web access password ({username})",
+  "webAccount.logout": "Sign out of Web ({username})",
   "logout.confirm.title": "Disconnect and restart Mcode?",
   "logout.confirm.descriptionWithRunningSessions":
     "{count} session(s) are currently running. Disconnecting will interrupt them and restart the app.",

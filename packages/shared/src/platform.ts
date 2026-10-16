@@ -743,6 +743,17 @@ export interface IPlatformService {
    */
   supportsWebRemoteControl?: boolean;
 
+  /**
+   * Linux Web 发行版的访问账号（账号密码登录）。存在时侧栏账户菜单显示
+   * “修改访问密码 / 退出 Web 登录”等入口；其他平台不提供。
+   */
+  webAccount?: {
+    username?: string;
+    passwordConfigured: boolean;
+    openSettings(): void;
+    logout(): Promise<void>;
+  };
+
   /** 为当前 workspace 开启 Web 远程控制能力 */
   startWebRemoteControl(
     context: WebRemoteControlContext,

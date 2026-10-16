@@ -930,6 +930,9 @@ const zhCN: Record<string, string> = {
   "app.currentTheme": "当前: {theme}",
   "app.login": "连接使用",
   "app.logout": "断开连接",
+  "webAccount.setupPassword": "设置 Web 访问密码",
+  "webAccount.changePassword": "修改 Web 访问密码（{username}）",
+  "webAccount.logout": "退出 Web 登录（{username}）",
   "logout.confirm.title": "断开连接并重启 Mcode？",
   "logout.confirm.descriptionWithRunningSessions":
     "检测到 {count} 个会话正在运行。断开连接会中断这些会话并重启 App。",

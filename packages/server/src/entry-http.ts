@@ -5,6 +5,8 @@ import {
 } from "./bundledMcodeBuiltinProviderConfig.js";
 import { createHttpServer } from "./http.js";
 import { createServerWebRemoteControl } from "./web-remote-control/serverWebRemoteControl.js";
+import { WebPasswordAuth } from "./webPasswordAuth.js";
+import { join } from "node:path";
 
 async function main(): Promise<void> {
   const zcodeBuiltinProviderConfigFilePath = await materializeBundledMcodeBuiltinProviderConfig({
@@ -41,7 +43,20 @@ async function main(): Promise<void> {
     console.error("[web-remote-control] init failed", error);
   });
 
+  // 账号密码登录：默认启用（未设置密码时仍按访问令牌鉴权，可在网页里创建账号密码）。
+  // MCODE_WEB_PASSWORD_AUTH=0 关闭；MCODE_WEB_AUTH_FILE 自定义存储位置（默认 ~/.mcode/v2/web-auth.json）。
+  const passwordAuthDisabled = ["0", "false", "off", "no"].includes(
+    process.env["MCODE_WEB_PASSWORD_AUTH"]?.trim().toLowerCase() ?? "",
+  );
+  const passwordAuth = passwordAuthDisabled
+    ? undefined
+    : new WebPasswordAuth({
+        filePath:
+          process.env["MCODE_WEB_AUTH_FILE"]?.trim() || join(getAppConfigDir(), "web-auth.json"),
+      });
+
   createHttpServer(services, port, {
+    ...(passwordAuth ? { passwordAuth } : {}),
     ...(webRemoteControl ? { webRemoteControl } : {}),
     topicResourcePeers,
     ...(host ? { host } : {}),
