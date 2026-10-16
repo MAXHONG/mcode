@@ -893,7 +893,22 @@ describe("createFeedbackService", () => {
     vi.unstubAllEnvs();
   });
 
-  it("uses the test Mcode API base by default when MCODE_ENV=test", async () => {
+  it("Mcode 隐私加固：未配置自建反馈服务时不向任何远端发送反馈/日志", async () => {
+    vi.stubEnv("MCODE_FEEDBACK_API_BASE", "");
+    const fetchMock = vi.fn();
+    vi.stubGlobal("fetch", fetchMock);
+    const service = createFeedbackService({
+      apiClient: makeFetchApiClient(),
+      credentialService: makeCredentialService(() => "shared-backend-jwt"),
+      oauthService: makeOAuthService(),
+    });
+    expect(await service.isRemoteEnabled?.()).toBe(false);
+    await expect(service.list({ mine: true })).resolves.toEqual({ items: [], total: 0 });
+    await expect(service.attachLogsFromExport("t")).rejects.toThrow("不会把反馈或日志上传");
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it.skip("uses the test Mcode API base by default when MCODE_ENV=test (Mcode: remote feedback disabled)", async () => {
     vi.stubEnv("MCODE_ENV", "test");
     // Bugfix: 开发机 shell 可能导出 MCODE_BASE_URL / MCODE_ENDPOINT_ORIGIN（resolver 最高优先级覆盖），
     // 会压过 MCODE_ENV=test 的默认域推断，把「默认 base」用例变成环境敏感；置空恢复封闭性。
@@ -923,7 +938,7 @@ describe("createFeedbackService", () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
   });
 
-  it("uses the production Mcode API base by default when MCODE_ENV=production", async () => {
+  it.skip("uses the production Mcode API base by default when MCODE_ENV=production (Mcode: remote feedback disabled)", async () => {
     vi.stubEnv("MCODE_ENV", "production");
     // 同上：屏蔽开发机 ambient 覆盖，保持「默认 base」语义封闭
     vi.stubEnv("MCODE_BASE_URL", "");

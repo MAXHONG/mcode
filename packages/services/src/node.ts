@@ -2382,6 +2382,7 @@ export function createLocalServices(options: {
         baseUrl: buildRuntimeMcodeApiUrl(process.env, "/"),
         appVersion: MCODE_VERSION,
         onSnapshot: (snapshot) => marketingAssets.accept(snapshot),
+        enabled: process.env.MCODE_ENABLE_MARKETING_TOUCH === "1",
       }),
     )
     .register(IFileService, fileService)

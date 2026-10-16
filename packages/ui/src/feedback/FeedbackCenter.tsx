@@ -10,7 +10,38 @@ import { ArrowLeftIcon, XIcon } from "lucide-react";
 import type { IFeedbackService } from "@mcode/services";
 import type { IPlatformService } from "@mcode/shared";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";
-import { memo } from "react";
+import { memo, useEffect, useState } from "react";
+
+export const MCODE_ISSUES_URL = "https://github.com/MAXHONG/mcode/issues";
+
+/** Mcode 隐私加固：远端反馈默认关闭，改为引导到 GitHub Issues + 本地导出日志。 */
+function LocalOnlyFeedbackNotice({
+  platform,
+  onClose,
+}: {
+  platform: IPlatformService;
+  onClose: () => void;
+}) {
+  const { intl } = useMcodeIntl();
+  return (
+    <div className="flex flex-col gap-4 p-6 text-ui-sm text-foreground" data-mcode-local-feedback="true">
+      <p className="leading-relaxed text-foreground-subtle">
+        {intl.formatMessage({ id: "feedback.mcode.localOnly.description" })}
+      </p>
+      <div className="flex flex-wrap gap-2">
+        <Button type="button" onClick={() => platform.openExternal(MCODE_ISSUES_URL)}>
+          {intl.formatMessage({ id: "feedback.mcode.localOnly.openIssues" })}
+        </Button>
+        <Button type="button" variant="outline" onClick={() => void platform.exportLogs()}>
+          {intl.formatMessage({ id: "feedback.mcode.localOnly.exportLogs" })}
+        </Button>
+        <Button type="button" variant="ghost" onClick={onClose}>
+          {intl.formatMessage({ id: "common.close" })}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 export const FeedbackCenter = memo(function FeedbackCenterComponent({
   feedbackService,
@@ -28,10 +59,52 @@ export const FeedbackCenter = memo(function FeedbackCenterComponent({
   const close = useFeedbackStore((state) => state.close);
   const openTickets = useFeedbackStore((state) => state.openTickets);
   const { intl } = useMcodeIntl();
+  const [remoteEnabled, setRemoteEnabled] = useState<boolean | null>(null);
+  useEffect(() => {
+    let disposed = false;
+    const isRemoteEnabled = (
+      feedbackService as (IFeedbackService & { isRemoteEnabled?: () => Promise<boolean> }) | undefined
+    )?.isRemoteEnabled;
+    if (!feedbackService || !isRemoteEnabled) {
+      setRemoteEnabled(true);
+      return;
+    }
+    void isRemoteEnabled
+      .call(feedbackService)
+      .then((value: boolean) => {
+        if (!disposed) setRemoteEnabled(value);
+      })
+      .catch(() => {
+        if (!disposed) setRemoteEnabled(false);
+      });
+    return () => {
+      disposed = true;
+    };
+  }, [feedbackService]);
   const titleId =
     tab === "tickets" ? "feedback.center.ticketsTitle" : "feedback.center.submitTitle";
 
   if (!feedbackService) return null;
+
+  if (remoteEnabled === false) {
+    return (
+      <Dialog
+        open={open || featureRequestOpen}
+        onOpenChange={(next) => {
+          if (!next) close();
+        }}
+      >
+        <DialogContent className="w-[min(30rem,calc(100vw-2rem))] gap-0 rounded-2xl p-0">
+          <DialogHeader className="p-6 pb-0">
+            <DialogTitle className="text-ui-lg font-medium">
+              {intl.formatMessage({ id: "feedback.mcode.localOnly.title" })}
+            </DialogTitle>
+          </DialogHeader>
+          <LocalOnlyFeedbackNotice platform={platform} onClose={close} />
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <>

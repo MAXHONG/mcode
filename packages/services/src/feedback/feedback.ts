@@ -62,6 +62,8 @@ export interface IFeedbackService {
   }>;
   cleanupPreparedLogArchive(path: string): Promise<void>;
   revealLogArchive(path: string): Promise<void>;
+  /** Mcode：远端反馈上传是否启用（默认关闭，仅自建 MCODE_FEEDBACK_API_BASE 时开启）。 */
+  isRemoteEnabled?(): Promise<boolean>;
 }
 
 export const IFeedbackService = createServiceDescriptor<IFeedbackService>(ServiceChannels.Feedback);

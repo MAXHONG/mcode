@@ -38,9 +38,16 @@ export async function resolveBuildTimeConfig(
   { defaultsPath = PRIVATE_BUILD_DEFAULTS_PATH } = {},
 ) {
   const defaults = await readPrivateDefaults(defaultsPath);
+  // Mcode 隐私加固：ARMS RUM 与事件上报默认强制关闭。即使环境变量或私有默认配置里
+  // 写了地址，也必须显式设置 MCODE_ALLOW_TELEMETRY=1 才会编进安装包；官方 Release 不设置。
+  const telemetryAllowed = ENABLED_VALUES.has(
+    pickValue(env, defaults, "MCODE_ALLOW_TELEMETRY").toLowerCase(),
+  );
   return {
-    armsRumEndpoint: pickValue(env, defaults, "MCODE_ARMS_RUM_ENDPOINT"),
-    telemetryReportEndpoint: pickValue(env, defaults, "MCODE_TELEMETRY_REPORT_ENDPOINT"),
+    armsRumEndpoint: telemetryAllowed ? pickValue(env, defaults, "MCODE_ARMS_RUM_ENDPOINT") : "",
+    telemetryReportEndpoint: telemetryAllowed
+      ? pickValue(env, defaults, "MCODE_TELEMETRY_REPORT_ENDPOINT")
+      : "",
     autoUpdateEnabled: ENABLED_VALUES.has(
       pickValue(env, defaults, "MCODE_AUTO_UPDATE").toLowerCase(),
     ),

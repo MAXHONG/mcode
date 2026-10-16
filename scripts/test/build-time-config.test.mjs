@@ -29,6 +29,7 @@ test("私有默认配置启用三项能力", async () => {
     MCODE_ARMS_RUM_ENDPOINT: " https://rum.example.com/x ",
     MCODE_TELEMETRY_REPORT_ENDPOINT: "https://report.example.com/event",
     MCODE_AUTO_UPDATE: "1",
+    MCODE_ALLOW_TELEMETRY: "1",
   });
   assert.deepEqual(await resolveBuildTimeConfig({}, { defaultsPath }), {
     armsRumEndpoint: "https://rum.example.com/x",
@@ -48,6 +49,7 @@ test("环境变量优先于私有默认配置，显式空字符串关闭单项�
       MCODE_ARMS_RUM_ENDPOINT: "",
       MCODE_TELEMETRY_REPORT_ENDPOINT: "https://other.example.com/event",
       MCODE_AUTO_UPDATE: "0",
+      MCODE_ALLOW_TELEMETRY: "1",
     },
     { defaultsPath },
   );
@@ -76,4 +78,17 @@ test("define 以 JSON 字面量注入", () => {
       __MCODE_AUTO_UPDATE_ENABLED__: "true",
     },
   );
+});
+
+test("Mcode 隐私加固：未显式 MCODE_ALLOW_TELEMETRY=1 时即使配置了地址也不启用上报", async () => {
+  const defaultsPath = await writeDefaults("no-allow.json", {
+    MCODE_ARMS_RUM_ENDPOINT: "https://rum.example.com/x",
+    MCODE_TELEMETRY_REPORT_ENDPOINT: "https://report.example.com/event",
+  });
+  const config = await resolveBuildTimeConfig(
+    { MCODE_TELEMETRY_REPORT_ENDPOINT: "https://other.example.com/event" },
+    { defaultsPath },
+  );
+  assert.equal(config.armsRumEndpoint, "");
+  assert.equal(config.telemetryReportEndpoint, "");
 });

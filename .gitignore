@@ -74,3 +74,4 @@ __pycache__/
 *.pyc
 .mcode-runtime
 .local-logs/
+core

@@ -86,6 +86,7 @@ it("附件文件名不能越出临时目录，上传后清理暂存数据", asyn
     });
   try {
     const service = createFeedbackService({
+      apiBaseUrl: "https://feedback.example.com/api/v1",
       credentialService: { load: async () => null, save: async () => {}, delete: async () => {} },
       oauthService: {} as IOAuthService,
       apiClient: { request: vi.fn() },
