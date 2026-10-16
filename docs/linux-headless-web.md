@@ -39,7 +39,7 @@ mcode --version
 
 ## 3. 配置模型
 
-无头机器无法完成 Z.ai / BigModel 的浏览器 OAuth 回调，推荐配置 API Key 类模型：
+无头机器也可以登录 Z.ai / BigModel Coding Plan（二选一）：在 Web 设置 → 模型供应商 点击登录，授权页会在**你自己电脑的浏览器**里打开，服务器端轮询获取结果，不需要回调到服务器本机。也可以配置 API Key 类模型：
 
 - **自定义 OpenAI 兼容 / Anthropic 兼容网关**：复制 [deploy/linux/provider_config.example.json](../deploy/linux/provider_config.example.json) 到 `~/.mcode/v2/provider_config.json`，修改 `baseUrl`、`apiKey`、模型 ID，然后 `chmod 600 ~/.mcode/v2/provider_config.json`。
 - **Z.ai / BigModel API Key**：启动 Web 后在 设置 → 模型供应商 中填写。
@@ -86,7 +86,7 @@ journalctl --user -u mcode-web -f           # 查看日志
 - 拿到带令牌链接的人可以 **以运行 Mcode 的 Linux 用户身份执行任意命令、读写文件**。用专门的系统用户运行，不要用 root。
 - 内网访问是明文 HTTP。只在可信网络使用；跨网络访问请用 Tailscale / WireGuard，或在前面加 HTTPS 反向代理（Caddy、Nginx），不要把端口直接暴露到公网。
 - `~/.mcode/v2/provider_config.json` 与 `~/.config/mcode/web.env` 含密钥，保持 `600` 权限，不要提交到仓库。
-- 手机扫码远程控制（经 Z.ai relay）只在桌面版提供；Linux Web 版在手机上直接用浏览器打开上面的内网地址。
+- 手机扫码远程控制（经 Z.ai relay，默认官方 `zcode.z.ai` 页面）：Web 界面左侧栏底部的手机图标 → 显示二维码，手机扫码即可远程操作当前工作区（仅本机工作区）。配对与中转逻辑在服务器端运行，关闭浏览器后仍保持；拿到二维码的人等同拿到控制权。不需要时设置 `MCODE_WEB_REMOTE_CONTROL=0` 完全关闭。
 
 ## 常见问题
 
@@ -97,4 +97,3 @@ journalctl --user -u mcode-web -f           # 查看日志
 | 浏览器 401 / 页面空白                       | 用终端打印的带 `?token=` 的完整地址打开                                |
 | WebSocket 403                               | 反向代理域名与 Host 不一致，设置 `MCODE_SERVER_ALLOWED_ORIGINS`        |
 | 页面提示未配置模型                          | 检查 `~/.mcode/v2/provider_config.json` 格式与权限，或在设置页添加模型 |
-| 日志里 `marketing-touch.query ... ZodError` | 无害，Z.ai 营销接口校验失败，不影响使用                                |

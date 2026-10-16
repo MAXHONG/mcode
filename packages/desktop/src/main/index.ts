@@ -75,6 +75,7 @@ import {
   DEFAULT_LOCALE,
   TEST_MCODE_ENDPOINT_ORIGIN,
   MCODE_VERSION,
+  MCODE_REMOTE_UPSTREAM_VERSION,
   buildMcodeEndpointUrls,
   resolveWebRemoteControlRelayWsUrl,
   resolveZCodeEndpointOrigin,
@@ -123,6 +124,11 @@ import {
   resolveExplicitStartupWorkspaceBootstrap,
 } from "./startupWorkspaceDeepLinkGate.js";
 import { createWebRemoteControlManager } from "./webRemoteControlManager.js";
+import { setWebRemoteControlRelayNetworkObserver } from "./webRemoteControlTransport.js";
+import {
+  noteWebRemoteRelayConnectAttempt,
+  noteWebRemoteRelayReconnect,
+} from "./desktopNetworkTelemetry.js";
 import { createNodeWebRemoteControlRelayAuthProvider } from "./webRemoteControlRelayAuthProvider.js";
 import { createWebRemoteControlRelayAuthStorageProvider } from "./webRemoteControlRelayAuthStorageProvider.js";
 import { createWebRemoteControlFeatureGate } from "./webRemoteControlFeatureGate.js";
@@ -875,7 +881,10 @@ const armsUserIdentitySync = createArmsUserIdentitySync({
   deviceMid,
   setUser: (user) => armsRum.setConfig("user", user),
 });
-const webRemoteControlAppVersion = MCODE_VERSION || app.getVersion();
+// Mcode：手机远控页面托管在 zcode.z.ai，按 app_version 选择 /remote/v4/<版本>/ 资源；
+// Mcode 自己的版本号（如 3.15.4）在官方 CDN 上不存在会直接 404，必须使用对齐的上游版本。
+const webRemoteControlAppVersion =
+  MCODE_REMOTE_UPSTREAM_VERSION || MCODE_VERSION || app.getVersion();
 const defaultMcodeEndpointUrls = buildMcodeEndpointUrls(DEFAULT_MCODE_ENDPOINT_ORIGIN, {
   appVersion: webRemoteControlAppVersion,
 });
@@ -913,6 +922,10 @@ let startupOpenWorkspaceRequest: ExplicitStartupWorkspaceRequest | null =
       ? { path: startupDeepLinkWorkspacePath, source: "deep-link" }
       : null;
 
+setWebRemoteControlRelayNetworkObserver({
+  noteConnectAttempt: noteWebRemoteRelayConnectAttempt,
+  noteReconnect: noteWebRemoteRelayReconnect,
+});
 const webRemoteControlManager = createWebRemoteControlManager({
   getEndpointUrls: async () => {
     const derived = buildMcodeEndpointUrls(await resolveCurrentMcodeEndpointOrigin(), {

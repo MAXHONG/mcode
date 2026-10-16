@@ -43,6 +43,7 @@ import {
 } from "@mcode/shared";
 import { connectRemote, createRemoteBackend, type RemoteConnection } from "./remote/index.js";
 import { createHostCapabilityStore } from "./hostCapability.js";
+import type { ServerWebRemoteControl } from "./web-remote-control/serverWebRemoteControl.js";
 
 function wrapWebSocket(ws: WebSocket): ISocket {
   const onData = new Emitter<VSBuffer>();
@@ -154,6 +155,8 @@ export interface HttpServerOptions {
   spaFallback?: boolean;
   staticRoot?: string;
   workspaces?: ServerRemoteWorkspaceInfo[];
+  /** 手机扫码远控（经 z.ai relay）；仅 Linux Web 发行版注入。 */
+  webRemoteControl?: Promise<ServerWebRemoteControl> | ServerWebRemoteControl;
 }
 
 function readTrimmedEnv(name: string): string | undefined {
@@ -379,6 +382,58 @@ function staticContentType(filePath: string): string {
   return staticMimeTypes[extname(filePath).toLowerCase()] ?? "application/octet-stream";
 }
 
+/**
+ * 手机扫码远控控制面：/api/web-remote-control/{status,start,refresh,stop}。
+ * 与其它 /api 一样受访问令牌保护；只返回二维码 URL 与状态，配对密钥只存在服务端凭据库。
+ */
+function registerWebRemoteControlRoutes(
+  app: Hono,
+  source: HttpServerOptions["webRemoteControl"],
+): void {
+  const base = "/api/web-remote-control";
+  const resolve = async () => {
+    if (!source) throw new Error("Web remote control is not available on this server");
+    return await source;
+  };
+  const fail = (c: Context, error: unknown) =>
+    c.json({ error: error instanceof Error ? error.message : String(error) }, 500);
+  app.get(`${base}/status`, async (c) => {
+    if (!source) return c.json({ status: "idle", unavailable: true });
+    try {
+      return c.json((await resolve()).getStatus());
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+  app.post(`${base}/start`, async (c) => {
+    try {
+      const body = (await c.req.json().catch(() => ({}))) as { initialTaskId?: unknown };
+      const initialTaskId =
+        typeof body.initialTaskId === "string" && body.initialTaskId.trim()
+          ? body.initialTaskId.trim()
+          : undefined;
+      return c.json(await (await resolve()).start({ initialTaskId }));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+  app.post(`${base}/refresh`, async (c) => {
+    try {
+      return c.json(await (await resolve()).resetPairing());
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+  app.post(`${base}/stop`, async (c) => {
+    try {
+      await (await resolve()).stop();
+      return c.json({ ok: true });
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+}
+
 export function createHttpServer(
   services: ServiceCollection,
   port = 3030,
@@ -419,7 +474,10 @@ export function createHttpServer(
     });
   }
 
-  app.get("/api/server-info", (c) => c.json(createServerInfo(options)));
+  app.get("/api/server-info", (c) =>
+    c.json({ ...createServerInfo(options), webRemoteControl: Boolean(options.webRemoteControl) }),
+  );
+  registerWebRemoteControlRoutes(app, options.webRemoteControl);
   app.post("/api/rpc-host-capability", (c) => c.json(hostCapabilities.issue()));
 
   // 普通 `/ws` 永远是 terminal-client；浏览器/任意客户端设置旧 mode header

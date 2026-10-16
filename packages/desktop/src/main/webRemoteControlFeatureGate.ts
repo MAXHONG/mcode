@@ -1,17 +1,2 @@
-export interface WebRemoteControlFeatureGate {
-  isEnabled(): boolean;
-  assertEnabled(): void;
-}
-
-export function createWebRemoteControlFeatureGate(
-  enabled = true,
-): WebRemoteControlFeatureGate {
-  return {
-    isEnabled: () => enabled,
-    assertEnabled: () => {
-      if (!enabled) {
-        throw new Error("Web remote control is disabled in this build");
-      }
-    },
-  };
-}
+// 已迁移到 @mcode/server（桌面与无界面 Linux Web 版共用同一套 z.ai relay 远控实现）。
+export * from "@mcode/server/web-remote-control/webRemoteControlFeatureGate.js";
