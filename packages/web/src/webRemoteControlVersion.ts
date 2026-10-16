@@ -47,7 +47,7 @@ export function createWebRemoteControlVersionGuard(options: WebRemoteControlVers
           const version = result.desktopAppVersion?.trim();
           if (!version) return result;
           const url = new URL(options.getUrl());
-          if (url.pathname.replace(/\/+$/, "") !== "/remote/v4") return result;
+          if (!url.pathname.replace(/\/+$/, "").endsWith("/remote/v4")) return result;
           if (url.searchParams.get("app_version") === version) return result;
           url.searchParams.set("app_version", version);
           pendingUrl = url.toString();
