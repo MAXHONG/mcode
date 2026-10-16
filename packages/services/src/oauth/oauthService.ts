@@ -15,6 +15,7 @@ import {
   type OAuthUserProfile,
   type UserInfo,
   resolveJwtExpiration,
+  isCredentialDecryptError,
 } from "@mcode/shared";
 import type { ICredentialService } from "../credential/credential.js";
 import { createServiceLogger } from "../logger/serviceLogger.js";
@@ -206,18 +207,43 @@ export class OAuthService implements IOAuthService {
       return { status: "signed-out" };
     }
 
-    // 启动缓存恢复只需要检查共享 mcode JWT；若通过 loadActiveTokenSet 连带读取
-    // provider access token，会把原本后台执行的 BigModel profile 迁移重新阻塞到首屏恢复链路。
-    const zcodeJwtToken = (await this.credentialService.load(MCODE_JWT_TOKEN_KEY))?.trim() ?? "";
-    if (zcodeJwtToken && resolveJwtExpiration(zcodeJwtToken, this.now()).kind === "expired") {
-      serviceLog.info("cached session invalidated because mcode JWT expired", {
+    // 3.15.3：同时检查共享 mcode JWT 与 provider access token 的过期；任一过期都要求重新登录，
+    // 避免带着过期 access token 进入设置页连接套餐时失败。仍不经过 loadActiveTokenSet，
+    // 防止把后台 BigModel profile 迁移阻塞进首屏恢复链路。
+    let tokens: Array<{ key: string; value: string }>;
+    try {
+      tokens = await Promise.all(
+        [MCODE_JWT_TOKEN_KEY, `oauth:${activeProvider}:access_token`].map(async (key) => ({
+          key,
+          value: (await this.credentialService.load(key))?.trim() ?? "",
+        })),
+      );
+    } catch (error) {
+      if (!isCredentialDecryptError(error)) throw error;
+      const cleared = await this.runSessionMutation(async () => {
+        if (this.oauthSessionGeneration !== restoreGeneration) return false;
+        const currentTokens = await this.repo.loadCachedSessionTokens(activeProvider);
+        if (currentTokens !== null) return false;
+        this.oauthSessionGeneration += 1;
+        return true;
+      });
+      return cleared ? { status: "signed-out" } : this.restoreCachedSessionState();
+    }
+    const expired = tokens.find(
+      ({ value }) => value && resolveJwtExpiration(value, this.now()).kind === "expired",
+    );
+    const zcodeJwtToken = tokens[0]?.value ?? "";
+    if (expired) {
+      serviceLog.info("cached session invalidated because login JWT expired", {
         provider: activeProvider,
+        credentialKey: expired.key,
       });
       const invalidated = await this.invalidateExpiredCachedSession(
         restoreGeneration,
         activeProvider,
         profile,
-        zcodeJwtToken,
+        expired.value,
+        expired.key,
       );
       if (!invalidated) {
         return this.restoreCachedSessionState();
@@ -273,11 +299,12 @@ export class OAuthService implements IOAuthService {
     expectedProvider: OAuthProviderId,
     expectedProfile: OAuthUserProfile,
     expectedJwt: string,
+    credentialKey: string = MCODE_JWT_TOKEN_KEY,
   ): Promise<boolean> {
     const invalidated = await this.runSessionMutation(async () => {
       const currentProvider = await this.repo.getActiveProvider();
       const currentProfile = await this.repo.loadUserProfile(expectedProvider);
-      const currentJwt = (await this.credentialService.load(MCODE_JWT_TOKEN_KEY))?.trim() ?? "";
+      const currentJwt = (await this.credentialService.load(credentialKey))?.trim() ?? "";
       if (
         this.oauthSessionGeneration !== expectedGeneration ||
         currentProvider !== expectedProvider ||

@@ -228,9 +228,9 @@ export class ProjectAccessTokenClient {
     loginToken: string,
     request: (url: string, init: RequestInit) => Promise<unknown>,
   ): Promise<KeyLocation> {
-    // 管理接口沿用旧鉴权格式；不能把签发端的 Bearer 约定扩散到所有端点。
+    // 3.15.3：customerInfo 两平台都要求裸业务 token；加 Bearer 会被误判为登录失效。
     const headers = {
-      Authorization: input.family === "zai" ? `Bearer ${loginToken}` : loginToken,
+      Authorization: loginToken,
       "Content-Type": "application/json",
     };
     const customer = customerSchema.safeParse(
@@ -285,7 +285,11 @@ export class ProjectAccessTokenClient {
           "bigmodel-organization": location.organizationId,
           "bigmodel-project": location.projectId,
         }
-      : headers;
+      : {
+          ...headers,
+          // 个人 Key 管理保留既有格式，不能套用 customerInfo 的鉴权约定。
+          Authorization: input.family === "zai" ? `Bearer ${loginToken}` : loginToken,
+        };
     const list = z
       .array(z.unknown())
       .safeParse(readData(await request(url, { method: "GET", headers: keyHeaders })));

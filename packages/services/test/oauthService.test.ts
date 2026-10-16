@@ -241,7 +241,9 @@ describe("oauthService", () => {
       }
       if (url.includes("/api/biz/")) {
         expect(new Headers(init?.headers).get("authorization")).toBe(
-          team && url.includes("/api_keys") && !url.endsWith("/access_tokens")
+          // 3.15.3：customerInfo 用裸业务 token；个人 Key 管理与签发仍用 Bearer。
+          url.endsWith("/getCustomerInfo") ||
+            (team && url.includes("/api_keys") && !url.endsWith("/access_tokens"))
             ? "zai-business-token"
             : "Bearer zai-business-token",
         );
@@ -2977,8 +2979,10 @@ describe("oauthService", () => {
     await credentialServiceStub.save("oauth:bigmodel:user_info", JSON.stringify(cachedUser));
 
     let blockedBigModelTokenLoad = false;
+    // 3.15.3：restore 首屏会先读一次 access_token 检查过期；阻塞的是后台迁移的那次读取。
+    let bigModelTokenLoads = 0;
     vi.spyOn(credentialServiceStub, "load").mockImplementation(async (key) => {
-      if (key === "oauth:bigmodel:access_token" && !blockedBigModelTokenLoad) {
+      if (key === "oauth:bigmodel:access_token" && ++bigModelTokenLoads === 2 && !blockedBigModelTokenLoad) {
         blockedBigModelTokenLoad = true;
         markTokenLoadStarted();
         await tokenLoadCanFinish;
