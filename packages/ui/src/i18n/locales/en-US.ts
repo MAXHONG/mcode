@@ -6529,6 +6529,10 @@ const enUS: Record<string, string> = {
   // Feedback
   "feedback.center.title": "Feedback",
   "feedback.center.description": "Describe the issue and track progress after submitting.",
+  "feedback.mcode.localOnly.title": "Feedback & bug reports",
+  "feedback.mcode.localOnly.description": "To protect your privacy, Mcode never uploads feedback, screenshots or diagnostic logs to any third-party server (including z.ai / Aliyun OSS). Please file issues on GitHub; if you want to attach logs, export them locally, review them, then attach them yourself.",
+  "feedback.mcode.localOnly.openIssues": "Open GitHub Issues",
+  "feedback.mcode.localOnly.exportLogs": "Export logs locally",
   "feedback.center.submitTitle": "Submit feedback",
   "feedback.center.ticketsTitle": "My feedback",
   "feedback.center.backToSubmit": "Back to submit feedback",

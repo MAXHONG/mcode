@@ -100,18 +100,16 @@ export function resolveBuildRemoteCdnReleaseRoots(runtimeEnv: Record<string, str
 export function resolveBuildPackagedAgentTelemetryEnv(
   runtimeEnv: Record<string, string | undefined>,
 ): Record<string, string> {
+  // Mcode 隐私加固：Agent OTLP 遥测默认不编进安装包，必须显式 MCODE_ALLOW_TELEMETRY=1。
+  if (!["1", "true", "yes"].includes(runtimeEnv.MCODE_ALLOW_TELEMETRY?.trim().toLowerCase() ?? "")) {
+    return {};
+  }
   const endpoint = runtimeEnv.MCODE_PACKAGED_AGENT_OTEL_ENDPOINT?.trim();
   const headers = runtimeEnv.MCODE_PACKAGED_AGENT_OTEL_HEADERS?.trim();
   const serviceName =
     runtimeEnv.MCODE_PACKAGED_AGENT_OTEL_SERVICE_NAME?.trim() || "mcode-cli-agent";
 
   if (!endpoint && !headers) {
-    if (
-      runtimeEnv.CI &&
-      (runtimeEnv.CI_COMMIT_TAG || runtimeEnv.CI_COMMIT_BRANCH === "release/current")
-    ) {
-      throw new Error("Packaged Agent OTLP configuration is required for release builds");
-    }
     return {};
   }
   if (!endpoint || !headers) {

@@ -132,6 +132,7 @@ describe("desktop tsup chunk isolation", () => {
     expect(
       resolveBuildPackagedAgentTelemetryEnv({
         MCODE_ENV: "production",
+        MCODE_ALLOW_TELEMETRY: "1",
         MCODE_PACKAGED_AGENT_OTEL_ENDPOINT: "https://arms.example.com/otlp",
         MCODE_PACKAGED_AGENT_OTEL_HEADERS: "x-arms-license-key=write-only",
         MCODE_PACKAGED_AGENT_OTEL_SERVICE_NAME: "mcode-cli-agent",
@@ -148,32 +149,32 @@ describe("desktop tsup chunk isolation", () => {
     expect(() =>
       resolveBuildPackagedAgentTelemetryEnv({
         MCODE_ENV: "production",
+        MCODE_ALLOW_TELEMETRY: "1",
         MCODE_PACKAGED_AGENT_OTEL_ENDPOINT: "https://arms.example.com/otlp",
       }),
     ).toThrow("must be configured together");
     expect(() =>
       resolveBuildPackagedAgentTelemetryEnv({
         MCODE_ENV: "production",
+        MCODE_ALLOW_TELEMETRY: "1",
         MCODE_PACKAGED_AGENT_OTEL_ENDPOINT: "http://arms.example.com/otlp",
         MCODE_PACKAGED_AGENT_OTEL_HEADERS: "x-arms-license-key=write-only",
       }),
     ).toThrow("must use HTTPS in production");
   });
 
-  it("release/current 与 Tag 构建缺少 Agent OTLP 配置时应失败，普通开发构建保持 Noop", () => {
+  it("Mcode 隐私加固：未显式 MCODE_ALLOW_TELEMETRY=1 时 Agent OTLP 一律不编入", () => {
     expect(resolveBuildPackagedAgentTelemetryEnv({})).toEqual({});
-    expect(() =>
+    expect(resolveBuildPackagedAgentTelemetryEnv({ CI: "true", CI_COMMIT_TAG: "v3.6.0" })).toEqual(
+      {},
+    );
+    expect(
       resolveBuildPackagedAgentTelemetryEnv({
-        CI: "true",
-        CI_COMMIT_BRANCH: "release/current",
+        MCODE_ENV: "production",
+        MCODE_PACKAGED_AGENT_OTEL_ENDPOINT: "https://arms.example.com/otlp",
+        MCODE_PACKAGED_AGENT_OTEL_HEADERS: "x-arms-license-key=write-only",
       }),
-    ).toThrow("required for release builds");
-    expect(() =>
-      resolveBuildPackagedAgentTelemetryEnv({
-        CI: "true",
-        CI_COMMIT_TAG: "v3.6.0",
-      }),
-    ).toThrow("required for release builds");
+    ).toEqual({});
   });
 
   it("安装包身份与后端环境作为两个编译期常量注入每个 bundle", () => {

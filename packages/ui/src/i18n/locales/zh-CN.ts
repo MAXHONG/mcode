@@ -6235,6 +6235,10 @@ const zhCN: Record<string, string> = {
   // 反馈
   "feedback.center.title": "问题上报",
   "feedback.center.description": "描述问题即可，提交后可查看处理进展。",
+  "feedback.mcode.localOnly.title": "反馈与问题报告",
+  "feedback.mcode.localOnly.description": "为保护你的隐私，Mcode 不会把反馈、截图或诊断日志上传到任何第三方服务器（包括 z.ai / 阿里云 OSS）。请在 GitHub Issues 提交问题；如需附带日志，可先导出到本地，检查内容后再自行上传。",
+  "feedback.mcode.localOnly.openIssues": "打开 GitHub Issues",
+  "feedback.mcode.localOnly.exportLogs": "导出日志到本地",
   "feedback.center.submitTitle": "提交反馈",
   "feedback.center.ticketsTitle": "我的反馈",
   "feedback.center.backToSubmit": "返回提交反馈",

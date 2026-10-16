@@ -59,7 +59,40 @@ function buildDeviceSnapshot(): FeedbackDeviceInfo {
   };
 }
 
+/**
+ * Mcode 隐私加固：Mcode 是非官方分支，反馈工单与诊断日志不应上传到 z.ai 后端 / 阿里云 OSS。
+ * 默认禁用全部远端反馈调用；只有用户显式设置 MCODE_FEEDBACK_API_BASE（自建反馈服务）才启用。
+ */
+export const MCODE_FEEDBACK_DISABLED_MESSAGE =
+  "Mcode 不会把反馈或日志上传到第三方服务器。请在 https://github.com/MAXHONG/mcode/issues 提交问题，日志可通过「帮助 → 导出日志」保存到本地后自行附上。";
+
+export function isRemoteFeedbackEnabled(explicit?: string): boolean {
+  return Boolean(explicit?.trim() || process.env.MCODE_FEEDBACK_API_BASE?.trim());
+}
+
+function remoteFeedbackDisabled(): never {
+  throw new Error(MCODE_FEEDBACK_DISABLED_MESSAGE);
+}
+
 export function createFeedbackService(options: CreateFeedbackServiceOptions): IFeedbackService {
+  const service = createRemoteFeedbackService(options);
+  if (isRemoteFeedbackEnabled(options.apiBaseUrl))
+    return { ...service, isRemoteEnabled: async () => true };
+  return {
+    ...service,
+    isRemoteEnabled: async () => false,
+    create: async () => remoteFeedbackDisabled(),
+    list: async () => ({ items: [], total: 0 }),
+    get: async () => remoteFeedbackDisabled(),
+    comment: async () => remoteFeedbackDisabled(),
+    uploadAttachment: async () => remoteFeedbackDisabled(),
+    uploadAttachmentWithProgress: async () => remoteFeedbackDisabled(),
+    uploadAttachmentData: async () => remoteFeedbackDisabled(),
+    attachLogsFromExport: async () => remoteFeedbackDisabled(),
+  };
+}
+
+function createRemoteFeedbackService(options: CreateFeedbackServiceOptions): IFeedbackService {
   const apiBaseUrl = resolveApiBaseUrl(options.apiBaseUrl);
   function getHostDeviceMid(): string | undefined {
     return options.getDeviceMid?.()?.trim() || undefined;

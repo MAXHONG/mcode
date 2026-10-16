@@ -21,7 +21,23 @@ export function createMarketingTouchService(options: {
   baseUrl: string;
   appVersion: string;
   onSnapshot?: (snapshot: ReturnType<typeof parseMarketingTouchResponse>) => void;
+  /** Mcode 隐私加固：默认不向 z.ai 拉取营销弹窗/上报点击（会携带设备 ID 与登录 JWT）。 */
+  enabled?: boolean;
 }): IMarketingTouchService {
+  if (options.enabled !== true) {
+    return {
+      async query({ locale }) {
+        return {
+          serverTime: Date.now(),
+          language: locale,
+          deliveries: [],
+          rejectedCount: 0,
+          scope: randomUUID(),
+        };
+      },
+      async report() {},
+    };
+  }
   let previousToken: string | undefined;
   let scope = randomUUID();
   async function context(locale: "zh-CN" | "en-US") {

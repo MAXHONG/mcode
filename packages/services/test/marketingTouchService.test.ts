@@ -15,6 +15,7 @@ function fixture(createService = createMarketingTouchService) {
     getDeviceMid: () => "550e8400-e29b-41d4-a716-446655440000",
     baseUrl: "https://api.example.com",
     appVersion: "3.11.2",
+    enabled: true,
   });
   return {
     service,
@@ -137,5 +138,27 @@ describe("MarketingTouchService boot request sequence", () => {
     const f = fixture(createService);
     await f.service.query({ locale: "en-US" });
     expect(sequences(f)).toEqual(["0"]);
+  });
+});
+
+describe("Mcode 隐私加固", () => {
+  it("默认不发起营销拉取与上报", async () => {
+    const request = vi.fn();
+    const service = createMarketingTouchService({
+      apiClient: { request },
+      getToken: async () => "jwt",
+      getDeviceMid: () => "550e8400-e29b-41d4-a716-446655440000",
+      baseUrl: "https://api.example.com",
+      appVersion: "3.15.4",
+    });
+    const snapshot = await service.query({ locale: "zh-CN" });
+    expect(snapshot.deliveries).toEqual([]);
+    await service.report({
+      locale: "zh-CN",
+      scope: snapshot.scope,
+      campaignId: "c",
+      actionType: "confirm",
+    });
+    expect(request).not.toHaveBeenCalled();
   });
 });
