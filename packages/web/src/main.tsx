@@ -1484,7 +1484,8 @@ async function bootstrapExternalRelayWebRemoteControl(params: URLSearchParams): 
   let currentTaskId: string | undefined;
   let currentRecoveryId: string | undefined;
   let nextBridgeGeneration = 0;
-  const checkVersionOnRecovery = window.location.pathname.replace(/\/+$/, "") === "/remote/v4";
+  // Mcode 自托管时路由带前缀（如 /mcode/remote/v4），按后缀判断 v4 页面。
+  const checkVersionOnRecovery = window.location.pathname.replace(/\/+$/, "").endsWith("/remote/v4");
   let disposeVersionNotice: (() => void) | undefined;
   const versionGuard = createWebRemoteControlVersionGuard({
     requestBootstrap: () => requestBootstrap(),
