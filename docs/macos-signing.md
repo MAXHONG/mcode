@@ -43,7 +43,3 @@ base64 -w0 devid.p12   # 填入 MAC_CERT_P12_BASE64
 spctl -a -vvv -t install Mcode.dmg     # accepted, source=Notarized Developer ID
 xcrun stapler validate Mcode.dmg
 ```
-
-## 工作流改动
-
-`release-desktop.yml` 的签名/公证步骤见 `docs/macos-signing-workflow.patch`，在仓库根目录执行 `git apply docs/macos-signing-workflow.patch` 即可应用。
