@@ -12,6 +12,64 @@ export const TEST_ZAI_BUSINESS_BASE_URL = "https://api.z.ai";
 export const DEFAULT_ZAI_OAUTH_CLIENT_ID = "client_P8X5CMWmlaRO9gyO-KSqtg";
 export const TEST_ZAI_OAUTH_CLIENT_ID = "client_P8X5CMWmlaRO9gyO-KSqtg";
 export const DEFAULT_WEB_REMOTE_CONTROL_RELAY_WS_URL = "wss://zcode.z.ai/ws";
+/**
+ * Mcode 自建远控中转（deploy/remote-relay，Cloudflare Worker）：协议兼容官方 relay V1，
+ * 同域托管 Mcode 品牌手机页。Mcode 默认使用自建中转，z.ai 官方 relay 作为备用。
+ */
+export const MCODE_SELF_HOSTED_REMOTE_ORIGIN = "https://remote.hjh.im";
+export const MCODE_SELF_HOSTED_RELAY_WS_URL = "wss://remote.hjh.im/ws";
+export const MCODE_SELF_HOSTED_REMOTE_PAGE_URL = `${MCODE_SELF_HOSTED_REMOTE_ORIGIN}/remote/v4`;
+
+/** 手机远控走哪条中转：mcode = 自建（默认），zai = z.ai 官方（备用）。 */
+export type WebRemoteControlRelayProvider = "mcode" | "zai";
+export const DEFAULT_WEB_REMOTE_CONTROL_RELAY_PROVIDER: WebRemoteControlRelayProvider = "mcode";
+
+export function normalizeWebRemoteControlRelayProvider(
+  value: unknown,
+): WebRemoteControlRelayProvider {
+  if (typeof value === "string") {
+    const normalized = value.trim().toLowerCase();
+    if (normalized === "zai" || normalized === "official" || normalized === "z.ai") return "zai";
+  }
+  return DEFAULT_WEB_REMOTE_CONTROL_RELAY_PROVIDER;
+}
+
+export interface ResolvedWebRemoteControlRelayEndpoints {
+  provider: WebRemoteControlRelayProvider;
+  relayWsUrl: string;
+  remoteUrl: string;
+}
+
+/**
+ * 统一解析手机远控的中转与手机页地址。优先级：显式环境变量覆盖 > 所选 provider 默认值。
+ * `officialRemoteUrl` 是按 endpoint 与 app_version 推导的官方页面（/remote/v4）。
+ */
+export function resolveWebRemoteControlRelayEndpoints(options: {
+  provider?: unknown;
+  endpointOrigin?: string | null | undefined;
+  officialRemoteUrl: string;
+  relayWsOverride?: string | null | undefined;
+  remoteUrlOverride?: string | null | undefined;
+}): ResolvedWebRemoteControlRelayEndpoints {
+  const provider = normalizeWebRemoteControlRelayProvider(options.provider);
+  const relayWsOverride = options.relayWsOverride?.trim();
+  const remoteUrlOverride = options.remoteUrlOverride?.trim();
+  if (provider === "zai") {
+    return {
+      provider,
+      relayWsUrl: resolveWebRemoteControlRelayWsUrl({
+        endpointOrigin: options.endpointOrigin,
+        overrideUrl: relayWsOverride,
+      }),
+      remoteUrl: remoteUrlOverride || options.officialRemoteUrl,
+    };
+  }
+  return {
+    provider,
+    relayWsUrl: relayWsOverride || MCODE_SELF_HOSTED_RELAY_WS_URL,
+    remoteUrl: remoteUrlOverride || MCODE_SELF_HOSTED_REMOTE_PAGE_URL,
+  };
+}
 export const WEB_REMOTE_CONTROL_V4_MIN_APP_VERSION = "3.4.0";
 
 export interface BuildMcodeEndpointUrlsOptions {

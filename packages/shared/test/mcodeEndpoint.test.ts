@@ -23,6 +23,10 @@ import {
   resolveBigModelApiOrigin,
   resolveRuntimeProductEndpointConfig,
   resolveWebRemoteControlRelayWsUrl,
+  resolveWebRemoteControlRelayEndpoints,
+  normalizeWebRemoteControlRelayProvider,
+  MCODE_SELF_HOSTED_RELAY_WS_URL,
+  MCODE_SELF_HOSTED_REMOTE_PAGE_URL,
   resolveZaiBusinessBaseUrl,
   resolveZaiOAuthClientId,
   resolveZaiOAuthOrigin,
@@ -165,6 +169,47 @@ describe("mcodeEndpoint", () => {
         endpointOrigin: "http://localhost:3030",
       }),
     ).toBe(DEFAULT_WEB_REMOTE_CONTROL_RELAY_WS_URL);
+  });
+
+  it("defaults phone remote control to the Mcode self-hosted relay with z.ai as fallback", () => {
+    const officialRemoteUrl = "https://zcode.z.ai/remote/v4";
+    expect(
+      resolveWebRemoteControlRelayEndpoints({
+        endpointOrigin: DEFAULT_MCODE_ENDPOINT_ORIGIN,
+        officialRemoteUrl,
+      }),
+    ).toEqual({
+      provider: "mcode",
+      relayWsUrl: MCODE_SELF_HOSTED_RELAY_WS_URL,
+      remoteUrl: MCODE_SELF_HOSTED_REMOTE_PAGE_URL,
+    });
+    expect(MCODE_SELF_HOSTED_RELAY_WS_URL).toBe("wss://remote.hjh.im/ws");
+    expect(MCODE_SELF_HOSTED_REMOTE_PAGE_URL).toBe("https://remote.hjh.im/remote/v4");
+    expect(
+      resolveWebRemoteControlRelayEndpoints({
+        provider: "zai",
+        endpointOrigin: DEFAULT_MCODE_ENDPOINT_ORIGIN,
+        officialRemoteUrl,
+      }),
+    ).toEqual({
+      provider: "zai",
+      relayWsUrl: DEFAULT_WEB_REMOTE_CONTROL_RELAY_WS_URL,
+      remoteUrl: officialRemoteUrl,
+    });
+    expect(
+      resolveWebRemoteControlRelayEndpoints({
+        provider: "mcode",
+        officialRemoteUrl,
+        relayWsOverride: " ws://127.0.0.1:8787/ws ",
+        remoteUrlOverride: "http://127.0.0.1:8787/remote/v4",
+      }),
+    ).toMatchObject({
+      relayWsUrl: "ws://127.0.0.1:8787/ws",
+      remoteUrl: "http://127.0.0.1:8787/remote/v4",
+    });
+    expect(normalizeWebRemoteControlRelayProvider("official")).toBe("zai");
+    expect(normalizeWebRemoteControlRelayProvider("garbage")).toBe("mcode");
+    expect(normalizeWebRemoteControlRelayProvider(undefined)).toBe("mcode");
   });
 
   it("allows an explicit web remote control relay url override", () => {

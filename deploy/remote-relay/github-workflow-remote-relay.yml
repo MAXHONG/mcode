@@ -1,0 +1,30 @@
+name: Deploy remote relay (remote.hjh.im)
+
+# 手动部署 Mcode 自建远控中转 + 手机页到 Cloudflare。需要仓库 Secrets：
+# CLOUDFLARE_API_TOKEN、CLOUDFLARE_ACCOUNT_ID。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: node deploy/remote-relay/scripts/build-page.mjs
+        env:
+          NODE_OPTIONS: --max-old-space-size=8192
+      - run: npx wrangler@4 deploy
+        working-directory: deploy/remote-relay
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      - run: RELAY_WS_URL=wss://remote.hjh.im/ws node --test deploy/remote-relay/test/relay.test.mjs
