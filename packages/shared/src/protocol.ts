@@ -396,6 +396,12 @@ export interface AppSettings {
   webRemoteControlExternalRelayDevice?: {
     deviceSid: string;
   };
+  /** 手机远控使用的中转：mcode = Mcode 自建（默认），zai = z.ai 官方（备用）。 */
+  webRemoteControlRelayProvider?: "mcode" | "zai";
+  /** Mcode 自建中转上的设备身份（与 z.ai 官方身份分开保存，切换中转互不影响）。 */
+  webRemoteControlSelfHostedRelayDevice?: {
+    deviceSid: string;
+  };
   /** 上次成功开启 Web 远控时的目标；缺失表示用户已明确关闭，不自动恢复。 */
   webRemoteControlLastEnabledContext?: {
     workspacePath: string;

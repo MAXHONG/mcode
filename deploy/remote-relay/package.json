@@ -1,0 +1,11 @@
+{
+  "name": "mcode-remote-relay",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build:page": "node scripts/build-page.mjs",
+    "dev": "wrangler dev --local",
+    "deploy": "wrangler deploy",
+    "test": "node --test test/relay.test.mjs"
+  }
+}

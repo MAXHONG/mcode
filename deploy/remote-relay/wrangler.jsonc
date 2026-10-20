@@ -1,0 +1,19 @@
+{
+  // Mcode 自建远控中转 + 手机远控页面。部署：deploy/remote-relay/README.md
+  "$schema": "../../node_modules/wrangler/config-schema.json",
+  "name": "mcode-remote-relay",
+  "main": "src/index.ts",
+  "compatibility_date": "2026-09-15",
+  "workers_dev": false,
+  "routes": [{ "pattern": "remote.hjh.im", "custom_domain": true }],
+  "assets": {
+    "directory": "./dist",
+    "binding": "ASSETS",
+    "run_worker_first": true
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "RELAY", "class_name": "RelayHub" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["RelayHub"] }],
+  "observability": { "enabled": true, "head_sampling_rate": 0.1 }
+}

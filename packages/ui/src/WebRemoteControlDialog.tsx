@@ -6,7 +6,11 @@ import type {
   WebRemoteControlFailure,
   WebRemoteControlStatus,
 } from "@mcode/shared";
-import { resolveWebRemoteControlWorkspaceKey } from "@mcode/shared";
+import {
+  normalizeWebRemoteControlRelayProvider,
+  resolveWebRemoteControlWorkspaceKey,
+  type WebRemoteControlRelayProvider,
+} from "@mcode/shared";
 import {
   Bot as BotIcon,
   CopyIcon,
@@ -30,6 +34,7 @@ import {
 import { toast } from "@/components/ui/toast.js";
 import { useConfirmDialog } from "@/hooks/useConfirmDialog.js";
 import { usePlatform } from "@/hooks/usePlatform.js";
+import { useOptionalServices } from "@/hooks/useServices.js";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";
 import { logger } from "@/logger.js";
 import { getBotProviderRegionTagLabelId } from "@/botsUi.js";
@@ -282,6 +287,28 @@ export const WebRemoteControlDialog = memo(function WebRemoteControlDialogCompon
   const [botsDialogOpen, setBotsDialogOpen] = useState(false);
   const [botEntryProvider, setBotEntryProvider] =
     useState<RemoteControlBotProvider | null>(null);
+  // 只读当前中转设置；没有 ServiceProvider（如独立渲染）时按默认的 Mcode 自建中转处理。
+  const settingService = useOptionalServices()?.settingService;
+  const [relayProvider, setRelayProvider] = useState<WebRemoteControlRelayProvider>(
+    normalizeWebRemoteControlRelayProvider(undefined),
+  );
+  useEffect(() => {
+    if (!open || !settingService) return;
+    let cancelled = false;
+    void settingService
+      .get()
+      .then((current) => {
+        if (!cancelled) {
+          setRelayProvider(
+            normalizeWebRemoteControlRelayProvider(current.webRemoteControlRelayProvider),
+          );
+        }
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [open, settingService]);
 
   const statusLabel = useMemo(
     () => getStatusLabel(status, intl.formatMessage),
@@ -556,6 +583,45 @@ export const WebRemoteControlDialog = memo(function WebRemoteControlDialogCompon
     }
   };
 
+  // Mcode：切换手机远控中转（自建 remote.hjh.im / z.ai 官方备用）。保存设置后重启远控，
+  // main 在 start 时按新设置解析 relay 与手机页地址，二维码随之更新；两条中转的设备身份分开保存。
+  const handleRelayProviderChange = async (nextProvider: WebRemoteControlRelayProvider) => {
+    if (nextProvider === relayProvider || loading) {
+      return;
+    }
+    setLoading(true);
+    try {
+      if (!settingService) {
+        throw new Error("settings unavailable");
+      }
+      await settingService.update({ webRemoteControlRelayProvider: nextProvider });
+      setRelayProvider(nextProvider);
+      await platform.stopWebRemoteControl();
+      const startResult = await platform.startWebRemoteControl({
+        workspacePath,
+        workspaceIdentity,
+        remoteSessionId,
+        initialTaskId,
+      });
+      setStatus(startResult.status === "cancelled" ? { status: "idle" } : startResult);
+      toast(
+        intl.formatMessage({
+          id:
+            nextProvider === "mcode"
+              ? "webRemoteControl.relay.switchedMcode"
+              : "webRemoteControl.relay.switchedZai",
+        }),
+      );
+      logger.info("[WebRemoteControlDialog] 已切换手机远控中转", { relayProvider: nextProvider });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      toast(intl.formatMessage({ id: "webRemoteControl.startFailed" }, { error: message }));
+      logger.error("[WebRemoteControlDialog] 切换手机远控中转失败", message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleStop = async () => {
     setLoading(true);
     try {
@@ -770,6 +836,28 @@ export const WebRemoteControlDialog = memo(function WebRemoteControlDialogCompon
                       {intl.formatMessage({ id: "webRemoteControl.copyLink" })}
                     </Button>
                   </div>
+                </div>
+                <div
+                  data-testid="web-remote-control-relay-switch"
+                  className="mb-3 flex flex-wrap items-center gap-2 rounded-lg bg-surface px-3 py-2"
+                >
+                  <div className="min-w-40 flex-1 text-ui-base/relaxed text-foreground-subtle">
+                    {intl.formatMessage({ id: "webRemoteControl.relay.label" })}
+                  </div>
+                  {(["mcode", "zai"] as const).map((provider) => (
+                    <Button
+                      key={provider}
+                      type="button"
+                      variant={relayProvider === provider ? "default" : "outline"}
+                      size="default"
+                      className="shrink-0 enabled:cursor-pointer"
+                      aria-pressed={relayProvider === provider}
+                      disabled={loading}
+                      onClick={() => void handleRelayProviderChange(provider)}
+                    >
+                      {intl.formatMessage({ id: `webRemoteControl.relay.${provider}` })}
+                    </Button>
+                  ))}
                 </div>
                 <div className="flex min-h-0 flex-1 items-center justify-center rounded-xl border border-dashed border-border bg-background-alt p-4">
                   {qrDataUrl ? (
