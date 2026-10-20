@@ -83,7 +83,8 @@ jobs:
     name: Build ${{ matrix.name }}
     needs: plan
     runs-on: ${{ matrix.runner }}
-    timeout-minutes: 120
+    # 苹果公证偶尔会排队很久（新账号首次可达数小时），放宽到 GitHub 托管 runner 的上限 6 小时，避免超时取消。
+    timeout-minutes: 360
     strategy:
       fail-fast: false
       # Linux 在旧 glibc 基线（Ubuntu 22.04）上构建，产物兼容面更广。
@@ -211,7 +212,7 @@ jobs:
             echo "Notarizing $dmg"
             xcrun notarytool submit "$dmg" \
               --key "$APPLE_API_KEY" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER" \
-              --wait --timeout 60m --output-format json | tee "$RUNNER_TEMP/notary.json"
+              --wait --timeout 150m --output-format json | tee "$RUNNER_TEMP/notary.json"
             status="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["status"])' "$RUNNER_TEMP/notary.json")"
             if [ "$status" != "Accepted" ]; then
               id="$(python3 -c 'import json,sys;print(json.load(open(sys.argv[1]))["id"])' "$RUNNER_TEMP/notary.json")"
