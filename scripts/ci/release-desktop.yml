@@ -229,8 +229,18 @@ jobs:
               echo "::error::dmg 公证失败：$status"
               exit 1
             fi
-            xcrun stapler staple "$dmg"
-            xcrun stapler validate "$dmg"
+            # staple/validate 要访问苹果 CloudKit 取票据，偶发网络中断（Error 68 / -1005）；重试几次。
+            for attempt in 1 2 3 4 5; do
+              if xcrun stapler staple "$dmg" && xcrun stapler validate "$dmg"; then
+                break
+              fi
+              if [ "$attempt" = 5 ]; then
+                echo "::error::stapler 连续失败：$dmg"
+                exit 1
+              fi
+              echo "stapler 第 $attempt 次失败，$((attempt * 20)) 秒后重试"
+              sleep $((attempt * 20))
+            done
           done
           # electron-builder 的 blockmap 基于 staple 前的 dmg 计算，staple 后需重新生成，避免增量更新校验失败。
           # （mac 自动更新走 zip，dmg.blockmap 仅作参考，这里直接删除过期文件。）
