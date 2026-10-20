@@ -31,6 +31,6 @@ RELAY_WS_URL=wss://remote.hjh.im/ws node --test test/relay.test.mjs # 线上
 MCODE_RELAY_IT_URL=wss://remote.hjh.im/ws npx vitest run packages/server/test/selfHostedRelayIntegration.test.ts
 ```
 
-## CI 自动部署（可选）
+## CI 自动部署
 
-把 `github-workflow-remote-relay.yml` 复制到 `.github/workflows/remote-relay.yml`，并在仓库 Secrets 配置 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID`，即可在 Actions 手动触发部署。
+`.github/workflows/remote-relay.yml`：在仓库 Secrets 配置 `CLOUDFLARE_API_TOKEN`、`CLOUDFLARE_ACCOUNT_ID` 后，可在 Actions 手动触发：构建手机页、部署 Worker、跑线上协议测试。
