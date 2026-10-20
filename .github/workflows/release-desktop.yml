@@ -26,6 +26,11 @@ on:
         required: false
         default: false
         type: boolean
+      platforms:
+        description: "补发：只构建这些平台并追加到已有 Release（逗号分隔，如 mac-x64 或 mac-x64,win-arm64）；留空构建全部"
+        required: false
+        default: ""
+        type: string
 
 # 安全：默认只读。只有最后的 release job 需要写 Release；构建 job 会执行大量第三方
 # 依赖代码，不能拿到可写的 GITHUB_TOKEN（见各 job 的 permissions 与 persist-credentials）。
@@ -62,6 +67,7 @@ jobs:
       - id: plan
         env:
           MAC_ONLY: ${{ inputs.mac_only }}
+          PLATFORMS: ${{ inputs.platforms }}
         run: |
           ALL='[
             {"name":"macOS arm64","runner":"macos-14","os":"mac","arch":"arm64"},
@@ -73,6 +79,9 @@ jobs:
           ]'
           if [ "$MAC_ONLY" = "true" ]; then
             M=$(echo "$ALL" | jq -c '[.[] | select(.os == "mac")]')
+          elif [ -n "$PLATFORMS" ]; then
+            M=$(echo "$ALL" | jq -c --arg p "$PLATFORMS" '($p | gsub(" ";"") | split(",")) as $want | [.[] | select((.os + "-" + .arch) as $k | $want | index($k))]')
+            [ "$(echo "$M" | jq length)" -gt 0 ] || { echo "::error::platforms 没有匹配的平台：$PLATFORMS（可选 mac-arm64, mac-x64, win-x64, win-arm64, linux-x64, linux-arm64）"; exit 1; }
           else
             M=$(echo "$ALL" | jq -c '.')
           fi
@@ -291,7 +300,7 @@ jobs:
   # 的 x64 与 arm64（原生模块按平台分目录随包分发）。在 Linux 上构建并做发行包冒烟测试。
   build-cli:
     name: Build CLI / Web bundle
-    if: ${{ inputs.mac_only != true }}
+    if: ${{ inputs.mac_only != true && inputs.platforms == '' }}
     runs-on: ubuntu-22.04
     timeout-minutes: 60
     steps:
@@ -339,10 +348,12 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  # 单个平台失败（例如苹果公证排队超时）不再阻塞整个发布：已成功的平台先发，
+  # 失败的平台之后用 platforms 输入补发，追加到同一 Release。
   release:
     name: Publish GitHub Release
     needs: [build, build-cli]
-    if: ${{ inputs.mac_only != true }}
+    if: ${{ always() && inputs.mac_only != true && needs.build.result != 'cancelled' && (needs.build-cli.result == 'success' || (inputs.platforms != '' && needs.build-cli.result == 'skipped')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -380,6 +391,18 @@ jobs:
           path: dist-release
           merge-multiple: true
 
+      # 补发时先取回同一 Release 已有的更新清单，合并后再整体覆盖，避免丢掉其他平台的条目。
+      - name: Fetch existing update manifests (back-fill)
+        if: ${{ inputs.platforms != '' }}
+        working-directory: dist-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+        run: |
+          gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null || { echo "::error::补发需要已存在的 Release：$TAG"; exit 1; }
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" -p 'latest*.yml' --clobber || true
+          ls -la
+
       - name: Assemble auto-update manifests
         working-directory: dist-release
         run: |
@@ -390,12 +413,25 @@ jobs:
 
       - name: Generate checksums
         working-directory: dist-release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          BACKFILL: ${{ inputs.platforms != '' }}
         run: |
-          sha256sum $(ls | grep -v '^latest.*\.yml$' | grep -v '^latest\.json$') > SHA256SUMS.txt
+          sha256sum $(ls | grep -v '^latest.*\.yml$' | grep -v '^latest\.json$' | grep -v '^SHA256SUMS\.txt$') > SHA256SUMS.new
+          if [ "$BACKFILL" = "true" ] && gh release download "$TAG" --repo "$GITHUB_REPOSITORY" -p SHA256SUMS.txt -O SHA256SUMS.old 2>/dev/null; then
+            # 已有条目保留，本次重建的同名文件以新哈希为准。
+            awk 'NR==FNR { new[$2]=1; print; next } !($2 in new)' SHA256SUMS.new SHA256SUMS.old | sort -k2 > SHA256SUMS.txt
+            rm -f SHA256SUMS.old
+          else
+            mv SHA256SUMS.new SHA256SUMS.txt
+          fi
+          rm -f SHA256SUMS.new
           cat SHA256SUMS.txt
 
       # 发布前确认命令行发行包三件套齐全，并与 latest.json 中的版本、哈希一致。
       - name: Verify CLI bundle assets
+        if: ${{ inputs.platforms == '' }}
         working-directory: dist-release
         env:
           TAG: ${{ steps.tag.outputs.tag }}
@@ -418,8 +454,15 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.tag.outputs.tag }}
           PRERELEASE: ${{ inputs.prerelease }}
+          BACKFILL: ${{ inputs.platforms != '' }}
+          BUILD_RESULT: ${{ needs.build.result }}
         shell: bash
         run: |
+          # 补发：只追加/覆盖本次构建的资产与合并后的清单，保留 Release 说明（由维护者在补发后更新）。
+          if [ "$BACKFILL" = "true" ]; then
+            gh release upload "$TAG" dist-release/* --clobber
+            exit 0
+          fi
           NOTES_FILE=$(mktemp)
           cat > "$NOTES_FILE" <<EOF
           Mcode ${TAG} — 基于 ZCode 开源项目改名构建（保留 Z.ai / BigModel 登录）。
@@ -436,23 +479,26 @@ jobs:
           ## 命令行 / Web 版（无界面 Linux 服务器可用）
           - \`mcode-*.tar.gz\`：TUI + Web + Agent 运行包，需要 Node.js 24+；\`install.sh\` 自动校验 SHA-256 后安装 \`mcode\` 命令。
           - 安装：\`curl -fsSL https://github.com/MAXHONG/mcode/releases/latest/download/install.sh | sh\`
-            （私有仓库请先下载 \`install.sh\` 与 \`mcode-*.tar.gz\`，再执行 \`MCODE_DIST_ARCHIVE=./mcode-<版本>.tar.gz sh install.sh\`）
           - 启动：\`mcode --web --host 0.0.0.0 --port 3030 --no-open\`，浏览器打开终端打印的带 token 地址。
           - 部署与 systemd 开机自启：仓库 \`docs/linux-headless-web.md\`。
 
           ## 自动更新
           - Windows / Linux 桌面版：应用内检测到新版本后可直接下载并在重启时安装。
-          - macOS：安装包未签名，应用内提示新版本后会打开本页面，请下载新的 DMG 覆盖安装。
+          - macOS：应用内提示新版本后会打开本页面，请下载新的 DMG 覆盖安装。
           - 命令行 / Web 版：重新执行 \`install.sh\` 即升级到最新版本，用户数据保留。
 
           ## 安装提示
-          - 本构建没有苹果开发者证书（仅 ad-hoc 签名）。macOS 首次打开提示“无法验证开发者”时，
-            到 系统设置 → 隐私与安全性 点「仍要打开」；若仍提示“已损坏”，执行：
-            \`sudo xattr -rd com.apple.quarantine /Applications/Mcode.app\`
-          - Windows SmartScreen 提示时选择「更多信息 → 仍要运行」。
+          - macOS 安装包使用 Developer ID 签名并经苹果公证，可直接打开。
+          - Windows 安装包未做代码签名，SmartScreen 提示时选择「更多信息 → 仍要运行」。
 
           校验值见 \`SHA256SUMS.txt\`。
           EOF
+          if [ "$BUILD_RESULT" != "success" ]; then
+            cat >> "$NOTES_FILE" <<'EOF'
+
+          > 注意：本次有平台构建失败（常见原因是苹果公证排队超时），对应安装包暂缺，将用 Release Desktop 工作流的 platforms 输入补发到本 Release。
+          EOF
+          fi
           FLAGS=()
           if [ "$PRERELEASE" = "true" ]; then FLAGS+=(--prerelease); fi
           if gh release view "$TAG" >/dev/null 2>&1; then

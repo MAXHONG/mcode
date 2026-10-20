@@ -7,7 +7,7 @@
 3. **文档**：更新 `README.md` 与 `README.en.md` 的「更新 / Updates」章节（日期、版本、变更摘要），以及所有受影响的文档（`REBRAND.md`、`docs/`、`specs/`、`deploy/` 等），保证文档与代码一致。
 4. **合并到仓库**：在分支上提交 → 推送 → 创建 PR → 合并到 `main`。不得把未合并的代码作为发布版本。
 5. **发布 Release**：在 `main` 合并后的提交上打 `v<version>` 标签并推送，由 `.github/workflows/release-desktop.yml` 构建全部平台桌面安装包与命令行 / Web 发行包，并发布为最新 GitHub Release。
-6. **核对产物**：确认工作流成功，Release 资产齐全（各平台安装包、`latest*.yml`、`SHA256SUMS.txt`、`mcode-<version>.tar.gz`、`latest.json`、`install.sh`），版本号正确。失败时修复后重新发布，不得留下半成品 Release。
+6. **核对产物**：确认工作流成功，Release 资产齐全（各平台安装包、`latest*.yml`、`SHA256SUMS.txt`、`mcode-<version>.tar.gz`、`latest.json`、`install.sh`），版本号正确。失败时修复后重新发布，不得留下半成品 Release。个别平台失败（如苹果公证排队超时）时，已成功平台照常发布，Release 说明注明暂缺；随后用 Release Desktop 工作流的 `platforms` 输入补发同一标签，补齐后更新 Release 说明（见 `docs/macos-signing.md`）。
 
 令牌、密钥只通过环境变量 / 临时文件使用，绝不写入仓库、提交信息、git 配置或日志。
 
