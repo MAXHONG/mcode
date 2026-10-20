@@ -262,7 +262,13 @@ jobs:
             codesign --verify --deep --strict --verbose=2 "$app"
             codesign -dv --verbose=2 "$app" 2>&1 | grep -E "Identifier|Authority|TeamIdentifier|Signature|Sealed Resources|flags"
             if [ "${MAC_NOTARIZED:-}" = "true" ]; then
-              xcrun stapler validate "$app"
+              # stapler validate 要访问苹果 CloudKit，偶发网络中断（Error 68），重试几次。
+              for attempt in 1 2 3 4 5; do
+                xcrun stapler validate "$app" && break
+                [ "$attempt" = 5 ] && { echo "::error::stapler validate 连续失败：$app"; exit 1; }
+                echo "stapler validate 第 $attempt 次失败，$((attempt * 20)) 秒后重试"
+                sleep $((attempt * 20))
+              done
               spctl -a -vvv -t exec "$app"
             fi
           done
@@ -395,6 +401,10 @@ jobs:
           fi
           echo "tag=$TAG" >> "$GITHUB_OUTPUT"
 
+      # 补发且构建失败时可能没有任何产物；先建目录，保证后续步骤给出明确错误而不是找不到工作目录。
+      - name: Prepare release directory
+        run: mkdir -p dist-release
+
       - name: Download artifacts
         uses: actions/download-artifact@v4
         with:
@@ -408,7 +418,9 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAG: ${{ steps.tag.outputs.tag }}
+          BUILD_RESULT: ${{ needs.build.result }}
         run: |
+          [ "$BUILD_RESULT" = "success" ] || { echo "::error::补发的平台构建失败（$BUILD_RESULT），不修改 Release：$TAG"; exit 1; }
           gh release view "$TAG" --repo "$GITHUB_REPOSITORY" >/dev/null || { echo "::error::补发需要已存在的 Release：$TAG"; exit 1; }
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" -p 'latest*.yml' --clobber || true
           ls -la
