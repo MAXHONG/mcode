@@ -79,6 +79,29 @@ for (const name of staged) {
 }
 
 if (out.size === 0) throw new Error("no update manifests found");
+
+// 补发（同一 Release 追加缺失平台）：目录里已有上次发布的同名清单时按 url 合并 files，
+// 新构建的同名文件覆盖旧条目，旧清单里本次没有重新构建的平台条目保留。
+for (const [file, doc] of out) {
+  let previous;
+  try {
+    previous = read(file);
+  } catch {
+    continue;
+  }
+  if (previous.version !== doc.version) {
+    console.log(`[merge-update-manifests] ${file}: existing version ${previous.version} != ${doc.version}, replaced`);
+    continue;
+  }
+  const fresh = new Set((doc.files ?? []).map((f) => f.url));
+  doc.files = [...(previous.files ?? []).filter((f) => !fresh.has(f.url)), ...(doc.files ?? [])];
+  // mac 旧版字段 path/sha512 优先指向 x64（与上面合并规则一致）。
+  if (file === "latest-mac.yml") {
+    const x64 = doc.files.find((f) => /mac-x64\.zip$/.test(f.url));
+    if (x64) Object.assign(doc, { path: x64.url, sha512: x64.sha512 });
+  }
+}
+
 for (const [file, doc] of out) {
   writeFileSync(join(dir, file), stringify(doc));
   console.log(`[merge-update-manifests] ${file}: version=${doc.version} files=${(doc.files ?? []).map((f) => f.url).join(", ")}`);

@@ -40,7 +40,7 @@ export PATH="$HOME/.local/bin:$PATH"
 mcode --web --host 0.0.0.0 --port 3030 --no-open --workspace ~/project
 ```
 
-用同一内网的浏览器打开终端打印的带 `?token=` 地址即可。仓库私有时需先下载 `install.sh` 与 `mcode-<版本>.tar.gz`，再执行 `MCODE_DIST_ARCHIVE=./mcode-<版本>.tar.gz sh install.sh`。模型配置、systemd 开机自启与安全须知见 [docs/linux-headless-web.md](docs/linux-headless-web.md)。
+用同一内网的浏览器打开终端打印的带 `?token=` 地址即可。无法访问 GitHub 的机器可先下载 `install.sh` 与 `mcode-<版本>.tar.gz`，再执行 `MCODE_DIST_ARCHIVE=./mcode-<版本>.tar.gz sh install.sh` 离线安装。模型配置、systemd 开机自启与安全须知见 [docs/linux-headless-web.md](docs/linux-headless-web.md)。
 
 ### 自动更新
 

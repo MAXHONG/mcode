@@ -29,7 +29,7 @@ mcode --version
 
 安装脚本会校验运行包的 SHA-256（来自同一 Release 的 `latest.json`），装到 `~/.mcode/runtime`，并创建 `~/.local/bin/mcode`。
 
-> 仓库为私有时，匿名 `curl` 无法下载 Release 资产。先用有权限的账号下载 `install.sh` 与 `mcode-<版本>.tar.gz`（例如 `gh release download -R MAXHONG/mcode -p 'mcode-*.tar.gz' -p install.sh`），再离线安装：
+> 无法访问 GitHub 的机器可离线安装：先在能联网的机器上下载 `install.sh` 与 `mcode-<版本>.tar.gz`（例如 `gh release download -R MAXHONG/mcode -p 'mcode-*.tar.gz' -p install.sh`），拷贝过去后执行：
 >
 > ```bash
 > MCODE_DIST_ARCHIVE=./mcode-<版本>.tar.gz sh install.sh
@@ -91,7 +91,7 @@ mcode passwd --reset    # 删除密码，恢复为只用访问令牌
 ```bash
 mkdir -p ~/.config/systemd/user ~/.config/mcode
 curl -fsSL -o ~/.config/systemd/user/mcode-web.service \
-  https://raw.githubusercontent.com/MAXHONG/mcode/main/deploy/linux/mcode-web.service   # 私有仓库时从本地仓库复制
+  https://raw.githubusercontent.com/MAXHONG/mcode/main/deploy/linux/mcode-web.service
 cp deploy/linux/mcode-web.env.example ~/.config/mcode/web.env
 chmod 600 ~/.config/mcode/web.env          # 修改其中的工作区、端口和 MCODE_WEB_TOKEN
 systemctl --user daemon-reload

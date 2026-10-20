@@ -40,7 +40,7 @@ export PATH="$HOME/.local/bin:$PATH"
 mcode --web --host 0.0.0.0 --port 3030 --no-open --workspace ~/project
 ```
 
-Open the token-bearing URL printed in the terminal from any browser on the same network. While the repository is private, download `install.sh` and `mcode-<version>.tar.gz` first, then run `MCODE_DIST_ARCHIVE=./mcode-<version>.tar.gz sh install.sh`. Model setup, systemd autostart and security notes: [docs/linux-headless-web.md](docs/linux-headless-web.md) (Chinese).
+Open the token-bearing URL printed in the terminal from any browser on the same network. For machines without GitHub access, download `install.sh` and `mcode-<version>.tar.gz` first, then run `MCODE_DIST_ARCHIVE=./mcode-<version>.tar.gz sh install.sh` for an offline install. Model setup, systemd autostart and security notes: [docs/linux-headless-web.md](docs/linux-headless-web.md) (Chinese).
 
 ## Updates
 
