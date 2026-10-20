@@ -2,10 +2,15 @@ import { describe, expect, it, vi } from "vitest";
 import type { AppSettings } from "@mcode/shared";
 import {
   WEB_REMOTE_CONTROL_EXTERNAL_RELAY_PASS_HASH_CREDENTIAL_KEY,
+  WEB_REMOTE_CONTROL_SELF_HOSTED_RELAY_PASS_HASH_CREDENTIAL_KEY,
   createWebRemoteControlRelayAuthStorageProvider,
+  type WebRemoteControlRelayAuthStorageScope,
 } from "../src/main/webRemoteControlRelayAuthStorageProvider.js";
 
-function createHarness(initialSettings: AppSettings = { recentProjects: [], locale: "zh-CN" }) {
+function createHarness(
+  initialSettings: AppSettings = { recentProjects: [], locale: "zh-CN" },
+  scope?: WebRemoteControlRelayAuthStorageScope | (() => Promise<WebRemoteControlRelayAuthStorageScope>),
+) {
   let settings = initialSettings;
   const credentials: Record<string, string | undefined> = {};
   const patches: Partial<AppSettings>[] = [];
@@ -15,6 +20,7 @@ function createHarness(initialSettings: AppSettings = { recentProjects: [], loca
     warn: vi.fn(),
   };
   const provider = createWebRemoteControlRelayAuthStorageProvider({
+    scope,
     credentialService: {
       load: async (key) => credentials[key] ?? null,
       save: async (key, value) => {
@@ -103,5 +109,30 @@ describe("createWebRemoteControlRelayAuthStorageProvider", () => {
     expect(loggedText).not.toContain("raw-secret-hash");
     expect(loggedText).toContain("hasPassHash");
     expect(loggedText).toContain("abcdef");
+  });
+
+  it("keeps the self-hosted relay identity separate from the z.ai identity", async () => {
+    let current: WebRemoteControlRelayAuthStorageScope = "mcode";
+    const { credentials, provider } = createHarness(undefined, async () => current);
+
+    await provider.save({ deviceSid: "mc_self", passHash: "self-hash" });
+    expect(credentials[WEB_REMOTE_CONTROL_SELF_HOSTED_RELAY_PASS_HASH_CREDENTIAL_KEY]).toBe(
+      "self-hash",
+    );
+    expect(credentials[WEB_REMOTE_CONTROL_EXTERNAL_RELAY_PASS_HASH_CREDENTIAL_KEY]).toBeUndefined();
+
+    current = "zai";
+    await expect(provider.load()).resolves.toBeUndefined();
+    await provider.save({ deviceSid: "zai-sid", passHash: "zai-hash" });
+
+    current = "mcode";
+    await expect(provider.load()).resolves.toEqual({ deviceSid: "mc_self", passHash: "self-hash" });
+    current = "zai";
+    await expect(provider.load()).resolves.toEqual({ deviceSid: "zai-sid", passHash: "zai-hash" });
+
+    current = "mcode";
+    await provider.clear();
+    current = "zai";
+    await expect(provider.load()).resolves.toEqual({ deviceSid: "zai-sid", passHash: "zai-hash" });
   });
 });

@@ -31,7 +31,9 @@ import {
   MCODE_REMOTE_UPSTREAM_VERSION,
   MCODE_VERSION,
   buildMcodeEndpointUrls,
-  resolveWebRemoteControlRelayWsUrl,
+  normalizeWebRemoteControlRelayProvider,
+  resolveWebRemoteControlRelayEndpoints,
+  type WebRemoteControlRelayProvider,
   type McodeTaskMeta,
   type WebRemoteControlContext,
   type WebRemoteControlStartResult,
@@ -211,25 +213,42 @@ export async function createServerWebRemoteControl(options: {
     connectionState: "connected",
   };
 
+  // Mcode：默认走自建中转 remote.hjh.im；设置 webRemoteControlRelayProvider=zai 或环境变量
+  // MCODE_WEB_REMOTE_CONTROL_RELAY=zai 切回 z.ai 官方 relay（备用）。环境变量优先。
+  const resolveRelayProvider = async (): Promise<WebRemoteControlRelayProvider> => {
+    const envProvider = process.env["MCODE_WEB_REMOTE_CONTROL_RELAY"]?.trim();
+    if (envProvider) return normalizeWebRemoteControlRelayProvider(envProvider);
+    try {
+      return normalizeWebRemoteControlRelayProvider(
+        (await settingService.get()).webRemoteControlRelayProvider,
+      );
+    } catch {
+      return normalizeWebRemoteControlRelayProvider(undefined);
+    }
+  };
+  const resolveRelayEndpoints = (provider: unknown) =>
+    resolveWebRemoteControlRelayEndpoints({
+      provider,
+      endpointOrigin: endpointUrls.origin,
+      officialRemoteUrl: endpointUrls.remoteUrl,
+      relayWsOverride,
+      remoteUrlOverride,
+    });
+  const defaultRelayEndpoints = resolveRelayEndpoints(await resolveRelayProvider());
+
   const manager = createWebRemoteControlManager({
-    getEndpointUrls: () => ({
-      ...endpointUrls,
-      relayWsUrl: resolveWebRemoteControlRelayWsUrl({
-        endpointOrigin: endpointUrls.origin,
-        overrideUrl: relayWsOverride,
-      }),
-      remoteUrl: remoteUrlOverride || endpointUrls.remoteUrl,
-    }),
-    relayWsUrl: resolveWebRemoteControlRelayWsUrl({
-      endpointOrigin: DEFAULT_MCODE_ENDPOINT_ORIGIN,
-      overrideUrl: relayWsOverride,
-    }),
-    mobileRemoteControlUrl: remoteUrlOverride || endpointUrls.remoteUrl,
+    getEndpointUrls: async () => {
+      const relay = resolveRelayEndpoints(await resolveRelayProvider());
+      return { ...endpointUrls, relayWsUrl: relay.relayWsUrl, remoteUrl: relay.remoteUrl };
+    },
+    relayWsUrl: defaultRelayEndpoints.relayWsUrl,
+    mobileRemoteControlUrl: defaultRelayEndpoints.remoteUrl,
     deviceMid,
     deviceName: process.env["MCODE_SERVER_NAME"]?.trim() || hostname(),
     appVersion,
     authProvider: createNodeWebRemoteControlRelayAuthProvider(),
     authStorageProvider: createWebRemoteControlRelayAuthStorageProvider({
+      scope: resolveRelayProvider,
       credentialService,
       loadSettings: () => settingService.get(),
       patchSettings: (patch) => settingService.update(patch),

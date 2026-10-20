@@ -107,7 +107,7 @@ journalctl --user -u mcode-web -f           # 查看日志
 - 拿到带令牌链接的人可以 **以运行 Mcode 的 Linux 用户身份执行任意命令、读写文件**。用专门的系统用户运行，不要用 root。
 - 内网访问是明文 HTTP。只在可信网络使用；跨网络访问请用 Tailscale / WireGuard，或在前面加 HTTPS 反向代理（Caddy、Nginx），不要把端口直接暴露到公网。
 - `~/.mcode/v2/provider_config.json` 与 `~/.config/mcode/web.env` 含密钥，保持 `600` 权限，不要提交到仓库。
-- 手机扫码远程控制（经 Z.ai relay，默认官方 `zcode.z.ai` 页面）：Web 界面左侧栏底部的手机图标 → 显示二维码，手机扫码即可远程操作当前工作区（仅本机工作区）。配对与中转逻辑在服务器端运行，关闭浏览器后仍保持；拿到二维码的人等同拿到控制权。不需要时设置 `MCODE_WEB_REMOTE_CONTROL=0` 完全关闭。
+- 手机扫码远程控制（默认经 Mcode 自建中转 `remote.hjh.im`，`MCODE_WEB_REMOTE_CONTROL_RELAY=zai` 切回 Z.ai 官方 relay 备用，见 `deploy/remote-relay/README.md`）：Web 界面左侧栏底部的手机图标 → 显示二维码，手机扫码即可远程操作当前工作区（仅本机工作区）。配对与中转逻辑在服务器端运行，关闭浏览器后仍保持；拿到二维码的人等同拿到控制权。不需要时设置 `MCODE_WEB_REMOTE_CONTROL=0` 完全关闭。
 
 ## 常见问题
 

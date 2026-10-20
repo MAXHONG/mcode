@@ -2024,6 +2024,11 @@ const enUS: Record<string, string> = {
   "webRemoteControl.copyLink": "Copy link",
   "webRemoteControl.copyLink.copied": "Remote control link copied",
   "webRemoteControl.copyLinkFailed": "Could not copy remote control link: {error}",
+  "webRemoteControl.relay.label": "Relay server",
+  "webRemoteControl.relay.mcode": "Mcode self-hosted (recommended)",
+  "webRemoteControl.relay.zai": "Z.ai official (fallback)",
+  "webRemoteControl.relay.switchedMcode": "Switched to the Mcode self-hosted relay. Scan the new QR code.",
+  "webRemoteControl.relay.switchedZai": "Switched to the Z.ai official relay. Scan the new QR code.",
   "webRemoteControl.refreshQr": "Refresh QR",
   "webRemoteControl.refreshQr.confirmTitle": "Refresh QR code?",
   "webRemoteControl.refreshQr.confirmDescription":

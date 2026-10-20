@@ -77,7 +77,9 @@ import {
   MCODE_VERSION,
   MCODE_REMOTE_UPSTREAM_VERSION,
   buildMcodeEndpointUrls,
-  resolveWebRemoteControlRelayWsUrl,
+  normalizeWebRemoteControlRelayProvider,
+  resolveWebRemoteControlRelayEndpoints,
+  type WebRemoteControlRelayProvider,
   resolveZCodeEndpointOrigin,
   shouldEnableE2ETestBridge,
   type UpdateStatePayload,
@@ -926,30 +928,50 @@ setWebRemoteControlRelayNetworkObserver({
   noteConnectAttempt: noteWebRemoteRelayConnectAttempt,
   noteReconnect: noteWebRemoteRelayReconnect,
 });
+// Mcode：手机远控默认走自建中转 remote.hjh.im（deploy/remote-relay），设置里可切回 z.ai 官方作为备用。
+// 环境变量 MCODE_WEB_REMOTE_CONTROL_RELAY=zai|mcode 优先于设置，便于排障。
+async function resolveWebRemoteControlRelayProvider(): Promise<WebRemoteControlRelayProvider> {
+  const envProvider = process.env["MCODE_WEB_REMOTE_CONTROL_RELAY"]?.trim();
+  if (envProvider) return normalizeWebRemoteControlRelayProvider(envProvider);
+  try {
+    return normalizeWebRemoteControlRelayProvider(
+      (await mainSettingService.get()).webRemoteControlRelayProvider,
+    );
+  } catch {
+    return normalizeWebRemoteControlRelayProvider(undefined);
+  }
+}
+
+const defaultWebRemoteControlRelayEndpoints = resolveWebRemoteControlRelayEndpoints({
+  provider: process.env["MCODE_WEB_REMOTE_CONTROL_RELAY"],
+  endpointOrigin: DEFAULT_MCODE_ENDPOINT_ORIGIN,
+  officialRemoteUrl: defaultMcodeEndpointUrls.remoteUrl,
+  relayWsOverride: webRemoteControlRelayWsEnvOverride,
+  remoteUrlOverride: webRemoteControlUrlEnvOverride,
+});
+
 const webRemoteControlManager = createWebRemoteControlManager({
   getEndpointUrls: async () => {
     const derived = buildMcodeEndpointUrls(await resolveCurrentMcodeEndpointOrigin(), {
       appVersion: webRemoteControlAppVersion,
     });
-    return {
-      ...derived,
-      relayWsUrl: resolveWebRemoteControlRelayWsUrl({
-        endpointOrigin: derived.origin,
-        overrideUrl: webRemoteControlRelayWsEnvOverride,
-      }),
-      remoteUrl: webRemoteControlUrlEnvOverride || derived.remoteUrl,
-    };
+    const relay = resolveWebRemoteControlRelayEndpoints({
+      provider: await resolveWebRemoteControlRelayProvider(),
+      endpointOrigin: derived.origin,
+      officialRemoteUrl: derived.remoteUrl,
+      relayWsOverride: webRemoteControlRelayWsEnvOverride,
+      remoteUrlOverride: webRemoteControlUrlEnvOverride,
+    });
+    return { ...derived, relayWsUrl: relay.relayWsUrl, remoteUrl: relay.remoteUrl };
   },
-  relayWsUrl: resolveWebRemoteControlRelayWsUrl({
-    endpointOrigin: DEFAULT_MCODE_ENDPOINT_ORIGIN,
-    overrideUrl: webRemoteControlRelayWsEnvOverride,
-  }),
-  mobileRemoteControlUrl: webRemoteControlUrlEnvOverride || defaultMcodeEndpointUrls.remoteUrl,
+  relayWsUrl: defaultWebRemoteControlRelayEndpoints.relayWsUrl,
+  mobileRemoteControlUrl: defaultWebRemoteControlRelayEndpoints.remoteUrl,
   deviceMid,
   deviceName: hostname(),
   appVersion: webRemoteControlAppVersion,
   authProvider: webRemoteControlAuthProvider,
   authStorageProvider: createWebRemoteControlRelayAuthStorageProvider({
+    scope: resolveWebRemoteControlRelayProvider,
     credentialService: webRemoteControlCredentialService,
     loadSettings: () => mainSettingService.get(),
     patchSettings: (patch) => mainSettingService.update(patch),

@@ -1889,6 +1889,11 @@ const zhCN: Record<string, string> = {
   "webRemoteControl.copyLink": "复制链接",
   "webRemoteControl.copyLink.copied": "已复制远程控制链接",
   "webRemoteControl.copyLinkFailed": "复制远程控制链接失败：{error}",
+  "webRemoteControl.relay.label": "中转服务器",
+  "webRemoteControl.relay.mcode": "Mcode 自建（推荐）",
+  "webRemoteControl.relay.zai": "Z.ai 官方（备用）",
+  "webRemoteControl.relay.switchedMcode": "已切换到 Mcode 自建中转，请重新扫码",
+  "webRemoteControl.relay.switchedZai": "已切换到 Z.ai 官方中转，请重新扫码",
   "webRemoteControl.refreshQr": "刷新二维码",
   "webRemoteControl.refreshQr.confirmTitle": "刷新二维码？",
   "webRemoteControl.refreshQr.confirmDescription":

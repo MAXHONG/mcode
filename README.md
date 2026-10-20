@@ -53,6 +53,7 @@ v3.15.1 及更早版本没有该功能，需要手动下载一次 v3.15.2 或更
 
 ## 更新
 
+- 2026-10-20：v3.15.5 — 手机远控默认改走 Mcode 自建中转 `remote.hjh.im`（Cloudflare Worker + Durable Object，协议兼容官方 relay V1，同域托管 Mcode 品牌手机页），不再依赖 z.ai relay 是否继续开放；远控弹窗新增「中转服务器」开关，可切回 Z.ai 官方作为备用（`MCODE_WEB_REMOTE_CONTROL_RELAY=zai` 亦可），两条中转的设备身份分开保存。桌面版与 Linux Web 版均生效。部署说明见 `deploy/remote-relay/README.md`。
 - 2026-10-16：未发版（main）— Linux Web 版新增账号密码登录：首次用令牌链接打开时可在网页创建账号，设置后令牌链接不能再登录浏览器，侧栏账户菜单可修改密码 / 退出，服务器上 `mcode passwd` 管理（scrypt 哈希、失败锁定、会话签名）；修复 macOS 安装包签名不完整（自 3.15.1 起，浏览器下载后首次打开会提示“已损坏”）：打包最后对整个 .app 重新 ad-hoc 签名并 `codesign --verify --deep --strict` 校验，失败即构建失败；Linux 无界面 Web 版支持手机扫码远控：配对与 z.ai relay 中转迁到服务端（`@mcode/server`），Web 侧栏新增二维码入口，`MCODE_WEB_REMOTE_CONTROL=0` 可关闭；修复二维码页 `app_version` 用了 z.ai 未提供的版本号导致手机页 404（改用上游版本号）；更新无头部署文档（OAuth 可在无头机器完成、移除过时 FAQ）。
 - 2026-10-16：v3.15.4 — 移植官方 ZCode 3.15.3 修复（登录身份验证失败、重复弹出新手引导、弱网卡住引导判断、多 Agent / 连续调用部分请求失败）；隐私加固：反馈 / 截图 / 诊断日志不再上传 z.ai 与阿里云 OSS（改为 GitHub Issues + 本地导出日志），营销弹窗默认关闭，ARMS / 事件上报 / Agent OTLP 须显式 `MCODE_ALLOW_TELEMETRY=1` 才会编入；设置页同时显示 Z.ai 与 BigModel Coding Plan，二选一登录；新增 Mcode 品牌手机远控页面的 GitHub Pages 自托管工作流（`MCODE_WEB_REMOTE_CONTROL_URL=mcode` 启用）。
 - 2026-10-16：v3.15.3 — 新增命令行 / Web 发行包（`mcode-<版本>.tar.gz` + `install.sh`，随 Release 发布），可在无界面 Linux 上 `mcode --web` 提供内网浏览器访问，附 systemd 开机自启示例与部署文档；已配置个人模型（如 OpenAI 兼容网关）时不再强制弹出“连接账号”登录页；Web 模式默认始终启用访问令牌、支持 `Authorization: Bearer`、拒绝跨站 WebSocket（CSWSH），令牌比较改为常量时间；`install.sh` 校验 SHA-256、检查 Node.js ≥ 24、支持 GitHub Releases 与离线安装；`pnpm build:mcode` 修复开箱构建失败；发布工作流默认只读权限、构建任务不再持有可写令牌。
