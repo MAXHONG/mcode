@@ -1,5 +1,15 @@
 /* eslint-disable max-lines -- Electron Builder config keeps related packaging hooks together so build order stays explicit. */
-import { cpSync, existsSync, mkdirSync, mkdtempSync, rmSync } from "node:fs";
+import {
+  closeSync,
+  cpSync,
+  existsSync,
+  mkdirSync,
+  mkdtempSync,
+  openSync,
+  readdirSync,
+  readSync,
+  rmSync,
+} from "node:fs";
 import { readdir, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
@@ -60,6 +70,10 @@ const macSigningIdentity =
   rawMacSigningIdentity?.replace(/^Developer ID Application:\s*/, "") ?? null;
 const shouldEnableMacSigning =
   process.env.MCODE_ENABLE_MAC_SIGN === "1" && Boolean(macSigningIdentity);
+// 提供 App Store Connect API Key（APPLE_API_KEY=.p8 路径 + APPLE_API_KEY_ID + APPLE_API_ISSUER）时公证 .app。
+const shouldNotarizeMacApp = Boolean(
+  process.env.APPLE_API_KEY && process.env.APPLE_API_KEY_ID && process.env.APPLE_API_ISSUER,
+);
 const workspaceRoot = resolve(import.meta.dirname, "../..");
 const desktopPackageRoot = import.meta.dirname;
 // Computer Use Helper（macOS .app、Windows runtime）只随真实 producer 打包；开源占位包下跳过随包资源与校验。
@@ -279,6 +293,78 @@ function adHocSignMacApp(context) {
   const appPath = resolve(context.appOutDir, appName);
   runCommand("codesign", ["--force", "--deep", "--sign", "-", "--timestamp=none", appPath]);
   runCommand("codesign", ["--verify", "--deep", "--strict", "--verbose=2", appPath]);
+}
+
+/**
+ * 正式签名（Developer ID）时的预签名：mac.signIgnore 会让 electron-builder 跳过
+ * Resources/glm、Resources/tools 下的文件（原设计依赖独立预签名阶段，但当前仓库没有这个阶段）。
+ * 这些目录里有 ripgrep、原生 .node 模块等 Mach-O 文件，若保持未签名 / ad-hoc，
+ * 苹果公证会直接拒绝（"The binary is not signed with a valid Developer ID certificate"）。
+ * 这里在 electron-builder 签主 app 之前，用同一个 Developer ID + hardened runtime + 时间戳逐个签名。
+ * 嵌套的独立 .app（如 CUA Helper）自带签名与 staple，跳过以免改变 CDHash。
+ */
+const MACH_O_MAGICS = new Set([
+  "feedface",
+  "feedfacf",
+  "cefaedfe",
+  "cffaedfe",
+  "cafebabe",
+  "bebafeca",
+]);
+
+function isMachOFile(filePath) {
+  let fd;
+  try {
+    fd = openSync(filePath, "r");
+    const header = Buffer.alloc(4);
+    if (readSync(fd, header, 0, 4, 0) < 4) return false;
+    return MACH_O_MAGICS.has(header.toString("hex"));
+  } catch {
+    return false;
+  } finally {
+    if (fd !== undefined) closeSync(fd);
+  }
+}
+
+function collectMachOFiles(dir, out = []) {
+  if (!existsSync(dir)) return out;
+  for (const entry of readdirSync(dir, { withFileTypes: true })) {
+    const fullPath = join(dir, entry.name);
+    if (entry.isSymbolicLink()) continue;
+    if (entry.isDirectory()) {
+      if (entry.name.endsWith(".app")) continue;
+      collectMachOFiles(fullPath, out);
+    } else if (entry.isFile() && isMachOFile(fullPath)) {
+      out.push(fullPath);
+    }
+  }
+  return out;
+}
+
+function presignMacSignIgnoredBinaries(context) {
+  const appName = `${context.packager?.appInfo?.productFilename ?? "Mcode"}.app`;
+  const resourcesDir = resolve(context.appOutDir, appName, "Contents", "Resources");
+  const identity = rawMacSigningIdentity.startsWith("Developer ID Application:")
+    ? rawMacSigningIdentity
+    : `Developer ID Application: ${macSigningIdentity}`;
+  const entitlements = resolve(desktopPackageRoot, "build/entitlements.mac.inherit.plist");
+  const files = ["glm", "tools"].flatMap((sub) => collectMachOFiles(join(resourcesDir, sub)));
+  console.log(`[mac-sign] presigning ${files.length} Mach-O files under glm/ and tools/`);
+  const keychainArgs = process.env.CSC_KEYCHAIN ? ["--keychain", process.env.CSC_KEYCHAIN] : [];
+  for (const file of files) {
+    runCommand("codesign", [
+      "--force",
+      "--sign",
+      identity,
+      ...keychainArgs,
+      "--options",
+      "runtime",
+      "--timestamp",
+      "--entitlements",
+      entitlements,
+      file,
+    ]);
+  }
 }
 
 function runTimedSync(label, fn) {
@@ -709,6 +795,11 @@ export default {
     if (context.electronPlatformName === "darwin" && !shouldEnableMacSigning) {
       runTimedSync("afterPack:adHocSignMacApp", () => adHocSignMacApp(context));
     }
+    if (context.electronPlatformName === "darwin" && shouldEnableMacSigning) {
+      runTimedSync("afterPack:presignMacSignIgnoredBinaries", () =>
+        presignMacSignIgnoredBinaries(context),
+      );
+    }
   },
   ...(shouldPackageWindowsBrowserImportHelper
     ? {
@@ -852,7 +943,10 @@ export default {
     // macOS 产物采用“build 阶段签名 + 独立公证阶段”的两段式流水线。
     // 如果这里不显式关闭 electron-builder 内置 notarize，它会在 build 阶段读取 Apple 凭据后直接尝试公证，
     // 并强制要求 APPLE_APP_SPECIFIC_PASSWORD，导致 build 还没产出 DMG 就提前失败。
-    notarize: false,
+    // 例外：提供了 App Store Connect API Key 时，让 electron-builder 在签名后、生成 dmg/zip 前
+    // 公证并 staple .app（API Key 方式不需要 Apple ID 专用密码）。这样 dmg 与自动更新 zip 里
+    // 都是已 staple 的 app；dmg 本身再由 CI 单独公证 + staple。
+    notarize: shouldEnableMacSigning && shouldNotarizeMacApp,
     hardenedRuntime: shouldEnableMacSigning,
     gatekeeperAssess: false,
     entitlements: "build/entitlements.mac.plist",
@@ -926,6 +1020,8 @@ export default {
     // 丢失 Electron Framework 主二进制，安装后启动直接报 DYLD Library missing。
     // 显式放大 DMG 容量，避免拷贝截断导致的“Framework 目录存在但核心文件缺失”。
     size: "3200m",
+    // 正式签名时 dmg 本身也用 Developer ID 签名，CI 再公证 + staple，双击 dmg 即可离线通过 Gatekeeper。
+    sign: shouldEnableMacSigning,
     // 使用自定义安装背景图。
     background: "build/dmg_background.png",
     // 安装盘图标统一使用安装专用素材，避免复用应用图标导致安装识别度不足。

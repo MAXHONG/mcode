@@ -75,3 +75,8 @@ __pycache__/
 .mcode-runtime
 .local-logs/
 core
+
+# 本地签名材料（私钥/证书），绝不提交
+.signing/
+*.p8
+*.p12
