@@ -49,5 +49,5 @@ xcrun stapler validate Mcode.dmg
 - 苹果公证通常 1~15 分钟；新开发者账号的前几次提交可能排队数小时。工作流给 dmg 公证留 150 分钟，整个构建任务上限 6 小时。
 - 某个平台失败（例如公证超时 `Timeout of 9000 second(s)`）**不会阻塞发布**：`Publish GitHub Release` 仍会用已成功的平台创建 Release，并在说明里注明有平台暂缺。
 - 补发缺失平台：Actions → Release Desktop → Run workflow，`Use workflow from` 选对应标签（如 `v3.15.5`），`tag` 填同一标签，`platforms` 填 `mac-x64`（可多个，逗号分隔：`mac-arm64, mac-x64, win-x64, win-arm64, linux-x64, linux-arm64`）。工作流只构建这些平台，取回已有 Release 的 `latest*.yml` 与 `SHA256SUMS.txt` 合并后追加上传，不改动其他平台的资产。
-- 公证通过后的 staple / validate 会访问苹果 CloudKit，偶发网络中断（`Error 68`）时工作流自动重试 5 次。
+- 公证通过后的 staple / validate 会访问苹果 CloudKit，偶发网络中断（`Error 68`）时工作流自动重试 5 次（dmg 与 .app 校验都会重试）。补发的平台构建失败时不会改动已有 Release。
 - 苹果那边的提交记录：`xcrun notarytool history --key AuthKey_XXXX.p8 --key-id <Key ID> --issuer <Issuer ID>`；被拒时 `xcrun notarytool log <提交 ID> ...` 查看原因。
