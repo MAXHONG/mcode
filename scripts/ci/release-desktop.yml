@@ -205,7 +205,22 @@ jobs:
           echo "enabled=true" >> "$GITHUB_OUTPUT"
 
       - name: Bundle desktop installer
-        run: pnpm bundle:desktop -- --os ${{ matrix.os }} --arch ${{ matrix.arch }} --skip-prepare --skip-build
+        shell: bash
+        env:
+          TARGET_OS: ${{ matrix.os }}
+          TARGET_ARCH: ${{ matrix.arch }}
+        run: |
+          set -uo pipefail
+          # macOS 打包内含 .app 公证 + staple，staple 会访问苹果 CloudKit，偶发网络中断（Error 68）
+          # 会让整个打包失败。mac 最多重试 3 次（重新提交公证通常几分钟），其他平台只跑一次。
+          max=1
+          [ "$TARGET_OS" = "mac" ] && max=3
+          for attempt in $(seq 1 "$max"); do
+            pnpm bundle:desktop -- --os "$TARGET_OS" --arch "$TARGET_ARCH" --skip-prepare --skip-build && exit 0
+            [ "$attempt" = "$max" ] && { echo "::error::打包连续失败 $max 次"; exit 1; }
+            echo "::warning::打包第 $attempt 次失败，60 秒后重试"
+            sleep 60
+          done
 
       # .app 已在 electron-builder 内公证 + staple；dmg 是新文件，需要再单独公证并 staple，
       # 这样用户离线双击 dmg 也能通过 Gatekeeper。
