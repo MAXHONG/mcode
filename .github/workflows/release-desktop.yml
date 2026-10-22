@@ -515,14 +515,16 @@ jobs:
 
           ## 命令行 / Web 版（无界面 Linux 服务器可用）
           - \`mcode-*.tar.gz\`：TUI + Web + Agent 运行包，需要 Node.js 24+；\`install.sh\` 自动校验 SHA-256 后安装 \`mcode\` 命令。
-          - 安装：\`curl -fsSL https://github.com/MAXHONG/mcode/releases/latest/download/install.sh | sh\`
+          - 安装：\`curl -fsSL https://mcode.hjh.im/install.sh | sh\`
           - 启动：\`mcode --web --host 0.0.0.0 --port 3030 --no-open\`，浏览器打开终端打印的带 token 地址。
           - 部署与 systemd 开机自启：仓库 \`docs/linux-headless-web.md\`。
 
-          ## 自动更新
+          ## 官网与自动更新
+          - 官网：https://mcode.hjh.im （全部安装包与版本历史，安装包和更新清单同步托管在官网）。
+          - 桌面版从 \`https://mcode.hjh.im/download/latest/\` 检查更新。
           - Windows / Linux 桌面版：应用内检测到新版本后可直接下载并在重启时安装。
-          - macOS：应用内提示新版本后会打开本页面，请下载新的 DMG 覆盖安装。
-          - 命令行 / Web 版：重新执行 \`install.sh\` 即升级到最新版本，用户数据保留。
+          - macOS：签名构建原地更新；未签名构建提示新版本后会打开官网下载页，请下载新的 DMG 覆盖安装。
+          - 命令行 / Web 版：\`curl -fsSL https://mcode.hjh.im/install.sh | sh\` 安装或升级，用户数据保留。
 
           ## 安装提示
           - macOS 安装包使用 Developer ID 签名并经苹果公证，可直接打开。
@@ -548,4 +550,59 @@ jobs:
               --target "${{ github.sha }}" \
               --latest \
               "${FLAGS[@]}"
+          fi
+
+      # 同步到官网 https://mcode.hjh.im（Cloudflare R2：mcode-releases；官网源码在私有仓库 MAXHONG/mcode-web）。
+      # 3.15.6 起桌面客户端从官网 download/latest/ 读取 latest*.yml 检查更新，因此这一步失败
+      # 等于“发布了但用户收不到更新”，必须让工作流失败。预发布版本只上传、不切换 stable 指针。
+      # 需要仓库 Secrets：CLOUDFLARE_ACCOUNT_ID、
+      # R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY（仅限 mcode-releases 桶读写的 R2 令牌，S3 接口）。
+      #
+      # 先重算清单里各文件的 sha512 / size：electron-builder 生成 latest-mac.yml 之后，
+      # dmg 还会再 staple 公证票据（文件变大约 2KB），清单里的 dmg 校验值就过期了。
+      # 补发（platforms 输入）时 dist-release 里只有本次平台的文件，取回同一 Release 的
+      # 其余资产后再整体同步，保证官网版本目录完整。
+      # 有平台构建失败时只上传不切换 stable：否则缺失平台的 latest*.yml 在官网 404，
+      # 该平台用户反而查不到更新；补发成功后（构建完整）再切换。
+      - name: Publish to website (mcode.hjh.im)
+        env:
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ steps.tag.outputs.tag }}
+          PRERELEASE: ${{ inputs.prerelease }}
+          BACKFILL: ${{ inputs.platforms != '' }}
+          BUILD_RESULT: ${{ needs.build.result }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "${CLOUDFLARE_ACCOUNT_ID:-}" ] || [ -z "${R2_ACCESS_KEY_ID:-}" ] || [ -z "${R2_SECRET_ACCESS_KEY:-}" ]; then
+            echo "::error::未配置 CLOUDFLARE_ACCOUNT_ID / R2_ACCESS_KEY_ID / R2_SECRET_ACCESS_KEY，无法同步到官网，客户端将收不到本次更新。"
+            exit 1
+          fi
+          SITE_DIR="$RUNNER_TEMP/site-release"
+          rm -rf "$SITE_DIR" && mkdir -p "$SITE_DIR"
+          if [ "$BACKFILL" = "true" ]; then
+            gh release download "$TAG" --repo "$GITHUB_REPOSITORY" -D "$SITE_DIR" --clobber
+          fi
+          cp -f dist-release/* "$SITE_DIR"/
+          node scripts/ci/fix-update-manifests.mjs "$SITE_DIR"
+          PROMOTE=true
+          if [ "$PRERELEASE" = "true" ]; then PROMOTE=false; fi
+          if [ "$BUILD_RESULT" != "success" ]; then
+            PROMOTE=false
+            echo "::warning::有平台构建失败，官网只上传 ${TAG} 的已有产物、不切换当前版本；补发完成后会自动切换。"
+          fi
+          for file in latest.yml latest-mac.yml latest-linux.yml; do
+            [ -f "$SITE_DIR/$file" ] || { PROMOTE=false; echo "::warning::缺少 $file，官网不切换当前版本。"; }
+          done
+          FLAGS=(--skip-existing)
+          if [ "$PROMOTE" != "true" ]; then FLAGS+=(--no-promote); fi
+          node scripts/ci/publish-website-release.mjs --version "${TAG#v}" --dir "$SITE_DIR" "${FLAGS[@]}"
+          if [ "$PROMOTE" = "true" ]; then
+            for file in latest.yml latest-mac.yml latest-linux.yml; do
+              curl -fsS "https://mcode.hjh.im/download/latest/$file" | grep -q "^version: ${TAG#v}$" \
+                || { echo "::error::官网 $file 版本不是 ${TAG#v}"; exit 1; }
+            done
           fi

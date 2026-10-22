@@ -5,7 +5,8 @@
 </div>
 <p align="center">
   <a href="README.md">简体中文</a> | English ·
-  <a href="https://github.com/MAXHONG/mcode/releases">Download</a>
+  <a href="https://mcode.hjh.im/en">Website</a> ·
+  <a href="https://mcode.hjh.im/en#downloads">Download</a>
 </p>
 
 > **Unofficial notice**: Mcode is an **unofficial community fork** of [ZCode](https://github.com/zai-org/ZCode) (Apache License 2.0). It is **not affiliated with, endorsed by, or authorized by** Z.ai / Zhipu AI or the official ZCode project. "ZCode", "Z.ai", "Zhipu" and "GLM" are trademarks of their respective owners and are mentioned only to describe compatibility. Signing in with a Z.ai account, Coding Plan subscriptions and related services are subject to Z.ai's terms of service; their availability is decided by Z.ai and is not guaranteed by this project. See [REBRAND.md](REBRAND.md) for the list of modifications and [LICENSE](LICENSE) for the original license.
@@ -18,7 +19,7 @@ Mcode is an AI coding workspace with desktop, browser, and terminal interfaces. 
 
 ## Download
 
-Get the latest installers from [Releases](https://github.com/MAXHONG/mcode/releases):
+Get the latest installers from the website **<https://mcode.hjh.im/en>** ([all versions](https://mcode.hjh.im/en/releases); also attached to this repository's [Releases](https://github.com/MAXHONG/mcode/releases)):
 
 | Platform              | File                          |
 | --------------------- | ----------------------------- |
@@ -35,15 +36,20 @@ The installers have no Apple Developer certificate (ad-hoc signed only). On macO
 
 ```bash
 # Requires Node.js 24+
-curl -fsSL https://github.com/MAXHONG/mcode/releases/latest/download/install.sh | sh
+curl -fsSL https://mcode.hjh.im/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 mcode --web --host 0.0.0.0 --port 3030 --no-open --workspace ~/project
 ```
 
-Open the token-bearing URL printed in the terminal from any browser on the same network. For machines without GitHub access, download `install.sh` and `mcode-<version>.tar.gz` first, then run `MCODE_DIST_ARCHIVE=./mcode-<version>.tar.gz sh install.sh` for an offline install. Model setup, systemd autostart and security notes: [docs/linux-headless-web.md](docs/linux-headless-web.md) (Chinese).
+Open the token-bearing URL printed in the terminal from any browser on the same network. For offline installs, download `install.sh` and `mcode-<version>.tar.gz` first, then run `MCODE_DIST_ARCHIVE=./mcode-<version>.tar.gz sh install.sh`. Model setup, systemd autostart and security notes: [docs/linux-headless-web.md](docs/linux-headless-web.md) (Chinese).
+
+### Auto-update
+
+The desktop app periodically checks the website feed `https://mcode.hjh.im/download/latest/` (per-platform `latest*.yml`). Windows / Linux download in-app and install on restart; unsigned macOS builds open the website download page. v3.15.2 – v3.15.4 read GitHub Releases, which return 404 anonymously while the repository is private, so please install the next version manually from the website once; after that updates arrive automatically. The website source lives in the private repository `MAXHONG/mcode-web`; the release workflow syncs each Release to its R2 bucket with `scripts/ci/fix-update-manifests.mjs` and `scripts/ci/publish-website-release.mjs`.
 
 ## Updates
 
+- 2026-10-20: Unreleased (main) — Launched the website <https://mcode.hjh.im> (modelled on the ZCode site, Chinese / English, OS-aware downloads, release history; source in the private repository `MAXHONG/mcode-web`), with installers and update manifests hosted on Cloudflare R2. The desktop auto-update feed is now `https://mcode.hjh.im/download/latest/` (GitHub Releases of the private repository return 404 anonymously, so clients never saw updates). Unsigned macOS builds open the website download page. `install.sh` downloads from the website by default (`curl -fsSL https://mcode.hjh.im/install.sh | sh` works anonymously). The release workflow gains a "Publish to website" step (repository secrets `CLOUDFLARE_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`, scoped to the `mcode-releases` bucket only). Linux package homepage metadata and share texts now link to the website.
 - 2026-10-20: v3.15.5 — Mobile remote control now uses the Mcode self-hosted relay `remote.hjh.im` by default (Cloudflare Worker + Durable Object, wire-compatible with the official relay V1, also serving the Mcode-branded phone page), so it no longer depends on z.ai keeping its relay open. A "Relay server" switch in the remote control dialog (or `MCODE_WEB_REMOTE_CONTROL_RELAY=zai`) falls back to the Z.ai official relay; device identities for the two relays are stored separately. Applies to desktop and the Linux Web build. See `deploy/remote-relay/README.md`.
 - 2026-10-16: Unreleased (main) — Username / password sign-in for the Linux Web build: create an account on first visit with the token URL; afterwards the token URL can no longer sign a browser in. Change password / sign out from the sidebar account menu, or manage it on the server with `mcode passwd` (scrypt hashes, lockout after failures, signed sessions). Fixed the incomplete macOS app signature (since 3.15.1, a downloaded DMG reported the app as damaged on first launch): the whole .app is now ad-hoc re-signed at the end of packaging and checked with `codesign --verify --deep --strict`, failing the build otherwise. Mobile QR remote control for the headless Linux Web build: pairing and z.ai relay moved server-side (`@mcode/server`), QR entry in the Web sidebar, disable with `MCODE_WEB_REMOTE_CONTROL=0`. Fixed the QR page 404 caused by an `app_version` z.ai does not serve (now uses the upstream version). Headless docs updated (OAuth works on headless machines, stale FAQ removed).
 - 2026-10-16: v3.15.4 — Ported upstream ZCode 3.15.3 fixes (login identity validation, repeated onboarding, onboarding check stuck on slow networks, some requests failing with parallel agents / consecutive model calls). Privacy hardening: feedback, screenshots and diagnostic logs are no longer uploaded to z.ai / Aliyun OSS (GitHub Issues + local log export instead), marketing popups are off by default, and ARMS / event reporting / Agent OTLP are only compiled in with an explicit `MCODE_ALLOW_TELEMETRY=1`. Settings always shows both Z.ai and BigModel Coding Plan; sign in to either one. New GitHub Pages workflow for a Mcode-branded mobile remote page (opt in with `MCODE_WEB_REMOTE_CONTROL_URL=mcode`).

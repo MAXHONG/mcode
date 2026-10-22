@@ -5,7 +5,8 @@
 </div>
 <p align="center">
   简体中文 | <a href="README.en.md">English</a> ·
-  <a href="https://github.com/MAXHONG/mcode/releases">下载安装包</a>
+  <a href="https://mcode.hjh.im">官网</a> ·
+  <a href="https://mcode.hjh.im/cn#downloads">下载安装包</a>
 </p>
 
 > **非官方声明**：Mcode 是基于 [ZCode](https://github.com/zai-org/ZCode)（Apache License 2.0）修改的**非官方社区版本**，与 Z.ai / 智谱（Zhipu AI）及 ZCode 官方**没有任何关联**，也未获其认可或授权。"ZCode"、"Z.ai"、"智谱"、"GLM" 等名称和标识归其各自权利人所有，本项目仅为说明兼容性而提及。使用 Z.ai 账号登录、Coding Plan 订阅及相关服务时，须遵守 Z.ai 的用户协议与服务条款；相关服务能否使用由 Z.ai 决定，本项目不作任何保证。修改内容见 [REBRAND.md](REBRAND.md)，原始许可证见 [LICENSE](LICENSE)。
@@ -17,7 +18,7 @@ Mcode 是 AI 编程工作台，提供桌面应用、浏览器界面和终端 Age
 
 ## 下载
 
-在 [Releases](https://github.com/MAXHONG/mcode/releases) 页面下载最新安装包：
+在官网 **<https://mcode.hjh.im>** 下载最新安装包（[全部版本](https://mcode.hjh.im/cn/releases)；同时发布在本仓库 [Releases](https://github.com/MAXHONG/mcode/releases)）：
 
 | 平台                  | 文件                                                       |
 | --------------------- | ---------------------------------------------------------- |
@@ -35,24 +36,27 @@ Mcode 是 AI 编程工作台，提供桌面应用、浏览器界面和终端 Age
 
 ```bash
 # 需要 Node.js 24+
-curl -fsSL https://github.com/MAXHONG/mcode/releases/latest/download/install.sh | sh
+curl -fsSL https://mcode.hjh.im/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"
 mcode --web --host 0.0.0.0 --port 3030 --no-open --workspace ~/project
 ```
 
-用同一内网的浏览器打开终端打印的带 `?token=` 地址即可。无法访问 GitHub 的机器可先下载 `install.sh` 与 `mcode-<版本>.tar.gz`，再执行 `MCODE_DIST_ARCHIVE=./mcode-<版本>.tar.gz sh install.sh` 离线安装。模型配置、systemd 开机自启与安全须知见 [docs/linux-headless-web.md](docs/linux-headless-web.md)。
+用同一内网的浏览器打开终端打印的带 `?token=` 地址即可。离线安装：先下载 `install.sh` 与 `mcode-<版本>.tar.gz`，再执行 `MCODE_DIST_ARCHIVE=./mcode-<版本>.tar.gz sh install.sh`。模型配置、systemd 开机自启与安全须知见 [docs/linux-headless-web.md](docs/linux-headless-web.md)。
 
 ### 自动更新
 
-v3.15.2 起，Mcode 启动后会定期检查 [GitHub Releases](https://github.com/MAXHONG/mcode/releases/latest) 是否有新版本：
+Mcode 启动后会定期从官网更新源 `https://mcode.hjh.im/download/latest/`（各平台 `latest*.yml`）检查新版本：
 
 - **Windows / Linux**：提示新版本后可在应用内下载，重启时自动安装。
-- **macOS**：安装包未签名，系统不允许自动安装，提示新版本后会打开发布页，下载新 DMG 覆盖安装即可。
+- **macOS**：签名构建（`MCODE_MAC_SIGNED_UPDATES=1`）原地更新；未签名构建提示新版本后会打开官网下载页，下载新 DMG 覆盖安装即可。
 
-v3.15.1 及更早版本没有该功能，需要手动下载一次 v3.15.2 或更高版本。命令行 / Web 版重新执行 `install.sh` 即可升级。
+v3.15.2 – v3.15.4 读取的是 GitHub Releases，仓库私有时匿名请求 404，因此检查不到更新；**请手动从官网下载一次下一个版本**（包含本改动的版本），之后即可自动更新。命令行 / Web 版重新执行 `curl -fsSL https://mcode.hjh.im/install.sh | sh` 即可升级。
+
+官网源码在私有仓库 `MAXHONG/mcode-web`（Hono + Cloudflare Pages + R2）。发版工作流用 `scripts/ci/fix-update-manifests.mjs` 修正更新清单、用 `scripts/ci/publish-website-release.mjs` 把每个 Release 的产物同步到官网的 R2 桶；两个仓库只通过 R2 布局（`releases/<版本>/<文件>`、`channels/stable.json`）对接。
 
 ## 更新
 
+- 2026-10-20：未发版（main）— 上线官网 <https://mcode.hjh.im>（参考 ZCode 官网，中英文，下载区自动识别系统，版本历史页），源码在私有仓库 `MAXHONG/mcode-web`，安装包与更新清单托管在 Cloudflare R2；桌面端自动更新源改为 `https://mcode.hjh.im/download/latest/`（私有仓库的 GitHub Releases 匿名 404，此前客户端收不到更新）；未签名 macOS 提示更新时打开官网下载页；`install.sh` 默认从官网下载，`curl -fsSL https://mcode.hjh.im/install.sh | sh` 匿名可用；发版工作流新增「Publish to website」步骤（仓库 Secrets `CLOUDFLARE_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`，令牌仅限 `mcode-releases` 桶）；Linux 包元数据 homepage 与分享文案链接改为官网。
 - 2026-10-20：v3.15.5 — 手机远控默认改走 Mcode 自建中转 `remote.hjh.im`（Cloudflare Worker + Durable Object，协议兼容官方 relay V1，同域托管 Mcode 品牌手机页），不再依赖 z.ai relay 是否继续开放；远控弹窗新增「中转服务器」开关，可切回 Z.ai 官方作为备用（`MCODE_WEB_REMOTE_CONTROL_RELAY=zai` 亦可），两条中转的设备身份分开保存。桌面版与 Linux Web 版均生效。部署说明见 `deploy/remote-relay/README.md`。
 - 2026-10-16：未发版（main）— Linux Web 版新增账号密码登录：首次用令牌链接打开时可在网页创建账号，设置后令牌链接不能再登录浏览器，侧栏账户菜单可修改密码 / 退出，服务器上 `mcode passwd` 管理（scrypt 哈希、失败锁定、会话签名）；修复 macOS 安装包签名不完整（自 3.15.1 起，浏览器下载后首次打开会提示“已损坏”）：打包最后对整个 .app 重新 ad-hoc 签名并 `codesign --verify --deep --strict` 校验，失败即构建失败；Linux 无界面 Web 版支持手机扫码远控：配对与 z.ai relay 中转迁到服务端（`@mcode/server`），Web 侧栏新增二维码入口，`MCODE_WEB_REMOTE_CONTROL=0` 可关闭；修复二维码页 `app_version` 用了 z.ai 未提供的版本号导致手机页 404（改用上游版本号）；更新无头部署文档（OAuth 可在无头机器完成、移除过时 FAQ）。
 - 2026-10-16：v3.15.4 — 移植官方 ZCode 3.15.3 修复（登录身份验证失败、重复弹出新手引导、弱网卡住引导判断、多 Agent / 连续调用部分请求失败）；隐私加固：反馈 / 截图 / 诊断日志不再上传 z.ai 与阿里云 OSS（改为 GitHub Issues + 本地导出日志），营销弹窗默认关闭，ARMS / 事件上报 / Agent OTLP 须显式 `MCODE_ALLOW_TELEMETRY=1` 才会编入；设置页同时显示 Z.ai 与 BigModel Coding Plan，二选一登录；新增 Mcode 品牌手机远控页面的 GitHub Pages 自托管工作流（`MCODE_WEB_REMOTE_CONTROL_URL=mcode` 启用）。
@@ -68,8 +72,8 @@ v3.15.1 及更早版本没有该功能，需要手动下载一次 v3.15.2 或更
 2. 修改根目录 `package.json` 的 `version`，并更新 `README.md` / `README.en.md` 的「更新」章节与相关文档。
 3. 提交到分支 → PR → 合并到 `main`。
 4. 在 `main` 上推送同名标签：`git tag v<版本> && git push origin v<版本>`。
-5. GitHub Actions「Release Desktop」会编译全部平台桌面安装包与命令行 / Web 发行包，并发布为最新 Release；已安装的桌面客户端随后会收到更新提醒。
-6. 检查工作流成功、Release 资产齐全。
+5. GitHub Actions「Release Desktop」会编译全部平台桌面安装包与命令行 / Web 发行包，发布为最新 Release，并同步到官网 <https://mcode.hjh.im>（R2）；已安装的桌面客户端随后会收到更新提醒。
+6. 检查工作流成功、Release 资产齐全、官网 `https://mcode.hjh.im/download/latest/latest.yml` 已是新版本。
 
 `mcodeUpstreamVersion` 表示远程开发（SSH/WSL/Docker）复用的上游 ZCode 组件版本，只有同步上游代码时才需要修改。
 

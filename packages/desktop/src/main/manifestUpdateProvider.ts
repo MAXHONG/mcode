@@ -179,9 +179,15 @@ function resolveManifestFiles(
 }
 
 /**
- * Mcode 发布到 GitHub Releases：`releases/latest/download/<file>` 永远重定向到最新正式 Release，
- * 不需要 GitHub API（无速率限制、无需 token）。各平台读取各自的 electron-builder 更新清单。
+ * Mcode 官网（https://mcode.hjh.im，源码在私有仓库 MAXHONG/mcode-web）托管全部发布产物：
+ * `download/latest/<file>` 始终指向最新正式版本，各平台读取各自的 electron-builder 更新清单。
+ *
+ * 修复原因：仓库为私有时 GitHub Releases 的 `releases/latest/download/` 对匿名请求返回 404，
+ * 已安装的客户端永远检查不到更新。官网对匿名公开、支持 Range（差分下载 / 断点续传）。
  */
+export const MCODE_WEBSITE_ORIGIN = "https://mcode.hjh.im";
+export const MCODE_LATEST_DOWNLOAD_URL = `${MCODE_WEBSITE_ORIGIN}/download/latest/`;
+/** 仅在显式传入 baseUrl 时使用（如自托管或回退 GitHub Releases 的公开仓库）。 */
 export const GITHUB_RELEASES_LATEST_DOWNLOAD_URL =
   "https://github.com/MAXHONG/mcode/releases/latest/download/";
 
@@ -208,7 +214,7 @@ export class GitHubReleasesUpdateProvider extends Provider<UpdateInfo> {
     runtimeOptions: ProviderRuntimeOptions,
   ) {
     super(runtimeOptions);
-    this.baseUrl = new URL(options.baseUrl?.trim() || GITHUB_RELEASES_LATEST_DOWNLOAD_URL);
+    this.baseUrl = new URL(options.baseUrl?.trim() || MCODE_LATEST_DOWNLOAD_URL);
     this.linuxExtensions = getLinuxUpdateExtensions(updater);
   }
 

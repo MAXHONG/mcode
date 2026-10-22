@@ -22,14 +22,14 @@ node -v
 ## 2. 安装 Mcode
 
 ```bash
-curl -fsSL https://github.com/MAXHONG/mcode/releases/latest/download/install.sh | sh
+curl -fsSL https://mcode.hjh.im/install.sh | sh
 export PATH="$HOME/.local/bin:$PATH"   # 写入 ~/.bashrc
 mcode --version
 ```
 
 安装脚本会校验运行包的 SHA-256（来自同一 Release 的 `latest.json`），装到 `~/.mcode/runtime`，并创建 `~/.local/bin/mcode`。
 
-> 无法访问 GitHub 的机器可离线安装：先在能联网的机器上下载 `install.sh` 与 `mcode-<版本>.tar.gz`（例如 `gh release download -R MAXHONG/mcode -p 'mcode-*.tar.gz' -p install.sh`），拷贝过去后执行：
+> 安装脚本与发行包托管在官网 https://mcode.hjh.im，匿名可下载。无法访问外网时，先在其他机器下载 `install.sh` 与 `mcode-<版本>.tar.gz`（官网「全部下载」或 `gh release download -R MAXHONG/mcode -p 'mcode-*.tar.gz' -p install.sh`），再离线安装：
 >
 > ```bash
 > MCODE_DIST_ARCHIVE=./mcode-<版本>.tar.gz sh install.sh

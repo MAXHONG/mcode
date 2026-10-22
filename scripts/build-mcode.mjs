@@ -15,10 +15,11 @@ import { installScriptSource } from "./mcode-distribution/installer.mjs";
 const root = resolve(import.meta.dirname, "..");
 const defaultOutDir = resolve(root, "dist", "mcode");
 // 修复原因：旧脚本在未配置 MCODE_DIST_BASE_URL 时直接失败，导致 `pnpm build:mcode` 开箱即坏。
-// Mcode 的发行包随 GitHub Release 一起发布，install.sh 默认就从最新 Release 下载。
-const GITHUB_RELEASES_BASE_URL = "https://github.com/MAXHONG/mcode/releases/latest/download/";
+// Mcode 的发行包随每次发布同步到官网 https://mcode.hjh.im（R2 托管，匿名可下载），
+// install.sh 默认从官网 `download/latest/` 下载；私有 GitHub 仓库的 Release 资产匿名访问会 404。
+const MCODE_WEBSITE_LATEST_BASE_URL = "https://mcode.hjh.im/download/latest/";
 const defaultBaseUrl =
-  (await loadEndpointEnv()).MCODE_DIST_BASE_URL?.trim() || GITHUB_RELEASES_BASE_URL;
+  (await loadEndpointEnv()).MCODE_DIST_BASE_URL?.trim() || MCODE_WEBSITE_LATEST_BASE_URL;
 const packageDirName = "mcode";
 const usage = `Usage:
   pnpm build:mcode

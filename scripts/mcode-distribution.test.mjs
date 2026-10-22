@@ -245,6 +245,25 @@ test("installer verifies SHA-256 and supports the GitHub Releases flat layout", 
   assert.deepEqual(JSON.parse(result.stdout).argv, []);
 });
 
+test("installer supports the Mcode website download/latest flat layout", async (t) => {
+  const { directory, root, downloads, tarball, sha256 } = await makeInstallerFixture(t, {
+    layout: "selfhosted",
+  });
+  // 模拟官网 https://mcode.hjh.im/download/latest/<asset>
+  const flat = join(downloads, "download/latest");
+  await mkdir(flat, { recursive: true });
+  await cp(tarball, join(flat, "mcode-1.2.3.tar.gz"));
+  await writeFile(
+    join(flat, "latest.json"),
+    JSON.stringify({ version: "1.2.3", tarball: "mcode-1.2.3.tar.gz", sha256 }),
+  );
+  const { stdout, bin } = await runInstaller(directory, `file://${downloads}/download/latest/`);
+  assert.match(stdout, /SHA-256 verified/);
+  await rm(root, { recursive: true });
+  const result = await exec(join(bin, "mcode"), [], { cwd: directory });
+  assert.deepEqual(JSON.parse(result.stdout).argv, []);
+});
+
 test("installer rejects an archive whose SHA-256 does not match latest.json", async (t) => {
   const { directory, baseUrl, latestDir } = await makeInstallerFixture(t, { layout: "github" });
   await writeFile(
