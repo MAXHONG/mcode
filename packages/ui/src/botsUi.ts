@@ -5,7 +5,7 @@ import type {
 } from "@mcode/shared";
 import { getSupportedBotReplyGranularities } from "@mcode/shared";
 
-export type BotProviderEntryId = BotProvider | "dingding";
+export type BotProviderEntryId = BotProvider;
 
 type BotProviderEntry =
   | { id: BotProvider; label: string; implemented: true }
@@ -16,7 +16,7 @@ export const BOT_PROVIDERS: BotProviderEntry[] = [
   { id: "feishu", label: "Feishu", implemented: true },
   { id: "lark", label: "Lark", implemented: true },
   { id: "telegram", label: "Telegram", implemented: true },
-  { id: "dingding", label: "DingTalk", implemented: false },
+  { id: "dingtalk", label: "DingTalk", implemented: true },
   { id: "discord", label: "Discord", implemented: false },
   { id: "wecom", label: "WeCom", implemented: false },
   { id: "webhook", label: "Webhook", implemented: true },

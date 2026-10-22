@@ -110,6 +110,80 @@ function TelegramBotFatherQrPanel({
   );
 }
 
+export const DINGTALK_OPEN_PLATFORM_URL = "https://open-dev.dingtalk.com/fe/app";
+
+function DingTalkCredentialsPanel({
+  clientId,
+  credentialValue,
+  secretSaving,
+  onClientIdChange,
+  onCredentialValueChange,
+  onSaveSecret,
+  onOpenConsole,
+}: {
+  clientId: string;
+  credentialValue: string;
+  secretSaving: boolean;
+  onClientIdChange: (value: string) => void;
+  onCredentialValueChange: (value: string) => void;
+  onSaveSecret: () => void;
+  onOpenConsole: () => void;
+}) {
+  const { intl } = useMcodeIntl();
+  const canSave = Boolean(clientId.trim() && credentialValue.trim()) && !secretSaving;
+  return (
+    <DetailPanel>
+      <div className="space-y-3 text-ui-base">
+        <div className="leading-5 text-foreground-subtle">
+          {intl.formatMessage({ id: "bots.dingtalkSetupHint" })}
+        </div>
+        <Button variant="ghost" size="sm" onClick={onOpenConsole}>
+          <ExternalLink className="size-3" />
+          {intl.formatMessage({ id: "bots.dingtalkOpenConsole" })}
+        </Button>
+        <label className="block space-y-1">
+          <span className="text-foreground">
+            {intl.formatMessage({ id: "bots.dingtalkClientId" })}
+          </span>
+          <Input
+            size="lg"
+            value={clientId}
+            onChange={(event) => onClientIdChange(event.target.value)}
+            placeholder={intl.formatMessage({ id: "bots.dingtalkClientIdPlaceholder" })}
+            disabled={secretSaving}
+            data-testid="bots-dingtalk-client-id"
+          />
+        </label>
+        <label className="block space-y-1">
+          <span className="text-foreground">
+            {intl.formatMessage({ id: "bots.dingtalkClientSecret" })}
+          </span>
+          <div className="flex w-full min-w-0 items-center gap-2">
+            <Input
+              size="lg"
+              type="password"
+              value={credentialValue}
+              onChange={(event) => onCredentialValueChange(event.target.value)}
+              placeholder={intl.formatMessage({ id: "bots.dingtalkClientSecretPlaceholder" })}
+              className="min-w-0 flex-1"
+              disabled={secretSaving}
+              data-testid="bots-dingtalk-client-secret"
+            />
+            <Button variant="outline" size="lg" onClick={onSaveSecret} disabled={!canSave}>
+              {secretSaving ? (
+                <LoaderCircle className="size-4 animate-spin" />
+              ) : (
+                <KeyRound className="size-4" />
+              )}
+              {intl.formatMessage({ id: "bots.saveSecret" })}
+            </Button>
+          </div>
+        </label>
+      </div>
+    </DetailPanel>
+  );
+}
+
 export function ProviderSettingsCard({
   bot,
   runtime,
@@ -124,6 +198,9 @@ export function ProviderSettingsCard({
   weixinRegistrationLoading,
   weixinActivated,
   secretSaving,
+  dingtalkClientId = "",
+  onDingTalkClientIdChange,
+  onOpenDingTalkConsole,
   onCredentialValueChange,
   onSaveSecret,
   onRemoveSecret,
@@ -147,6 +224,9 @@ export function ProviderSettingsCard({
   weixinRegistrationLoading: boolean;
   weixinActivated: boolean;
   secretSaving: boolean;
+  dingtalkClientId?: string;
+  onDingTalkClientIdChange?: (value: string) => void;
+  onOpenDingTalkConsole?: () => void;
   onCredentialValueChange: (value: string) => void;
   onSaveSecret: () => void;
   onRemoveSecret: () => void;
@@ -222,6 +302,18 @@ export function ProviderSettingsCard({
         secretSaving={secretSaving}
         onCredentialValueChange={onCredentialValueChange}
         onSaveSecret={onSaveSecret}
+      />
+    );
+  } else if (bot.provider === "dingtalk" && !hasSecret) {
+    detail = (
+      <DingTalkCredentialsPanel
+        clientId={dingtalkClientId}
+        credentialValue={credentialValue}
+        secretSaving={secretSaving}
+        onClientIdChange={(value) => onDingTalkClientIdChange?.(value)}
+        onCredentialValueChange={onCredentialValueChange}
+        onSaveSecret={onSaveSecret}
+        onOpenConsole={() => onOpenDingTalkConsole?.()}
       />
     );
   } else if ((isFeishuLike && !hasSecret) || (isWeixin && !hasSecret)) {

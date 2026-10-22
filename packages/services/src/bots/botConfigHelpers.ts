@@ -75,6 +75,14 @@ export function normalizeBotConfig(bot: BotConfig): BotConfig {
     // Bugfix: Feishu/Lark 的回复颗粒度依赖 Card JSON 2.0 单卡更新，旧配置不能继续保留普通消息模式。
     replyMode: normalizeBotReplyGranularity(bot.provider, bot.replyMode),
   };
+  if (normalized.provider === "dingtalk") {
+    // 钉钉 Client ID 是 Stream 锁键与 robotCode，首尾空白会导致网关鉴权失败或跨窗口锁失配。
+    const clientId = normalized.dingtalkClientId?.trim();
+    if (clientId) normalized.dingtalkClientId = clientId;
+    else delete normalized.dingtalkClientId;
+    delete normalized.webhookUrl;
+    return normalized;
+  }
   if (normalized.provider !== "weixin") {
     return normalized;
   }

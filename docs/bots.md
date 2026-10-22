@@ -79,7 +79,19 @@ The Bots dialog right pane follows the same row structure as Settings General: e
 
 Provider setup intentionally hides stored secret values. Telegram shows a fixed BotFather QR code alongside the token input before a secret is saved; after saving it automatically advances to the private-chat bind code until the bot is connected. Feishu / Lark start with QR authorization for app credentials, then automatically show the private-chat bind code. Weixin starts with QR login; successful QR login saves the bot token and clears the QR detail panel. Because Weixin QR login returns bot credentials rather than the scanning user's deliverable chat id, the user must send any first message in Weixin to activate the chat. That first activation message receives a welcome/help reply and is not sent to Mcode task flow as a prompt.
 
-Webhook setup is available from the new bot provider list and provider settings surface. Feishu and Lark are both first-class new bot entries. They share the same provider implementation and registration flow, but the selected provider id must be preserved because it chooses the OpenAPI domain (`open.feishu.cn` for Feishu, `open.larksuite.com` for Lark). DingTalk is shown there only as a coming-soon channel.
+Webhook setup is available from the new bot provider list and provider settings surface. Feishu and Lark are both first-class new bot entries. They share the same provider implementation and registration flow, but the selected provider id must be preserved because it chooses the OpenAPI domain (`open.feishu.cn` for Feishu, `open.larksuite.com` for Lark). DingTalk is a first-class channel (see below).
+
+## DingTalk (Stream mode)
+
+DingTalk uses an enterprise internal app robot in **Stream mode**, so the desktop host needs no public callback URL.
+
+- Setup: create an internal app on the DingTalk Open Platform, add the Robot capability, set message receiving to Stream mode, publish, then paste **Client ID (AppKey)** and **Client Secret (AppSecret)** in the Bots dialog. `dingtalkClientId` is stored in `bot-config.v3.json`; the secret only lives in `CredentialService`.
+- Inbound: `dingtalkChannelRuntime` registers `POST /v1.0/gateway/connections/open` (topic `/v1.0/im/bot/messages/get`), opens the WebSocket, replies to `SYSTEM ping`, reconnects immediately on `disconnect`, and reconnects with exponential backoff on errors or 90 s of silence. A cross-window lock (`dingtalk-stream`, keyed by Client ID) keeps one Mcode window online per app, because DingTalk load-balances messages across all open connections.
+- Binding: same `/bind <code>` flow as Telegram, in a direct chat. `providerUserId` is the sender's `senderStaffId`.
+- Outbound: direct chats use `/v1.0/robot/oToMessages/batchSend` (`sampleMarkdown`); group replies use the inbound `sessionWebhook` (only `https://oapi|api.dingtalk.com/` URLs are trusted) and fall back to `/v1.0/robot/groupMessages/send`. Long replies are split at ~3500 characters; single newlines are converted to markdown hard breaks outside code blocks.
+- Selections: DingTalk markdown has no buttons, so it shares Weixin's numbered text selection (`isTextSelectionBotProvider`).
+- Attachments: picture / file / video / rich-text images are downloaded via `/v1.0/robot/messageFiles/download`; voice messages use DingTalk's speech recognition text.
+- Scheduled-task results can be delivered back to the originating DingTalk chat.
 
 ## Commands
 
