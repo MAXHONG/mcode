@@ -67,25 +67,29 @@ describe("BotsDialog config", () => {
     }
   });
 
-  it("shows Lark as a supported new bot entry and keeps DingTalk coming soon", () => {
+  it("shows Lark and DingTalk as supported new bot entries", () => {
     expect(BOT_PROVIDERS.find((provider) => provider.id === "lark")).toEqual({
       id: "lark",
       label: "Lark",
       implemented: true,
     });
-    expect(BOT_PROVIDERS.find((provider) => provider.id === "dingding")).toEqual(
-      {
-        id: "dingding",
-        label: "DingTalk",
-        implemented: false,
-      },
-    );
-    expect(enUS["bots.channel.dingding"]).toBeTruthy();
-    expect(zhCN["bots.channel.dingding"]).toBeTruthy();
-    expect(enUS["bots.newBot.providerDescription.lark"]).toBeTruthy();
-    expect(zhCN["bots.newBot.providerDescription.lark"]).toBeTruthy();
-    expect(enUS["bots.newBot.providerDescription.dingding"]).toBeTruthy();
-    expect(zhCN["bots.newBot.providerDescription.dingding"]).toBeTruthy();
+    expect(BOT_PROVIDERS.find((provider) => provider.id === "dingtalk")).toEqual({
+      id: "dingtalk",
+      label: "DingTalk",
+      implemented: true,
+    });
+    for (const key of [
+      "bots.channel.dingtalk",
+      "bots.newBot.providerDescription.lark",
+      "bots.newBot.providerDescription.dingtalk",
+      "bots.botTokenDescription.dingtalk",
+      "bots.dingtalkClientId",
+      "bots.dingtalkClientSecret",
+      "bots.runtime.dingtalkStreamRunning",
+    ]) {
+      expect(enUS[key]).toBeTruthy();
+      expect(zhCN[key]).toBeTruthy();
+    }
   });
 
   it("uses welcome screen region tags for Feishu and Lark bot entries", () => {

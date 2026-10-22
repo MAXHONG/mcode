@@ -30,6 +30,7 @@ export const botProviders = [
   "feishu",
   "lark",
   "weixin",
+  "dingtalk",
   "discord",
   "wecom",
 ] as const;
@@ -43,7 +44,7 @@ export type FeishuBotProvider = Extract<BotProvider, "feishu" | "lark">;
  */
 export const mcodeAutomationBotDeliveryTargetSchema = z
   .object({
-    provider: z.enum(["feishu", "lark", "weixin"]),
+    provider: z.enum(["feishu", "lark", "weixin", "dingtalk"]),
     botId: z.string().trim().min(1),
     providerUserId: z.string().trim().min(1),
     chatType: z.enum(["private", "group"]),
@@ -58,6 +59,14 @@ export type McodeAutomationBotDeliveryTarget = z.infer<
 
 export function isFeishuBotProvider(provider: BotProvider): provider is FeishuBotProvider {
   return provider === "feishu" || provider === "lark";
+}
+
+/**
+ * 没有原生按钮回调的纯文本通道：选项以编号文本展示，用户回复数字完成选择。
+ * 微信 iLink 和钉钉 markdown 消息都属于此类。
+ */
+export function isTextSelectionBotProvider(provider: BotProvider): boolean {
+  return provider === "weixin" || provider === "dingtalk";
 }
 export type BotContextMode = "draft" | "task";
 export type BotReplyGranularity =
@@ -116,6 +125,8 @@ export interface BotConfig {
   webhookUrl?: string;
   webhookAuthHeaderName?: string;
   feishuAppId?: string;
+  /** 钉钉企业内部应用 Client ID（原 AppKey，同时作为 robotCode）；Client Secret 只存 CredentialService。 */
+  dingtalkClientId?: string;
   providerUserId?: string;
   displayName?: string;
   allowedWorkspaces: string[];
@@ -780,6 +791,7 @@ export const botConfigSchema = z
     webhookUrl: z.string().url().optional(),
     webhookAuthHeaderName: z.string().min(1).optional(),
     feishuAppId: z.string().min(1).optional(),
+    dingtalkClientId: z.string().min(1).optional(),
     providerUserId: z.string().min(1).optional(),
     displayName: z.string().optional(),
     allowedWorkspaces: z.array(z.string().min(1)),

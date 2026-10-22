@@ -72,6 +72,7 @@ import {
   type BotPendingElicitation,
   type BotStructuredElicitationResponse,
   isFeishuBotProvider,
+  isTextSelectionBotProvider,
   type BotProvider,
   type BotProviderCallbackResult,
   type BotReplyGranularity,
@@ -130,6 +131,7 @@ import type {
 import { createTelegramBotProvider } from "./providers/telegramProvider.js";
 import { createWebhookBotProvider } from "./providers/webhookProvider.js";
 import { createWeixinBotProvider } from "./providers/weixinProvider.js";
+import { createDingTalkBotProvider } from "./providers/dingtalkProvider.js";
 import {
   beginWeixinRegistration as beginWeixinQrRegistration,
   pollWeixinRegistration as pollWeixinQrRegistration,
@@ -182,6 +184,7 @@ import {
 import { createTelegramChannelRuntime } from "./telegramChannelRuntime.js";
 import { createBotTaskStreamHub } from "#src/bots/taskStreamHub.js";
 import { createWeixinChannelRuntime } from "./weixinChannelRuntime.js";
+import { createDingTalkChannelRuntime } from "./dingtalkChannelRuntime.js";
 import { createFeishuChannelRuntime } from "./feishuChannelRuntime.js";
 import { registerMemoryDiagnosticsProvider } from "#src/memoryDiagnostics.js";
 
@@ -236,7 +239,12 @@ const BOT_REPLY_GRANULARITY_OPTIONS = [
   aliases: readonly string[];
 }>;
 
-const BOT_EXCLUSIVE_CREDENTIAL_PROVIDERS = new Set<BotProvider>(["telegram", "feishu", "lark"]);
+const BOT_EXCLUSIVE_CREDENTIAL_PROVIDERS = new Set<BotProvider>([
+  "telegram",
+  "feishu",
+  "lark",
+  "dingtalk",
+]);
 const FEISHU_STREAMING_CARD_MIN_UPDATE_INTERVAL_MS = 1_000;
 const FEISHU_STREAMING_CARD_REQUEST_TIMEOUT_MS = 15_000;
 const FEISHU_STREAMING_CARD_FAILURE_BACKOFF_BASE_MS = 1_000;
@@ -539,7 +547,12 @@ function groupCardFor(
 function resolveAutomationBotDeliveryTarget(
   actor: BotActor,
 ): McodeAutomationBotDeliveryTarget | undefined {
-  if (actor.provider !== "feishu" && actor.provider !== "lark" && actor.provider !== "weixin") {
+  if (
+    actor.provider !== "feishu" &&
+    actor.provider !== "lark" &&
+    actor.provider !== "weixin" &&
+    actor.provider !== "dingtalk"
+  ) {
     return undefined;
   }
   const providerUserId = actor.chatId?.trim() || actor.providerUserId.trim();
@@ -842,6 +855,9 @@ export function createBotsService(
     weixin: createWeixinBotProvider({
       loadCredential: (key) => deps.credentialService.load(key),
     }),
+    dingtalk: createDingTalkBotProvider({
+      loadCredential: (key) => deps.credentialService.load(key),
+    }),
     discord: null,
     wecom: null,
   };
@@ -898,6 +914,15 @@ export function createBotsService(
     readConfig: () => repo.readConfig(),
     readWeixinGetUpdatesBuf,
     writeWeixinGetUpdatesBuf,
+    processProviderCallback,
+  });
+  const dingtalkRuntime = createDingTalkChannelRuntime({
+    runBackgroundTasks: runStartupBackgroundTasks,
+    credentialService: deps.credentialService,
+    logger: botsLogger,
+    statusSink,
+    ensureBotStorageMigrated,
+    readConfig: () => repo.readConfig(),
     processProviderCallback,
   });
   const feishuRuntime = createFeishuChannelRuntime({
@@ -1418,7 +1443,7 @@ export function createBotsService(
   }
 
   function privateSyncSupported(bot: BotConfig): boolean {
-    return ["feishu", "lark", "telegram", "weixin"].includes(bot.provider);
+    return ["feishu", "lark", "telegram", "weixin", "dingtalk"].includes(bot.provider);
   }
 
   function taskStreamKey(context: BotContextState, actor: BotActor): string {
@@ -2804,8 +2829,8 @@ export function createBotsService(
     if (!selection) {
       return null;
     }
-    if (actor.provider !== "weixin") {
-      // Bugfix: 只有微信没有结构化选项，只能靠“回复数字”承接 pending selection。
+    if (!isTextSelectionBotProvider(actor.provider)) {
+      // Bugfix: 只有微信/钉钉没有结构化选项，只能靠“回复数字”承接 pending selection。
       // Telegram/飞书等 provider 有按钮回调，普通文本不应被隐式解析成菜单选择。
       clearPendingSelection(actor);
       return null;
@@ -4686,7 +4711,7 @@ export function createBotsService(
       return [createOutbound(actor, msg(auth.locale, "elicitationExpired"))];
     }
     const parsedValue = parseElicitationResponseValue(value);
-    if (actor.provider !== "weixin") {
+    if (!isTextSelectionBotProvider(actor.provider)) {
       const expectedToken = getPendingElicitationSelectionToken(pending);
       if (!parsedValue.token || parsedValue.token !== expectedToken) {
         // Bugfix: Telegram/飞书/Webhook 的旧按钮可能在新一轮 AskUserQuestion 后才送达。
@@ -6011,7 +6036,7 @@ export function createBotsService(
     // Bugfix: 微信没有原生选项卡能力，只能走纯文本编号选项。
     // 之前纯文本 fallback 会同时展示标题里的“当前”和选项上的“当前”标记，
     // 微信回复看起来像重复状态文案；这里让标题负责说明当前状态，列表只保留可回复的编号。
-    const supportsStructuredSelection = actor.provider !== "weixin";
+    const supportsStructuredSelection = !isTextSelectionBotProvider(actor.provider);
     // Bugfix: 微信 /model 第一层选择的是供应商，之前复用 description 把模型列表也拼进同一行，
     // 导致用户还没选供应商就看到两层信息。纯文本通道先只展示供应商，模型放到下一层再展示。
     const textSelection = stripModelProviderDescriptionsForTextSelection(selection);
@@ -8177,6 +8202,7 @@ export function createBotsService(
       clearCandidateCaches();
       telegramRuntime.scheduleRefresh(savedConfig);
       weixinRuntime.scheduleRefresh(savedConfig);
+      dingtalkRuntime.scheduleRefresh(savedConfig);
       feishuRuntime.scheduleRefresh(savedConfig);
       return savedConfig;
     },
@@ -8240,6 +8266,7 @@ export function createBotsService(
       clearCandidateCaches();
       telegramRuntime.scheduleRefresh(savedConfig);
       weixinRuntime.scheduleRefresh(savedConfig);
+      dingtalkRuntime.scheduleRefresh(savedConfig);
       feishuRuntime.scheduleRefresh(savedConfig);
       return bot;
     },
@@ -8258,6 +8285,9 @@ export function createBotsService(
       if (bot.provider === "weixin") {
         weixinRuntime.stopPolling(bot.id);
       }
+      if (bot.provider === "dingtalk") {
+        void dingtalkRuntime.stopStream(bot.id);
+      }
       // Bugfix: 只移除密钥时如果保留旧绑定身份，UI 会显示“已连通”，但运行时已经没有 token 可用。
       // 这里同步清理绑定状态，让 Bot token 行回到可重新添加的状态。
       const nextBot = normalizeBotConfig({
@@ -8267,6 +8297,7 @@ export function createBotsService(
         providerUserId: undefined,
         displayName: undefined,
         feishuAppId: isFeishuBotProvider(bot.provider) ? undefined : bot.feishuAppId,
+        dingtalkClientId: bot.provider === "dingtalk" ? undefined : bot.dingtalkClientId,
       });
       const savedConfig = await writeBotConfig({
         ...config,
@@ -8280,6 +8311,7 @@ export function createBotsService(
       clearCandidateCaches();
       telegramRuntime.scheduleRefresh(savedConfig);
       weixinRuntime.scheduleRefresh(savedConfig);
+      dingtalkRuntime.scheduleRefresh(savedConfig);
       feishuRuntime.scheduleRefresh(savedConfig);
       if (bot.credentialRef) {
         await deps.credentialService.delete(bot.credentialRef);
@@ -8301,6 +8333,9 @@ export function createBotsService(
       if (bot?.provider === "weixin") {
         weixinRuntime.stopPolling(bot.id);
       }
+      if (bot?.provider === "dingtalk") {
+        void dingtalkRuntime.stopStream(bot.id);
+      }
       await writeBotConfig({
         ...config,
         bots: config.bots.filter((item) => item.id !== botId),
@@ -8308,6 +8343,7 @@ export function createBotsService(
       clearCandidateCaches();
       telegramRuntime.scheduleRefresh();
       weixinRuntime.scheduleRefresh();
+      dingtalkRuntime.scheduleRefresh();
       await serializeStateWrite(async () => {
         const state = await repo.readState();
         delete state.bots[botId];
@@ -8818,7 +8854,7 @@ export function createBotsService(
             : parsedCommand.type === "message"
               ? (resolvePendingSelectionCommand(message.actor, parsedCommand.text) ?? parsedCommand)
               : parsedCommand.type === "selection.cancel" &&
-                  message.actor.provider !== "weixin" &&
+                  !isTextSelectionBotProvider(message.actor.provider) &&
                   (message.commandText ?? message.text).trim() === "0"
                 ? (clearPendingSelection(message.actor),
                   { type: "message", text: message.text } as const)
@@ -9694,7 +9730,7 @@ export function createBotsService(
             if (!pending) {
               return [createOutbound(message.actor, msg(auth.locale, "elicitationExpired"))];
             }
-            if (message.actor.provider !== "weixin") {
+            if (!isTextSelectionBotProvider(message.actor.provider)) {
               // Bugfix: 非微信通道的“完成”应从带 token 的按钮进入 elicitation.respond。
               // 直接 /elicitation submit 没有轮次标识，可能误提交上一轮 AskUserQuestion。
               return [createOutbound(message.actor, msg(auth.locale, "elicitationExpired"))];
@@ -9880,6 +9916,7 @@ export function createBotsService(
         cancelUploads,
         telegramRuntime.dispose(),
         weixinRuntime.dispose(),
+        dingtalkRuntime.dispose(),
         feishuRuntime.dispose(),
       ]).then(() => undefined);
       return shutdownPromise;
@@ -9904,6 +9941,7 @@ export function createBotsService(
     privateRecoveryTimer.unref();
     void telegramRuntime.refresh();
     void weixinRuntime.refresh();
+    void dingtalkRuntime.refresh();
     void feishuRuntime.refresh();
     void ensureBotStorageMigrated()
       .then(async () => {

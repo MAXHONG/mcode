@@ -82,7 +82,7 @@ export function ProviderIcon({
         ? WeixinChannelIcon
         : provider === "feishu" || provider === "lark"
           ? FeishuChannelIcon
-          : provider === "dingding"
+          : provider === "dingtalk"
             ? DingDingChannelIcon
             : provider === "discord"
               ? DiscordChannelIcon

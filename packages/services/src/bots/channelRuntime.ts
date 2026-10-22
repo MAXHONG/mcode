@@ -257,6 +257,13 @@ export function acquireFeishuWebSocketLock(
   return acquireBotRuntimeLock(`${bot.provider}-websocket`, bot.feishuAppId?.trim() ?? "", bot.id);
 }
 
+export function acquireDingTalkStreamLock(
+  bot: Pick<BotConfig, "id" | "dingtalkClientId">,
+): Promise<BotRuntimeLock | null> {
+  // 同一钉钉应用的 Stream 连接会被网关负载到任意一条在线连接；多窗口同时在线会让消息随机丢到别的 host。
+  return acquireBotRuntimeLock("dingtalk-stream", bot.dingtalkClientId?.trim() ?? "", bot.id);
+}
+
 export function waitFor(ms: number, signal: AbortSignal): Promise<void> {
   if (signal.aborted) {
     return Promise.resolve();

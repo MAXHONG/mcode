@@ -45,7 +45,10 @@ import {
   BotReplyGranularityCard,
   BotSummaryCard,
 } from "@/BotsDialog/BotSummaryCard.js";
-import { ProviderSettingsCard } from "@/BotsDialog/ProviderSettingsCard.js";
+import {
+  DINGTALK_OPEN_PLATFORM_URL,
+  ProviderSettingsCard,
+} from "@/BotsDialog/ProviderSettingsCard.js";
 import { BoundGroupsCard } from "@/BotsDialog/BoundGroupsCard.js";
 import { WorkspaceAccessCard } from "@/BotsDialog/WorkspaceAccessCard.js";
 import { SettingsGroupCard } from "@/settings/SettingsPageParts.js";
@@ -118,6 +121,10 @@ export function BotsDialog({
   const [weixinRegistrationLoading, setWeixinRegistrationLoading] = useState(false);
   const [nowMs, setNowMs] = useState(() => Date.now());
   const [credentialValue, setCredentialValue] = useState("");
+  const [dingtalkClientIdDraft, setDingtalkClientIdDraft] = useState<{
+    botId: string;
+    value: string;
+  } | null>(null);
   const [secretSaving, setSecretSaving] = useState(false);
   const [workspaceAccessSaving, setWorkspaceAccessSaving] = useState(false);
   const [botNameDraft, setBotNameDraft] = useState<{
@@ -745,9 +752,26 @@ export function BotsDialog({
 
   const handleSaveSecret = async () => {
     if (!selectedBot || secretSaving) return;
+    const dingtalkClientId =
+      selectedBot.provider === "dingtalk"
+        ? (dingtalkClientIdDraft?.botId === selectedBot.id
+            ? dingtalkClientIdDraft.value
+            : (selectedBot.dingtalkClientId ?? "")
+          ).trim()
+        : "";
+    if (selectedBot.provider === "dingtalk" && (!dingtalkClientId || !credentialValue.trim())) {
+      toast(intl.formatMessage({ id: "bots.dingtalkCredentialsRequired" }));
+      return;
+    }
     setSecretSaving(true);
     try {
-      await saveBot(selectedBot, { credentialValue });
+      // 钉钉需要 Client ID（明文配置）与 Client Secret（CredentialService）一起保存，
+      // 否则 Stream runtime 会拿着不完整的凭据反复重连。
+      await saveBot(
+        selectedBot.provider === "dingtalk" ? { ...selectedBot, dingtalkClientId } : selectedBot,
+        { credentialValue },
+      );
+      if (selectedBot.provider === "dingtalk") setDingtalkClientIdDraft(null);
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       logger.error("[BotsDialog] 保存 Bot secret 失败", message);
@@ -878,7 +902,7 @@ export function BotsDialog({
       return;
     }
 
-    if (selectedBot.provider === "telegram") {
+    if (selectedBot.provider === "telegram" || selectedBot.provider === "dingtalk") {
       if (!selectedBot.credentialRef || selectedBot.providerUserId) {
         return;
       }
@@ -934,6 +958,10 @@ export function BotsDialog({
 
   const handleOpenTelegramBotFather = () => {
     platform.openExternal(TELEGRAM_BOTFATHER_URL);
+  };
+
+  const handleOpenDingTalkConsole = () => {
+    platform.openExternal(DINGTALK_OPEN_PLATFORM_URL);
   };
 
   const copyBindCommand = async () => {
@@ -1217,6 +1245,15 @@ export function BotsDialog({
                   weixinRegistrationLoading={weixinRegistrationLoading}
                   weixinActivated={Boolean(selectedBotState?.weixinActivatedAt)}
                   secretSaving={secretSaving}
+                  dingtalkClientId={
+                    dingtalkClientIdDraft?.botId === selectedBot.id
+                      ? dingtalkClientIdDraft.value
+                      : (selectedBot.dingtalkClientId ?? "")
+                  }
+                  onDingTalkClientIdChange={(value) =>
+                    setDingtalkClientIdDraft({ botId: selectedBot.id, value })
+                  }
+                  onOpenDingTalkConsole={handleOpenDingTalkConsole}
                   onCredentialValueChange={setCredentialValue}
                   onSaveSecret={() => void handleSaveSecret()}
                   onRemoveSecret={() => void handleRemoveSecret()}
