@@ -36,11 +36,12 @@ Mcode 基于 [zai-org/ZCode](https://github.com/zai-org/ZCode) v3.15.1（Apache-
 
 ## 构建与发布差异
 
-- 自动更新改为读取本仓库 GitHub Releases 的 `latest*.yml`（`packages/desktop/src/main/manifestUpdateProvider.ts` 中的 `GitHubReleasesUpdateProvider`），不再请求 z.ai 的更新 manifest 服务；z.ai 下发的远端强制升级检查始终跳过，避免 Mcode 被引导安装上游 ZCode 安装包。
-- 安装包未签名、未公证；macOS 上的更新提示改为打开 Release 页面（设置 `MCODE_MAC_SIGNED_UPDATES=1` 的签名构建可恢复原地安装）。
-- `.github/workflows/release-desktop.yml` 在 macOS（arm64 / x64）、Windows（x64 / ARM64）、Linux（x64 / ARM64）Runner 上构建，推送 `v*` 标签或手动触发后发布到 GitHub Releases，并整理各平台更新清单（`scripts/ci/merge-update-manifests.mjs`）。
+- 自动更新改为读取 Mcode 官网 `https://mcode.hjh.im/download/latest/` 的 `latest*.yml`（`packages/desktop/src/main/manifestUpdateProvider.ts` 中的 `GitHubReleasesUpdateProvider`，沿用 GitHub Releases 的扁平布局；官网源码在私有仓库 `MAXHONG/mcode-web`，产物托管在 Cloudflare R2），不再请求 z.ai 的更新 manifest 服务；z.ai 下发的远端强制升级检查始终跳过，避免 Mcode 被引导安装上游 ZCode 安装包。
+- 产品主页（Linux 包元数据 homepage、分享文案下载链接）改为 `https://mcode.hjh.im`；登录、套餐等服务端地址仍是 `zcode.z.ai`。
+- 安装包未签名、未公证时，macOS 上的更新提示改为打开官网版本下载页（设置 `MCODE_MAC_SIGNED_UPDATES=1` 的签名构建可恢复原地安装）。
+- `.github/workflows/release-desktop.yml` 在 macOS（arm64 / x64）、Windows（x64 / ARM64）、Linux（x64 / ARM64）Runner 上构建，推送 `v*` 标签或手动触发后发布到 GitHub Releases，整理各平台更新清单（`scripts/ci/merge-update-manifests.mjs`），再修正更新清单并同步到官网 R2（`scripts/ci/fix-update-manifests.mjs`、`scripts/ci/publish-website-release.mjs`）。
 - Mcode 版本号（`package.json` 的 `version`）可独立于上游递增；远程开发使用的上游组件版本由 `mcodeUpstreamVersion` 固定（`MCODE_REMOTE_UPSTREAM_VERSION`）。
-- v3.15.3 起，发布工作流同时构建命令行 / Web 发行包（`mcode-<版本>.tar.gz`、`latest.json`、`install.sh`），`install.sh` 默认从本仓库 GitHub Releases 下载并校验 SHA-256；无界面 Linux 部署见 `docs/linux-headless-web.md` 与 `deploy/linux/`。
+- v3.15.3 起，发布工作流同时构建命令行 / Web 发行包（`mcode-<版本>.tar.gz`、`latest.json`、`install.sh`），`install.sh` 默认从官网 `https://mcode.hjh.im/download/latest/` 下载并校验 SHA-256；无界面 Linux 部署见 `docs/linux-headless-web.md` 与 `deploy/linux/`。
 - 与上游的行为差异（v3.15.3）：已有可用模型（含个人 Provider）时启动不再强制打开登录页；`mcode --web` 默认总是启用访问令牌，Web 服务拒绝跨站 WebSocket 升级。
 
 ## 重新执行改名

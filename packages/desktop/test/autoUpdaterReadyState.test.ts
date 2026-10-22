@@ -297,7 +297,7 @@ describe("autoUpdater ready state sync", () => {
     );
   });
 
-  it("未显式配置 feed 时默认使用 GitHub Releases provider", async () => {
+  it("未显式配置 feed 时默认使用 Mcode 官网更新源", async () => {
     mockProcessPlatform("linux");
     process.env["TEST_UPDATER_ARCH"] = "arm64";
 
@@ -317,7 +317,9 @@ describe("autoUpdater ready state sync", () => {
     process.env["TEST_UPDATER_ARCH"] = "arm64";
 
     const { initAutoUpdater } = await import("../src/main/autoUpdater.js");
-    initAutoUpdater({ updateFeedSource: { url: "https://zcode.z.ai/api/v1/releases/electron/manifest" }, });
+    initAutoUpdater({
+      updateFeedSource: { url: "https://zcode.z.ai/api/v1/releases/electron/manifest" },
+    });
 
     expect(autoUpdaterMock.setFeedURL).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -328,12 +330,11 @@ describe("autoUpdater ready state sync", () => {
     expect(autoUpdaterMock.checkForUpdates).toHaveBeenCalledTimes(1);
   });
 
-  it("未签名 macOS 构建点击下载时打开 GitHub Release 页面而不是下载安装", async () => {
+  it("未签名 macOS 构建点击下载时打开官网版本下载页而不是下载安装", async () => {
     mockProcessPlatform("darwin");
     delete process.env["MCODE_MAC_SIGNED_UPDATES"];
-    const { downloadAvailableUpdate, getAutoUpdaterState, initAutoUpdater } = await import(
-      "../src/main/autoUpdater.js"
-    );
+    const { downloadAvailableUpdate, getAutoUpdaterState, initAutoUpdater } =
+      await import("../src/main/autoUpdater.js");
     await initAutoUpdater();
     autoUpdaterMock.emit("update-available", { version: "3.15.9" });
     await new Promise((resolve) => setTimeout(resolve, 0));
@@ -341,9 +342,7 @@ describe("autoUpdater ready state sync", () => {
 
     downloadAvailableUpdate("renderer");
 
-    expect(shellOpenExternal).toHaveBeenCalledWith(
-      "https://github.com/MAXHONG/mcode/releases/tag/v3.15.9",
-    );
+    expect(shellOpenExternal).toHaveBeenCalledWith("https://mcode.hjh.im/cn/releases#v3.15.9");
     expect(autoUpdaterMock.downloadUpdate).not.toHaveBeenCalled();
   });
 
@@ -454,7 +453,10 @@ describe("autoUpdater ready state sync", () => {
     const { getAutoUpdaterState, initAutoUpdater, refreshAutoUpdaterReleaseChannel } =
       await import("../src/main/autoUpdater.js");
 
-    initAutoUpdater({ settingService: settingServiceMock, updateFeedSource: { url: "https://zcode.z.ai/api/v1/releases/electron/manifest" }, });
+    initAutoUpdater({
+      settingService: settingServiceMock,
+      updateFeedSource: { url: "https://zcode.z.ai/api/v1/releases/electron/manifest" },
+    });
     const options = autoUpdaterMock.setFeedURL.mock.calls[0]?.[0] as {
       resolveReleaseChannel?: () => Promise<string>;
     };
@@ -807,8 +809,7 @@ describe("autoUpdater ready state sync", () => {
     expect(autoUpdaterMock.setFeedURL).toHaveBeenCalledWith(
       expect.objectContaining({
         provider: "custom",
-        manifestUrl:
-          "https://zcode.z.ai/api/v1/releases/electron/manifest?platform=old&channel=1",
+        manifestUrl: "https://zcode.z.ai/api/v1/releases/electron/manifest?platform=old&channel=1",
         releasePlatform: "darwin-aarch64",
       }),
     );

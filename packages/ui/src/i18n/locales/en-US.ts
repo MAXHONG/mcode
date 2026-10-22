@@ -279,7 +279,7 @@ const enUS: Record<string, string> = {
   "manualClaimPlan.claim.share.copyImageSucceeded": "Image copied",
   "manualClaimPlan.claim.share.actionFailed": "Share action failed. Please try again.",
   "manualClaimPlan.claim.share.twitterText":
-    "I claimed {subtitle} on Mcode. Download and install Mcode to claim yours. https://zcode.z.ai",
+    "I claimed {subtitle} on Mcode. Download and install Mcode to claim yours. https://mcode.hjh.im",
   "manualClaimPlan.claim.share.twitterTextLabel": "Twitter/X post text",
   // Common
   "common.loading": "Loading...",
@@ -1079,7 +1079,8 @@ const enUS: Record<string, string> = {
   "browser.permission.deviceBluetooth": "Bluetooth devices",
   "browser.permission.unknownCapability": "an unknown capability",
   "browser.permission.screenShareTitle": "{origin} wants to share your screen",
-  "browser.permission.screenShareDescription": "Choose the screen or window to share. This choice applies only to this session.",
+  "browser.permission.screenShareDescription":
+    "Choose the screen or window to share. This choice applies only to this session.",
   "browser.permission.deviceTitle": "{origin} wants to connect a device",
   "browser.permission.connect": "Connect",
   "browser.permission.screenGroup.screen": "Entire Screen",
@@ -6538,7 +6539,8 @@ const enUS: Record<string, string> = {
   "feedback.center.title": "Feedback",
   "feedback.center.description": "Describe the issue and track progress after submitting.",
   "feedback.mcode.localOnly.title": "Feedback & bug reports",
-  "feedback.mcode.localOnly.description": "To protect your privacy, Mcode never uploads feedback, screenshots or diagnostic logs to any third-party server (including z.ai / Aliyun OSS). Please file issues on GitHub; if you want to attach logs, export them locally, review them, then attach them yourself.",
+  "feedback.mcode.localOnly.description":
+    "To protect your privacy, Mcode never uploads feedback, screenshots or diagnostic logs to any third-party server (including z.ai / Aliyun OSS). Please file issues on GitHub; if you want to attach logs, export them locally, review them, then attach them yourself.",
   "feedback.mcode.localOnly.openIssues": "Open GitHub Issues",
   "feedback.mcode.localOnly.exportLogs": "Export logs locally",
   "feedback.center.submitTitle": "Submit feedback",
@@ -7398,7 +7400,7 @@ const enUS: Record<string, string> = {
   "globalNotice.highspeed.speedSummary": "HighSpeed · {duration}",
   "globalNotice.highspeed.lessWaiting": "{percent}% less waiting",
   "globalNotice.highspeed.copySummary":
-    "I used the Mcode Highspeed card and saved {duration}s. Give it a try. Download Mcode https://zcode.z.ai",
+    "I used the Mcode Highspeed card and saved {duration}s. Give it a try. Download Mcode https://mcode.hjh.im",
   "globalNotice.highspeed.imageSummary": "{tokens} tokens · {duration}s saved",
   "globalNotice.highspeed.close": "Close Highspeed share card",
   ...requestSecurityMessagesEnUS,

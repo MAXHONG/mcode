@@ -22,6 +22,7 @@ import {
 import { logger } from "./logger.js";
 import {
   GitHubReleasesUpdateProvider,
+  MCODE_WEBSITE_ORIGIN,
   ManifestUpdateProvider,
   getElectronReleasePlatform,
 } from "./manifestUpdateProvider.js";
@@ -159,7 +160,14 @@ function isDevAutoUpdateEnabled(): boolean {
   );
 }
 
-const MCODE_GITHUB_RELEASES_URL = "https://github.com/MAXHONG/mcode/releases";
+/**
+ * 未签名 macOS 构建无法原地安装更新，改为打开官网对应版本的下载页。
+ * 仓库为私有时 GitHub Release 页面对普通用户不可见，因此统一指向官网。
+ */
+export function resolveMcodeReleasePageUrl(version: string, locale: Locale = menuLocale): string {
+  const langPath = locale === "zh-CN" ? "cn" : "en";
+  return `${MCODE_WEBSITE_ORIGIN}/${langPath}/releases#v${encodeURIComponent(version)}`;
+}
 
 function shouldOpenReleasePageInsteadOfInstalling(): boolean {
   return process.platform === "darwin" && process.env.MCODE_MAC_SIGNED_UPDATES !== "1";
@@ -794,13 +802,13 @@ function applyManifestUpdateProvider(options: InitAutoUpdaterOptions): void {
   const manifestUrl = options.updateFeedSource?.url.trim();
   if (!manifestUrl) {
     // Mcode 不使用 z.ai 的 manifest 服务（那里只分发官方 ZCode 安装包），
-    // 改为读取 GitHub Releases 上由 electron-builder 生成的 latest*.yml。
+    // 改为读取 Mcode 官网 https://mcode.hjh.im/download/latest/ 下由 electron-builder 生成的 latest*.yml。
     autoUpdater.setFeedURL({
       provider: "custom",
       updateProvider: GitHubReleasesUpdateProvider,
     });
     logger.info(
-      `[auto-update] GitHub Releases provider applied platform=${getElectronReleasePlatform()}`,
+      `[auto-update] Mcode website provider applied platform=${getElectronReleasePlatform()}`,
     );
     return;
   }
@@ -1276,8 +1284,8 @@ export function downloadAvailableUpdate(reason = "renderer") {
 
   if (shouldOpenReleasePageInsteadOfInstalling()) {
     // Mcode 的 macOS 安装包未经 Apple 签名，Squirrel.Mac 会拒绝安装未签名更新。
-    // 这里改为打开对应版本的 GitHub Release 页面，由用户下载 DMG 手动替换。
-    const releaseUrl = `${MCODE_GITHUB_RELEASES_URL}/tag/v${menuState.version}`;
+    // 这里改为打开官网对应版本的下载页，由用户下载 DMG 手动替换。
+    const releaseUrl = resolveMcodeReleasePageUrl(menuState.version);
     logger.info(`[auto-update] ${reason}: open release page instead of install ${releaseUrl}`);
     void shell.openExternal(releaseUrl);
     return;

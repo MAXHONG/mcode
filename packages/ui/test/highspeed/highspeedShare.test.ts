@@ -158,13 +158,13 @@ describe("highspeed client share", () => {
   it("copies the complete share text", async () => {
     let copied = "";
     await copyHighspeedShareText(
-      "我用 Mcode 高速卡节省了 120 秒的时间，你也来试试吧。下载 Mcode https://zcode.z.ai",
+      "我用 Mcode 高速卡节省了 120 秒的时间，你也来试试吧。下载 Mcode https://mcode.hjh.im",
       async (text) => {
         copied = text;
       },
     );
     expect(copied).toBe(
-      "我用 Mcode 高速卡节省了 120 秒的时间，你也来试试吧。下载 Mcode https://zcode.z.ai",
+      "我用 Mcode 高速卡节省了 120 秒的时间，你也来试试吧。下载 Mcode https://mcode.hjh.im",
     );
   });
 

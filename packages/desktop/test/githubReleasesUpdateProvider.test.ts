@@ -1,12 +1,12 @@
 import { DebUpdater, NsisUpdater } from "electron-updater";
 import { describe, expect, it } from "vitest";
 import {
-  GITHUB_RELEASES_LATEST_DOWNLOAD_URL,
+  MCODE_LATEST_DOWNLOAD_URL,
   GitHubReleasesUpdateProvider,
   resolveGitHubReleaseChannelFile,
 } from "@desktop/main/manifestUpdateProvider.js";
 
-describe("GitHub Releases update provider", () => {
+describe("Mcode website (GitHub Releases layout) update provider", () => {
   it("maps each platform/arch to the manifest file published by the release workflow", () => {
     expect(resolveGitHubReleaseChannelFile("win32", "x64")).toBe("latest.yml");
     expect(resolveGitHubReleaseChannelFile("win32", "arm64")).toBe("latest-arm64.yml");
@@ -16,7 +16,7 @@ describe("GitHub Releases update provider", () => {
     expect(resolveGitHubReleaseChannelFile("linux", "arm64")).toBe("latest-linux-arm64.yml");
   });
 
-  it("resolves relative asset names against the latest-release download URL", () => {
+  it("resolves relative asset names against the Mcode website latest download URL", () => {
     const provider = new GitHubReleasesUpdateProvider(
       { provider: "custom" },
       Object.create(NsisUpdater.prototype),
@@ -27,7 +27,8 @@ describe("GitHub Releases update provider", () => {
       releaseDate: "2026-10-15",
       files: [{ url: "Mcode-3.15.2-win-x64.exe", sha512: "x", size: 1 }],
     } as never);
-    expect(file?.url.href).toBe(`${GITHUB_RELEASES_LATEST_DOWNLOAD_URL}Mcode-3.15.2-win-x64.exe`);
+    expect(file?.url.href).toBe(`${MCODE_LATEST_DOWNLOAD_URL}Mcode-3.15.2-win-x64.exe`);
+    expect(file?.url.href).toBe("https://mcode.hjh.im/download/latest/Mcode-3.15.2-win-x64.exe");
   });
 
   it("keeps only the installer format matching the installed Linux package", () => {

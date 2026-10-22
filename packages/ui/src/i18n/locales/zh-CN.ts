@@ -260,7 +260,7 @@ const zhCN: Record<string, string> = {
   "manualClaimPlan.claim.share.copyImageSucceeded": "图片已复制",
   "manualClaimPlan.claim.share.actionFailed": "操作失败，请重试",
   "manualClaimPlan.claim.share.twitterText":
-    "我在 Mcode 领取了 {subtitle}。邀请你也来下载安装即可领取。\nhttps://zcode.z.ai",
+    "我在 Mcode 领取了 {subtitle}。邀请你也来下载安装即可领取。\nhttps://mcode.hjh.im",
   "manualClaimPlan.claim.share.twitterTextLabel": "Twitter/X 分享文案",
   // 通用
   "common.loading": "加载中...",
@@ -6244,7 +6244,8 @@ const zhCN: Record<string, string> = {
   "feedback.center.title": "问题上报",
   "feedback.center.description": "描述问题即可，提交后可查看处理进展。",
   "feedback.mcode.localOnly.title": "反馈与问题报告",
-  "feedback.mcode.localOnly.description": "为保护你的隐私，Mcode 不会把反馈、截图或诊断日志上传到任何第三方服务器（包括 z.ai / 阿里云 OSS）。请在 GitHub Issues 提交问题；如需附带日志，可先导出到本地，检查内容后再自行上传。",
+  "feedback.mcode.localOnly.description":
+    "为保护你的隐私，Mcode 不会把反馈、截图或诊断日志上传到任何第三方服务器（包括 z.ai / 阿里云 OSS）。请在 GitHub Issues 提交问题；如需附带日志，可先导出到本地，检查内容后再自行上传。",
   "feedback.mcode.localOnly.openIssues": "打开 GitHub Issues",
   "feedback.mcode.localOnly.exportLogs": "导出日志到本地",
   "feedback.center.submitTitle": "提交反馈",
@@ -7042,7 +7043,7 @@ const zhCN: Record<string, string> = {
   "globalNotice.highspeed.speedSummary": "HighSpeed · {duration}",
   "globalNotice.highspeed.lessWaiting": "减少等待 {percent}%",
   "globalNotice.highspeed.copySummary":
-    "我用 Mcode 高速卡节省了 {duration} 秒的时间，你也来试试吧。下载 Mcode https://zcode.z.ai",
+    "我用 Mcode 高速卡节省了 {duration} 秒的时间，你也来试试吧。下载 Mcode https://mcode.hjh.im",
   "globalNotice.highspeed.imageSummary": "{tokens} tokens · 节省 {duration} 秒",
   "globalNotice.highspeed.close": "关闭加速分享卡片",
   ...requestSecurityMessagesZhCN,

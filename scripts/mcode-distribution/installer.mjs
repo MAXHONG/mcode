@@ -7,6 +7,8 @@ const packageDirName = "mcode";
  * - 自托管目录：`<base>/latest.json` + `<base>/releases/<version>/<tarball>`（pnpm build:mcode 的输出目录）
  * - GitHub Releases：base 为 `https://github.com/<owner>/<repo>/releases/latest/download/`
  *   时，`latest.json`、tarball 与 `sha256.txt` 都是同一个 Release 的扁平资产。
+ * - Mcode 官网：base 为 `https://mcode.hjh.im/download/latest/`（默认）时同为扁平布局；
+ *   官网也兼容自托管布局（`https://mcode.hjh.im/` + `releases/<version>/<tarball>`）。
  *
  * 修复原因：
  * - 旧脚本只支持自托管布局，拼出的 `releases/<version>/...` 在 GitHub Releases 上 404；
@@ -85,7 +87,7 @@ else
   TARBALL="$(json_field "$TMP_DIR/latest.json" tarball)" || fail "latest.json has no tarball"
   EXPECTED_SHA="$(json_field "$TMP_DIR/latest.json" sha256 2>/dev/null || true)"
   case "$BASE" in
-    */releases/download/*|*/releases/latest/download)
+    */releases/download/*|*/releases/latest/download|*/download/latest)
       ARCHIVE_URL="$BASE/$TARBALL" ;;
     *)
       ARCHIVE_URL="$BASE/releases/$VERSION/$TARBALL" ;;
