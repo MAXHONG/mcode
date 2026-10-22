@@ -50,13 +50,13 @@ Mcode 启动后会定期从官网更新源 `https://mcode.hjh.im/download/latest
 - **Windows / Linux**：提示新版本后可在应用内下载，重启时自动安装。
 - **macOS**：签名构建（`MCODE_MAC_SIGNED_UPDATES=1`）原地更新；未签名构建提示新版本后会打开官网下载页，下载新 DMG 覆盖安装即可。
 
-v3.15.2 – v3.15.4 读取的是 GitHub Releases，仓库私有时匿名请求 404，因此检查不到更新；**请手动从官网下载一次下一个版本**（包含本改动的版本），之后即可自动更新。命令行 / Web 版重新执行 `curl -fsSL https://mcode.hjh.im/install.sh | sh` 即可升级。
+v3.15.6 起从官网检查更新。v3.15.2 – v3.15.5 仍读取 GitHub Releases（仓库已公开，可正常检查），会先自动升级到 v3.15.6，之后改从官网更新；v3.15.1 及更早版本没有自动更新，需要手动从官网安装一次。命令行 / Web 版重新执行 `curl -fsSL https://mcode.hjh.im/install.sh | sh` 即可升级。
 
 官网源码在私有仓库 `MAXHONG/mcode-web`（Hono + Cloudflare Pages + R2）。发版工作流用 `scripts/ci/fix-update-manifests.mjs` 修正更新清单、用 `scripts/ci/publish-website-release.mjs` 把每个 Release 的产物同步到官网的 R2 桶；两个仓库只通过 R2 布局（`releases/<版本>/<文件>`、`channels/stable.json`）对接。
 
 ## 更新
 
-- 2026-10-20：未发版（main）— 上线官网 <https://mcode.hjh.im>（参考 ZCode 官网，中英文，下载区自动识别系统，版本历史页），源码在私有仓库 `MAXHONG/mcode-web`，安装包与更新清单托管在 Cloudflare R2；桌面端自动更新源改为 `https://mcode.hjh.im/download/latest/`（私有仓库的 GitHub Releases 匿名 404，此前客户端收不到更新）；未签名 macOS 提示更新时打开官网下载页；`install.sh` 默认从官网下载，`curl -fsSL https://mcode.hjh.im/install.sh | sh` 匿名可用；发版工作流新增「Publish to website」步骤（仓库 Secrets `CLOUDFLARE_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`，令牌仅限 `mcode-releases` 桶）；Linux 包元数据 homepage 与分享文案链接改为官网。
+- 2026-10-22：v3.15.6 — 上线官网 <https://mcode.hjh.im>（参考 ZCode 官网，中英文，下载区自动识别系统，版本历史页），源码在私有仓库 `MAXHONG/mcode-web`，安装包与更新清单托管在 Cloudflare R2；桌面端自动更新源改为 `https://mcode.hjh.im/download/latest/`（私有仓库的 GitHub Releases 匿名 404，此前客户端收不到更新）；未签名 macOS 提示更新时打开官网下载页；`install.sh` 默认从官网下载，`curl -fsSL https://mcode.hjh.im/install.sh | sh` 匿名可用；发版工作流新增「Publish to website」步骤（仓库 Secrets `CLOUDFLARE_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`，令牌仅限 `mcode-releases` 桶）；Linux 包元数据 homepage 与分享文案链接改为官网。
 - 2026-10-20：v3.15.5 — 手机远控默认改走 Mcode 自建中转 `remote.hjh.im`（Cloudflare Worker + Durable Object，协议兼容官方 relay V1，同域托管 Mcode 品牌手机页），不再依赖 z.ai relay 是否继续开放；远控弹窗新增「中转服务器」开关，可切回 Z.ai 官方作为备用（`MCODE_WEB_REMOTE_CONTROL_RELAY=zai` 亦可），两条中转的设备身份分开保存。桌面版与 Linux Web 版均生效。部署说明见 `deploy/remote-relay/README.md`。
 - 2026-10-16：未发版（main）— Linux Web 版新增账号密码登录：首次用令牌链接打开时可在网页创建账号，设置后令牌链接不能再登录浏览器，侧栏账户菜单可修改密码 / 退出，服务器上 `mcode passwd` 管理（scrypt 哈希、失败锁定、会话签名）；修复 macOS 安装包签名不完整（自 3.15.1 起，浏览器下载后首次打开会提示“已损坏”）：打包最后对整个 .app 重新 ad-hoc 签名并 `codesign --verify --deep --strict` 校验，失败即构建失败；Linux 无界面 Web 版支持手机扫码远控：配对与 z.ai relay 中转迁到服务端（`@mcode/server`），Web 侧栏新增二维码入口，`MCODE_WEB_REMOTE_CONTROL=0` 可关闭；修复二维码页 `app_version` 用了 z.ai 未提供的版本号导致手机页 404（改用上游版本号）；更新无头部署文档（OAuth 可在无头机器完成、移除过时 FAQ）。
 - 2026-10-16：v3.15.4 — 移植官方 ZCode 3.15.3 修复（登录身份验证失败、重复弹出新手引导、弱网卡住引导判断、多 Agent / 连续调用部分请求失败）；隐私加固：反馈 / 截图 / 诊断日志不再上传 z.ai 与阿里云 OSS（改为 GitHub Issues + 本地导出日志），营销弹窗默认关闭，ARMS / 事件上报 / Agent OTLP 须显式 `MCODE_ALLOW_TELEMETRY=1` 才会编入；设置页同时显示 Z.ai 与 BigModel Coding Plan，二选一登录；新增 Mcode 品牌手机远控页面的 GitHub Pages 自托管工作流（`MCODE_WEB_REMOTE_CONTROL_URL=mcode` 启用）。
