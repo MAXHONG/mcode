@@ -33,7 +33,7 @@ Options:
   --version <text>    Release version. Defaults to root package.json version.
   --out-dir <path>    Output directory. Defaults to dist/mcode.
   --base-url <url>    Default install.sh download base URL
-                      (default: MCODE_DIST_BASE_URL or ${GITHUB_RELEASES_BASE_URL}).
+                      (default: MCODE_DIST_BASE_URL or ${MCODE_WEBSITE_LATEST_BASE_URL}).
   --help, -h          Show this help.
 
 Outputs (under --out-dir):
@@ -281,7 +281,7 @@ async function writeGithubReleaseAssets({ outDir, tarball, tarballName, sha256, 
     ),
   );
   const installer = resolve(assetsDir, "install.sh");
-  await writeFile(installer, installScriptSource(GITHUB_RELEASES_BASE_URL));
+  await writeFile(installer, installScriptSource(MCODE_WEBSITE_LATEST_BASE_URL));
   await chmod(installer, 0o755);
   return assetsDir;
 }
