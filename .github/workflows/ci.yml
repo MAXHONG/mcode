@@ -24,16 +24,10 @@ concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
 
+# 注意：NODE_ENV=production 只能用于打包 job。放在全局会让 pnpm install 跳过 devDependencies，
+# 并让 React 加载生产构建（没有 act()），单测会大面积误报失败。
 env:
-  MCODE_ENV: production
-  NODE_ENV: production
-  # 测试包关闭自动更新，避免装上后被正式版自动覆盖。
-  MCODE_AUTO_UPDATE: "0"
   HUSKY: "0"
-  ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
-  ELECTRON_BUILDER_BINARIES_MIRROR: https://github.com/electron-userland/electron-builder-binaries/releases/download/
-  MCODE_SKIP_REMOTE_ASSETS: "1"
-  CSC_IDENTITY_AUTO_DISCOVERY: "false"
   NODE_OPTIONS: --max-old-space-size=6144
 
 jobs:
@@ -130,6 +124,14 @@ jobs:
     env:
       MCODE_TARGET_OS: ${{ matrix.os }}
       MCODE_TARGET_ARCH: ${{ matrix.arch }}
+      MCODE_ENV: production
+      NODE_ENV: production
+      # 测试包关闭自动更新，避免装上后被正式版自动覆盖。
+      MCODE_AUTO_UPDATE: "0"
+      ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
+      ELECTRON_BUILDER_BINARIES_MIRROR: https://github.com/electron-userland/electron-builder-binaries/releases/download/
+      MCODE_SKIP_REMOTE_ASSETS: "1"
+      CSC_IDENTITY_AUTO_DISCOVERY: "false"
     steps:
       # Windows 默认 core.autocrlf=true，会改写按哈希校验的资源文件。
       - name: Disable git autocrlf
