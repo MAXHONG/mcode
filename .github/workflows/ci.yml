@@ -1,0 +1,181 @@
+name: CI (test build)
+
+# 开发分支的检查与测试安装包，不发布 Release、不签名、不同步官网。
+# - 推送 genspark_ai_developer：跑 lint / 架构检查 / 类型检查 / 单测，并打 Windows x64 测试包
+# - 手动触发（工作流合并到 main 之后可用）：可指定要打包的平台
+# 产物在本次运行的 Artifacts 里，保留 7 天。正式发布仍走 release-desktop.yml。
+on:
+  push:
+    branches:
+      - genspark_ai_developer
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: "要打测试包的平台（逗号分隔：win-x64, win-arm64, mac-arm64, mac-x64, linux-x64, linux-arm64；填 none 只跑检查）"
+        required: false
+        default: "win-x64"
+        type: string
+
+# 构建会执行大量第三方依赖代码，只给只读权限，也不使用任何 Secrets。
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  MCODE_ENV: production
+  NODE_ENV: production
+  # 测试包关闭自动更新，避免装上后被正式版自动覆盖。
+  MCODE_AUTO_UPDATE: "0"
+  HUSKY: "0"
+  ELECTRON_MIRROR: https://github.com/electron/electron/releases/download/
+  ELECTRON_BUILDER_BINARIES_MIRROR: https://github.com/electron-userland/electron-builder-binaries/releases/download/
+  MCODE_SKIP_REMOTE_ASSETS: "1"
+  CSC_IDENTITY_AUTO_DISCOVERY: "false"
+  NODE_OPTIONS: --max-old-space-size=6144
+
+jobs:
+  checks:
+    name: Lint / architecture / typecheck
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Lint
+        run: pnpm run lint
+      - name: Architecture check
+        run: pnpm run architecture:check -- --changed
+      - name: Typecheck
+        run: pnpm typecheck
+
+  unit-tests:
+    name: Unit tests
+    runs-on: ubuntu-22.04
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Unit tests
+        run: pnpm run test:unit
+
+  plan:
+    name: Plan test builds
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.plan.outputs.matrix }}
+      enabled: ${{ steps.plan.outputs.enabled }}
+    steps:
+      - id: plan
+        env:
+          PLATFORMS: ${{ inputs.platforms || 'win-x64' }}
+        run: |
+          ALL='[
+            {"name":"macOS arm64","runner":"macos-14","os":"mac","arch":"arm64"},
+            {"name":"macOS x64","runner":"macos-15-intel","os":"mac","arch":"x64"},
+            {"name":"Windows x64","runner":"windows-latest","os":"win","arch":"x64"},
+            {"name":"Windows ARM64","runner":"windows-11-arm","os":"win","arch":"arm64"},
+            {"name":"Linux x64","runner":"ubuntu-22.04","os":"linux","arch":"x64"},
+            {"name":"Linux ARM64","runner":"ubuntu-22.04-arm","os":"linux","arch":"arm64"}
+          ]'
+          if [ "$(echo "$PLATFORMS" | tr -d ' ')" = "none" ]; then
+            echo "enabled=false" >> "$GITHUB_OUTPUT"
+            echo 'matrix={"include":[]}' >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          M=$(echo "$ALL" | jq -c --arg p "$PLATFORMS" '($p | gsub(" ";"") | split(",")) as $want | [.[] | select((.os + "-" + .arch) as $k | $want | index($k))]')
+          [ "$(echo "$M" | jq length)" -gt 0 ] || { echo "::error::platforms 没有匹配的平台：$PLATFORMS"; exit 1; }
+          echo "enabled=true" >> "$GITHUB_OUTPUT"
+          echo "matrix={\"include\":$M}" >> "$GITHUB_OUTPUT"
+          echo "$M"
+
+  build:
+    name: Test build ${{ matrix.name }}
+    needs: plan
+    if: ${{ needs.plan.outputs.enabled == 'true' }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.plan.outputs.matrix) }}
+    env:
+      MCODE_TARGET_OS: ${{ matrix.os }}
+      MCODE_TARGET_ARCH: ${{ matrix.arch }}
+    steps:
+      # Windows 默认 core.autocrlf=true，会改写按哈希校验的资源文件。
+      - name: Disable git autocrlf
+        run: git config --global core.autocrlf false
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Linux packaging tools
+        if: matrix.os == 'linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends rpm libarchive-tools xz-utils
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Prepare desktop runtime assets
+        run: pnpm prepare:desktop-runtime
+      - name: Build workspace packages
+        run: pnpm run build:bootstrap
+      # 测试包不签名、不公证（macOS 为 ad-hoc 签名，首次打开需在系统设置里允许）。
+      - name: Bundle desktop installer
+        shell: bash
+        run: pnpm bundle:desktop -- --os "$MCODE_TARGET_OS" --arch "$MCODE_TARGET_ARCH" --skip-prepare --skip-build
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          mkdir -p test-artifacts
+          cd packages/desktop/dist
+          for f in *.dmg *.zip *.exe *.AppImage *.deb *.rpm; do
+            [ -f "$f" ] || continue
+            cp "$f" "../../../test-artifacts/${f// /-}"
+          done
+          ls -la ../../../test-artifacts
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcode-test-${{ matrix.os }}-${{ matrix.arch }}-${{ github.sha }}
+          path: test-artifacts/*
+          if-no-files-found: error
+          retention-days: 7
