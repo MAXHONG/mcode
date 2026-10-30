@@ -149,6 +149,11 @@ FILE_SPECIFIC_PROTECT = {
     "packages/ui/test/codingPlanEmbeddedWebview.test.ts": [r"\"zcode-theme\""],
 }
 
+TEXT_SOURCE_SUFFIXES = (
+    ".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs",
+    ".json", ".md", ".yaml", ".yml", ".css", ".html", ".sh", ".py", ".toml",
+)
+
 PROTECT_RE = re.compile("|".join(f"(?:{p})" for p in PROTECT_PATTERNS))
 
 REPLACEMENTS = [
@@ -202,7 +207,10 @@ def main() -> int:
         if path.is_symlink() or not path.is_file():
             continue
         raw = path.read_bytes()
-        if b"\0" in raw:
+        # 含 NUL 一般是二进制文件；但源码里也可能出现字面 NUL（如模板字符串里的 \x00 分隔符，
+        # 上游 useWorkflowRunNodeResult.ts 即是如此）。按扩展名放行文本源码，否则其中的
+        # @zcode/* import 不会被改名，构建时找不到模块。
+        if b"\0" in raw and not rel.endswith(TEXT_SOURCE_SUFFIXES):
             continue
         try:
             text = raw.decode("utf-8")
