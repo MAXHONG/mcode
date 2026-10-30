@@ -123,6 +123,17 @@ PROTECT_PATTERNS = [
     r"(?<=glm/)\$\{[^}]+\}/zcode\.cjs",
     # 上游 server / 移动端远程页使用的 RPC 成员与数据字段名
     r"(?<![\w$])(?:ResetZCodeEndpoint|SetZCodeEndpointCustom|SetZCodeEndpointProduction|SetZCodeEndpointTest|ToggleZCodeStdioTapDevProxy|ZCodeAgent|ZCodeSession|ZCodeTask|addZCodeAgentMcpServer|baseZCodeService|basedOnZCodeBuiltinRevision|buildZCodeSourceHeaders|buildZCodeToolEnvPassthroughEnv|capturedZCodeAgentTelemetryEnv|continueInZCode|copyClaudeAgentsFileToZcodeAgentsFile|deleteZCodeAgentMcpServer|downloadZCode|exchangeZcodeJwtToken|fromUserZCodeSource|getEnabledMcpServersForZCode|getZCodeTaskService|isZcodeJwtRequest|localZCodeAgentService|onDidCheckZCodeBuiltin|onZCodeBuiltinRefreshError|onZCodeInteractionBehaviorChange|onZcodeJwtInvalid|refreshZCodeBuiltin|remoteZCodeAgentService|renderZCodeFileCitations|resolveZCodeApiOrigin|resolveZCodeBuiltinActiveFilePath|resolveZCodeEndpointOrigin|sanitizeZCodeRuntimeEnv|toZCodeBuiltinJSON|updateZCodeAgentMcpServer|workspaceShellZCodeState|workspaceZCodeService|zcodeAgent|zcodeAgentCommandResolver|zcodeAgentService|zcodeAgentSpawnFallbackCwd|zcodeAttachments|zcodeAuthorization|zcodeBotOpenId|zcodeBotRemoved|zcodeBuiltin|zcodeBuiltinActiveFilePath|zcodeBuiltinEnvironment|zcodeBuiltinFilePath|zcodeBuiltinModelRules|zcodeBuiltinProviderConfigFilePath|zcodeBuiltinProviderTemplates|zcodeBuiltinProviders|zcodeBuiltinRemote|zcodeBuiltinRevision|zcodeBuiltinSource|zcodeCallbackPrepareError|zcodeCandidates|zcodeCardText|zcodeChatType|zcodeEndpointOrigin|zcodeEnv|zcodeFeishuCardResponseState|zcodeFeishuSynchronousCardAction|zcodeIgnoreInteractionMessage|zcodeInteractionBehavior|zcodeJwt|zcodeJwtToken|zcodeMcpProcessTelemetryBaseShape|zcodeMcpUiAppToolInstanceShape|zcodeMcpUiPluginScopeShape|zcodeMobilePage|zcodeNativeCardContent|zcodePlanAnthropicBaseUrl|zcodePlanBillingBalanceUrl|zcodePlanBillingCurrentUrl|zcodePlanOpenAiBaseUrl|zcodeProfileMigrationRetryAfter|zcodeProfileSchemaVersion|zcodeProvider|zcodeReferencedAttachment|zcodeReferencedInlineImages|zcodeReferencedMessage|zcodeSessionService|zcodeSessionStore|zcodeSnapshot|zcodeTaskService|zcodeTimeline|zcodeTopicHasAcceptedInput|zcodeTopicRootIsCurrentBot|zcodeagentmcp)(?![\w$])",
+    # ---- 与 z.ai 官网托管页 / 分享页共享的 wire 标识（cb9a1912 手工恢复，补进脚本防止合并上游时再次误改）----
+    r"zcode-artifact(?![\w-])",
+    r"zcode-file-citation[\w-]*",
+    r"\.zcode-share(?![\w-])",
+    r"zcode-share-context",
+    r"zcode-cloud-hero-v\d+",
+    r"zcode:coding-plan:[\w-]+",
+    r"zcode-coding-plan-auth-ready",
+    r"raw-zcode-meta",
+    r"__zcode_artifact_image__",
+    r"\"ZCode/[\d.]+\"",
     # zCode→mCode 规则曾把 bizCode 误改为 bimCode
     r"\bbizCode\b",
 ]
@@ -131,6 +142,11 @@ PROTECT_PATTERNS = [
 FILE_SPECIFIC_PROTECT = {
     "packages/client/src/globals.d.ts": [r"(?m)^(\s+)zcode: \{"],
     "packages/ui/src/logger.ts": [r"(?m)^(\s+)zcode\?: \{"],
+    # RPC 通道名：官网托管的手机远控页 / 分享页按原名调用
+    "packages/shared/src/channels.ts": [r"\"zcode-(?:task|agent|session)\""],
+    # Coding Plan 内嵌官网页读取的主题 key；应用自身主题 key 仍是 mcode-theme
+    "packages/ui/src/settings/model-provider-section/codingPlanEmbeddedWebview.ts": [r"\"zcode-theme\""],
+    "packages/ui/test/codingPlanEmbeddedWebview.test.ts": [r"\"zcode-theme\""],
 }
 
 PROTECT_RE = re.compile("|".join(f"(?:{p})" for p in PROTECT_PATTERNS))
