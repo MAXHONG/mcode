@@ -86,7 +86,7 @@ describe("Mcode endpoint X-Client-Language 跟随界面语言", () => {
     const before = server.requests.filter((request) => !isHost(request)).length;
     await browser.execute(async () => {
       await (
-        window as unknown as { mcode: { executeDesktopCommand(command: string): Promise<void> } }
+        window as unknown as { zcode: { executeDesktopCommand(command: string): Promise<void> } }
       ).zcode.executeDesktopCommand("openCommunity");
     });
     await browser.waitUntil(

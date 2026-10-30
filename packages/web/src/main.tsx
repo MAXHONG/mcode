@@ -61,6 +61,7 @@ import {
   resolveConversationShareCodeFromPath,
 } from "./share/conversationShareRoute.js";
 import type {
+  IPlatformService,
   WebRemoteControlFailure,
   WebRemoteControlFailureReason,
   WebRemoteControlPlatformMethod,

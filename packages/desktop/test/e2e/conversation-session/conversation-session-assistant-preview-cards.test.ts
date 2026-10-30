@@ -519,7 +519,7 @@ async function assertFileOpenApps(filename: string, fixture?: FileApplicationInf
     (await browser.execute(async (filePath) => {
       const platform = (
         window as unknown as Window & {
-          mcode: {
+          zcode: {
             getFileApplications(target: {
               path: string;
               pathKind: "file";

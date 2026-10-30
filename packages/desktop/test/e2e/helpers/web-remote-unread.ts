@@ -66,7 +66,7 @@ export async function readMobileTaskView() {
   return browser.execute(async () => {
     const bridge = (
       window as Window & {
-        mcode?: { getWebRemoteControlStatus(): Promise<WebRemoteControlStatus> };
+        zcode?: { getWebRemoteControlStatus(): Promise<WebRemoteControlStatus> };
       }
     ).zcode;
     if (!bridge) throw new Error("MRO03 desktop platform missing");

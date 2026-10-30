@@ -14,7 +14,7 @@ import { getE2EAppDataPaths } from "#e2e/helpers/desktop-app";
 async function remoteStatus() {
   const serialized = await browser.execute(async () => {
     const bridge = (
-      window as Window & { mcode?: { getWebRemoteControlStatus(): Promise<{ status: string }> } }
+      window as Window & { zcode?: { getWebRemoteControlStatus(): Promise<{ status: string }> } }
     ).zcode;
     if (!bridge) throw new Error("缺少 preload 远控接口");
     // WebDriver 把返回对象的 error 字段当成协议错误；序列化后再在测试端还原真实状态。

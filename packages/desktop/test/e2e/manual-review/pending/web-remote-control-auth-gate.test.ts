@@ -79,7 +79,7 @@ describe("桌面远控登录门禁", () => {
           await browser.execute(() => {
             const bridge = (
               window as Window & {
-                mcode?: { getWebRemoteControlStatus(): Promise<{ status: string }> };
+                zcode?: { getWebRemoteControlStatus(): Promise<{ status: string }> };
               }
             ).zcode;
             if (!bridge) throw new Error("缺少 preload 远控平台接口");
