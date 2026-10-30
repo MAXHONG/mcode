@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { DesktopCommandIds } from "@mcode/shared";
+import { DesktopCommandIds, MCODE_FEEDBACK_ENABLED } from "@mcode/shared";
 import {
   TID_WORKSPACE_HELP_MENU_RESOURCE_MANAGER,
   TID_WORKSPACE_HELP_MENU_TRIGGER,
@@ -118,10 +118,12 @@ export function WorkspaceHelpMenuButton({
           <UsersIcon className="size-4" />
           {intl.formatMessage({ id: "workspaceHeader.help.community" })}
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={helpMenuActions.openIssueReport}>
-          <MessageSquareIcon className="size-4" />
-          {intl.formatMessage({ id: "workspaceHeader.help.issueReport" })}
-        </DropdownMenuItem>
+        {MCODE_FEEDBACK_ENABLED ? (
+          <DropdownMenuItem onSelect={helpMenuActions.openIssueReport}>
+            <MessageSquareIcon className="size-4" />
+            {intl.formatMessage({ id: "workspaceHeader.help.issueReport" })}
+          </DropdownMenuItem>
+        ) : null}
         {vulnerabilityReportLoading || vulnerabilityReportUrl ? (
           <DropdownMenuItem
             disabled={vulnerabilityReportLoading}
@@ -136,10 +138,12 @@ export function WorkspaceHelpMenuButton({
             {intl.formatMessage({ id: "workspaceHeader.help.reportVulnerability" })}
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuItem onSelect={openFeatureRequest}>
-          <LightbulbIcon className="size-4" />
-          {intl.formatMessage({ id: "workspaceHeader.help.productRequest" })}
-        </DropdownMenuItem>
+        {MCODE_FEEDBACK_ENABLED ? (
+          <DropdownMenuItem onSelect={openFeatureRequest}>
+            <LightbulbIcon className="size-4" />
+            {intl.formatMessage({ id: "workspaceHeader.help.productRequest" })}
+          </DropdownMenuItem>
+        ) : null}
         {/* Windows/Linux 没有原生菜单栏，自绘标题栏箭头菜单也已下线，
             资源管理器只能从这里进；Web 端没有该窗口，不渲染。 */}
         {isDesktop ? (

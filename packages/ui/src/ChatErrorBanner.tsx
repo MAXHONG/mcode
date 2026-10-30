@@ -1,3 +1,4 @@
+import { MCODE_FEEDBACK_ENABLED } from "@mcode/shared";
 import { resolveRequestSecurityErrorMessageId } from "@/request-security-edition/errors.js";
 import { getRemoteConnectionFailureCode } from "@/lib/remoteWorkspaceServiceError.js";
 import { formatRemoteConnectionError } from "@/lib/remoteConnectionPresentation.js";
@@ -367,7 +368,7 @@ export function ChatErrorBanner({
           </>
         ) : null}
 
-        {!modelConfigMissing ? (
+        {MCODE_FEEDBACK_ENABLED && !modelConfigMissing ? (
           <Button
             type="button"
             variant="outline"

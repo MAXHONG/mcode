@@ -1,3 +1,4 @@
+import { MCODE_FEEDBACK_ENABLED } from "@mcode/shared";
 import {
   mobilePluginDiscoveryTelemetrySchema,
   sessionCreateTelemetrySchema,
@@ -148,6 +149,8 @@ export function createWebPlatform(options?: {
       window.open(url, "_blank", "noopener,noreferrer");
     },
     openFeedback: async () => {
+      // Mcode：反馈功能关闭，不跳转到上游远端配置下发的反馈表单。
+      if (!MCODE_FEEDBACK_ENABLED) return;
       const feedbackUrl = await resolveFeedbackUrl();
       if (!feedbackUrl) {
         return;

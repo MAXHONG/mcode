@@ -161,6 +161,7 @@
   "packages/server/test/tsupConfig.test.ts",
   "packages/server/test/webPasswordAuthHttp.test.ts",
   "packages/services/test/botsDingTalkProvider.test.ts",
+  "packages/services/test/mcodePrivacyGuards.test.ts",
   "packages/shared/test/mcodeEndpoint.test.ts",
   "packages/ui/test/botsDialogConfig.test.ts",
   "packages/ui/test/highspeed/highspeedShare.test.ts",

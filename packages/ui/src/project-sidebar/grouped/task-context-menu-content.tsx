@@ -1,3 +1,4 @@
+import { MCODE_FEEDBACK_ENABLED } from "@mcode/shared";
 import { SidebarNativeTooltip } from "@/ControlHintTooltip.js";
 import type { ProjectTask as McodeTaskMeta } from "@/project-sidebar/contract.js";
 
@@ -208,10 +209,14 @@ export function GroupedTaskContextMenuContent({
           {intl.formatMessage({ id: "appHeader.goToProviderConfig" })}
         </span>
       </ContextMenuItem>
-      <ContextMenuSeparator />
-      <ContextMenuItem onSelect={onOpenTaskFeedback}>
-        {intl.formatMessage({ id: "taskList.feedback" })}
-      </ContextMenuItem>
+      {MCODE_FEEDBACK_ENABLED ? (
+        <>
+          <ContextMenuSeparator />
+          <ContextMenuItem onSelect={onOpenTaskFeedback}>
+            {intl.formatMessage({ id: "taskList.feedback" })}
+          </ContextMenuItem>
+        </>
+      ) : null}
     </ContextMenuContent>
   );
 }

@@ -114,6 +114,7 @@ export * from "./mcode-session-content-profile.js";
 export * from "./mcode-tool-projection-memory.js";
 export * from "./mcode-slash-command-help.js";
 export * from "./mcodeEndpoint.js";
+export * from "./mcodePrivacy.js";
 export * from "./mcode-source-headers.js";
 export * from "./mcode-agent-policy.js";
 export * from "./mcode-media-policy.js";

@@ -1,4 +1,4 @@
-import { redactFeedbackText } from "@mcode/shared";
+import { MCODE_FEEDBACK_ENABLED, redactFeedbackText } from "@mcode/shared";
 import { usePlatform } from "@/hooks/usePlatform.js";
 import { RemotePasswordInput } from "@/remote-connection/RemotePasswordInput.js";
 import {
@@ -662,16 +662,18 @@ export function RemoteConnectionConnectingStep({
           <Button type="button" variant="secondary" size="sm" onClick={onBack}>
             {intl.formatMessage({ id: "remote.backToConnection" })}
           </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="sm"
-            onClick={() => {
-              void handleOpenFeedback();
-            }}
-          >
-            {intl.formatMessage({ id: "remoteConnection.feedback" })}
-          </Button>
+          {MCODE_FEEDBACK_ENABLED ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                void handleOpenFeedback();
+              }}
+            >
+              {intl.formatMessage({ id: "remoteConnection.feedback" })}
+            </Button>
+          ) : null}
         </div>
       </div>
     ) : null;
