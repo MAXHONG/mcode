@@ -49,6 +49,7 @@ import type { resolveWorkspaceGitBranch } from "./tui-workspace-git.js";
 export type BootstrapModule = typeof import("@mcode/bootstrap");
 
 export interface RunDependencies extends PluginsCommandOverrides {
+  migrateStorage?: () => Promise<import("@mcode/shared/sqlite-migrations").MigrationResult>;
   protocolLifecycle?: RunMcodeProtocolAgentOptions["lifecycle"];
   protocolInput?: NodeJS.ReadableStream;
   createManagedCdpBrowserRuntime?: (

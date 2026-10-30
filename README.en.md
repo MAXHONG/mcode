@@ -49,6 +49,7 @@ The desktop app periodically checks the website feed `https://mcode.hjh.im/downl
 
 ## Updates
 
+- 2026-10-30: v3.17.1 — Synced upstream ZCode v3.17.1 (Electron 44, new remote-control V2 architecture, mobile logs / push, device list page). Mobile remote control still defaults to the Mcode self-hosted relay `remote.hjh.im` (relay V1, no sign-in needed to scan); the z.ai relay (V2, requires z.ai sign-in) remains as fallback. New provider "Discover models" (reads `/models` under the Base URL and adds models in one click) and smart model-parameter matching (aliases such as `deep-seek-v4.1-flash`, `glm-latest`, `qwen-flash-latest` reuse built-in model parameters; auto can be turned off per model for manual editing). The new conversation telemetry added in 3.17.1 is off by default.
 - 2026-10-22: v3.15.7 — New DingTalk bot channel: enterprise internal app in Stream mode (no public callback URL needed). Enter the Client ID / Client Secret in Bots, then send `/bind` in a direct chat. Supports direct chats, group @ replies, split long markdown replies, image / file / voice (speech-recognition text) input, numbered selections and scheduled-task result delivery; only one window keeps the connection. See `docs/bots.md`.
 - 2026-10-22: v3.15.6 — Launched the website <https://mcode.hjh.im> (modelled on the ZCode site, Chinese / English, OS-aware downloads, release history; source in the private repository `MAXHONG/mcode-web`), with installers and update manifests hosted on Cloudflare R2. The desktop auto-update feed is now `https://mcode.hjh.im/download/latest/` (GitHub Releases of the private repository return 404 anonymously, so clients never saw updates). Unsigned macOS builds open the website download page. `install.sh` downloads from the website by default (`curl -fsSL https://mcode.hjh.im/install.sh | sh` works anonymously). The release workflow gains a "Publish to website" step (repository secrets `CLOUDFLARE_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`, scoped to the `mcode-releases` bucket only). Linux package homepage metadata and share texts now link to the website.
 - 2026-10-20: v3.15.5 — Mobile remote control now uses the Mcode self-hosted relay `remote.hjh.im` by default (Cloudflare Worker + Durable Object, wire-compatible with the official relay V1, also serving the Mcode-branded phone page), so it no longer depends on z.ai keeping its relay open. A "Relay server" switch in the remote control dialog (or `MCODE_WEB_REMOTE_CONTROL_RELAY=zai`) falls back to the Z.ai official relay; device identities for the two relays are stored separately. Applies to desktop and the Linux Web build. See `deploy/remote-relay/README.md`.
@@ -146,6 +147,8 @@ When starting the general Web service's HTTP entry directly, configure API/WebSo
 See Packaging below for build instructions. `pnpm build:mcode` only creates the distribution; it does not replace an existing `mcode` on `PATH`. If the command still points to an older installation or another checkout, check it with `command -v mcode` on macOS / Linux or `where.exe mcode` on Windows.
 
 ### CLI Source Development
+
+See the [CLI usage guide (Chinese)](apps/mcode-cli/docs/usage/README.md) for model configuration, non-interactive runs, tools and extensions, batch evaluation, and trajectory capture.
 
 Use the source entry when developing the TUI or Agent:
 

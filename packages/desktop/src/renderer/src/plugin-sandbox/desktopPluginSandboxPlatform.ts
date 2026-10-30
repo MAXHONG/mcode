@@ -15,6 +15,7 @@ export function createDesktopPluginSandboxPlatform(): PluginSandboxPlatformPort 
   if (!bridge) return undefined;
   return {
     supportsRetainedMove: bridge.supportsRetainedMove,
+    ...(bridge.setExecutionActive ? { setExecutionActive: bridge.setExecutionActive } : {}),
     ...(bridge.copyImage
       ? {
           copyImage: (input: import("@mcode/shared/mcp-apps").PluginSandboxCaptureRequest) =>

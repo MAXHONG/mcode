@@ -2,7 +2,17 @@
 import { MCODE_AGENT_PROVIDER, resolveMcodeRuntimeEnv } from "@mcode/shared";
 import { createHash, randomUUID } from "node:crypto";
 import { existsSync } from "node:fs";
-import { cp, lstat, mkdir, mkdtemp, readdir, readFile, readlink, rm } from "node:fs/promises";
+import {
+  access,
+  cp,
+  lstat,
+  mkdir,
+  mkdtemp,
+  readdir,
+  readFile,
+  readlink,
+  rm,
+} from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join, resolve } from "node:path";
 import type { IRemoteBackend } from "@mcode/server/remote/backend.js";
@@ -113,6 +123,9 @@ async function computeDevelopmentAgentAssetsSha256(params: {
     hash.update(`plugin:${packageName}\n`);
     await hashDevelopmentOfficialPluginPackage(hash, packageRoot, packageName);
   }
+  const bundledSkillsRoot = join(params.repoRoot, "apps/mcode-cli/packages/bundled-skills");
+  await assertDevelopmentOfficialPluginRequiredAssets(bundledSkillsRoot, "bundled-skills");
+  await hashLocalPath(hash, bundledSkillsRoot, "bundled-skills");
   return hash.digest("hex");
 }
 
@@ -125,7 +138,7 @@ async function hashDevelopmentOfficialPluginPackage(
   if (!existsSync(manifestPath)) {
     throw new Error(`[mcode-agent-deploy] missing official plugin manifest: ${manifestPath}`);
   }
-  assertDevelopmentOfficialPluginRequiredAssets(packageRoot, packageName);
+  await assertDevelopmentOfficialPluginRequiredAssets(packageRoot, packageName);
 
   for (const topLevelPath of REMOTE_AGENT_OFFICIAL_PLUGIN_INCLUDED_TOP_LEVEL_PATHS) {
     const sourcePath = join(packageRoot, topLevelPath);
@@ -165,16 +178,18 @@ async function hashLocalPath(
   hash.update(await readFile(filePath));
 }
 
-function assertDevelopmentOfficialPluginRequiredAssets(
+async function assertDevelopmentOfficialPluginRequiredAssets(
   packageRoot: string,
   packageName: string,
-): void {
+): Promise<void> {
   const packagePrefix = `${packageName}/`;
   for (const requiredRelativePath of REMOTE_AGENT_OFFICIAL_PLUGIN_REQUIRED_RELATIVE_PATHS) {
     if (!requiredRelativePath.startsWith(packagePrefix)) continue;
     const localRelativePath = requiredRelativePath.slice(packagePrefix.length);
     const requiredPath = join(packageRoot, ...localRelativePath.split("/"));
-    if (!existsSync(requiredPath)) {
+    try {
+      await access(requiredPath);
+    } catch {
       throw new Error(
         `[mcode-agent-deploy] missing official plugin required asset: ${requiredPath}`,
       );
@@ -268,9 +283,7 @@ async function shouldSkipDevelopmentMcodeAgentDeploy(params: {
     return false;
   }
 
-  params.loggers.log(
-    `[mcode-agent-deploy] ${MCODE_AGENT_PROVIDER}: 开发态 mcode.cjs 未变化，跳过`,
-  );
+  params.loggers.log(`[mcode-agent-deploy] ${MCODE_AGENT_PROVIDER}: 开发态 mcode.cjs 未变化，跳过`);
   return true;
 }
 
@@ -291,7 +304,7 @@ async function stageDevelopmentOfficialPluginPackages(params: {
     if (!existsSync(manifestPath)) {
       throw new Error(`[mcode-agent-deploy] missing official plugin manifest: ${manifestPath}`);
     }
-    assertDevelopmentOfficialPluginRequiredAssets(sourceRoot, packageName);
+    await assertDevelopmentOfficialPluginRequiredAssets(sourceRoot, packageName);
 
     const targetRoot = join(params.packagesDir, packageName);
     await mkdir(targetRoot, { recursive: true });
@@ -304,6 +317,10 @@ async function stageDevelopmentOfficialPluginPackages(params: {
       }
     }
   }
+  // 修复原因：内置技能不再是插件，单独复制完整包，不能要求 plugin.json 或按插件白名单裁剪。
+  const bundledSkillsRoot = join(params.repoRoot, "apps/mcode-cli/packages/bundled-skills");
+  await assertDevelopmentOfficialPluginRequiredAssets(bundledSkillsRoot, "bundled-skills");
+  await cp(bundledSkillsRoot, join(params.packagesDir, "bundled-skills"), { recursive: true });
 }
 
 async function uploadDevelopmentOfficialPluginPackages(params: {

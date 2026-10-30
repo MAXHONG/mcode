@@ -1,4 +1,5 @@
-import { createConfig } from "@mcode/adapters/config";
+import { createMcpTransportFetch } from "@mcode/adapters";
+import { createConfig, resolvePath } from "@mcode/adapters/config";
 import type { McpElicitationPort, McpNotificationPort } from "@mcode/contracts";
 import { createNodeModelSelectionFacade } from "@mcode/provider-node";
 import { createNodeLoggerFactory } from "@mcode/adapters/logging";
@@ -13,7 +14,7 @@ import {
   type McodeMcpResourceSample,
   type McodeMcpTelemetryEvent,
 } from "@mcode/shared";
-import type { SqliteSessionStore } from "@mcode/adapters/storage";
+import { createNodeSessionDataFiles, type SqliteSessionStore } from "@mcode/adapters/storage";
 import { traceContextToLogContext, createRootTraceContext } from "@mcode/contracts";
 import type { McpPort, ModelSelection } from "@mcode/contracts";
 import type { PresentationSurface } from "@mcode/core";
@@ -28,15 +29,22 @@ import {
   prepareProtocolStartupStorage,
 } from "./mcode-protocol/storage-startup.js";
 import { closeSessionStore, getSessionDbPath } from "./app/session-store.js";
+import { resolveMcpNodeFallbackProvider } from "./app/mcp-node-fallback.js";
+import { getCliStorageRoot, getProjectMemoryRoot } from "./app/paths.js";
 import { startProcessProviderRegistryRuntime } from "./app/process-provider-registry-runtime.js";
 import { scheduleStartupLogRetentionCleanup } from "./log-retention.js";
 import { resolveProcessProviderEndpointRoutingPort } from "./provider-endpoint-routing.js";
 import { StartupTimer, startupNow } from "./startup-logging.js";
 import { installMcodeProtocolAiSdkWarningLogger } from "./mcode-protocol/ai-sdk-warning-logger.js";
 import {
+  createOfficialCommandAuthHeadersPort,
   createOfficialMcpAuthHeadersPort,
   type OfficialMcpAuthRequestContext,
 } from "./mcode-protocol/official-mcp-auth-port.js";
+import {
+  createOfficialCommandEndpoint,
+  type OfficialCommandEndpoint,
+} from "./official-command-endpoint/index.js";
 import {
   createOfficialMcpTrustedOriginRegistry,
   OFFICIAL_MCP_DEV_TRUSTED_ORIGINS_ENV,
@@ -126,6 +134,7 @@ export async function runMcodeProtocolAgent(
   let sessionStore: SqliteSessionStore | undefined;
   let serverForCleanup: McodeProtocolAgentServer | undefined;
   let nodeReplBrowserBroker: NodeReplBrowserBroker | undefined;
+  let officialCommandEndpoint: OfficialCommandEndpoint | undefined;
   let mcpConnectionPool: McpConnectionPool | undefined;
   let mcpPort: McpPort | undefined;
   let mcpTelemetryTracker: McpTelemetryTracker | undefined;
@@ -235,6 +244,20 @@ export async function runMcodeProtocolAgent(
         resolveZCodeApiOrigin,
       }),
     };
+    // 官方插件命令进程的代理端点（技术方案 5.8）：CLI 不持有凭证，端点每个请求向 host 现取
+    // 身份头后转发给 mcode-server。和官方 MCP 用同一个 origin 表达式与网络配置。
+    const endpointEnv = options.env ?? process.env;
+    officialCommandEndpoint = createOfficialCommandEndpoint({
+      resolveHeaders: createOfficialCommandAuthHeadersPort({
+        resolveContext: () => officialMcpAuthContext,
+        logger,
+      }).resolveHeaders,
+      resolveZCodeApiOrigin,
+      appVersion: endpointEnv.ZCODE_APP_VERSION?.trim() || options.version,
+      fetch: createMcpTransportFetch({ env: endpointEnv, network: configResult.config.network }),
+      logger,
+    });
+    const activeOfficialCommandEndpoint = officialCommandEndpoint;
     // MCP elicitation 归属到协议 server 的会话；pool 先于 server 创建，端口延迟绑定。
     let elicitationServer: {
       requestMcpElicitation: McpElicitationPort["requestElicitation"];
@@ -263,12 +286,17 @@ export async function runMcodeProtocolAgent(
               noProxy: configResult.config.network.noProxy,
               caCertFile: configResult.config.network.caCertFile,
             },
+            nodeFallback: resolveMcpNodeFallbackProvider({
+              cliStorageRoot: getCliStorageRoot(resolvePath(configResult.config.storage.dir)),
+              logger,
+            }),
             officialMcpAuth,
             telemetry: mcpTelemetryTracker,
             workingDirectory: options.cwd,
           });
     mcpPort = mcpConnectionPool?.acquireLease({ leaseId: "protocol-settings" });
     const activeProviderRegistryRuntime = providerRegistryRuntime;
+    const protocolCliStorageRoot = getCliStorageRoot(resolvePath(configResult.config.storage.dir));
     const modelSelectionFacade = createNodeModelSelectionFacade(
       activeProviderRegistryRuntime.runtime.registryService,
     );
@@ -305,6 +333,8 @@ export async function runMcodeProtocolAgent(
               }
             : {}),
           providerEndpointRoutingPort,
+          officialCommandEnv: (sessionId, workspace) =>
+            activeOfficialCommandEndpoint.envForSession(sessionId, workspace),
           sourceTitle: "electron",
           onToolExecResource: (params) =>
             connection.send({ method: mcodeProtocolNotifications.toolExecResource, params }),
@@ -315,6 +345,12 @@ export async function runMcodeProtocolAgent(
       mcpPort,
       mcpTelemetry: mcpTelemetryTracker,
       sessionStore,
+      sessionDataFiles: createNodeSessionDataFiles({
+        cliStorageRoot: protocolCliStorageRoot,
+        // 与会话运行时的记忆解析同一函数，删除的正是 CLI 读写的那个目录。
+        memoryRoot: ({ workspacePath, workspaceIdentity }) =>
+          getProjectMemoryRoot(protocolCliStorageRoot, workspacePath, workspaceIdentity),
+      }),
       syncAccountProviderConfig: activeProviderRegistryRuntime.syncAccountProviderConfig,
       refreshProviderRegistry: async (reason) => {
         await activeProviderRegistryRuntime.runtime.registryService.refresh(reason);
@@ -384,6 +420,12 @@ export async function runMcodeProtocolAgent(
     throw error;
   } finally {
     options.lifecycle?.requestShutdown();
+    await officialCommandEndpoint?.close().catch((error: unknown) => {
+      logger.warn("Official command endpoint close failed", {
+        error: error instanceof Error ? error.message : String(error),
+        event: "mcode_protocol.official_command_endpoint.close_failed",
+      });
+    });
     await cleanupProtocolRuntime({
       logger,
       deadlineAt: options.lifecycle?.deadlineAt,

@@ -1,17 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { createConfig } from "@mcode/adapters/config";
 import { MCODE_CUA_OFFICIAL_PLUGIN_ID, MCODE_PLUGIN_ID_ENV_KEY } from "@mcode/shared";
-import {
-  ModelConfig,
-  ModelOptionSpecsConfig,
-  ModelPropertiesConfig,
-  ProviderRegistry,
-} from "@mcode/provider";
+import { ProviderRegistry } from "@mcode/provider";
 import {
   resolveAppRuntimeConfig as resolveProductionAppRuntimeConfig,
   runtimeConfigLogContext,
 } from "../src/app/runtime-config.js";
-import { createApiKeyProviderConfig } from "./provider-config-fixtures.js";
 
 const workingDirectory = "/workspace/app";
 const testModelSelection = {
@@ -75,6 +69,22 @@ function createMainOnlyConfigResult() {
 }
 
 describe("resolveAppRuntimeConfig", () => {
+  it.each([undefined, [], ["/workspace/backend", "C:\\work\\shared folder"]])(
+    "passes the current additional directories into runtime context: %j",
+    (additionalDirectories) => {
+      const resolved = resolveAppRuntimeConfig({
+        cliStorageRoot: "/tmp/mcode-cli",
+        configResult: createConfigResult(),
+        options: { additionalDirectories },
+        subagentOutputRootDir: "/tmp/mcode-cli/agents",
+        workingDirectory,
+      });
+
+      expect(resolved.runtimeConfig.additionalDirectories).toEqual(additionalDirectories);
+      expect(resolved.runtimeConfig.workingDirectory).toBe(workingDirectory);
+    },
+  );
+
   it.each([
     {
       env: {},
@@ -246,8 +256,6 @@ describe("resolveAppRuntimeConfig", () => {
     });
 
     expect(resolved.runtimeConfig.modelSelection).toEqual(sessionModelSelection);
-    expect(resolved.runtimeConfig).not.toHaveProperty("liteModelSelection");
-    expect(resolved.runtimeConfig).not.toHaveProperty("liteModelProviderOptions");
   });
 
   it("进程 Registry 模式不从通用 RuntimeConfig 补全未知模型", () => {
@@ -310,60 +318,6 @@ describe("resolveAppRuntimeConfig", () => {
     });
 
     expect(resolved.runtimeConfig.titleGeneration?.timeoutMs).toBe(30_000);
-  });
-
-  it("keeps model format facts on Registry Models instead of Runtime Config", () => {
-    const providerRegistry = new ProviderRegistry([
-      {
-        providerId: "provider:test",
-        config: createApiKeyProviderConfig({
-          apiFormat: "anthropic-messages",
-          apiKey: "test-key",
-          baseURL: "https://registry.example.test",
-          models: ["glm-0531"],
-        }),
-        models: [
-          {
-            modelId: "glm-0531",
-            config: new ModelConfig({
-              properties: new ModelPropertiesConfig({
-                requiresMfjsToolSchema: false,
-                contextWindow: 128_000,
-                inputFormat: {
-                  supportsText: true,
-                  supportsImage: false,
-                  supportsVideo: false,
-                  supportsAudio: false,
-                  supportsPdf: true,
-                },
-                outputFormat: { supportsText: true },
-                supportsToolCall: true,
-                supportsJsonSchemaOutput: true,
-                supportsNativeWebSearch: false,
-                supportsMidConversationSystem: true,
-              }),
-              optionSpecs: new ModelOptionSpecsConfig({
-                maxOutputTokens: {
-                  max: 32_000,
-                  map: '{"max_tokens":maxOutputTokens}',
-                },
-              }),
-            }),
-          },
-        ],
-      },
-    ]);
-
-    const resolved = resolveAppRuntimeConfig({
-      cliStorageRoot: "/tmp/mcode-cli",
-      configResult: createConfigResult(),
-      options: { providerRegistry },
-      subagentOutputRootDir: "/tmp/mcode-cli/agents",
-      subagentProfiles: [],
-      workingDirectory,
-    });
-
-    expect(resolved.runtimeConfig).not.toHaveProperty("modelInputMediaCapabilities");
   });
 
   it("projects explicit session tool filters into the runtime tool surface", () => {

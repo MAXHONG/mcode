@@ -1,3 +1,4 @@
+import { migrateApplicationStorage, createSettingService } from "@mcode/services/node";
 import { disposeServiceResourcesAndWait, getAppConfigDir } from "@mcode/services/node";
 import type { IChannel } from "@mcode/rpc";
 import {
@@ -64,6 +65,7 @@ async function main() {
     environmentConfigRoot: getAppConfigDir(),
     content: readBundledMcodeBuiltinProviderConfig(),
   });
+  await migrateApplicationStorage(await createSettingService().get());
   const { authorityModeParseResult, services } = createStdioServices({
     env: process.env,
     zcodeBuiltinProviderConfigFilePath,

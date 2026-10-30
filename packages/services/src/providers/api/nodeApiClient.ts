@@ -21,15 +21,13 @@ interface NodeApiClientOptions {
     headers: Headers,
   ) => boolean | Promise<boolean>;
   businessUnauthorizedObservationTimeoutMs?: number;
-  /** 3.15.3：403/空 200 的业务响应需经身份接口复核后才判定凭证失效。 */
   resolveBusinessCredentialValidationRequest?: (
     input: string | URL,
     headers: Headers,
-  ) =>
-    | Promise<BusinessCredentialValidationRequest | null>
-    | BusinessCredentialValidationRequest
-    | null;
+  ) => Promise<{ url: string; authorization: string; emptyBodyMeansInvalid: boolean } | null>;
   resolveZCodeEndpointOrigin?: () => Promise<string> | string;
+  /** 宿主内存里的实时界面语言；同步读取，未注入或无值时 X-Client-Language 回退进程 Intl locale。 */
+  resolveClientLanguage?: () => string | undefined;
 }
 
 export interface BusinessCredentialValidationRequest {
@@ -71,12 +69,35 @@ function waitWithAbort<T>(promise: Promise<T>, signal?: AbortSignal | null): Pro
 const DEFAULT_BUSINESS_UNAUTHORIZED_OBSERVATION_TIMEOUT_MS = 1000;
 const MAX_BUSINESS_UNAUTHORIZED_OBSERVATION_BYTES = 64 * 1024;
 
+function waitWithAbort<T>(promise: Promise<T>, signal?: AbortSignal | null): Promise<T> {
+  if (!signal) return promise;
+  return new Promise<T>((resolve, reject) => {
+    const abort = () => reject(new DOMException("The operation was aborted.", "AbortError"));
+    const cleanup = () => signal.removeEventListener("abort", abort);
+    signal.addEventListener("abort", abort, { once: true });
+    promise.then(
+      (value) => {
+        cleanup();
+        resolve(value);
+      },
+      (error: unknown) => {
+        cleanup();
+        reject(error);
+      },
+    );
+    if (signal.aborted) {
+      cleanup();
+      abort();
+    }
+  });
+}
+
 function readChunkWithinTimeout(
   reader: ReadableStreamDefaultReader<Uint8Array>,
   timeoutMs: number,
   signal?: AbortSignal | null,
 ): Promise<{ done: boolean; value?: Uint8Array } | null> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
+  let timer: ReturnType<typeof setTimeout>;
   const timeout = new Promise<null>((resolve) => {
     timer = setTimeout(() => resolve(null), timeoutMs);
   });
@@ -97,7 +118,7 @@ async function readBusinessAuthenticationResponse(
   response: Response,
   timeoutMs: number,
   signal?: AbortSignal | null,
-): Promise<BusinessAuthenticationEvidence> {
+): Promise<"unauthorized" | "empty" | null> {
   // 业务接口把登录过期封装成 HTTP 200，不能只看 status；读副本避免抢走调用方正文。
   // continuous SSE 没有完整 JSON 正文，观察器不能等待流结束或引入恢复语义。
   if (response.headers.get("content-type")?.toLowerCase().startsWith("text/event-stream"))
@@ -133,7 +154,7 @@ async function readBusinessAuthenticationResponse(
       ? "unauthorized"
       : null;
   } catch {
-    // HTML/损坏 JSON 只能证明请求异常，不能据此清理登录态。
+    // 空正文/HTML/损坏 JSON 只能证明请求异常，不能据此清理登录态。
     return null;
   } finally {
     // 观察副本是 best-effort；超时、超限或解析失败时及时取消，不能占用连接。
@@ -159,8 +180,9 @@ function isRequestForEndpoint(input: string | URL, endpointOrigin: string): bool
 function withMcodeEndpointHeaders(
   headers: RequestInit["headers"] | undefined,
   endpointOrigin: string,
+  clientLanguage: string | undefined,
 ): RequestInit["headers"] {
-  const next = new Headers(buildZCodeSourceHeaders());
+  const next = new Headers(buildZCodeSourceHeaders({ clientLanguage }));
   if (headers) {
     new Headers(headers).forEach((value, key) => {
       next.set(key, value);
@@ -177,6 +199,7 @@ function resolveRequestHeaders(
   requestInput: string | URL,
   headers: RequestInit["headers"] | undefined,
   endpointOrigin: string,
+  clientLanguage: string | undefined,
 ): RequestInit["headers"] | undefined {
   if (!isRequestForEndpoint(requestInput, endpointOrigin)) {
     return headers;
@@ -184,12 +207,13 @@ function resolveRequestHeaders(
 
   // Mcode 后端请求以前只有部分业务路径手动补来源头。
   // 统一在 ApiClient 出口按 endpoint origin 注入，避免 OAuth/config/billing/snapshot 等链路遗漏。
-  return withMcodeEndpointHeaders(headers, endpointOrigin);
+  return withMcodeEndpointHeaders(headers, endpointOrigin, clientLanguage);
 }
 
 export class NodeApiClient implements ApiClient {
   private readonly fetchImpl?: typeof fetch;
   private readonly resolveZCodeEndpointOrigin?: () => Promise<string> | string;
+  private readonly resolveClientLanguage?: NodeApiClientOptions["resolveClientLanguage"];
   private readonly onZcodeJwtInvalid?: (input: string | URL, headers: Headers) => void;
   private readonly isZcodeJwtRequest?: NodeApiClientOptions["isZcodeJwtRequest"];
   private readonly isBusinessUnauthorizedRequest?: NodeApiClientOptions["isBusinessUnauthorizedRequest"];
@@ -197,7 +221,11 @@ export class NodeApiClient implements ApiClient {
   private readonly resolveBusinessCredentialValidationRequest?: NodeApiClientOptions["resolveBusinessCredentialValidationRequest"];
   private readonly businessValidations = new Map<
     string,
-    { promise: Promise<boolean>; controller: AbortController; subscribers: number }
+    {
+      promise: Promise<boolean>;
+      controller: AbortController;
+      subscribers: number;
+    }
   >();
 
   constructor(options: NodeApiClientOptions = {}) {
@@ -205,30 +233,27 @@ export class NodeApiClient implements ApiClient {
     this.onZcodeJwtInvalid = options.onZcodeJwtInvalid;
     this.isZcodeJwtRequest = options.isZcodeJwtRequest;
     this.isBusinessUnauthorizedRequest = options.isBusinessUnauthorizedRequest;
+    this.resolveBusinessCredentialValidationRequest =
+      options.resolveBusinessCredentialValidationRequest;
     this.businessUnauthorizedObservationTimeoutMs =
       options.businessUnauthorizedObservationTimeoutMs ??
       DEFAULT_BUSINESS_UNAUTHORIZED_OBSERVATION_TIMEOUT_MS;
     this.resolveZCodeEndpointOrigin = options.resolveZCodeEndpointOrigin;
-    this.resolveBusinessCredentialValidationRequest =
-      options.resolveBusinessCredentialValidationRequest;
+    this.resolveClientLanguage = options.resolveClientLanguage;
   }
 
-  /**
-   * 3.15.3：并发请求共享同一次身份复核（按 url+token 去重），所有订阅者都放弃时才中止复核。
-   * 修复多 Agent / 连续调用时，单个业务请求的 403/空响应误触发登出导致其它请求失败。
-   */
   private async confirmBusinessCredentialInvalid(
     input: string | URL,
     headers: Headers,
     response: Response,
-    evidence: BusinessAuthenticationEvidence,
+    evidence: "unauthorized" | "empty" | null,
     signal?: AbortSignal | null,
   ): Promise<boolean> {
     if (signal?.aborted) return false;
     const check = await this.resolveBusinessCredentialValidationRequest?.(input, headers);
     if (!check || signal?.aborted) return false;
-    const requestUrl = new URL(resolveUrl(input));
-    const identityUrl = new URL(check.url);
+    const requestUrl = new URL(input),
+      identityUrl = new URL(check.url);
     if (requestUrl.origin === identityUrl.origin && requestUrl.pathname === identityUrl.pathname)
       return response.status === 200 && evidence === "empty" && check.emptyBodyMeansInvalid;
     const key = JSON.stringify([check.url, check.authorization]);
@@ -239,7 +264,8 @@ export class NodeApiClient implements ApiClient {
         controller.signal,
         AbortSignal.timeout(this.businessUnauthorizedObservationTimeoutMs),
       ]);
-      const validation: Promise<boolean> = Promise.resolve()
+      // 空定价/PAT响应或普通403不能直接登出。沿用 transport 核验身份，不递归触发观察器。
+      const validation = Promise.resolve()
         .then(async () => {
           try {
             const identity = await waitWithAbort(
@@ -266,6 +292,7 @@ export class NodeApiClient implements ApiClient {
               (identity.status === 200 && result === "empty" && check.emptyBodyMeansInvalid)
             );
           } catch {
+            // 核验离线、超时或格式不明只能保留登录；不能用探测失败代替认证失效证据。
             return false;
           }
         })
@@ -280,6 +307,8 @@ export class NodeApiClient implements ApiClient {
     try {
       return await waitWithAbort(entry.promise, signal);
     } finally {
+      // 核验曾独立等待，原请求取消后仍 pending 并可能登出；各订阅者独立收口，
+      // 只有最后一个离开才取消共享 transport，避免影响仍在等待的并发请求。
       entry.subscribers -= 1;
       if (entry.subscribers === 0) {
         entry.controller.abort();
@@ -317,8 +346,15 @@ export class NodeApiClient implements ApiClient {
         throw new DOMException("The operation was aborted.", "AbortError");
       }
       const fetchImpl = this.fetchImpl ?? globalThis.fetch;
+      // X-Client-Language 曾取进程 Intl locale：从 Dock 启动时无 LANG 会回退 en-US，且不跟随界面语言。
+      // 宿主注入内存中的实时界面语言；同步读取，不引入 I/O，不改变请求的取消与超时语义。
       const requestHeaders = withRequestIdHeader(
-        resolveRequestHeaders(requestInput, init?.headers, activeEndpointOrigin),
+        resolveRequestHeaders(
+          requestInput,
+          init?.headers,
+          activeEndpointOrigin,
+          this.resolveClientLanguage?.(),
+        ),
       );
       if (isRequestForEndpoint(requestInput, activeEndpointOrigin)) {
         // 调试说明：这里只记录 header key，避免 Authorization / token 等敏感值落盘。
@@ -342,44 +378,45 @@ export class NodeApiClient implements ApiClient {
                 requestInput,
                 requestHeadersForObservation,
               );
-              if (!isCurrentMcodeJwtRequest) return;
-              let invalid = response.status === 401;
-              if (
-                !invalid &&
-                (await this.isBusinessUnauthorizedRequest?.(
-                  requestInput,
-                  requestHeadersForObservation,
-                ))
-              ) {
-                const evidence = await readBusinessAuthenticationResponse(
-                  response,
-                  this.businessUnauthorizedObservationTimeoutMs,
-                  signal,
-                );
-                invalid = evidence === "unauthorized";
+              if (isCurrentMcodeJwtRequest) {
+                let invalid = response.status === 401;
                 if (
                   !invalid &&
-                  (response.status === 403 || (response.status === 200 && evidence === "empty"))
-                )
-                  invalid = await this.confirmBusinessCredentialInvalid(
+                  (await this.isBusinessUnauthorizedRequest?.(
                     requestInput,
                     requestHeadersForObservation,
+                  ))
+                ) {
+                  const evidence = await readBusinessAuthenticationResponse(
                     response,
-                    evidence,
+                    this.businessUnauthorizedObservationTimeoutMs,
                     signal,
                   );
+                  invalid = evidence === "unauthorized";
+                  if (
+                    !invalid &&
+                    (response.status === 403 || (response.status === 200 && evidence === "empty"))
+                  )
+                    invalid = await this.confirmBusinessCredentialInvalid(
+                      requestInput,
+                      requestHeadersForObservation,
+                      response,
+                      evidence,
+                      signal,
+                    );
+                }
+                if (invalid && !signal?.aborted)
+                  this.onZcodeJwtInvalid?.(requestInput, requestHeadersForObservation);
               }
-              if (invalid && !signal?.aborted)
-                this.onZcodeJwtInvalid?.(requestInput, requestHeadersForObservation);
             })(),
             signal,
           );
         } catch (error) {
-          if (signal?.aborted) throw abortError();
+          if (signal?.aborted) throw new DOMException("The operation was aborted.", "AbortError");
           log.warn("mcode jwt invalid response observation failed", { error });
         }
       }
-      if (signal?.aborted) throw abortError();
+      if (signal?.aborted) throw new DOMException("The operation was aborted.", "AbortError");
       return response;
     } catch (error) {
       if (error instanceof ApiError) {

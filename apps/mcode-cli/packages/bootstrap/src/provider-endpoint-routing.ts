@@ -1,4 +1,8 @@
 import { createConfig, type ConfigResult } from "@mcode/adapters/config";
+import {
+  createSharedMcodeCredentialStore,
+  SHARED_MCODE_CREDENTIAL_KEYS,
+} from "@mcode/adapters/auth";
 import { createNodeHttpClientAdapter } from "@mcode/adapters/http";
 import { createProviderEndpointRoutingPort } from "@mcode/adapters/model";
 import { createNodeLoggerFactory } from "@mcode/adapters/logging";
@@ -41,6 +45,8 @@ export function resolveProcessProviderEndpointRoutingPort(
     return existing;
   }
 
+  const credentialStore = createSharedMcodeCredentialStore({ env });
+
   const port = createProviderEndpointRoutingPort({
     appVersion: options.appVersion,
     endpointOrigin,
@@ -53,6 +59,7 @@ export function resolveProcessProviderEndpointRoutingPort(
     logger: options.logger.child({
       module: "adapters.model.provider_endpoint_routing",
     }),
+    readMcodeJwt: () => credentialStore.load(SHARED_MCODE_CREDENTIAL_KEYS.zcodeJwtToken),
     sourceHeaders: () =>
       createProviderEndpointRoutingSourceHeaders({
         appVersion: options.appVersion,

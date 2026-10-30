@@ -1,9 +1,13 @@
-import { createLocalServices, createTopicResourcePeers, getAppConfigDir } from "@mcode/services/node";
+import {
+  createServerHostServices,
+  createTopicResourcePeers,
+  getAppConfigDir,
+} from "@mcode/services/node";
 import {
   materializeBundledMcodeBuiltinProviderConfig,
   readBundledMcodeBuiltinProviderConfig,
 } from "./bundledMcodeBuiltinProviderConfig.js";
-import { createHttpServer } from "./http.js";
+import { createHttpServer, resolveHttpServerId } from "./http.js";
 import { createServerWebRemoteControl } from "./web-remote-control/serverWebRemoteControl.js";
 import { WebPasswordAuth } from "./webPasswordAuth.js";
 import { join } from "node:path";
@@ -18,11 +22,14 @@ async function main(): Promise<void> {
   const staticRoot = process.env["MCODE_WEB_STATIC_ROOT"]?.trim() || undefined;
   const authToken = process.env["MCODE_SERVER_AUTH_TOKEN"]?.trim() || undefined;
   const topicResourcePeers = createTopicResourcePeers();
-  const services = createLocalServices({
-    topicResourceRelayChannel: (request) => topicResourcePeers.getChannel(request),
-    zcodeBuiltinProviderConfigFilePath,
-    providerProvisioningTargetEnabled: Boolean(authToken),
-  });
+  const serverId = resolveHttpServerId();
+  const { services, workspaceIdentityMapper, migrationFailedPathCount } =
+    await createServerHostServices({
+      topicResourceRelayChannel: (request) => topicResourcePeers.getChannel(request),
+      sourceServerId: serverId,
+      zcodeBuiltinProviderConfigFilePath,
+      providerProvisioningTargetEnabled: Boolean(authToken),
+    });
 
   // 手机扫码远控：默认随 Web 版启用；MCODE_WEB_REMOTE_CONTROL=0 关闭。
   const webRemoteControlDisabled = ["0", "false", "off", "no"].includes(
@@ -56,6 +63,10 @@ async function main(): Promise<void> {
       });
 
   createHttpServer(services, port, {
+    serverId,
+    workspaceIdentityMapper,
+    migrationFailedPathCount,
+    virtualProjects: true,
     ...(passwordAuth ? { passwordAuth } : {}),
     ...(webRemoteControl ? { webRemoteControl } : {}),
     topicResourcePeers,

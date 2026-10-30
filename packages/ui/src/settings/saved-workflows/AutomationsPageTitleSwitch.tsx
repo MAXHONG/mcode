@@ -1,5 +1,6 @@
 import { useCallback, type KeyboardEvent } from "react";
-import { TID_AUTOMATIONS_PAGE_TAB, testId } from "@mcode/shared";
+import { TID_AUTOMATIONS_PAGE_TAB } from "@mcode/shared";
+import { testId } from "@mcode/shared/test-ids";
 import { cn } from "@/components/lib/utils.js";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";
 

@@ -5,7 +5,8 @@ import {
   SlidersHorizontalIcon,
   SquareIcon,
 } from "lucide-react";
-import { TID_CHAT_WORKFLOW_RUN_DIGEST, testId } from "@mcode/shared";
+import { TID_CHAT_WORKFLOW_RUN_DIGEST } from "@mcode/shared";
+import { testId } from "@mcode/shared/test-ids";
 import type { WorkflowRunState } from "@mcode/shared/mcode-protocol-v4";
 import { cn } from "@/components/lib/utils.js";
 import { Button } from "@/components/ui/button.js";

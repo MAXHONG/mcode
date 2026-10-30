@@ -4,7 +4,15 @@ import { validateRemoteServerBundle } from "./buildRemoteValidation.js";
 import { loadBuiltinProviderConfig } from "../../scripts/builtin-provider-config.mjs";
 import { stageThirdPartyNotices } from "../../scripts/third-party-notices.mjs";
 
-const { version, mcodeUpstreamVersion } = JSON.parse(readFileSync("../../package.json", "utf-8"));
+const { version, mcodeCompatibility, mcodeUpstreamVersion } = JSON.parse(
+  readFileSync("../../package.json", "utf-8"),
+) as {
+  version: string;
+  mcodeCompatibility?: { minCompatibleVersion?: string };
+  // Mcode：远程开发锁定的上游 ZCode 组件版本（z.ai CDN 只按上游版本发布 manifest）。
+  mcodeUpstreamVersion?: string;
+};
+const minCompatibleVersion = mcodeCompatibility?.minCompatibleVersion ?? version;
 const { content: mcodeBuiltinProviderConfigJson } = await loadBuiltinProviderConfig();
 
 /**
@@ -44,6 +52,7 @@ const buildResult = await build({
     "import.meta.url": "__import_meta_url",
     "import.meta.dirname": "__import_meta_dirname",
     __MCODE_VERSION__: JSON.stringify(version),
+    __MCODE_MIN_COMPATIBLE_VERSION__: JSON.stringify(minCompatibleVersion),
     __MCODE_UPSTREAM_VERSION__: JSON.stringify(mcodeUpstreamVersion ?? version),
     __MCODE_BUILTIN_PROVIDER_CONFIG_JSON__: JSON.stringify(mcodeBuiltinProviderConfigJson),
   },

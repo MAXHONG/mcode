@@ -12,6 +12,10 @@ export const MCODE_TOOL_ENV_PASSTHROUGH_ENV_KEY = "MCODE_TOOL_ENV_PASSTHROUGH_JS
 export const MCODE_DESKTOP_CONTEXT_PROMPT_ENABLED_ENV = "MCODE_DESKTOP_CONTEXT_PROMPT_ENABLED";
 export const MCODE_CUA_PRODUCT_HELPER_ENV_KEY = "MCODE_CUA_PRODUCT_HELPER";
 export const MCODE_CUA_BROKER_SOCKET_ENV_KEY = "MCODE_CUA_PERMISSION_BROKER_SOCKET";
+// 官方命令端点（agent 侧代理，技术方案 5.8）：地址与 session token 只由 agent 按 session 注入
+// Bash/tool 子进程，不随 agent 全局 env 继承。
+export const MCODE_OFFICIAL_ENDPOINT_ENV_KEY = "MCODE_OFFICIAL_ENDPOINT";
+export const MCODE_OFFICIAL_ENDPOINT_TOKEN_ENV_KEY = "MCODE_OFFICIAL_ENDPOINT_TOKEN";
 /** Shared node_repl host marker; unlike the broker bearer values it is not a secret. */
 export const MCODE_CUA_NODE_REPL_HOST_ENV_KEY = "MCODE_CUA_NODE_REPL_HOST";
 // One-knob local-development bundle. Setting MCODE_CUA_DEV_MODE implies the internal feature
@@ -70,6 +74,10 @@ const SANITIZED_RUNTIME_ENV_KEYS = [
   "MCODE_CUA_PERMISSION_BROKER_TOKEN",
   "MCODE_CUA_PERMISSION_BROKER_REFRESH_MARKER",
   "MCODE_CUA_PLUGIN_AUTHORITY",
+  // 官方命令端点的地址与 token 属于某一个 session，由 agent 定向注入；从父进程继承来的
+  // 值（例如嵌套运行的 agent）一律剔除，避免一个 session 拿着另一个 session 的 token。
+  MCODE_OFFICIAL_ENDPOINT_ENV_KEY,
+  MCODE_OFFICIAL_ENDPOINT_TOKEN_ENV_KEY,
   // Agent OTLP Endpoint/Auth/Identity 只属于 CLI telemetry bootstrap，不能继续泄漏给
   // Bash、MCP 或模型工具子进程。sanitize 前会捕获到本进程私有 Map，供 Agent 启动边界读取。
   "OTEL_EXPORTER_OTLP_ENDPOINT",
@@ -101,6 +109,8 @@ const NON_TOOL_PASSTHROUGH_RUNTIME_ENV_KEYS = [
   MCODE_CUA_BROKER_SOCKET_ENV_KEY,
   "MCODE_CUA_PERMISSION_BROKER_REFRESH_MARKER",
   "MCODE_CUA_PLUGIN_AUTHORITY",
+  MCODE_OFFICIAL_ENDPOINT_ENV_KEY,
+  MCODE_OFFICIAL_ENDPOINT_TOKEN_ENV_KEY,
   MCODE_REMOTE_RUNTIME_NETWORK_AUTHORITY_ENV_KEY,
   MCODE_REMOTE_HTTP_PROXY_ENV_KEY,
   MCODE_REMOTE_NO_PROXY_ENV_KEY,

@@ -8,7 +8,7 @@ import {
   TID_SETTINGS_SECTION_NAV,
   TID_TASK_SETTINGS_BUTTON,
   testId,
-} from "@mcode/shared";
+} from "@mcode/shared/test-ids";
 import {
   DEFAULT_WORKSPACE,
   clearAppData,

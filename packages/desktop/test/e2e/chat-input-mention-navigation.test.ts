@@ -3,7 +3,7 @@ import {
   TID_PROMPT_SUGGESTION_PANEL,
   TID_V4_COMPOSER_INPUT,
   testId,
-} from "@mcode/shared";
+} from "@mcode/shared/test-ids";
 import {
   clearAppData,
   setInputValueByTestIdDom,

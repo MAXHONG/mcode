@@ -1,4 +1,4 @@
-import { TID_LOGIN_TRIGGER } from "@mcode/shared";
+import { TID_LOGIN_TRIGGER } from "@mcode/shared/test-ids";
 import { DEFAULT_WORKSPACE, waitForDefaultWorkspaceReady } from "./desktop-app.js";
 import { sel } from "./selectors.js";
 

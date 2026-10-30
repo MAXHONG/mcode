@@ -1,5 +1,5 @@
 import { MessageCirclePlus } from "lucide-react";
-import { TID_TASK_NEW_BUTTON } from "@mcode/shared";
+import { TID_TASK_NEW_BUTTON } from "@mcode/shared/test-ids";
 import { cn } from "@/components/lib/utils.js";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";
 import { useShortcutCommandLabel } from "@/shortcuts/useShortcutBindings.js";
