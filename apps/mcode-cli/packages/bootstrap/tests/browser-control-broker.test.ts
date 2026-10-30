@@ -53,7 +53,6 @@ describe("createProtocolBrowserControlBroker", () => {
       deliveryKind: "web-remote-replayable",
       remoteSessionId: "remote-session-1",
       workspaceIdentity: "ssh://host/repo",
-      remoteSessionId: "remote-session-1",
       // 即使 record 中旧 workspaceKey 错了，也必须按统一公式重新计算。
       workspaceKey: "legacy-path-only-key",
       workspacePath: "/repo",

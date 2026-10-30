@@ -289,27 +289,6 @@ export class OAuthCredentialRepo {
     await this.credentialService.delete(ACTIVE_PROVIDER_KEY);
   }
 
-  /**
-   * 3.15.3：启动恢复同时读取共享 JWT 与 provider access token（两者都要检查过期）；
-   * 解密失败视为本地登录态损坏，清理后返回 null。
-   */
-  async loadCachedSessionTokens(
-    provider: OAuthProviderId,
-  ): Promise<Array<{ key: string; value: string }> | null> {
-    try {
-      return await Promise.all(
-        [MCODE_JWT_TOKEN_KEY, accessTokenKey(provider)].map(async (key) => ({
-          key,
-          value: (await this.credentialService.load(key))?.trim() ?? "",
-        })),
-      );
-    } catch (error) {
-      if (!isCredentialDecryptError(error)) throw error;
-      await this.clearCorruptOAuthSession();
-      return null;
-    }
-  }
-
   async loadTokenSet(provider: OAuthProviderId): Promise<OAuthTokenSet | null> {
     try {
       const accessToken = await this.credentialService.load(accessTokenKey(provider));
