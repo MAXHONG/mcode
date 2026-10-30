@@ -3,6 +3,7 @@ import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui";
 import { CheckIcon, ChevronRightIcon } from "lucide-react";
 
 import { cn } from "../lib/utils.js";
+import { guardClosingMenuPointer } from "./menu-closing-focus-guard.js";
 
 function DropdownMenu({ ...props }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
   return <DropdownMenuPrimitive.Root data-slot="dropdown-menu" {...props} />;
@@ -66,6 +67,8 @@ function DropdownMenuGroup({
 
 function DropdownMenuItem({
   className,
+  onPointerMove,
+  onPointerLeave,
   inset,
   variant = "default",
   ...props
@@ -76,6 +79,8 @@ function DropdownMenuItem({
   return (
     <DropdownMenuPrimitive.Item
       data-slot="dropdown-menu-item"
+      onPointerMove={guardClosingMenuPointer(onPointerMove)}
+      onPointerLeave={guardClosingMenuPointer(onPointerLeave)}
       data-inset={inset}
       data-variant={variant}
       className={cn(
@@ -89,6 +94,8 @@ function DropdownMenuItem({
 
 function DropdownMenuCheckboxItem({
   className,
+  onPointerMove,
+  onPointerLeave,
   children,
   checked,
   inset,
@@ -99,6 +106,8 @@ function DropdownMenuCheckboxItem({
   return (
     <DropdownMenuPrimitive.CheckboxItem
       data-slot="dropdown-menu-checkbox-item"
+      onPointerMove={guardClosingMenuPointer(onPointerMove)}
+      onPointerLeave={guardClosingMenuPointer(onPointerLeave)}
       data-inset={inset}
       className={cn(
         "relative flex min-h-7 cursor-default items-center gap-2 rounded-md py-1.5 pr-8 pl-2 text-ui-base text-foreground outline-hidden select-none data-[highlighted]:bg-menu-hover data-[highlighted]:text-foreground data-inset:pl-7.5 data-disabled:pointer-events-none data-disabled:text-foreground-subtlest data-disabled:opacity-100 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -135,6 +144,8 @@ function DropdownMenuRadioGroup({
 
 function DropdownMenuRadioItem({
   className,
+  onPointerMove,
+  onPointerLeave,
   children,
   inset,
   ...props
@@ -144,6 +155,8 @@ function DropdownMenuRadioItem({
   return (
     <DropdownMenuPrimitive.RadioItem
       data-slot="dropdown-menu-radio-item"
+      onPointerMove={guardClosingMenuPointer(onPointerMove)}
+      onPointerLeave={guardClosingMenuPointer(onPointerLeave)}
       data-inset={inset}
       className={cn(
         "relative flex min-h-7 cursor-default items-center gap-2 rounded-md py-1.5 pr-8 pl-2 text-ui-base text-foreground outline-hidden select-none data-[highlighted]:bg-menu-hover data-[highlighted]:text-foreground data-inset:pl-7.5 data-disabled:pointer-events-none data-disabled:text-foreground-subtlest data-disabled:opacity-100 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
@@ -216,6 +229,8 @@ function DropdownMenuSub({ ...props }: React.ComponentProps<typeof DropdownMenuP
 
 function DropdownMenuSubTrigger({
   className,
+  onPointerMove,
+  onPointerLeave,
   inset,
   children,
   ...props
@@ -225,6 +240,8 @@ function DropdownMenuSubTrigger({
   return (
     <DropdownMenuPrimitive.SubTrigger
       data-slot="dropdown-menu-sub-trigger"
+      onPointerMove={guardClosingMenuPointer(onPointerMove)}
+      onPointerLeave={guardClosingMenuPointer(onPointerLeave)}
       data-inset={inset}
       className={cn(
         "group/dropdown-menu-sub-trigger flex min-h-7 cursor-default items-center gap-2 rounded-md px-2 py-1 text-ui-base text-foreground outline-hidden select-none data-[highlighted]:bg-menu-hover data-[highlighted]:text-foreground data-inset:pl-7.5 data-[state=open]:bg-menu-hover data-[state=open]:text-foreground [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",

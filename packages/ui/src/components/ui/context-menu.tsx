@@ -3,6 +3,7 @@ import { ContextMenu as ContextMenuPrimitive } from "radix-ui";
 import { ChevronRightIcon } from "lucide-react";
 
 import { cn } from "../lib/utils.js";
+import { guardClosingMenuPointer } from "./menu-closing-focus-guard.js";
 
 function ContextMenu({ ...props }: React.ComponentProps<typeof ContextMenuPrimitive.Root>) {
   return <ContextMenuPrimitive.Root data-slot="context-menu" {...props} />;
@@ -36,6 +37,8 @@ function ContextMenuContent({
 
 function ContextMenuItem({
   className,
+  onPointerMove,
+  onPointerLeave,
   inset,
   variant = "default",
   ...props
@@ -46,6 +49,8 @@ function ContextMenuItem({
   return (
     <ContextMenuPrimitive.Item
       data-slot="context-menu-item"
+      onPointerMove={guardClosingMenuPointer(onPointerMove)}
+      onPointerLeave={guardClosingMenuPointer(onPointerLeave)}
       data-inset={inset}
       data-variant={variant}
       className={cn(
@@ -76,6 +81,8 @@ function ContextMenuSub({ ...props }: React.ComponentProps<typeof ContextMenuPri
 
 function ContextMenuSubTrigger({
   className,
+  onPointerMove,
+  onPointerLeave,
   inset,
   children,
   ...props
@@ -85,6 +92,8 @@ function ContextMenuSubTrigger({
   return (
     <ContextMenuPrimitive.SubTrigger
       data-slot="context-menu-sub-trigger"
+      onPointerMove={guardClosingMenuPointer(onPointerMove)}
+      onPointerLeave={guardClosingMenuPointer(onPointerLeave)}
       data-inset={inset}
       className={cn(
         "group/context-menu-sub-trigger flex min-h-7 cursor-default items-center gap-2 rounded-md px-2 py-1 text-ui-base text-foreground outline-hidden select-none data-[highlighted]:bg-menu-hover data-[highlighted]:text-foreground data-inset:pl-7.5 data-[state=open]:bg-menu-hover data-[state=open]:text-foreground data-disabled:pointer-events-none data-disabled:text-foreground-subtlest data-disabled:opacity-100 [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
