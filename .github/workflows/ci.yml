@@ -116,8 +116,10 @@ jobs:
           python-version: "3.12"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Unit tests
-        run: pnpm run test:unit
+      # 上游 3.17 退役了 App 单测执行链（test:unit），只保留显式清单的工程测试；
+      # Mcode 自有功能的测试已加入 scripts/engineering-test-files.json。
+      - name: Engineering tests
+        run: pnpm run test:engineering
 
   plan:
     name: Plan test builds
