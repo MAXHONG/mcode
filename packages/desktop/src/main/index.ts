@@ -280,7 +280,7 @@ import {
   createEmbeddedBrowserPermissionUiBridge,
   setActiveEmbeddedBrowserPermissionUiBridge,
 } from "./embeddedBrowserPermissionUiBridge.js";
-import { mapMcodeEnvToArmsRumEnv } from "@mcode/shared";
+import { mapMcodeEnvToArmsRumEnv, MCODE_MOBILE_PUSH_ENABLED } from "@mcode/shared";
 import {
   findWindowsProcessesReferencingResourceMarkers,
   probeWindowsPackagedResourceWritable,
@@ -1118,22 +1118,29 @@ const webRemoteControlManager = createWebRemoteControlManager({
     webRemoteControlSharedHostAttachments.disposeRemoteSession(remoteSessionId),
 });
 webRemoteControlManagerRef.current = webRemoteControlManager;
-webRemoteControlManager.startNotifications();
-broadcastHub.onMobilePushRun = (run) => webRemoteControlManager.observeNotificationRun(run);
-// owner 必须在事件到达时同步确认；locale 由 MobilePushConnection 在确认后再异步读取。
-broadcastHub.onMobilePushEvent = (event) =>
-  webRemoteControlManager.sendNotification(event, () =>
-    mainSettingService.get().then(
-      (settings) => (settings.locale?.startsWith("zh") ? "zh-CN" : "en-US"),
-      () => {
-        logger.warn("[mobile-push] notification locale unavailable");
-        throw new Error("locale_unavailable");
-      },
-    ),
-  );
-app
-  .whenReady()
-  .then(() => powerMonitor.on("resume", () => void webRemoteControlManager.refreshNotifications()));
+// Mcode 隐私加固：上游 3.17 新增的手机推送会把任务运行状态/通知事件上报到
+// z.ai /api/v1/remote/notification/events，属于登录与模型调用之外的外发通道，默认整体关闭：
+// 不建立通知长连接、不观察运行、不发送通知事件。
+if (MCODE_MOBILE_PUSH_ENABLED) {
+  webRemoteControlManager.startNotifications();
+  broadcastHub.onMobilePushRun = (run) => webRemoteControlManager.observeNotificationRun(run);
+  // owner 必须在事件到达时同步确认；locale 由 MobilePushConnection 在确认后再异步读取。
+  broadcastHub.onMobilePushEvent = (event) =>
+    webRemoteControlManager.sendNotification(event, () =>
+      mainSettingService.get().then(
+        (settings) => (settings.locale?.startsWith("zh") ? "zh-CN" : "en-US"),
+        () => {
+          logger.warn("[mobile-push] notification locale unavailable");
+          throw new Error("locale_unavailable");
+        },
+      ),
+    );
+}
+app.whenReady().then(() => {
+  // Mcode：手机推送关闭时，唤醒后也不能 refresh（refresh 会重新建立到 z.ai 的通知连接）。
+  if (!MCODE_MOBILE_PUSH_ENABLED) return;
+  powerMonitor.on("resume", () => void webRemoteControlManager.refreshNotifications());
+});
 app.on("will-quit", () => webRemoteControlManager.disposeNotifications());
 
 let forceUpdateMainWindowCreationBlocked = false;
