@@ -139,7 +139,7 @@ describe(`${MARKER}: 设置分类添加与连接反馈`, () => {
       ).version;
       expect(await $('[data-testid="remote-install-version"]').getText()).toBe(releaseVersion);
       expect(await $('[data-testid="remote-install-path"]').getText()).toBe(
-        `/home/${config.username}/.zcode/server`,
+        `/home/${config.username}/.mcode/server`,
       );
       expect(
         await browser.execute(() =>

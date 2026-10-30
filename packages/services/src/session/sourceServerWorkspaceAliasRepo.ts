@@ -301,7 +301,7 @@ export class SourceServerWorkspaceAliasRepo {
     this.sessionDbPath =
       options.sessionDbPath ?? join(getDataBaseDir(), ".mcode", "cli", "db", "db.sqlite");
     this.backupRoot =
-      options.backupRoot ?? join(getDataBaseDir(), ".zcode", "server", "migration-backups");
+      options.backupRoot ?? join(getDataBaseDir(), ".mcode", "server", "migration-backups");
     this.now = options.now ?? Date.now;
     this.createMigrationId = options.migrationId ?? randomUUID;
     this.afterPhaseCommitted = options.afterPhaseCommitted;

@@ -165,9 +165,9 @@ export interface CreateSourceServerTransportAdapterOptions {
   createBackend?: (target: RemoteTarget) => Promise<IRemoteBackend>;
 }
 
-const SERVER_ROOT_READ_PATH = "~/.zcode/server";
-const SERVER_ROOT_SHELL = '"$HOME/.zcode/server"';
-const SERVER_BIN_SHELL = '"$HOME/.zcode/server/bin/mcode"';
+const SERVER_ROOT_READ_PATH = "~/.mcode/server";
+const SERVER_ROOT_SHELL = '"$HOME/.mcode/server"';
+const SERVER_BIN_SHELL = '"$HOME/.mcode/server/bin/mcode"';
 const STALE_BOOTSTRAP_AGE_MS = 30 * 60 * 1_000;
 const INSTALL_PROGRESS_MESSAGES: Record<SourceServerInstallProgress["phase"], string> = {
   "verify-archive": "Verifying Source Server archive",
@@ -257,7 +257,7 @@ class BackendSourceServerTransportAdapter implements SourceServerTransportAdapte
     const operationId = `${process.pid}-${Date.now()}`;
     const bootstrapRootShell = `${SERVER_ROOT_SHELL}/.bootstrap-${operationId}`;
     const bootstrapDirShell = `${bootstrapRootShell}/extract`;
-    const remoteArchive = `~/.zcode/server/.bootstrap-${operationId}/mcode-server.tar.gz`;
+    const remoteArchive = `~/.mcode/server/.bootstrap-${operationId}/mcode-server.tar.gz`;
     const remoteArchiveShell = `${bootstrapRootShell}/mcode-server.tar.gz`;
     const cleanupCommand = `rm -rf ${bootstrapRootShell}`;
     const cleanupStaleBootstrapRootsCommand =

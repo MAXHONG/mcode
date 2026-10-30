@@ -537,7 +537,7 @@ describe("stageRelease", () => {
   it("bundled workflow skills ship in the agent component and affect its hash", async () => {
     const fixture = await makeStageFixture();
     const officialPluginsDir = join(await makeTempDir(), "packages");
-    await writeOfficialPluginFixture(officialPluginsDir, "zcode-guide-plugin");
+    await writeOfficialPluginFixture(officialPluginsDir, "mcode-guide-plugin");
     const options = {
       ...fixture,
       officialPluginsDir,
@@ -638,7 +638,7 @@ describe("stageRelease", () => {
     async (cacheState) => {
       const fixture = await makeStageFixture();
       const officialPluginsDir = join(await makeTempDir(), "packages");
-      await writeOfficialPluginFixture(officialPluginsDir, "zcode-guide-plugin");
+      await writeOfficialPluginFixture(officialPluginsDir, "mcode-guide-plugin");
       if (cacheState !== "absent") {
         const cachedPackDir = join(officialPluginsDir, "bundled-skills");
         await mkdir(join(cachedPackDir, "skills/dynamic-workflows"), { recursive: true });
@@ -708,7 +708,7 @@ describe("stageRelease", () => {
         pluginExtractDir,
       ]);
       await expect(
-        stat(join(pluginExtractDir, "runtime/packages/zcode-guide-plugin")),
+        stat(join(pluginExtractDir, "runtime/packages/mcode-guide-plugin")),
       ).resolves.toBeTruthy();
       await expect(
         stat(join(pluginExtractDir, "runtime/packages/bundled-skills")),
@@ -796,7 +796,7 @@ describe("stageRelease", () => {
         mcpEntry: "dist/mcp/server.js",
         withMcpEntryFile: false,
       });
-      await writeOfficialPluginFixture(officialPluginsDir, "zcode-guide-plugin");
+      await writeOfficialPluginFixture(officialPluginsDir, "mcode-guide-plugin");
 
       await expect(
         stageRelease({
@@ -836,7 +836,7 @@ describe("stageRelease", () => {
     // 插件，会把这种僵尸目录当插件 stage，随后 fail-closed 校验读不到 plugin.json 而整段失败。
     const fixture = await makeStageFixture();
     const officialPluginsDir = join(await makeTempDir(), "packages");
-    await writeOfficialPluginFixture(officialPluginsDir, "zcode-guide-plugin");
+    await writeOfficialPluginFixture(officialPluginsDir, "mcode-guide-plugin");
     const orphanDir = join(officialPluginsDir, "computer-use-plugin");
     await mkdir(join(orphanDir, "node_modules", "@mcode", "computer-use"), { recursive: true });
     await writeFile(

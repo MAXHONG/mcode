@@ -461,7 +461,7 @@ async function runServe(
           env: {
             ...inheritedEnv,
             ...releaseWiring,
-            ...(runtimeRoot ? { ZCODE_SERVER_RUNTIME_ROOT: runtimeRoot } : {}),
+            ...(runtimeRoot ? { MCODE_SERVER_RUNTIME_ROOT: runtimeRoot } : {}),
             ...(release?.releaseId ? { MCODE_SERVER_RELEASE_ID: release.releaseId } : {}),
           },
           stdio: ["ignore", "ignore", "ignore", "ipc"],
@@ -660,7 +660,7 @@ async function finishUninstall(
     "uninstalled.json",
     "update-transaction.json",
     "node",
-    "zcode-server.cjs",
+    "mcode-server.cjs",
     "agents",
     "build",
     "tools",

@@ -55,7 +55,7 @@ Windows WSL 用户反馈“连接失败”，附带的连接日志只有两条 I
 
 ## 待补
 
-重启后旧项目的侧栏状态与点击结果；侧栏行、向导、设置页设备卡截图；WSL 内 `ls -l ~/.zcode/server/bin/mcode; cat ~/.zcode/server/current.json`。
+重启后旧项目的侧栏状态与点击结果；侧栏行、向导、设置页设备卡截图；WSL 内 `ls -l ~/.mcode/server/bin/mcode; cat ~/.mcode/server/current.json`。
 
 ## 验证要求
 

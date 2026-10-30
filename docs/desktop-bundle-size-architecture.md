@@ -35,7 +35,7 @@
   `build:remote:assets` job 同步 descriptor 与四个 archive。
 - `remoteCdnBaseUrl` 仍可通过环境变量覆盖；一旦显式设置，就只使用该自定义基址，不再套用
   `MCODE_ENV` 默认值或 production 地区分流
-- SSH 远端服务器下载模式会在远端临时目录下载并校验完整 archive；最终安装到 `~/.zcode/server/releases/`，并通过 `current.json` 原子切换。
+- SSH 远端服务器下载模式会在远端临时目录下载并校验完整 archive；最终安装到 `~/.mcode/server/releases/`，并通过 `current.json` 原子切换。
 
 ## 开发态切换公网 CDN
 

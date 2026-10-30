@@ -65,7 +65,7 @@ async function stagedReleaseDir(): Promise<string> {
 async function remoteInstalledState(config: SSHConnectionConfig): Promise<string> {
   const result = await runSSHCommand(
     config,
-    'if [ -f "$HOME/.zcode/server/current.json" ]; then grep -o \'"archiveSha256": *"[0-9a-f]*"\' "$HOME/.zcode/server/current.json"; else echo none; fi',
+    'if [ -f "$HOME/.mcode/server/current.json" ]; then grep -o \'"archiveSha256": *"[0-9a-f]*"\' "$HOME/.mcode/server/current.json"; else echo none; fi',
   );
   return result.stdout.trim() || `exit=${result.code}`;
 }

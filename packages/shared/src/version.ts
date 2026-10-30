@@ -13,9 +13,9 @@ export const MCODE_BUILD_TIME: string =
   typeof __MCODE_BUILD_TIME__ !== "undefined" ? __MCODE_BUILD_TIME__ : "unknown";
 
 /**
- * 远程开发（SSH/WSL/Docker）复用 z.ai CDN 上的上游 ZCode 远端组件，CDN 只按上游版本号发布 manifest。
- * Mcode 自身版本（用于 GitHub Releases 自动更新）可以独立递增，远端契约仍锁定在该上游版本。
- * 升级上游基线时同步修改这里（以及 package.json 的 `mcodeUpstreamVersion`）。
+ * 当前同步的上游 ZCode 版本（package.json 的 `mcodeUpstreamVersion`）。
+ * 只用于 z.ai 官方手机远控页的 `app_version`（官方页面按上游版本发布）。
+ * 远程开发组件自 v3.17.1 起由 Mcode 自建发布，按 MCODE_VERSION 校验，不再使用该值。
  */
 declare const __MCODE_UPSTREAM_VERSION__: string;
 export const MCODE_REMOTE_UPSTREAM_VERSION: string =

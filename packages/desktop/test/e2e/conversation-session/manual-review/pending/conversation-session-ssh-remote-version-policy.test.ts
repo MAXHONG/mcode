@@ -70,7 +70,7 @@ describe(`${MARKER}: 版本兼容策略`, () => {
   after(async () => {
     await restoreSnapshotFault();
     if (runtimeConfig) {
-      const current = await runSSHCommand(runtimeConfig, 'cat "$HOME/.zcode/server/current.json"');
+      const current = await runSSHCommand(runtimeConfig, 'cat "$HOME/.mcode/server/current.json"');
       if (current.code === 0) facts.finalInstalledVersion = JSON.parse(current.stdout).version;
     }
     await mkdir(artifactDir, { recursive: true });
@@ -108,7 +108,7 @@ describe(`${MARKER}: 版本兼容策略`, () => {
     const sourceId = parseRemoteWorkspaceIdentity(a.workspaceIdentity!)?.sourceServerId;
     if (!sourceId) throw new Error("缺少设备身份");
     const before = JSON.parse(
-      (await runSSHCommand(config, 'cat "$HOME/.zcode/server/current.json"')).stdout,
+      (await runSSHCommand(config, 'cat "$HOME/.mcode/server/current.json"')).stdout,
     );
     facts.originalInstalledVersion = before.version;
     await disconnectRemoteSource(sourceId, MARKER);
@@ -135,7 +135,7 @@ describe(`${MARKER}: 版本兼容策略`, () => {
     // 构造旧远端属于降级，CLI 要求显式授权；授权后会写降级标记。
     const installed = await runSSHCommand(
       config,
-      `"$HOME/.zcode/server/bin/mcode" update --from-archive '${remoteArchive}' --force${requiredOld ? " --allow-downgrade" : ""} --json`,
+      `"$HOME/.mcode/server/bin/mcode" update --from-archive '${remoteArchive}' --force${requiredOld ? " --allow-downgrade" : ""} --json`,
       { timeoutMs: 120_000 },
     );
     facts.syntheticInstallResult = {
@@ -147,12 +147,12 @@ describe(`${MARKER}: 版本兼容策略`, () => {
     // Server 生命周期日志可能先于结果写到 stdout；沿用真实 SSH CLI 验证脚本的末行 JSON 合同。
     expect(JSON.parse(installed.stdout.trim().split("\n").at(-1)!).applied).toBe(true);
     const synthetic = JSON.parse(
-      (await runSSHCommand(config, 'cat "$HOME/.zcode/server/current.json"')).stdout,
+      (await runSSHCommand(config, 'cat "$HOME/.mcode/server/current.json"')).stdout,
     );
     expect(synthetic.version).toBe(version);
     facts.syntheticVersion = { version, minimum, archiveSha256: synthetic.archiveSha256 };
     const readDowngradeMarker = async () => {
-      const marker = await runSSHCommand(config, 'cat "$HOME/.zcode/server/downgrade.json"');
+      const marker = await runSSHCommand(config, 'cat "$HOME/.mcode/server/downgrade.json"');
       return marker.code === 0
         ? (JSON.parse(marker.stdout) as { releaseId?: string; fromVersion?: string })
         : null;
@@ -165,7 +165,7 @@ describe(`${MARKER}: 版本兼容策略`, () => {
       });
     } else if (requiredOld) {
       // 其他旧版本场景代表从未升级过的远端，不能带降级标记，否则向导不会自动更新。
-      expect((await runSSHCommand(config, 'rm -f "$HOME/.zcode/server/downgrade.json"')).code).toBe(
+      expect((await runSSHCommand(config, 'rm -f "$HOME/.mcode/server/downgrade.json"')).code).toBe(
         0,
       );
     }
@@ -180,7 +180,7 @@ describe(`${MARKER}: 版本兼容策略`, () => {
       );
       expect(await $('[data-testid="ssh-dialog"]').isExisting()).toBe(false);
       expect(
-        JSON.parse((await runSSHCommand(config, 'cat "$HOME/.zcode/server/current.json"')).stdout)
+        JSON.parse((await runSSHCommand(config, 'cat "$HOME/.mcode/server/current.json"')).stdout)
           .version,
       ).toBe(version);
       await clickTestIdByDom(TID_TASK_SETTINGS_BUTTON);
@@ -241,7 +241,7 @@ describe(`${MARKER}: 版本兼容策略`, () => {
         timeout: 30_000,
       });
       expect(
-        JSON.parse((await runSSHCommand(config, 'cat "$HOME/.zcode/server/current.json"')).stdout)
+        JSON.parse((await runSSHCommand(config, 'cat "$HOME/.mcode/server/current.json"')).stdout)
           .archiveSha256,
       ).toBe(synthetic.archiveSha256);
       await mkdir(artifactDir, { recursive: true });
@@ -260,7 +260,7 @@ describe(`${MARKER}: 版本兼容策略`, () => {
       );
       // 等待确认期间不得自动升级被切回的远端。
       expect(
-        JSON.parse((await runSSHCommand(config, 'cat "$HOME/.zcode/server/current.json"')).stdout)
+        JSON.parse((await runSSHCommand(config, 'cat "$HOME/.mcode/server/current.json"')).stdout)
           .version,
       ).toBe(version);
       await mkdir(artifactDir, { recursive: true });
@@ -300,7 +300,7 @@ describe(`${MARKER}: 版本兼容策略`, () => {
         { timeout: 30_000, timeoutMsg: `${MARKER}: 详细信息没有说明需要升级桌面端` },
       );
       expect(
-        JSON.parse((await runSSHCommand(config, 'cat "$HOME/.zcode/server/current.json"')).stdout)
+        JSON.parse((await runSSHCommand(config, 'cat "$HOME/.mcode/server/current.json"')).stdout)
           .archiveSha256,
       ).toBe(synthetic.archiveSha256);
       facts.remoteNotDowngraded = true;
@@ -331,7 +331,7 @@ describe(`${MARKER}: 版本兼容策略`, () => {
         expect(facts.snapshotRetryUpdateCalls).toBe(1);
       }
       const current = JSON.parse(
-        (await runSSHCommand(config, 'cat "$HOME/.zcode/server/current.json"')).stdout,
+        (await runSSHCommand(config, 'cat "$HOME/.mcode/server/current.json"')).stdout,
       );
       // 当前构建已是 3.15.1；升级目标应回到本轮真实首装版本，不能硬编码历史补丁号。
       expect(current.version).toBe(scenario === "optional" ? version : before.version);

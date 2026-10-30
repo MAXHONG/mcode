@@ -1,6 +1,6 @@
 # SSH Remote P0 E2E 规格
 
-> **2026-09-07 新一轮完整回归**：范围、材料与隔离以 [R3 合并后自动化方案](r3-remote-automation-plan.md) 为执行入口，逐项合同见 [R3A 矩阵](r3-remote-automation-case-matrix.md)。下文历史“单服务器/不含手机”剪枝不限制新方案；旧 `zcode-server.cjs` PID helper、legacy manifest 代理断言和显式 Provider 同步表述需按现行 R3/Provisioning 改造后才能复用。已有 formal/pending 状态不代表新基线运行通过。
+> **2026-09-07 新一轮完整回归**：范围、材料与隔离以 [R3 合并后自动化方案](r3-remote-automation-plan.md) 为执行入口，逐项合同见 [R3A 矩阵](r3-remote-automation-case-matrix.md)。下文历史“单服务器/不含手机”剪枝不限制新方案；旧 `mcode-server.cjs` PID helper、legacy manifest 代理断言和显式 Provider 同步表述需按现行 R3/Provisioning 改造后才能复用。已有 formal/pending 状态不代表新基线运行通过。
 
 ## 定义
 

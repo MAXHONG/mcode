@@ -207,7 +207,7 @@ browser 半边（`browsers` / `getBrowser` / `createBrowserTab` / `getTab` /
 
 ### 2.3 语义规则（不只是签名）
 
-模型可见语义按 `apps/mcode-cli/packages/zcode-cua-plugin/docs/computer-use.md` 定义，不做随意化改动：
+模型可见语义按 `apps/mcode-cli/packages/mcode-cua-plugin/docs/computer-use.md` 定义，不做随意化改动：
 
 - **观察方法自动展示结果**，动作方法不展示。`{emit:false}` 关闭。
 - **绑定即观察**：`cua.getApp(...)` 返回前展示该 app 的**全量** AX 树。
@@ -371,7 +371,7 @@ request_access  stop_computer_control
 ```
 
 `cua.computer` 的角色是暴露**平台特定的底层 computer API**（语义见
-`apps/mcode-cli/packages/zcode-cua-plugin/docs/computer-use.md`）。
+`apps/mcode-cli/packages/mcode-cua-plugin/docs/computer-use.md`）。
 模型文档提一句、不展开。
 
 住在这里的 Mcode 独有能力：**窗口寻址**（`list_windows` + `app_ref.window_id`，§4.1）、
@@ -649,9 +649,9 @@ Helper 侧原生实现（macOS NSPasteboard、Windows / Linux 各自剪贴板 AP
 
 | 文件 | 改动 |
 |---|---|
-| `mcode .../zcode-cua-plugin/scripts/computer-use-client.mjs` | **重写**：`cua` 全局、`Target`/`App`、自动 emit、错误映射、`cua.computer`(14)、未文档化成员 |
-| `mcode .../zcode-cua-plugin/docs/computer-use.md` | 重写为 v3.1 参考（去 browser 半边 + per-cell bootstrap 段） |
-| `mcode .../zcode-cua-plugin/skills/computer-use/SKILL.md` | 重写 |
+| `mcode .../mcode-cua-plugin/scripts/computer-use-client.mjs` | **重写**：`cua` 全局、`Target`/`App`、自动 emit、错误映射、`cua.computer`(14)、未文档化成员 |
+| `mcode .../mcode-cua-plugin/docs/computer-use.md` | 重写为 v3.1 参考（去 browser 半边 + per-cell bootstrap 段） |
+| `mcode .../mcode-cua-plugin/skills/computer-use/SKILL.md` | 重写 |
 | `mcode-cua/plugin/skills/computer-use/SKILL.md` | 重写（producer 事实源） |
 | `mcode-cua/src/tools/zoom.ts` | **删除**（480 行） |
 | `mcode-cua/src/broker/server/electronDisplaySelection.ts` | **删除**（S0c；选屏状态层，topology 留在 `lib/display-topology.ts`） |
@@ -723,7 +723,7 @@ Helper 侧原生实现（macOS NSPasteboard、Windows / Linux 各自剪贴板 AP
 
 | 测试 | 现状断言 | 改动 |
 |---|---|---|
-| `mcode .../zcode-cua-plugin/tests/sdk.node-test.mjs` | `METHOD_NAMES.length === 30` | 改为：`cua.computer` 14 项 + `Target` 12 个成员齐 + `cua` 无任何 browser 成员 |
+| `mcode .../mcode-cua-plugin/tests/sdk.node-test.mjs` | `METHOD_NAMES.length === 30` | 改为：`cua.computer` 14 项 + `Target` 12 个成员齐 + `cua` 无任何 browser 成员 |
 | 同上 | 动作结果含 `action_sent` / `dispatch_status` | 成功 resolve 为 `undefined`；`possibly_sent` reject 且 `actionSent === true` |
 | `mcode-cua/test/skill-keyboard-contract.test.ts` | 钉死 `nodeRepl.write(nextState.text)`、`return_state="none"`、22KB 上限 | 改为钉死「观察方法自动展示」「禁止对观察结果再 write」「per-cell bootstrap」 |
 | `mcode-cua/test/observation-tools.test.ts` | delta / no_change → `null` | 反转：三态都返回完整内部 AppState |
@@ -731,7 +731,7 @@ Helper 侧原生实现（macOS NSPasteboard、Windows / Linux 各自剪贴板 AP
 
 ### 7.5 surface 门禁
 
-`apps/mcode-cli/packages/zcode-cua-plugin/tests/sdk.node-test.mjs` 对模型可见面做
+`apps/mcode-cli/packages/mcode-cua-plugin/tests/sdk.node-test.mjs` 对模型可见面做
 surface 精确断言：
 
 1. `Target` 的 12 个交互面成员**存在且位置参数同名同序**；

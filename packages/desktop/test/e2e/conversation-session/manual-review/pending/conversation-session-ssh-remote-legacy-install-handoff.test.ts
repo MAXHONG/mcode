@@ -229,7 +229,7 @@ describe(`${MARKER}: 迁移的密码 SSH 项目首次安装`, () => {
       await execInRemoteContainer(container, [
         "sh",
         "-c",
-        `test -e /home/${config.username}/.zcode/server/bin/mcode && echo installed || echo absent`,
+        `test -e /home/${config.username}/.mcode/server/bin/mcode && echo installed || echo absent`,
       ])
     ).stdout.trim();
   }
@@ -286,7 +286,7 @@ describe(`${MARKER}: 迁移的密码 SSH 项目首次安装`, () => {
           [
             "sh",
             "-c",
-            `pkill -9 -u ${config.username} -f '.zcode/server' || true; rm -rf /home/${config.username}/.zcode/server`,
+            `pkill -9 -u ${config.username} -f '.mcode/server' || true; rm -rf /home/${config.username}/.mcode/server`,
           ],
           { user: "0" },
         );

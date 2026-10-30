@@ -162,7 +162,7 @@ describe(`${MARKER}: 远端分享账号权威与未登录拒绝`, () => {
     // stop 是 Server 根命令，server stop 会误走旧 CLI，无法正确切换本 case 的 API 环境。
     const restarted = await runSSHCommand(
       prepared.config,
-      `"$HOME/.zcode/server/bin/mcode" stop --json; kill -TERM ${core.supervisorPid}; MCODE_BASE_URL='http://127.0.0.1:${remotePort}' "$HOME/.zcode/server/bin/mcode" serve --daemon --json`,
+      `"$HOME/.mcode/server/bin/mcode" stop --json; kill -TERM ${core.supervisorPid}; MCODE_BASE_URL='http://127.0.0.1:${remotePort}' "$HOME/.mcode/server/bin/mcode" serve --daemon --json`,
       { timeoutMs: 60_000 },
     );
     expect(restarted.code).toBe(0);
@@ -176,7 +176,7 @@ describe(`${MARKER}: 远端分享账号权威与未登录拒绝`, () => {
     });
     const setRemote = `const fs=await import('node:fs/promises');const p=process.env.HOME+'/.mcode/v2/credentials.json';const d=JSON.parse(await fs.readFile(p,'utf8'));Object.assign(d,{'oauth:active_provider':'zai','oauth:zai:access_token':${JSON.stringify(REMOTE_TOKEN)},zcodejwttoken:${JSON.stringify(REMOTE_TOKEN)}});await fs.writeFile(p,JSON.stringify(d),{mode:384});`;
     const runtime = JSON.parse(
-      (await runSSHCommand(prepared.config, 'cat "$HOME/.zcode/server/current.json"')).stdout,
+      (await runSSHCommand(prepared.config, 'cat "$HOME/.mcode/server/current.json"')).stdout,
     );
     const set = await runSSHCommand(
       prepared.config,

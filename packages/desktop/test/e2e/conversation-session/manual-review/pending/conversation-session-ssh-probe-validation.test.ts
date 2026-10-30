@@ -201,7 +201,7 @@ describe(`${MARKER}: 探测失败不伪装为系统不支持或未安装`, () =>
     expect(source.installState).toBe("installed");
     const currentBefore = await readRemoteContainerFile(
       container,
-      "/home/dev/.zcode/server/current.json",
+      "/home/dev/.mcode/server/current.json",
     );
     await disconnectRemoteSource(sourceId, MARKER);
     await writeRemoteContainerFile(container, `${FIXTURE_ROOT}/mode`, "missing-installed\n");
@@ -246,7 +246,7 @@ describe(`${MARKER}: 探测失败不伪装为系统不支持或未安装`, () =>
     expect(recovered.servers.find((item) => item.sourceServerId === sourceId)?.installState).toBe(
       "installed",
     );
-    expect(await readRemoteContainerFile(container, "/home/dev/.zcode/server/current.json")).toBe(
+    expect(await readRemoteContainerFile(container, "/home/dev/.mcode/server/current.json")).toBe(
       currentBefore,
     );
     const profile = recovered.profiles.find((item) => item.sourceServerId === sourceId)!;

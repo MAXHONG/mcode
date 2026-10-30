@@ -411,7 +411,7 @@ export async function listRemoteMcodeServerPids(config: SSHConnectionConfig): Pr
   if (result.code !== 0) {
     throw new Error(`读取远端 mcode-server PID 失败: ${result.stderr}`);
   }
-  // 缺陷原因：这里原先匹配 `zcode-server.cjs`，而 3.12 的 release 布局早已把 daemon 换成
+  // 缺陷原因：这里原先匹配 `mcode-server.cjs`，而 3.12 的 release 布局早已把 daemon 换成
   // <release>/runtime/server-cli.js serve --supervisor（工作进程是 server-core.js）。旧名字
   // 在远端根本不存在，匹配结果恒为空数组，SSH-P0-LIFE-02 只会报 before=/current= 全空，
   // 看不出是探测失效而不是产品没起 server（2026-09-15 服务器全量实测）。
@@ -544,7 +544,7 @@ export async function readRemoteCoreIdentity(
   state: string;
   generation: number;
 }> {
-  const statusResult = await runSSHCommand(config, 'cat "$HOME/.zcode/server/run/status.json"');
+  const statusResult = await runSSHCommand(config, 'cat "$HOME/.mcode/server/run/status.json"');
   if (statusResult.code !== 0) {
     throw new Error(`${caseMarker}: 读取远端 Core status 失败: ${statusResult.stderr}`);
   }

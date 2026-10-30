@@ -57,7 +57,7 @@ Status: ready-for-human
   - H2（设计缺口）：Core 连续崩溃，Supervisor 进入 `crash-loop-stopped`（存活、持锁、不写 status）；`cli.ts:279-307` 只复用 ready/starting，`enable --now` 无效，10s 超时。规格未规定此时 `serve --daemon` 的行为。
 - 3.16.3：`76edccb16a` 修了 01:50 那一次 F 类；`7c9139f8b0` 部分覆盖 H1（远端需先升级）；`46b6a998f2`、`e450176615` 对 H1/H2 无效（两种情况下本次启动都不写 status）。
 - 分诊建议：平台把它作为 687 条“SSH连接失败”的代表。按形状复核：第一次超时前有 keepalive 判死/握手超时（远端不可达），之后每次约 14～15s 持续失败 → 归为“远端重启后起不来”，不按“慢机”加长等待。
-- 待补：远端 `uptime -s`、`last -x reboot`、`ls -la ~/.zcode/server/run/`、`cat status.json server.lock`、锁 pid 的 `ps`、`systemctl --user show 'com.zhipu.mcode.server.*' -p ActiveState,SubState,Result,NRestarts`、`journalctl --user -b -u 'com.zhipu.mcode.server.*' -n 80`。journal 中 `Another Mcode Server instance is already running` → H1；`crash budget exhausted` → H2。
+- 待补：远端 `uptime -s`、`last -x reboot`、`ls -la ~/.mcode/server/run/`、`cat status.json server.lock`、锁 pid 的 `ps`、`systemctl --user show 'com.zhipu.mcode.server.*' -p ActiveState,SubState,Result,NRestarts`、`journalctl --user -b -u 'com.zhipu.mcode.server.*' -n 80`。journal 中 `Another Mcode Server instance is already running` → H1；`crash budget exhausted` → H2。
 
 ## 认证失败（3 条，无日志）
 

@@ -118,7 +118,7 @@ const { Server: SSHServer } = ssh2;
 // RDUX-11-09：Linux x64、未安装的环境探测输出；改正密码后连接停在安装确认，证明认证已通过。
 const NOT_INSTALLED_PROBE_OUTPUT =
   "__MCODE_PROBE_PLATFORM__\nLinux\n__MCODE_PROBE_ARCH__\nx86_64\n" +
-  "__MCODE_PROBE_ROOT__\n/home/dev/.zcode/server\n__MCODE_PROBE_KERNEL__\nLinux\n" +
+  "__MCODE_PROBE_ROOT__\n/home/dev/.mcode/server\n__MCODE_PROBE_KERNEL__\nLinux\n" +
   "__MCODE_PROBE_LIBC__\nglibc 2.35\n__MCODE_PROBE_INSTALLED__\n0\n" +
   "__MCODE_PROBE_VERSION__\n\n__MCODE_PROBE_STATUS__\n\n__MCODE_PROBE_END__\n";
 

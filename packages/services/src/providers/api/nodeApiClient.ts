@@ -30,42 +30,6 @@ interface NodeApiClientOptions {
   resolveClientLanguage?: () => string | undefined;
 }
 
-export interface BusinessCredentialValidationRequest {
-  url: string;
-  authorization: string;
-  emptyBodyMeansInvalid: boolean;
-}
-
-type BusinessAuthenticationEvidence = "empty" | "unauthorized" | null;
-
-function abortError(): DOMException {
-  return new DOMException("The operation was aborted.", "AbortError");
-}
-
-/** 让观察/复核链路跟随调用方 signal 中止，避免取消后的请求继续占住并发 Agent 的调用。 */
-function waitWithAbort<T>(promise: Promise<T>, signal?: AbortSignal | null): Promise<T> {
-  if (!signal) return promise;
-  return new Promise<T>((resolve, reject) => {
-    const abort = () => reject(abortError());
-    const cleanup = () => signal.removeEventListener("abort", abort);
-    signal.addEventListener("abort", abort, { once: true });
-    promise.then(
-      (value) => {
-        cleanup();
-        resolve(value);
-      },
-      (error: unknown) => {
-        cleanup();
-        reject(error);
-      },
-    );
-    if (signal.aborted) {
-      cleanup();
-      abort();
-    }
-  });
-}
-
 const DEFAULT_BUSINESS_UNAUTHORIZED_OBSERVATION_TIMEOUT_MS = 1000;
 const MAX_BUSINESS_UNAUTHORIZED_OBSERVATION_BYTES = 64 * 1024;
 

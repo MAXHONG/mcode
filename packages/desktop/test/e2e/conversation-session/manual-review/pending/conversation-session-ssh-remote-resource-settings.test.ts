@@ -176,7 +176,7 @@ describe(`${MARKER}: 同名同路径设备上的设置隔离`, () => {
         ).toBe(0);
         await uploadSSHFixtureFile(a, file, remoteFile);
         const installed = JSON.parse(
-          (await runSSHCommand(a, 'cat "$HOME/.zcode/server/current.json"')).stdout,
+          (await runSSHCommand(a, 'cat "$HOME/.mcode/server/current.json"')).stdout,
         );
         await $('input[placeholder="my-mcp-server"]').setValue(name);
         await $('input[placeholder="npx"]').setValue(`${installed.releaseDir}/runtime/node`);

@@ -380,7 +380,7 @@ Agent 接线约定：发行包内 Core 不在 monorepo、也没有 Electron runt
 --stdio`），不得由旧 `server-cli.js` 把自动推导结果永久写入全局 `process.env`。显式配置的
 `MCODE_AGENT_SERVER_COMMAND` 仍永远优先；开发态没有 release runtime 时不注入。
 
-Agent 版本身份：Core 启动时把自身编译期版本 `MCODE_VERSION` 写入 `ZCODE_APP_VERSION`，覆盖继承值；
+Agent 版本身份：Core 启动时把自身编译期版本 `MCODE_VERSION` 写入 `MCODE_APP_VERSION`，覆盖继承值；
 Core 拉起的 Agent 继承该 env，模型请求的 `User-Agent` / `X-ZCode-App-Version` 和遥测
 productVersion 报告 App 版本，而不是 CLI 包版本。注入点只能在 Core：升级时旧 Supervisor 会拉起
 新 release 的 Core，Supervisor 与 SSH/WSL/Docker exec 的版本都不代表该 Core。
@@ -564,7 +564,7 @@ status、lock、Core 或 SQLite。
 POSIX 稳定入口 `bin/mcode` 读取 `current.json.releaseDir`，只执行 `<root>/releases/` 下的 release；
 越界时输出 `Invalid current Mcode Server release` 并以 1 退出。该边界必须和写入方比较同一种路径：
 生命周期命令写 `current.json` 前已把 server root 收敛为 canonical（`realpath`）路径，launcher 也必须
-用物理路径（`cd -P` + `pwd -P`）计算 root。远端以 `"$HOME/.zcode/server/bin/mcode"` 调用入口，
+用物理路径（`cd -P` + `pwd -P`）计算 root。远端以 `"$HOME/.mcode/server/bin/mcode"` 调用入口，
 `$HOME` 可能经过符号链接（例如 NAS 的 `/var/services/homes -> /volume1/homes`、`/home -> /var/home`），
 这种别名不得让合法 release 被判为越界。
 

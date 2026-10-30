@@ -21,8 +21,8 @@ import type {
   TransportContext,
 } from "@mcode/server/source-server/transportAdapter.js";
 
-const SERVER_ROOT_SHELL = '"$HOME/.zcode/server"';
-const SERVER_BIN_SHELL = '"$HOME/.zcode/server/bin/mcode"';
+const SERVER_ROOT_SHELL = '"$HOME/.mcode/server"';
+const SERVER_BIN_SHELL = '"$HOME/.mcode/server/bin/mcode"';
 const SERVER_CURRENT_SHELL = `${SERVER_ROOT_SHELL}/current.json`;
 const SERVER_STATUS_SHELL = `${SERVER_ROOT_SHELL}/run/status.json`;
 const SERVER_DOWNGRADE_SHELL = `${SERVER_ROOT_SHELL}/downgrade.json`;

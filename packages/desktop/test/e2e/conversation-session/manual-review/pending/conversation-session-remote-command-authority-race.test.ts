@@ -90,7 +90,7 @@ async function fifoHasReader(container: string): Promise<boolean> {
   const result = await execInRemoteContainer(container, [
     "sh",
     "-c",
-    'pid=$(sed -nE \'s/.*"pid": *([0-9]+).*/\\1/p\' "$HOME/.zcode/server/run/status.json" | head -n1); for file in /proc/"$pid"/fd/*; do if [ "$(readlink "$file" 2>/dev/null)" = "$1" ]; then printf yes; break; fi; done',
+    'pid=$(sed -nE \'s/.*"pid": *([0-9]+).*/\\1/p\' "$HOME/.mcode/server/run/status.json" | head -n1); for file in /proc/"$pid"/fd/*; do if [ "$(readlink "$file" 2>/dev/null)" = "$1" ]; then printf yes; break; fi; done',
     "sh",
     FIFO,
   ]);
@@ -99,7 +99,7 @@ async function fifoHasReader(container: string): Promise<boolean> {
 
 async function startFifoKeeper(container: string): Promise<void> {
   const release = JSON.parse(
-    (await execInRemoteContainer(container, ["cat", "/home/dev/.zcode/server/current.json"]))
+    (await execInRemoteContainer(container, ["cat", "/home/dev/.mcode/server/current.json"]))
       .stdout,
   );
   // 保留写端使 Core 的 open 能完成而 read 继续等待；因此可从 Core fd 证明请求确实在途。

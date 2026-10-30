@@ -2799,7 +2799,7 @@ const enUS: Record<string, string> = {
   "remote.connectingConfirmTitle": "Stop the current connection?",
   "remote.sourceServerInstallTitle": "Mcode Server installation required",
   "remote.sourceServerInstallDescription":
-    "Mcode will upload the matching release, install it under ~/.zcode/server, and start the remote service. Existing legacy remote files will be preserved.",
+    "Mcode will upload the matching release, install it under ~/.mcode/server, and start the remote service. Existing legacy remote files will be preserved.",
   "remote.sourceServerInstallConfirm": "Install and continue",
   "remote.installTarget": "Target account",
   "remote.installVersion": "Install version",

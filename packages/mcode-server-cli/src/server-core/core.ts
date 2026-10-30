@@ -20,7 +20,7 @@ import { resolveServerLayout } from "../runtime/paths.js";
 declare const __MCODE_BUILTIN_PROVIDER_CONFIG_JSON__: string | undefined;
 
 export async function runServerCore(generation: number): Promise<void> {
-  // Bug 原因：Agent 的模型请求头从 ZCODE_APP_VERSION 读 App 版本，缺失时回退到 CLI 包版本
+  // Bug 原因：Agent 的模型请求头从 MCODE_APP_VERSION 读 App 版本，缺失时回退到 CLI 包版本
   // （0.17.0）。本地由 Desktop main 注入；远端 Core 由 SSH/WSL/Docker exec → Supervisor fork 拉起，
   // 整条链都没有这个 env，远端请求于是报 0.17.0（按客户端版本拦截的网关会拒绝）。升级时旧 Supervisor
   // 会拉起新 release 的 Core，所以只能由 Core 用自身编译期版本写入，Agent spawn 时继承。

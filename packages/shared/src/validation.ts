@@ -589,7 +589,7 @@ export const remoteTargetSchema = z.discriminatedUnion("kind", [
 ]);
 
 export const helloMessageSchema = z.object({
-  type: z.literal("zcode-hello"),
+  type: z.literal("mcode-hello"),
   version: z.string(),
   platform: z.string(),
   arch: z.string(),
@@ -597,7 +597,7 @@ export const helloMessageSchema = z.object({
 });
 
 export const helloAckMessageSchema = z.object({
-  type: z.literal("zcode-hello-ack"),
+  type: z.literal("mcode-hello-ack"),
   version: z.string(),
   clientId: nonEmptyStringSchema,
 });

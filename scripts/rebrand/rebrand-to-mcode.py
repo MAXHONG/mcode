@@ -113,14 +113,8 @@ PROTECT_PATTERNS = [
     r"browserScreenshotContentIndices|officialMcp\w*)\b",
     r"com\.zcode/",
     r"zcode\.cua/",
-    # ---- 远程链路契约（SSH/WSL/Docker 远端运行 z.ai CDN 上游组件，必须保持原名）----
-    r"zcode-hello(?:-ack)?\b",
-    r"zcode-server\.cjs\b",
-    r"\.zcode/server\b",
-    r"\"\.zcode\", \"server\"",
-    r"\bZCODE_(?:SERVICE_AUTHORITY_MODE|APP_VERSION|SERVER_RUNTIME_ROOT|REMOTE_HTTP_PROXY|REMOTE_NO_PROXY|REMOTE_RUNTIME_NETWORK_AUTHORITY)\b",
-    r"zcode-(?:cua|guide)-plugin(?=[\"/])",
-    r"(?<=glm/)\$\{[^}]+\}/zcode\.cjs",
+    # ---- 远程链路契约：Mcode 方案 B（2026-10-30）起远端组件由 Mcode 自建发布到 mcode.hjh.im，
+    # ~/.mcode/server、mcode-server.cjs、mcode-hello、MCODE_* 等一律随常规规则改名，不再保护。----
     # 上游 server / 移动端远程页使用的 RPC 成员与数据字段名
     r"(?<![\w$/])(?:ResetZCodeEndpoint|SetZCodeEndpointCustom|SetZCodeEndpointProduction|SetZCodeEndpointTest|ToggleZCodeStdioTapDevProxy|ZCodeAgent|ZCodeSession|ZCodeTask|addZCodeAgentMcpServer|baseZCodeService|basedOnZCodeBuiltinRevision|buildZCodeSourceHeaders|buildZCodeToolEnvPassthroughEnv|capturedZCodeAgentTelemetryEnv|continueInZCode|copyClaudeAgentsFileToZcodeAgentsFile|deleteZCodeAgentMcpServer|downloadZCode|exchangeZcodeJwtToken|fromUserZCodeSource|getEnabledMcpServersForZCode|getZCodeTaskService|isZcodeJwtRequest|localZCodeAgentService|onDidCheckZCodeBuiltin|onZCodeBuiltinRefreshError|onZCodeInteractionBehaviorChange|onZcodeJwtInvalid|refreshZCodeBuiltin|remoteZCodeAgentService|renderZCodeFileCitations|resolveZCodeApiOrigin|resolveZCodeBuiltinActiveFilePath|resolveZCodeEndpointOrigin|sanitizeZCodeRuntimeEnv|toZCodeBuiltinJSON|updateZCodeAgentMcpServer|workspaceShellZCodeState|workspaceZCodeService|zcodeAgent|zcodeAgentCommandResolver|zcodeAgentService|zcodeAgentSpawnFallbackCwd|zcodeAttachments|zcodeAuthorization|zcodeBotOpenId|zcodeBotRemoved|zcodeBuiltin|zcodeBuiltinActiveFilePath|zcodeBuiltinEnvironment|zcodeBuiltinFilePath|zcodeBuiltinModelRules|zcodeBuiltinProviderConfigFilePath|zcodeBuiltinProviderTemplates|zcodeBuiltinProviders|zcodeBuiltinRemote|zcodeBuiltinRevision|zcodeBuiltinSource|zcodeCallbackPrepareError|zcodeCandidates|zcodeCardText|zcodeChatType|zcodeEndpointOrigin|zcodeEnv|zcodeFeishuCardResponseState|zcodeFeishuSynchronousCardAction|zcodeIgnoreInteractionMessage|zcodeInteractionBehavior|zcodeJwt|zcodeJwtToken|zcodeMcpProcessTelemetryBaseShape|zcodeMcpUiAppToolInstanceShape|zcodeMcpUiPluginScopeShape|zcodeMobilePage|zcodeNativeCardContent|zcodePlanAnthropicBaseUrl|zcodePlanBillingBalanceUrl|zcodePlanBillingCurrentUrl|zcodePlanOpenAiBaseUrl|zcodeProfileMigrationRetryAfter|zcodeProfileSchemaVersion|zcodeProvider|zcodeReferencedAttachment|zcodeReferencedInlineImages|zcodeReferencedMessage|zcodeSessionService|zcodeSessionStore|zcodeSnapshot|zcodeTaskService|zcodeTimeline|zcodeTopicHasAcceptedInput|zcodeTopicRootIsCurrentBot|zcodeagentmcp)(?![\w$]|\.(?:js|ts|tsx|mjs|cjs)\b)",
     # ---- 与 z.ai 官网托管页 / 分享页共享的 wire 标识（cb9a1912 手工恢复，补进脚本防止合并上游时再次误改）----

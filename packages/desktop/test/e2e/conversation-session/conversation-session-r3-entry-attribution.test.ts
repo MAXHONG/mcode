@@ -284,7 +284,7 @@ describe(`${CASE_MARKER}: 两个 Source 下全局新建/项目入口的目标归
     const appliedBAfter = await readProvisioningApplied(targetB);
     const coreB = await runSSHCommand(
       targetB,
-      'tr -d "\\n " < "$HOME/.zcode/server/run/status.json" | cut -c1-200; pgrep -fc "app-server --stdio" || true',
+      'tr -d "\\n " < "$HOME/.mcode/server/run/status.json" | cut -c1-200; pgrep -fc "app-server --stdio" || true',
     );
     facts.secondProjectOnB = {
       identity: projectB.workspaceIdentity,

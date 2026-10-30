@@ -56,7 +56,7 @@ R3 不交付：
 | 服务集合         | 三种连接方式统一采用「全转发」模式（与现有 server transport 的 `createServerRemoteWorkspaceServiceCollection` 一致）；`LegacyRemoteWorkspaceRpcContract` 更名为版本化的 `RemoteWorkspaceRpcContract` 并作为握手校验的一部分                                                                                                                                                                                                                                                                                                                                                             |
 | 连接记录模型     | `lastWorkspaceSession` 的「连接与 workspace 合一实体」拆分为三实体：`SourceServerRecord`（握手后建立）、`ConnectionProfile`（线路+凭据引用）、workspace 打开历史（引用前两者）。凭据 key 从 `remote-workspace:<workspaceKey>:*` 迁到 `connection-profile:<profileId>:*`                                                                                                                                                                                                                                                                                                                 |
 | 远端数据迁移     | **R3 不做破坏性 key 重写**。Server Core 维护 path → canonical key 的 alias 解析层，按 workspace 打开惰性执行；单线路历史零数据改动（新旧版本读写同一批行，回退与混连天然兼容）；仅多线路变体历史做一次性合并到 canonical（备份 + ledger），失败按 workspace 粒度阻止打开、不阻塞连接。R4 才执行 server-local 清洁化                                                                                                                                                                                                                                                                     |
-| 目录共存         | 旧主链资产（`~/.zcode/server` 下 `node`、`zcode-server.cjs`、`agents/`、`tools/`、`build/` 散文件）与 R2 release 布局同目录共存。R3 安装不清理旧散文件（保护未升级 Desktop 的回滚路径），清理留待 R4                                                                                                                                                                                                                                                                                                                                                                                    |
+| 目录共存         | 旧主链资产（`~/.mcode/server` 下 `node`、`mcode-server.cjs`、`agents/`、`tools/`、`build/` 散文件）与 R2 release 布局同目录共存。R3 安装不清理旧散文件（保护未升级 Desktop 的回滚路径），清理留待 R4                                                                                                                                                                                                                                                                                                                                                                                    |
 | 自动重连         | 启动按最近在线排序尝试全部保存连接，不按 7 天过滤（并发和单次预算见[当前恢复合同](../remote/desktop-remote-session-renderer-reattach.md)，各尝试一次）；在线断连按 2/4/8s 重试 3 次；离线每 2 分钟静默探测。仅对「凭据可静默获得」的 Profile 生效；需要交互（密码未存、版本不兼容、迁移失败）时停在离线态等待用户                                                                                                                                                                                                                                                                       |
 | 窗口模型         | 沿用 R1 窗口级隔离；一期按单窗口（主窗口）设计与验收，启动自动重连由主窗口 Host 执行，多窗口行为不做产品承诺                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | 远端 automation  | 一期不支持。cron 调度与 run 生命周期当前在窗口 Host 进程内（`cronAutomationRepo`/`cronRunLifecycle`），迁往 Core 涉及调度器移植、错过补跑语义（方案已列为后续能力）与管理 UI 多 Source 化，改动独立且不小；daemon 常驻已为后续实现铺路，R3 架构不设障碍                                                                                                                                                                                                                                                                                                                                 |
@@ -420,7 +420,7 @@ probe：status.json ready + Core PID 存活 ──► 复用端口 ──► 握
 - daemon 启动 owner 仍由 Server CLI 在 OS service 与 detached Supervisor 之间选择，不新增重试、状态缓存、启动锁或并行启动路径。同一 canonical server root 只有一个 Supervisor 和 Core，由现有 `server.lock` 保证：后到的 Supervisor 取锁失败就退出，不改 status。以前注册成功的 enabled unit 与 fallback 同时启动、两个 CLI 同时回退时，后到者取锁失败，结果与 WSL/Docker 的 fallback 相同。运行中的 Supervisor 失去锁时不再写 status，停止 Core 后结束，规则见 [R2](r2-server-cli-and-daemon.md)（2026-10-26）：锁文件不存在（server root 被删除或替换）以退出码 1 结束，由服务管理器或下一次 `serve --daemon` 拉起新实例；锁已换了 owner 以退出码 0 结束，新 owner 已在运行，服务管理器不重启。
 - `serve --daemon --json` 非零退出时，Adapter 必须优先解析 stdout 的结构化 `{ error, code?, retryable? }`，再把 stderr 作为补充诊断。Node warning、登录 banner 或 shell 噪音不得覆盖真实 CLI 错误。
 - Server CLI `--json` 的结果（成功或失败）是 stdout 中最后一个单行 JSON 对象；Adapter 读取结果时跳过其前后的纯文本行。部分 SSH 堡垒机会把远端 stderr 合并进 stdout，并在 stdout 结束后才投递，Node warning 因此可能排在结果行之后，不能把最后一个非空行当作结果。
-- Source Server bootstrap 可执行文件放在最终可执行根（`~/.zcode/server`）的临时 staging 内，不从常见 `noexec` 的 `/tmp` 执行；archive 临时文件仍须在成功、失败和取消后清理。
+- Source Server bootstrap 可执行文件放在最终可执行根（`~/.mcode/server`）的临时 staging 内，不从常见 `noexec` 的 `/tmp` 执行；archive 临时文件仍须在成功、失败和取消后清理。
 - 远端直下只把 curl/wget、tar 和 SHA-256 工具作为必需能力；awk/wc/date 等仅用于增强进度，缺失时降级为无速度进度而不是阻断下载。Desktop 下载后上传同样必须在上传前探测 tar，避免传完大 archive 才失败。
 - macOS 构建 POSIX archive 时必须显式禁用 bsdtar xattr/PAX metadata；仅设置 `COPYFILE_DISABLE=1` 不足以移除 `LIBARCHIVE.xattr.*`，否则 Linux 解压会按条目刷出数千行 unknown extended header 并掩盖真实错误。
 
@@ -444,7 +444,7 @@ probe ──已安装且 daemon ready──────────────�
 - 判定为需要更新之后，两种策略的更新逻辑必须完全一致：连接流程只把 Profile 置为 `needs-upgrade + updateAvailability: required` 并以 `source-server-upgrade-required` 拒绝连接，不得在连接流程内直接执行 archive update；更新本身统一由 §6.3 的 `updateSource → Manager.updateServer` 执行（`updating` 状态、操作日志、`force:false` 先行、running-task guard 后由用户显式确认再 `force:true`）。因此连接向导内的自动更新、启动重连/断线恢复的「立即更新」入口和强制更新确认对开发态同样生效。（R3A-B-06 修正：此前开发态在连接流程内直接 `installOrUpdate`，guard 只能表现为普通连接失败，UI 没有强制更新入口。）
 - 开发态内容刷新只接受本轮本地 staging 的 descriptor/archive，并统一走 Desktop 上传；即使 SSH Profile 保存的是 `remote-download` 也不得改从 CDN 获取同版本产物。若本地产物缺失、校验失败或更新被 running-task guard 阻断，连接必须 fail-closed，禁止回退 CDN 或继续运行旧 release。
 - 开发态 `bootstrap:with-remote` 必须调用与 CI 相同的 Source Server staging 入口并刷新 descriptor/archive；普通 `bootstrap` 继续跳过远端资源。成功返回表示所有仓库源码派生的 runtime、插件与 archive 都在本轮构建，只有固定版本且经校验的外部二进制允许复用缓存。staging 开始先使旧 descriptor 失效，四个平台 archive 全部原子落盘并校验后再原子发布新 descriptor；失败不得留下可被开发连接消费的旧 generation。Linux 开发专用入口 `prepare:remote-assets:linux` 复用同一路径，只构建并发布 `linux-x64` / `linux-arm64`，descriptor 只列本轮目标，不混入历史 macOS 条目；环境与使用约定见 [Bootstrap 命令](../bootstrap.md)。
-- 远端 `~/.zcode/server` 内旧主链散文件（`node`、`zcode-server.cjs`、`agents/`、`build/`、`tools/`）与 R2 布局共目录：R3 安装**不删除**这些旧文件——未升级的旧版本 Desktop 仍依赖它们运行旧主链；清理属于 R4。R2 的 uninstall allowlist 需扩展列出这批旧路径，保证 R3 之后的 `mcode uninstall` 能一并清理并写入 `preservedPaths` 对账。
+- 远端 `~/.mcode/server` 内旧主链散文件（`node`、`mcode-server.cjs`、`agents/`、`build/`、`tools/`）与 R2 布局共目录：R3 安装**不删除**这些旧文件——未升级的旧版本 Desktop 仍依赖它们运行旧主链；清理属于 R4。R2 的 uninstall allowlist 需扩展列出这批旧路径，保证 R3 之后的 `mcode uninstall` 能一并清理并写入 `preservedPaths` 对账。
 
 ## 6. 握手、鉴权与版本兼容
 
@@ -971,11 +971,11 @@ Core 启动（server-core/core.ts runServerCore）
   layout = resolveServerLayout(MCODE_SERVER_ROOT)
   ├─ MCODE_BUILTIN_PROVIDER_CONFIG_FILE 显式指定 ──► 直接使用该文件
   ├─ 否则 materializeMcodeBuiltinProviderConfig({ runtimeRoot: layout.serverRoot, content })
-  │     └─► ~/.zcode/server/config/provider/mcode-builtin-<sha256(content)>.json（tmp + rename；同 hash 幂等，内容不一致则失败）
+  │     └─► ~/.mcode/server/config/provider/mcode-builtin-<sha256(content)>.json（tmp + rename；同 hash 幂等，内容不一致则失败）
   └─ 两者皆无 ──► 启动失败（fail-closed）
 ```
 
-- 物化目录是 `serverRoot`（`~/.zcode/server`），**不是** release 自带的 `runtime/`：release 目录不可变，同一 releaseId 重装时会重算整棵树的内容哈希，多出的物化文件会让该目录被判为损坏副本并整体替换（[R2 immutable promote](./r2-server-cli-and-daemon.md)）；文件名含内容 hash，跨 release 共用安全。`config/` 目前不在 `mcode uninstall` allowlist 内，卸载后会作为 `preservedPaths` 保留（见 [r2-server-cli-and-daemon.md](./r2-server-cli-and-daemon.md)）。
+- 物化目录是 `serverRoot`（`~/.mcode/server`），**不是** release 自带的 `runtime/`：release 目录不可变，同一 releaseId 重装时会重算整棵树的内容哈希，多出的物化文件会让该目录被判为损坏副本并整体替换（[R2 immutable promote](./r2-server-cli-and-daemon.md)）；文件名含内容 hash，跨 release 共用安全。`config/` 目前不在 `mcode uninstall` allowlist 内，卸载后会作为 `preservedPaths` 保留（见 [r2-server-cli-and-daemon.md](./r2-server-cli-and-daemon.md)）。
 - 远端 Built-in Release 不随 Provisioning 复制：本机 Personal Layer 引用远端 Built-in 不存在的 Provider/Model 时，目标返回结构化错误并回滚本次配置写入。
 
 #### 8.3.6 最近结果与失败重试（数据同步页）
@@ -1343,7 +1343,7 @@ R3 保留源码但已从生产入口不可达、R4 再物理删除：
 - `buildRemoteWorkspaceIdentity` 的 SSH/WSL/Docker 构造。Host 仍在没有历史精确值时用它生成 `legacyRouteHint`，它不是正式 stable identity；随 R4 删除 hint 时一并删除；
 - 旧连接记录（`lastWorkspaceSession` remote entry、`remote-workspace:*` credential key）的读取与解析；
 - `parseRemoteWorkspaceIdentity` 对 `remote:ssh/wsl/docker:*` 的解析（远端迁移扫描用）；
-- 远端 `~/.zcode/server` 旧散文件（未升级 Desktop 的回滚依赖）；
+- 远端 `~/.mcode/server` 旧散文件（未升级 Desktop 的回滚依赖）；
 - 迁移 ledger/报告的兼容读取。
 
 长期保留：`IRemoteBackend` 三实现的 exec/upload/detect 原语（Adapter 底座）、`kind:"server"` dev 直连、手机 attachment 全链路。

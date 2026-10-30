@@ -28,8 +28,8 @@ import { prepareV4ConversationE2E } from "#e2e/helpers/v4-conversation";
 // Restart=on-failure 会轮流重启、互相接管，每轮都停掉 Core。
 const MARKER = "E2E_REMOTE_SHARED_ROOT_PEER_HOST_SSH";
 const DEV: RemoteAccount = { user: "dev", home: "/home/dev" };
-const SERVER_ROOT = '"$HOME/.zcode/server"';
-const SERVER_BIN = '"$HOME/.zcode/server/bin/mcode"';
+const SERVER_ROOT = '"$HOME/.mcode/server"';
+const SERVER_BIN = '"$HOME/.mcode/server/bin/mcode"';
 const PEER_UNIT = "mcode-peer-host.service";
 // 与产品 unit 相同的 ExecStart 和 Restart=on-failure，只多一层命名空间。unit 写进共享 home 的 ~/.config，
 // 与真实共享 home 下另一台主机的 user manager 读到的位置相同。
@@ -37,7 +37,7 @@ const PEER_UNIT_CONTENT = [
   "[Unit]",
   "Description=Mcode Server on a peer host sharing this home",
   "[Service]",
-  `ExecStart=/usr/bin/unshare --user --map-root-user --pid --fork --kill-child --mount-proc ${DEV.home}/.zcode/server/bin/mcode serve --supervisor --service-entry --server-root ${DEV.home}/.zcode/server`,
+  `ExecStart=/usr/bin/unshare --user --map-root-user --pid --fork --kill-child --mount-proc ${DEV.home}/.mcode/server/bin/mcode serve --supervisor --service-entry --server-root ${DEV.home}/.mcode/server`,
   "Restart=on-failure",
   "",
 ].join("\n");

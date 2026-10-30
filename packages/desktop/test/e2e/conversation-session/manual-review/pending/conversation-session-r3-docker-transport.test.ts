@@ -147,7 +147,7 @@ describe(`${CASE_MARKER}: Desktop Docker transport 首装、首发与关闭重�
         "-e",
         `const { readFile } = require("node:fs/promises");
         async function main() {
-          const root = process.env.HOME + "/.zcode/server/run/";
+          const root = process.env.HOME + "/.mcode/server/run/";
           const status = JSON.parse(await readFile(root + "status.json", "utf8"));
           const token = (await readFile(root + "ingress-token", "utf8")).trim();
           const response = await fetch("http://127.0.0.1:" + status.port + "/api/server-info", {
@@ -190,7 +190,7 @@ describe(`${CASE_MARKER}: Desktop Docker transport 首装、首发与关闭重�
     facts.containerUser = (
       await dockerSh(
         container,
-        "id -un; test -e ~/.zcode/server/current.json && echo installed || echo fresh",
+        "id -un; test -e ~/.mcode/server/current.json && echo installed || echo fresh",
       )
     ).trim();
     await prepareV4ConversationE2E({ skipProvider: true });
@@ -211,7 +211,7 @@ describe(`${CASE_MARKER}: Desktop Docker transport 首装、首发与关闭重�
     // 且每段 grep 兜底 || true，保证命令 exit 0 时 stdout 不被丢弃。
     const installState = await dockerSh(
       container,
-      'grep -o \'"archiveSha256": *"[0-9a-f]*"\' ~/.zcode/server/current.json || true; cat ~/.zcode/server/run/status.json | tr -d "\\n "; echo; grep -o "\\"providerName\\": *\\"[^\\"]*\\"" ~/.mcode/v2/provider_config.json || true',
+      'grep -o \'"archiveSha256": *"[0-9a-f]*"\' ~/.mcode/server/current.json || true; cat ~/.mcode/server/run/status.json | tr -d "\\n "; echo; grep -o "\\"providerName\\": *\\"[^\\"]*\\"" ~/.mcode/v2/provider_config.json || true',
     );
     facts.remoteAfterConnect = installState.split("\n").filter(Boolean).slice(0, 8);
     expect(installState).toContain("archiveSha256");
@@ -276,7 +276,7 @@ describe(`${CASE_MARKER}: Desktop Docker transport 首装、首发与关闭重�
 
     const daemonAfterDisconnect = await dockerSh(
       container,
-      'cat ~/.zcode/server/run/status.json | tr -d "\\n " | cut -c1-120',
+      'cat ~/.mcode/server/run/status.json | tr -d "\\n " | cut -c1-120',
     );
     expect(daemonAfterDisconnect).toContain('"state":"ready"');
     await reconnectRemoteProject(ready.identity, CASE_MARKER);

@@ -21,7 +21,7 @@ describe("createRuntimeAiSdkModelExecutionConfig", () => {
       },
     };
     const config = createRuntimeAiSdkModelExecutionConfig(
-      { ZCODE_APP_VERSION: "3.9.0", MCODE_ENV: "test" },
+      { MCODE_APP_VERSION: "3.9.0", MCODE_ENV: "test" },
       {
         endpointRoutingPort,
         network: {
@@ -58,7 +58,7 @@ describe("buildCliMcodeSourceHeaders", () => {
   it("生成运行时来源 Header，不根据模型或 Provider 推断", () => {
     expect(
       buildCliMcodeSourceHeaders(
-        { ZCODE_APP_VERSION: "3.9.0", MCODE_ENV: "production" },
+        { MCODE_APP_VERSION: "3.9.0", MCODE_ENV: "production" },
         { sourceTitle: "cli" },
       ),
     ).toMatchObject({

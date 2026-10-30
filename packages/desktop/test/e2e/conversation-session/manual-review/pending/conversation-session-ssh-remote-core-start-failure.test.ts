@@ -77,7 +77,7 @@ describe(`${MARKER}: 远端 Core 启动失败时连接错误带出原因`, () =>
         `HOME=${DEV.home}`,
         "sh",
         "-c",
-        '"$HOME/.zcode/server/bin/mcode" stop --wait --server-root "$HOME/.zcode/server" --json',
+        '"$HOME/.mcode/server/bin/mcode" stop --wait --server-root "$HOME/.mcode/server" --json',
       ],
       { user: DEV.user },
     );

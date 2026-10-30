@@ -29,11 +29,11 @@ async function readRemoteFacts(config: SSHConnectionConfig) {
     config,
     'echo "tmp=$(mount | grep " /tmp " | head -n1)"; echo "tar=$(command -v tar || echo none)"; ' +
       'echo "forwarding=$(grep -iE "^AllowTcpForwarding" /etc/ssh/sshd_config | tail -n1)"; ' +
-      'echo "current=$(test -f "$HOME/.zcode/server/current.json" && grep -o \'"archiveSha256": *"[0-9a-f]*"\' "$HOME/.zcode/server/current.json" || echo none)"; ' +
-      'echo "staging=$(ls -d "$HOME"/.zcode/server/staging* "$HOME"/.zcode/server/bootstrap* 2>/dev/null | tr "\\n" ",")"; ' +
-      'echo "serverRoot=$(ls -A "$HOME/.zcode/server" 2>/dev/null | tr "\\n" ",")"; ' +
+      'echo "current=$(test -f "$HOME/.mcode/server/current.json" && grep -o \'"archiveSha256": *"[0-9a-f]*"\' "$HOME/.mcode/server/current.json" || echo none)"; ' +
+      'echo "staging=$(ls -d "$HOME"/.mcode/server/staging* "$HOME"/.mcode/server/bootstrap* 2>/dev/null | tr "\\n" ",")"; ' +
+      'echo "serverRoot=$(ls -A "$HOME/.mcode/server" 2>/dev/null | tr "\\n" ",")"; ' +
       'echo "libc=$(getconf GNU_LIBC_VERSION 2>/dev/null || echo none)"; ' +
-      'echo "tmpEntries=$(ls /tmp 2>/dev/null | tr "\\n" ",")"; echo "status=$(cat "$HOME/.zcode/server/run/status.json" 2>/dev/null | tr -d "\\n ")"',
+      'echo "tmpEntries=$(ls /tmp 2>/dev/null | tr "\\n" ",")"; echo "status=$(cat "$HOME/.mcode/server/run/status.json" 2>/dev/null | tr -d "\\n ")"',
   );
   return Object.fromEntries(
     facts.stdout

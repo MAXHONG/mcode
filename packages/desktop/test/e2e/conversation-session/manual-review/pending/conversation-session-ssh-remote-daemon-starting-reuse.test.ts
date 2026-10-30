@@ -27,7 +27,7 @@ const STARTING_WINDOW_ENABLED = process.env.R3_DAEMON_STARTING_WINDOW !== "0";
 // Core 在 require 阶段同步阻塞的时长。要短于 Supervisor 首启 15 秒的 ready 预算，
 // 又要长到 Desktop 的 probe 与 serve --daemon 落在 starting 窗口内。
 const SLOW_CORE_MS = 8_000;
-const SERVER_ROOT = "/home/dev/.zcode/server";
+const SERVER_ROOT = "/home/dev/.mcode/server";
 const SLOW_CORE_SCRIPT = "/home/dev/.e2e-slow-core.cjs";
 const SAMPLER_SCRIPT = "/home/dev/.e2e-daemon-sampler.sh";
 const SAMPLER_LOG = "/tmp/e2e-daemon-samples.log";
@@ -68,13 +68,13 @@ async function preinstallRemoteRelease(container: string, appVersion: string): P
     container,
     [
       "set -eu",
-      'b="$HOME/.zcode/server/.e2e-bootstrap"',
+      'b="$HOME/.mcode/server/.e2e-bootstrap"',
       'rm -rf "$b"',
       'mkdir -p "$b"',
       'tar -xzf /tmp/e2e-mcode-server.tar.gz -C "$b" --strip-components=1',
-      '"$b/bin/mcode" update --from-archive /tmp/e2e-mcode-server.tar.gz --server-root "$HOME/.zcode/server" --json',
+      '"$b/bin/mcode" update --from-archive /tmp/e2e-mcode-server.tar.gz --server-root "$HOME/.mcode/server" --json',
       // update 会拉起 daemon；停掉后由本用例按需制造 starting 窗口。
-      '"$HOME/.zcode/server/bin/mcode" stop --wait --server-root "$HOME/.zcode/server" --json',
+      '"$HOME/.mcode/server/bin/mcode" stop --wait --server-root "$HOME/.mcode/server" --json',
       'rm -rf "$b" /tmp/e2e-mcode-server.tar.gz',
     ].join("; "),
   );
@@ -137,7 +137,7 @@ async function startDaemonInStartingWindow(container: string): Promise<number> {
     container,
     "sh",
     "-c",
-    `"$HOME/.zcode/server/bin/mcode" serve --daemon --server-root "$HOME/.zcode/server" > /tmp/e2e-background-serve.log 2>&1`,
+    `"$HOME/.mcode/server/bin/mcode" serve --daemon --server-root "$HOME/.mcode/server" > /tmp/e2e-background-serve.log 2>&1`,
   ]);
   let snapshot: DaemonSnapshot = { lockPid: null, state: null };
   await browser.waitUntil(

@@ -186,7 +186,7 @@ export async function runMcodeProtocolAgent(
       create: () =>
         prepareMcodeTelemetryEnv(runtimeEnv, {
           cliVersion: options.version,
-          productVersion: options.env?.ZCODE_APP_VERSION,
+          productVersion: options.env?.MCODE_APP_VERSION,
           runtimeSurface,
         }),
     });
@@ -253,7 +253,7 @@ export async function runMcodeProtocolAgent(
         logger,
       }).resolveHeaders,
       resolveZCodeApiOrigin,
-      appVersion: endpointEnv.ZCODE_APP_VERSION?.trim() || options.version,
+      appVersion: endpointEnv.MCODE_APP_VERSION?.trim() || options.version,
       fetch: createMcpTransportFetch({ env: endpointEnv, network: configResult.config.network }),
       logger,
     });

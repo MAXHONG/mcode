@@ -143,7 +143,7 @@ async function main() {
   );
 
   log("install archive through bootstrap bin/mcode");
-  const serverRoot = "/root/.zcode/server";
+  const serverRoot = "/root/.mcode/server";
   const remoteArchive = `/root/mcode-server-${target}.tar.gz`;
   const { stdout: installOutput } = await ssh(
     `/root/mcode-bootstrap/bin/mcode update --from-archive ${remoteArchive} --server-root ${serverRoot} --json`,

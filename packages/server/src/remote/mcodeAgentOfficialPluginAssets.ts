@@ -5,7 +5,7 @@ export const REMOTE_AGENT_OFFICIAL_PLUGIN_DIR_NAME = "packages";
 export const REMOTE_AGENT_OFFICIAL_PLUGIN_PACKAGE_NAMES = [
   "android-emulator-plugin",
   "browser-use-plugin",
-  "zcode-cua-plugin",
+  "mcode-cua-plugin",
   "documents-plugin",
   "pdf-plugin",
   "presentations-plugin",
@@ -15,20 +15,14 @@ export const REMOTE_AGENT_OFFICIAL_PLUGIN_PACKAGE_NAMES = [
   "restore-legacy-sessions-plugin",
   "skill-creator-plugin",
   "plugin-creator-plugin",
-  "zcode-guide-plugin",
+  "mcode-guide-plugin",
   "visualize-plugin",
   "mcode-site-plugin",
 ] as const;
 
-// 远端目录名必须与 z.ai CDN 上游 glm 组件（packages/zcode-*-plugin）及上游 agent 的
-// rootCandidates 保持一致；本仓库源码目录已更名为 mcode-*-plugin，开发态上传时按此映射取源。
-const REMOTE_AGENT_OFFICIAL_PLUGIN_LOCAL_SOURCE_DIR_NAMES: Readonly<Record<string, string>> = {
-  "zcode-cua-plugin": "mcode-cua-plugin",
-  "zcode-guide-plugin": "mcode-guide-plugin",
-};
-
+// Mcode 方案 B：远端组件由 Mcode 自建发布，远端插件目录与源码目录同名（mcode-*-plugin）。
 export function resolveRemoteAgentOfficialPluginLocalSourceDirName(packageName: string): string {
-  return REMOTE_AGENT_OFFICIAL_PLUGIN_LOCAL_SOURCE_DIR_NAMES[packageName] ?? packageName;
+  return packageName;
 }
 
 export const REMOTE_AGENT_OFFICIAL_PLUGIN_INCLUDED_TOP_LEVEL_PATHS = [
@@ -127,9 +121,9 @@ export const REMOTE_AGENT_OFFICIAL_PLUGIN_REQUIRED_RELATIVE_PATHS = [
   "spreadsheets-plugin/dist/server.mjs",
   "spreadsheets-plugin/dist/ui/assets.json",
   "spreadsheets-plugin/dist/ui/panel.html",
-  "zcode-cua-plugin/docs/computer-use.md",
-  "zcode-cua-plugin/scripts/computer-use-client.mjs",
-  "zcode-cua-plugin/skills/computer-use/SKILL.md",
+  "mcode-cua-plugin/docs/computer-use.md",
+  "mcode-cua-plugin/scripts/computer-use-client.mjs",
+  "mcode-cua-plugin/skills/computer-use/SKILL.md",
 ] as const;
 
 export function buildRemoteAgentOfficialPluginDir(remoteProviderDir: string): string {

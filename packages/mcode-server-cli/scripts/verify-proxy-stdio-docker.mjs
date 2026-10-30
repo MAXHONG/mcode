@@ -63,17 +63,17 @@ try {
     [
       "mkdir -p /tmp/mcode-bootstrap",
       "tar -xzf /tmp/mcode-server.tar.gz -C /tmp/mcode-bootstrap --strip-components=1",
-      "/tmp/mcode-bootstrap/bin/mcode update --from-archive /tmp/mcode-server.tar.gz --server-root /root/.zcode/server --json",
-      "MCODE_SERVER_SKIP_SERVICE_REGISTRATION=1 /root/.zcode/server/bin/mcode serve --daemon --server-root /root/.zcode/server --json",
+      "/tmp/mcode-bootstrap/bin/mcode update --from-archive /tmp/mcode-server.tar.gz --server-root /root/.mcode/server --json",
+      "MCODE_SERVER_SKIP_SERVICE_REGISTRATION=1 /root/.mcode/server/bin/mcode serve --daemon --server-root /root/.mcode/server --json",
     ].join(" && "),
   ]);
   const statusResult = await run("docker", [
     "exec",
     containerName,
-    "/root/.zcode/server/bin/mcode",
+    "/root/.mcode/server/bin/mcode",
     "status",
     "--server-root",
-    "/root/.zcode/server",
+    "/root/.mcode/server",
     "--json",
   ]);
   const status = JSON.parse(statusResult.stdout.toString("utf8").trim().split("\n").pop());
@@ -82,7 +82,7 @@ try {
     "exec",
     containerName,
     "cat",
-    "/root/.zcode/server/run/ingress-token",
+    "/root/.mcode/server/run/ingress-token",
   ]);
   const token = tokenResult.stdout.toString("utf8").trim();
   assert(token.length >= 32, "ingress token exists");
@@ -109,11 +109,11 @@ try {
       "exec",
       "-i",
       containerName,
-      "/root/.zcode/server/bin/mcode",
+      "/root/.mcode/server/bin/mcode",
       "server",
       "proxy-stdio",
       "--server-root",
-      "/root/.zcode/server",
+      "/root/.mcode/server",
     ],
     { input: request },
   );

@@ -110,7 +110,7 @@ async function computeDevelopmentAgentAssetsSha256(params: {
   repoRoot: string;
 }): Promise<string> {
   const hash = createHash("sha256");
-  hash.update("bundle:zcode.cjs\n");
+  hash.update("bundle:mcode.cjs\n");
   hash.update(await readFile(params.localBundlePath));
   for (const packageName of REMOTE_AGENT_OFFICIAL_PLUGIN_PACKAGE_NAMES) {
     const packageRoot = join(
@@ -273,7 +273,7 @@ async function shouldSkipDevelopmentMcodeAgentDeploy(params: {
   try {
     await waitForClose(
       await params.backend.exec(
-        `"\${ZCODE_SERVER_RUNTIME_ROOT:-$HOME/.zcode/server}/node" -e ${quotePosixShellArg(verifyBundleScript)} ${quotePosixPathArg(params.remoteBundlePath)} ${quotePosixShellArg(params.localBundleSha256)}`,
+        `"\${MCODE_SERVER_RUNTIME_ROOT:-$HOME/.mcode/server}/node" -e ${quotePosixShellArg(verifyBundleScript)} ${quotePosixPathArg(params.remoteBundlePath)} ${quotePosixShellArg(params.localBundleSha256)}`,
       ),
     );
   } catch {
