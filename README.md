@@ -56,6 +56,7 @@ v3.15.6 起从官网检查更新。v3.15.2 – v3.15.5 仍读取 GitHub Releases
 
 ## 更新
 
+- 2026-10-30：v3.17.1 — 同步上游 ZCode v3.17.1（Electron 44、远控 V2 新架构、手机日志/推送、设备列表页等）。手机远控仍默认走 Mcode 自建中转 `remote.hjh.im`（relay V1，扫码免登录），z.ai 官方中转（V2，需登录 z.ai）作为备用；远程开发（SSH/WSL/Docker）组件统一为 Mcode 命名并改由 mcode.hjh.im 自建分发。隐私加固：只保留 z.ai/智谱账号登录与模型调用外联，问题反馈（日志/截图上传）、手机推送事件上报、会话分享发布、Sites 默认启用全部关闭，遥测默认关闭。
 - 2026-10-22：v3.15.7 — 新增钉钉机器人渠道：企业内部应用 + Stream 模式长连接（无需公网回调地址），在「机器人」里填写 Client ID / Client Secret 后单聊发送 `/bind` 绑定；支持单聊、群聊 @ 回复、Markdown 长消息分段、图片/文件/语音（语音识别文本）、编号选项、定时任务结果回推，多窗口只保持一条连接。详见 `docs/bots.md`。
 - 2026-10-22：v3.15.6 — 上线官网 <https://mcode.hjh.im>（参考 ZCode 官网，中英文，下载区自动识别系统，版本历史页），源码在私有仓库 `MAXHONG/mcode-web`，安装包与更新清单托管在 Cloudflare R2；桌面端自动更新源改为 `https://mcode.hjh.im/download/latest/`（私有仓库的 GitHub Releases 匿名 404，此前客户端收不到更新）；未签名 macOS 提示更新时打开官网下载页；`install.sh` 默认从官网下载，`curl -fsSL https://mcode.hjh.im/install.sh | sh` 匿名可用；发版工作流新增「Publish to website」步骤（仓库 Secrets `CLOUDFLARE_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`，令牌仅限 `mcode-releases` 桶）；Linux 包元数据 homepage 与分享文案链接改为官网。
 - 2026-10-20：v3.15.5 — 手机远控默认改走 Mcode 自建中转 `remote.hjh.im`（Cloudflare Worker + Durable Object，协议兼容官方 relay V1，同域托管 Mcode 品牌手机页），不再依赖 z.ai relay 是否继续开放；远控弹窗新增「中转服务器」开关，可切回 Z.ai 官方作为备用（`MCODE_WEB_REMOTE_CONTROL_RELAY=zai` 亦可），两条中转的设备身份分开保存。桌面版与 Linux Web 版均生效。部署说明见 `deploy/remote-relay/README.md`。
@@ -166,6 +167,8 @@ Web 模式默认工作目录为当前目录，监听 `127.0.0.1`，自动选择�
 构建方式见下方打包章节。`pnpm build:mcode` 只生成发行包，不会替换 `PATH` 中已有的 `mcode`。如果命令仍指向旧安装或其他源码目录，macOS / Linux 可用 `command -v mcode` 检查，Windows 可用 `where.exe mcode` 检查。
 
 ### CLI 源码开发
+
+CLI 的模型配置、非交互调用、工具与扩展、批量评测和轨迹记录见 [CLI 使用指南](apps/mcode-cli/docs/usage/README.md)。
 
 直接开发 TUI 或 Agent 时，运行源码入口：
 

@@ -1,5 +1,6 @@
 /* eslint-disable max-lines -- OAuthService 集中维护 OAuth 会话生命周期和 provider 切换边界，当前 review 修复只收窄后台迁移写入条件。 */
 import { randomBytes } from "node:crypto";
+import { Emitter } from "@mcode/rpc";
 import {
   ApiError,
   formatLogPrefix,
@@ -10,6 +11,7 @@ import {
   type OAuthCachedSessionRestoreResult,
   type OAuthProviderId,
   type OAuthProviderMeta,
+  type OAuthSessionState,
   type OAuthStartResponse,
   type OAuthTokenSet,
   type OAuthUserProfile,
@@ -116,6 +118,8 @@ function resolveInactiveOAuthProvider(provider: OAuthProviderId): OAuthProviderI
  * 在 host process 中运行，管理 OAuth 流程的完整生命周期。
  */
 export class OAuthService implements IOAuthService {
+  private readonly sessionChanges = new Emitter<OAuthSessionState>();
+  readonly onDidChangeSession = this.sessionChanges.event;
   private readonly credentialService: ICredentialService;
   private readonly repo: OAuthCredentialRepo;
   private readonly adapters = new Map<OAuthProviderId, OAuthProviderAdapter>();
@@ -157,6 +161,7 @@ export class OAuthService implements IOAuthService {
     this.repo = new OAuthCredentialRepo(credentialService, {
       providerIds: adapters.map((adapter) => adapter.providerId),
       onCorruptOAuthSessionCleared: async (providers) => {
+        this.sessionChanges.fire("signed-out");
         // 本地 OAuth 凭据解密失败后等价于强制 logout。
         // repo 只能清 OAuth 命名空间，派生的 Start/Coding Plan provider key 必须回到 service 层清理。
         await this.notifyProvidersLogout(providers);
@@ -207,10 +212,9 @@ export class OAuthService implements IOAuthService {
       return { status: "signed-out" };
     }
 
-    // 3.15.3：同时检查共享 mcode JWT 与 provider access token 的过期；任一过期都要求重新登录，
-    // 避免带着过期 access token 进入设置页连接套餐时失败。仍不经过 loadActiveTokenSet，
-    // 防止把后台 BigModel profile 迁移阻塞进首屏恢复链路。
-    let tokens: Array<{ key: string; value: string }>;
+    // 业务 JWT 过期而共享 JWT 仍有效时，旧实现会恢复伪登录态；直接读两个凭据做本地检查，
+    // 不调用 loadActiveTokenSet，避免把后台 profile 迁移或网络请求带回首屏恢复链路。
+    let tokens: { key: string; value: string }[];
     try {
       tokens = await Promise.all(
         [MCODE_JWT_TOKEN_KEY, `oauth:${activeProvider}:access_token`].map(async (key) => ({
@@ -221,6 +225,7 @@ export class OAuthService implements IOAuthService {
     } catch (error) {
       if (!isCredentialDecryptError(error)) throw error;
       const cleared = await this.runSessionMutation(async () => {
+        // 损坏凭据清理也是会话写入；旧恢复须在队列内重读，不能删除已提交的新登录。
         if (this.oauthSessionGeneration !== restoreGeneration) return false;
         const currentTokens = await this.repo.loadCachedSessionTokens(activeProvider);
         if (currentTokens !== null) return false;
@@ -299,7 +304,7 @@ export class OAuthService implements IOAuthService {
     expectedProvider: OAuthProviderId,
     expectedProfile: OAuthUserProfile,
     expectedJwt: string,
-    credentialKey: string = MCODE_JWT_TOKEN_KEY,
+    credentialKey = MCODE_JWT_TOKEN_KEY,
   ): Promise<boolean> {
     const invalidated = await this.runSessionMutation(async () => {
       const currentProvider = await this.repo.getActiveProvider();
@@ -321,6 +326,7 @@ export class OAuthService implements IOAuthService {
       }
       this.oauthSessionGeneration += 1;
       await this.repo.clearActiveSession();
+      this.sessionChanges.fire("signed-out");
       return true;
     });
     if (!invalidated) {
@@ -460,6 +466,8 @@ export class OAuthService implements IOAuthService {
       await rollback();
       throw new Error("OAuth flow 已取消");
     }
+    // 凭据是认证事实源；同账号重登也必须通知，不能等 renderer 的设置更新或成功计数。
+    this.sessionChanges.fire("signed-in");
   }
 
   private async runPendingSessionCompletion(
@@ -1057,6 +1065,8 @@ export class OAuthService implements IOAuthService {
         : null;
       this.oauthSessionGeneration += 1;
       await this.repo.clearActiveSession();
+      // 登出已生效：后续 provider/设置清理即使失败，也必须先撤销已认证的远控连接。
+      this.sessionChanges.fire("signed-out");
       return { activeProvider, accountIdentity };
     });
     if (!result) return false;
@@ -1089,6 +1099,7 @@ export class OAuthService implements IOAuthService {
       // ZAI/BigModel provider 的 Unlink 已收敛为 App logout。
       // 只有当前 active provider 才代表登录事实，避免旧 unlink 路径误删非当前 provider token。
       await this.repo.clearActiveSession();
+      this.sessionChanges.fire("signed-out");
       return accountIdentity;
     });
     if (loggedOutIdentity !== undefined) {
@@ -1106,6 +1117,7 @@ export class OAuthService implements IOAuthService {
       }
       this.oauthSessionGeneration += 1;
       await this.repo.clearAll(providers);
+      this.sessionChanges.fire("signed-out");
       return identities;
     });
     await this.cancelPending();

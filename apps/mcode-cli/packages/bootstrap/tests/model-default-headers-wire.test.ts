@@ -81,7 +81,7 @@ function createFixture(
   );
   if (!provider.ok || !model.ok) throw new Error("invalid header fixture");
   const executionConfig = createRuntimeAiSdkModelExecutionConfig(
-    options.env ?? { ZCODE_APP_VERSION: CLIENT_VERSION, MCODE_ENV: "production" },
+    options.env ?? { MCODE_APP_VERSION: CLIENT_VERSION, MCODE_ENV: "production" },
     { sourceTitle: options.sourceTitle ?? "electron", appVersion: options.appVersion },
   );
   const adapter = createModelAdapter({ executionConfig, env: {} });
@@ -241,13 +241,13 @@ describe("模型请求默认 Header：Bootstrap → Adapter → 真实 SDK", () 
   it.each([
     { env: {}, sourceTitle: "cli" as const, appVersion: "1.2.3", expected: "1.2.3" },
     {
-      env: { ZCODE_APP_VERSION: "3.12.0" },
+      env: { MCODE_APP_VERSION: "3.12.0" },
       sourceTitle: "electron" as const,
       appVersion: "0.13.3",
       expected: "3.12.0",
     },
     {
-      env: { ZCODE_APP_VERSION: "bad\r\nheader" },
+      env: { MCODE_APP_VERSION: "bad\r\nheader" },
       sourceTitle: "cli" as const,
       appVersion: "1.2.3",
       expected: undefined,
@@ -263,7 +263,7 @@ describe("模型请求默认 Header：Bootstrap → Adapter → 真实 SDK", () 
     expect(requests[0]!.headers.get("x-title")).toBe(`Z Code@${options.sourceTitle}`);
   });
 
-  it("真实 Runtime 标题 sidecar 沿公共工厂携带版本、other 类型和会话追踪", async () => {
+  it("真实 Runtime 标题 sidecar 沿公共工厂携带版本、宿主类型和会话追踪", async () => {
     const { model, requests } = createFixture();
     const sessionId = createSessionId("header-title-session");
     const updateSession = vi.fn(async (input) => input);
@@ -302,7 +302,9 @@ describe("模型请求默认 Header：Bootstrap → Adapter → 真实 SDK", () 
     );
     expect(requests).toHaveLength(1);
     expect(requests[0]!.headers.get("x-zcode-app-version")).toBe(CLIENT_VERSION);
-    expect(requests[0]!.headers.get("x-zcode-session-type")).toBe("other");
+    // 标题用途不改变宿主会话分类；两个 Header 分别表达归属和用途。
+    expect(requests[0]!.headers.get("x-zcode-session-type")).toBe("main");
+    expect(requests[0]!.headers.get("x-zcode-query-source")).toBe("session_title");
     // 既有请求归因会去掉内部 sess_ 前缀；本次不改变服务端看到的会话身份格式。
     expect(requests[0]!.headers.get("x-session-id")).toBe("header-title-session");
     expect(requests[0]!.headers.get("x-zcode-trace-id")).toBeTruthy();

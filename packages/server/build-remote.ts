@@ -4,7 +4,15 @@ import { validateRemoteServerBundle } from "./buildRemoteValidation.js";
 import { loadBuiltinProviderConfig } from "../../scripts/builtin-provider-config.mjs";
 import { stageThirdPartyNotices } from "../../scripts/third-party-notices.mjs";
 
-const { version, mcodeUpstreamVersion } = JSON.parse(readFileSync("../../package.json", "utf-8"));
+const { version, mcodeCompatibility, mcodeUpstreamVersion } = JSON.parse(
+  readFileSync("../../package.json", "utf-8"),
+) as {
+  version: string;
+  mcodeCompatibility?: { minCompatibleVersion?: string };
+  // Mcode：远程开发锁定的上游 ZCode 组件版本（z.ai CDN 只按上游版本发布 manifest）。
+  mcodeUpstreamVersion?: string;
+};
+const minCompatibleVersion = mcodeCompatibility?.minCompatibleVersion ?? version;
 const { content: mcodeBuiltinProviderConfigJson } = await loadBuiltinProviderConfig();
 
 /**
@@ -30,7 +38,7 @@ const nativeAddonPlugin: Plugin = {
 const buildResult = await build({
   entryPoints: ["src/entry-stdio.ts"],
   bundle: true,
-  outfile: "dist/remote/zcode-server.cjs",
+  outfile: "dist/remote/mcode-server.cjs",
   platform: "node",
   format: "cjs",
   target: "node22",
@@ -44,16 +52,17 @@ const buildResult = await build({
     "import.meta.url": "__import_meta_url",
     "import.meta.dirname": "__import_meta_dirname",
     __MCODE_VERSION__: JSON.stringify(version),
+    __MCODE_MIN_COMPATIBLE_VERSION__: JSON.stringify(minCompatibleVersion),
     __MCODE_UPSTREAM_VERSION__: JSON.stringify(mcodeUpstreamVersion ?? version),
     __MCODE_BUILTIN_PROVIDER_CONFIG_JSON__: JSON.stringify(mcodeBuiltinProviderConfigJson),
   },
   metafile: true,
 });
 
-const remoteBundleSource = readFileSync("dist/remote/zcode-server.cjs", "utf-8");
+const remoteBundleSource = readFileSync("dist/remote/mcode-server.cjs", "utf-8");
 const bundledInputs = Object.keys(buildResult.metafile.inputs);
 validateRemoteServerBundle({ bundledInputs, source: remoteBundleSource });
 // 修复：remote 单文件 bundle 内联第三方代码，dist/remote 也必须附完整声明。
 await stageThirdPartyNotices("dist/remote");
 
-console.log("Built dist/remote/zcode-server.cjs");
+console.log("Built dist/remote/mcode-server.cjs");

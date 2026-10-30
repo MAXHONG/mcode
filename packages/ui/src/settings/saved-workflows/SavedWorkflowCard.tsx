@@ -6,10 +6,10 @@ import {
   TID_WORKFLOW_CARD_RUN,
   TID_WORKFLOW_ACTION_DELETE,
   TID_WORKFLOW_ACTION_MOVE,
-  testId,
   type McodeSavedWorkflowEntry,
   type McodeSavedWorkflowRun,
 } from "@mcode/shared";
+import { testId } from "@mcode/shared/test-ids";
 import { Button } from "@/components/ui/button.js";
 import {
   DropdownMenu,

@@ -1,3 +1,4 @@
+import { MCODE_FEEDBACK_ENABLED } from "@mcode/shared";
 export type QuickPickCommandIcon =
   | "book"
   | "browser"
@@ -229,24 +230,26 @@ export function createQuickPickCommands({
     },
   ];
 
-  commands.push({
-    id: "feedback",
-    sectionId: "app",
-    titleId: "quickPick.command.feedback",
-    icon: "feedback",
-    keywords: [
-      "feedback",
-      "issue",
-      "support",
-      "tickets",
-      "问题上报",
-      "问题反馈",
-      "反馈",
-      "我的反馈",
-      "工单",
-    ],
-    run: handlers.openFeedback,
-  });
+  // Mcode：反馈功能整体关闭（不向任何服务器上传反馈/日志），命令面板也不再提供入口。
+  if (MCODE_FEEDBACK_ENABLED)
+    commands.push({
+      id: "feedback",
+      sectionId: "app",
+      titleId: "quickPick.command.feedback",
+      icon: "feedback",
+      keywords: [
+        "feedback",
+        "issue",
+        "support",
+        "tickets",
+        "问题上报",
+        "问题反馈",
+        "反馈",
+        "我的反馈",
+        "工单",
+      ],
+      run: handlers.openFeedback,
+    });
 
   if (canOpenCommunity) {
     commands.push({

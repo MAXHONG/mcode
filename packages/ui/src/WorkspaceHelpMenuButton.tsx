@@ -1,13 +1,14 @@
 import { useState } from "react";
+import { DesktopCommandIds, MCODE_FEEDBACK_ENABLED } from "@mcode/shared";
 import {
-  DesktopCommandIds,
   TID_WORKSPACE_HELP_MENU_RESOURCE_MANAGER,
   TID_WORKSPACE_HELP_MENU_TRIGGER,
-} from "@mcode/shared";
+} from "@mcode/shared/test-ids";
 import {
   ActivityIcon,
   BookOpenIcon,
   CircleHelpIcon,
+  CopyIcon,
   DownloadIcon,
   LightbulbIcon,
   InfoIcon,
@@ -33,6 +34,7 @@ import { usePlatform } from "@/hooks/usePlatform.js";
 import { useVulnerabilityReportUrl } from "@/hooks/useVulnerabilityReportUrl.js";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";
 import { createHelpMenuActionHandlers } from "@/lib/helpMenuActions.js";
+import { toast } from "@/components/ui/toast.js";
 
 export function WorkspaceHelpMenuButton({
   className,
@@ -70,6 +72,19 @@ export function WorkspaceHelpMenuButton({
     void platform.executeDesktopCommand(DesktopCommandIds.ShowAbout);
   };
 
+  const handleCopyDeviceMid = async () => {
+    try {
+      const deviceMid = platform.getDeviceId();
+      if (!deviceMid || typeof navigator === "undefined" || !navigator.clipboard?.writeText) {
+        throw new Error("clipboard unavailable");
+      }
+      await navigator.clipboard.writeText(deviceMid);
+      toast(intl.formatMessage({ id: "workspaceHeader.help.deviceMidCopied" }));
+    } catch {
+      toast(intl.formatMessage({ id: "workspaceHeader.help.deviceMidCopyFailed" }));
+    }
+  };
+
   return (
     <DropdownMenu open={open} onOpenChange={setOpen}>
       <ControlHintTooltip title={helpMenuLabel} side="bottom">
@@ -103,10 +118,12 @@ export function WorkspaceHelpMenuButton({
           <UsersIcon className="size-4" />
           {intl.formatMessage({ id: "workspaceHeader.help.community" })}
         </DropdownMenuItem>
-        <DropdownMenuItem onSelect={helpMenuActions.openIssueReport}>
-          <MessageSquareIcon className="size-4" />
-          {intl.formatMessage({ id: "workspaceHeader.help.issueReport" })}
-        </DropdownMenuItem>
+        {MCODE_FEEDBACK_ENABLED ? (
+          <DropdownMenuItem onSelect={helpMenuActions.openIssueReport}>
+            <MessageSquareIcon className="size-4" />
+            {intl.formatMessage({ id: "workspaceHeader.help.issueReport" })}
+          </DropdownMenuItem>
+        ) : null}
         {vulnerabilityReportLoading || vulnerabilityReportUrl ? (
           <DropdownMenuItem
             disabled={vulnerabilityReportLoading}
@@ -121,10 +138,12 @@ export function WorkspaceHelpMenuButton({
             {intl.formatMessage({ id: "workspaceHeader.help.reportVulnerability" })}
           </DropdownMenuItem>
         ) : null}
-        <DropdownMenuItem onSelect={openFeatureRequest}>
-          <LightbulbIcon className="size-4" />
-          {intl.formatMessage({ id: "workspaceHeader.help.productRequest" })}
-        </DropdownMenuItem>
+        {MCODE_FEEDBACK_ENABLED ? (
+          <DropdownMenuItem onSelect={openFeatureRequest}>
+            <LightbulbIcon className="size-4" />
+            {intl.formatMessage({ id: "workspaceHeader.help.productRequest" })}
+          </DropdownMenuItem>
+        ) : null}
         {/* Windows/Linux 没有原生菜单栏，自绘标题栏箭头菜单也已下线，
             资源管理器只能从这里进；Web 端没有该窗口，不渲染。 */}
         {isDesktop ? (
@@ -134,6 +153,10 @@ export function WorkspaceHelpMenuButton({
             <DropdownMenuItem onSelect={helpMenuActions.exportLogs}>
               <DownloadIcon className="size-4" />
               {intl.formatMessage({ id: "titleBar.menu.help.exportLogs" })}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={handleCopyDeviceMid}>
+              <CopyIcon className="size-4" />
+              {intl.formatMessage({ id: "workspaceHeader.help.copyDeviceMid" })}
             </DropdownMenuItem>
             <DropdownMenuItem
               data-testid={TID_WORKSPACE_HELP_MENU_RESOURCE_MANAGER}

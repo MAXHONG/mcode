@@ -1,11 +1,11 @@
 import { ChevronRight, Loader2 } from "lucide-react";
+import { type StorageCategoryId } from "@mcode/shared";
 import {
-  type StorageCategoryId,
   TID_RESOURCE_MANAGER_STORAGE_CATEGORY_CLEAN,
   TID_RESOURCE_MANAGER_STORAGE_CATEGORY_ROW,
   TID_RESOURCE_MANAGER_STORAGE_CATEGORY_SIZE,
   testId,
-} from "@mcode/shared";
+} from "@mcode/shared/test-ids";
 import { Button } from "@/components/ui/button.js";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";
 import { formatBytes } from "@/resource-manager/resourceUsageView.js";

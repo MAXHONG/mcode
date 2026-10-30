@@ -11,7 +11,7 @@ export const DEFAULT_ZAI_BUSINESS_BASE_URL = "https://api.z.ai";
 export const TEST_ZAI_BUSINESS_BASE_URL = "https://api.z.ai";
 export const DEFAULT_ZAI_OAUTH_CLIENT_ID = "client_P8X5CMWmlaRO9gyO-KSqtg";
 export const TEST_ZAI_OAUTH_CLIENT_ID = "client_P8X5CMWmlaRO9gyO-KSqtg";
-export const DEFAULT_WEB_REMOTE_CONTROL_RELAY_WS_URL = "wss://zcode.z.ai/ws";
+export const DEFAULT_WEB_REMOTE_CONTROL_RELAY_WS_URL = "wss://zcode.z.ai/api/v1/remote/ws2";
 /**
  * Mcode 自建远控中转（deploy/remote-relay，Cloudflare Worker）：协议兼容官方 relay V1，
  * 同域托管 Mcode 品牌手机页。Mcode 默认使用自建中转，z.ai 官方 relay 作为备用。
@@ -299,13 +299,13 @@ export function resolveWebRemoteControlRelayWsUrl(options?: {
     return overrideUrl;
   }
 
-  // Bugfix：标准 test endpoint 已部署独立 relay；继续固定到生产 relay 会让测试环境跨环境配对。
-  // 仅识别规范 test origin，避免改变 production、localhost 和其他自定义 endpoint 的既有行为。
-  if (options?.endpointOrigin?.trim() === TEST_MCODE_ENDPOINT_ORIGIN) {
-    return "wss://zcode.z.ai/ws";
-  }
-
-  return DEFAULT_WEB_REMOTE_CONTROL_RELAY_WS_URL;
+  const origin = new URL(
+    normalizeMcodeEndpointOrigin(options?.endpointOrigin?.trim() || DEFAULT_MCODE_ENDPOINT_ORIGIN),
+  );
+  origin.protocol = origin.protocol === "https:" ? "wss:" : "ws:";
+  // z.ai 官方中转已升级 V2（需 z.ai 登录）；Mcode 自建中转 remote.hjh.im 走 V1，见 MCODE_SELF_HOSTED_RELAY_WS_URL。
+  origin.pathname = "/api/v1/remote/ws2";
+  return origin.toString();
 }
 
 export function resolveBigModelApiOrigin(env: RuntimeBigModelApiEnv = {}): string {
@@ -434,9 +434,9 @@ export function buildMcodeEndpointUrls(
     origin: normalizedOrigin,
     apiBaseUrl: `${normalizedOrigin}/api/v1`,
     remoteUrl: `${normalizedOrigin}/remote/${remoteVersion}`,
-    webRemoteCallbackUrl: `${normalizedOrigin}/web-remote/callback`,
+    webRemoteCallbackUrl: `${normalizedOrigin}/remote/v4`,
     webShareCallbackUrl: `${normalizedOrigin}/cn/share/callback`,
-    relayWsUrl: `${wsOrigin}/ws`,
+    relayWsUrl: `${wsOrigin}/api/v1/remote/ws2`,
     zcodePlanOpenAiBaseUrl: `${normalizedOrigin}/api/v1/zcode-plan`,
     zcodePlanAnthropicBaseUrl: `${normalizedOrigin}/api/v1/zcode-plan/anthropic`,
     zcodePlanBillingCurrentUrl: `${normalizedOrigin}/api/v1/zcode-plan/billing/current`,

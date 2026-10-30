@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { TID_V4_GOAL_BANNER } from "@mcode/shared";
+import { TID_V4_GOAL_BANNER } from "@mcode/shared/test-ids";
 import type { GoalState } from "@mcode/shared/mcode-protocol-v4";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";
 

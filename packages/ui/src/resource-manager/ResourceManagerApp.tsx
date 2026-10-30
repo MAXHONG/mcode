@@ -1,12 +1,11 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import {
-  TID_RESOURCE_MANAGER_TAB,
-  testId,
   type ResourceUsageCategory,
   type ResourceUsageSnapshot,
   type StorageManagementBridge,
   type NetworkCaptureBridge,
 } from "@mcode/shared";
+import { TID_RESOURCE_MANAGER_TAB, testId } from "@mcode/shared/test-ids";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs.js";
 import { useMcodeIntl } from "@/i18n/index.js";
 import { StorageSection } from "./storage/StorageSection.js";

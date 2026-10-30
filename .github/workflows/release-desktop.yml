@@ -379,12 +379,79 @@ jobs:
           if-no-files-found: error
           retention-days: 14
 
+  # Mcode 方案 B：远程开发（SSH / WSL / Docker）组件自建发布。产出 mcode-server-<平台>.tar.gz
+  # （linux/darwin × x64/arm64）与 source-server-release.json，随 Release 上传并同步到官网
+  # https://mcode.hjh.im/releases/<版本>/，桌面端远程连接从这里下载（packages/desktop/src/main/remoteCdn.ts）。
+  # 不再使用 z.ai CDN：那里的上游组件是 ~/.zcode/server / zcode-server-*.tar.gz，与 Mcode 命名不兼容。
+  build-remote:
+    name: Build remote-dev server bundles
+    if: ${{ inputs.mac_only != true && inputs.platforms == '' }}
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    env:
+      MCODE_ENV: production
+      NODE_ENV: production
+      NODE_OPTIONS: --max-old-space-size=6144
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: pnpm
+
+      - name: Setup Python (node-gyp)
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install dependencies
+        env:
+          NODE_ENV: development
+        run: pnpm install --frozen-lockfile
+
+      - name: Stage remote server bundles (all targets)
+        run: pnpm prepare:remote-assets
+
+      - name: Collect artifacts
+        shell: bash
+        run: |
+          set -euo pipefail
+          VERSION=$(node -p "require('./package.json').version")
+          SRC="packages/desktop/mock-cdn/releases/$VERSION"
+          mkdir -p remote-release
+          cp "$SRC/source-server-release.json" remote-release/
+          cp "$SRC"/mcode-server-*.tar.gz remote-release/
+          node -e '
+            const d = require("./remote-release/source-server-release.json");
+            if (d.version !== process.argv[1]) throw new Error("descriptor version " + d.version);
+            if (d.archives.length !== 4) throw new Error("expected 4 archives, got " + d.archives.length);
+          ' "$VERSION"
+          ls -la remote-release
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: mcode-remote-server
+          path: remote-release/*
+          if-no-files-found: error
+          retention-days: 14
+
   # 单个平台失败（例如苹果公证排队超时）不再阻塞整个发布：已成功的平台先发，
   # 失败的平台之后用 platforms 输入补发，追加到同一 Release。
   release:
     name: Publish GitHub Release
-    needs: [build, build-cli]
-    if: ${{ always() && inputs.mac_only != true && needs.build.result != 'cancelled' && (needs.build-cli.result == 'success' || (inputs.platforms != '' && needs.build-cli.result == 'skipped')) }}
+    needs: [build, build-cli, build-remote]
+    if: ${{ always() && inputs.mac_only != true && needs.build.result != 'cancelled' && ((needs.build-cli.result == 'success' && needs.build-remote.result == 'success') || (inputs.platforms != '' && needs.build-cli.result == 'skipped')) }}
     runs-on: ubuntu-latest
     permissions:
       contents: write

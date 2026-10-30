@@ -1,3 +1,4 @@
+import { MCODE_FEEDBACK_ENABLED } from "@mcode/shared";
 import { getPluginSandboxHost } from "./pluginSandbox/index.js";
 /* eslint-disable max-lines -- 桌面命令分发需要共享窗口与平台上下文，集中维护更便于一致性 */
 import { readMcodeStdioTapDevState, setMcodeStdioTapDevEnabled } from "@mcode/services/node";
@@ -252,6 +253,8 @@ async function openFeedback(
   targetWindow?: BrowserWindow | null,
   fetchRemoteConfig?: () => Promise<unknown>,
 ) {
+  // Mcode：反馈功能关闭。菜单项已移除，这里再兜底一次，避免快捷键/IPC 等旧入口打开反馈弹窗或外部表单。
+  if (!MCODE_FEEDBACK_ENABLED) return;
   let remoteConfig: unknown;
   let localConfig: unknown;
   try {
@@ -500,6 +503,8 @@ export async function executeDesktopCommand(options: {
   mcodeEndpointEnvBaseOrigin?: string | null;
   credentialsDir: string;
   currentApplicationLocale: Locale;
+  /** 远控诊断：向已配对手机拉取日志并导出（窗口 id 为命令来源窗口）。 */
+  pullMobileLogs?: (windowId: number | undefined) => Promise<unknown>;
 }) {
   const targetWindow = resolveTargetWindow(options.senderWindow);
   options.logger.info(
@@ -615,6 +620,9 @@ export async function executeDesktopCommand(options: {
       return;
     case DesktopCommandIds.ExportLogs:
       await exportLogs();
+      return;
+    case DesktopCommandIds.PullMobileLogs:
+      await options.pullMobileLogs?.(targetWindow?.id);
       return;
     case DesktopCommandIds.ToggleDevTools:
       targetWindow?.webContents.toggleDevTools();

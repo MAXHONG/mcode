@@ -1,12 +1,16 @@
-import type { RequestVerificationReason } from "@mcode/shared";
+import { MCODE_PROVIDER_CONFIG_NETWORK_ERROR, type RequestVerificationReason } from "@mcode/shared";
 import type { ModelRequestAuth } from "@mcode/contracts";
 import { ModelErrorCode, ModelProtocolError } from "@mcode/contracts";
 import type { AiSdkModelTextRequest, ResolvedAiSdkModel } from "./runner-runtime.js";
 
 export class RuntimeHeadersRefreshError extends Error {
+  readonly retryable: boolean;
   constructor(cause: unknown) {
     super(cause instanceof Error ? cause.message : String(cause), { cause });
     this.name = "RuntimeHeadersRefreshError";
+    // 只信任 Host 的结构化分类；旧文案也可能来自无效配置，不能按文本扩大重试。
+    this.retryable = typeof cause === "object" && cause !== null &&
+      "code" in cause && cause.code === MCODE_PROVIDER_CONFIG_NETWORK_ERROR;
   }
 }
 

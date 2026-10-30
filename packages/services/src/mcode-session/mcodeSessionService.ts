@@ -52,23 +52,15 @@ export function createMcodeSessionService({
   const { withApiRetryRuntime } = createMcodeSessionApiRetryRuntimeTracker();
   const deferredDraftSessions = createMcodeDeferredDraftRegistry();
 
-  function notifySyncer(
-    target: McodeTaskTarget,
-    options?: {
-      includeSnapshot?: boolean;
-    },
-  ): void {
+  function notifySyncer(target: McodeTaskTarget): void {
     if (!taskIndexSyncer) {
       return;
     }
-    taskIndexSyncer.ensureSessionSubscription(
-      {
-        workspacePath: target.workspacePath,
-        workspaceIdentity: target.workspaceIdentity,
-        sessionId: target.sessionId,
-      },
-      options,
-    );
+    taskIndexSyncer.ensureSessionSubscription({
+      workspacePath: target.workspacePath,
+      workspaceIdentity: target.workspaceIdentity,
+      sessionId: target.sessionId,
+    });
   }
 
   function getSessionSnapshotDiagnostics(snapshot: McodeSessionStateSnapshot) {
@@ -336,7 +328,7 @@ export function createMcodeSessionService({
         );
       }
       const agentDurationMs = Date.now() - startedAt;
-      notifySyncer(agentParams, { includeSnapshot: shouldBroadcastSnapshot });
+      notifySyncer(agentParams);
       const broadcastStartedAt = Date.now();
       const modelOverride = agentParams.model
         ? formatModelPickerValue(agentParams.model)

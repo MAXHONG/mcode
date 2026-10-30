@@ -6,7 +6,7 @@ import {
   TID_CHAT_COMPACT_MARKER,
   TID_CHAT_USER_MESSAGE,
   TID_CHAT_VIEW,
-} from "@mcode/shared";
+} from "@mcode/shared/test-ids";
 
 export interface CompactMarkerSnapshot {
   attempt: number | null;

@@ -121,7 +121,7 @@ export function findMcodeAgentRuntimeBinary(): string | null {
     return envPath;
   }
 
-  // import.meta.dirname 在打包后的 CJS bundle（zcode-server.cjs）中是 undefined，
+  // import.meta.dirname 在打包后的 CJS bundle（mcode-server.cjs）中是 undefined，
   // 直接传给 resolvePath 会报 "paths[0]" argument must be of type string。
   // 这里做空值保护，只有 import.meta.dirname 存在时才构建对应的候选路径。
   const moduleDir: string | undefined = import.meta.dirname;
@@ -130,7 +130,7 @@ export function findMcodeAgentRuntimeBinary(): string | null {
 
   const candidates = [
     packagedResourcesPath ? resolvePath(packagedResourcesPath, ...resourceSegments) : null,
-    resolvePath(homedir(), ".zcode", "server", "agents", ...resourceSegments),
+    resolvePath(homedir(), ".mcode", "server", "agents", ...resourceSegments),
     ...platformScopedRoots.map((root) =>
       root ? resolvePath(root, runtime.bundledResourceDir, ...entrySegments) : null,
     ),
@@ -158,7 +158,7 @@ export function findMcodeAgentRuntimeNodeBundle(): string | null {
 
   const candidates = [
     packagedResourcesPath ? resolvePath(packagedResourcesPath, ...resourceSegments) : null,
-    resolvePath(homedir(), ".zcode", "server", "agents", ...resourceSegments),
+    resolvePath(homedir(), ".mcode", "server", "agents", ...resourceSegments),
     ...platformScopedRoots.map((root) =>
       root ? resolvePath(root, runtime.bundledResourceDir, ...entrySegments) : null,
     ),
@@ -224,7 +224,8 @@ function findGlmDevEntry(): GlmDevEntry | null {
   const anchorDirs = [repoRoot, process.cwd()].filter((anchor): anchor is string =>
     Boolean(anchor),
   );
-  const candidates = ["mcode-cli", "glm", "cc-refactor"];
+  // 历史研发目录会意外抢占发行入口；自定义目录统一由 MCODE_AGENT_WORKDIR 显式指定。
+  const candidates = ["mcode-cli", "glm"];
   const seen = new Set<string>();
   for (const anchorDir of anchorDirs) {
     for (const name of candidates) {

@@ -3,12 +3,14 @@ import {
   type StorageCategoryId,
   type StorageRootUsage,
   STORAGE_MORE_ENTRIES_PATH,
+} from "@mcode/shared";
+import {
   TID_RESOURCE_MANAGER_STORAGE_CATEGORY_CLEAN,
   TID_RESOURCE_MANAGER_STORAGE_DETAIL,
   TID_RESOURCE_MANAGER_STORAGE_DETAIL_BACK,
   TID_RESOURCE_MANAGER_STORAGE_DETAIL_ENTRY,
   testId,
-} from "@mcode/shared";
+} from "@mcode/shared/test-ids";
 import { Button } from "@/components/ui/button.js";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";
 import { formatBytes } from "@/resource-manager/resourceUsageView.js";

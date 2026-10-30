@@ -251,10 +251,6 @@ function isBridgeableRemoteTarget(target: WebRemoteControlWorkspaceTarget): bool
   return target.kind !== "remote" || Boolean(target.workspaceIdentity && target.remoteSessionId);
 }
 
-function isBridgeableRemoteTask(task: WebRemoteControlTaskTarget): boolean {
-  return task.workspaceKind !== "remote" || Boolean(task.workspaceIdentity && task.remoteSessionId);
-}
-
 function toExternalBridge(
   runtime: WorkspaceBridgeRuntime,
 ): WebRemoteControlExternalWorkspaceBridge {
@@ -738,30 +734,6 @@ export function createWebRemoteControlManager(dependencies: WebRemoteControlMana
     return [...workspaceByKey.values()];
   }
 
-  function getAvailableTasks(runtime: WindowControlRuntime): WebRemoteControlTaskTarget[] {
-    const availableWorkspaceKeys = new Set(
-      getAvailableWorkspaces(runtime).map((workspace) =>
-        resolveWebRemoteControlWorkspaceKey(workspace),
-      ),
-    );
-
-    return (availableTasksByWindowId.get(runtime.windowId) ?? [])
-      .filter(
-        (task) =>
-          isBridgeableRemoteTask(task) &&
-          availableWorkspaceKeys.has(resolveWebRemoteControlWorkspaceKey(task)),
-      )
-      .sort((left, right) => {
-        if (right.updatedAt !== left.updatedAt) {
-          return right.updatedAt - left.updatedAt;
-        }
-        if (right.createdAt !== left.createdAt) {
-          return right.createdAt - left.createdAt;
-        }
-        return right.taskId.localeCompare(left.taskId);
-      });
-  }
-
   function getRuntimeInitialViewState(
     runtime: WindowControlRuntime,
   ): WebRemoteControlMobileViewState | undefined {
@@ -784,7 +756,6 @@ export function createWebRemoteControlManager(dependencies: WebRemoteControlMana
       windowControlSessionId: runtime.deviceSid,
       desktopAppVersion: dependencies.appVersion,
       workspaces: getAvailableWorkspaces(runtime),
-      tasks: getAvailableTasks(runtime),
       initialViewState: getRuntimeInitialViewState(runtime),
       mobileViewState: runtime.mobileViewState,
     };
@@ -797,7 +768,6 @@ export function createWebRemoteControlManager(dependencies: WebRemoteControlMana
     const initialViewState = getRuntimeInitialViewState(runtime);
     return {
       workspaces: getAvailableWorkspaces(runtime),
-      tasks: getAvailableTasks(runtime),
       activeWorkspaceKey:
         runtime.mobileViewState?.activeWorkspaceKey ??
         initialViewState?.activeWorkspaceKey ??
@@ -824,33 +794,8 @@ export function createWebRemoteControlManager(dependencies: WebRemoteControlMana
         ]);
       })
       .sort();
-    const taskSignatureEntries = (result.tasks ?? [])
-      .map((task) => {
-        const workspaceKey = resolveWebRemoteControlWorkspaceKey(task);
-        return JSON.stringify([
-          workspaceKey,
-          task.taskId,
-          // Bugfix：自动标题和用户重命名不会改变 task identity/membership；标题本身必须参与
-          // 首页快照去重，否则手机会一直保留旧文案。
-          task.title,
-          // Bugfix：远程 workspace 重连后 workspaceKey 可以保持不变，但 task target 绑定的
-          // remoteSessionId 会轮换；手机必须采用新连接身份，不能把它当成重复任务。
-          task.remoteSessionId ?? "",
-          // Bugfix：手机首页状态来自 renderer 已计算的 displayStatus；旧签名只比较 membership，
-          // running/completed/error 迁移会被误判为重复快照。缺失值按手机 fallback 归一为 idle。
-          task.displayStatus ?? "idle",
-          // 后台工作起止决定手机列表运行层归属（排序），displayStatus 不变也要出新快照。
-          Boolean(task.hasBackgroundWork),
-          // 工作流运行行的数据：phase 灯翻转、run 结束、子代理数变化都要让手机重画那一行。
-          task.workflowActivity ?? null,
-          // Bugfix：unreadAt 是手机蓝点的事实字段；打开任务清除未读时 task membership 不变，
-          // 必须让时间戳到缺失值的迁移触发新快照。
-          typeof task.unreadAt === "number" ? task.unreadAt : "",
-          Boolean(task.pinned),
-          Boolean(task.archived),
-        ]);
-      })
-      .sort();
+    // 上游 3.17 起任务列表不再随 workspace 快照下发（手机经 bridge 读取），签名只比较 workspace。
+    const taskSignatureEntries: string[] = [];
 
     // Bugfix：title / connection error 是任意用户可见字符串，不能再用控制字符拼接 tuple；
     // 否则字段值本身包含分隔符时不同快照可能得到相同签名。JSON tuple 保持字段边界且仍忽略数组顺序。
@@ -1307,7 +1252,6 @@ export function createWebRemoteControlManager(dependencies: WebRemoteControlMana
   function createQrUrl(
     auth: { deviceSid: string; passHash: string },
     mobileRemoteControlUrl: string,
-    theme?: WebRemoteControlContext["theme"],
   ): string {
     return buildWebRemoteControlExternalQrUrl({
       baseUrl: mobileRemoteControlUrl,
@@ -1317,7 +1261,6 @@ export function createWebRemoteControlManager(dependencies: WebRemoteControlMana
       deviceMid: dependencies.deviceMid,
       deviceName: dependencies.deviceName,
       appVersion: dependencies.appVersion,
-      theme,
     });
   }
 
@@ -1481,7 +1424,7 @@ export function createWebRemoteControlManager(dependencies: WebRemoteControlMana
         throw error;
       }
 
-      const qrUrl = createQrUrl(auth, mobileRemoteControlUrl, context.theme);
+      const qrUrl = createQrUrl(auth, mobileRemoteControlUrl);
       runtime!.deviceSid = auth.deviceSid;
       runtime!.passHash = auth.passHash;
       runtime!.qrUrl = qrUrl;

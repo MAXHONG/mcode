@@ -132,7 +132,6 @@ function toTaskTarget(
     updatedAt: task.updatedAt,
     ...(task.provider ? { provider: task.provider } : {}),
     ...(typeof task.unreadAt === "number" ? { unreadAt: task.unreadAt } : {}),
-    displayStatus: task.status === "completed" ? "completed" : "idle",
   };
 }
 

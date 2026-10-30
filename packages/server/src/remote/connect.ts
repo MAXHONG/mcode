@@ -379,7 +379,7 @@ function buildRemoteServerCommand(
 ): string {
   const envParts = [
     `${SERVICE_AUTHORITY_MODE_ENV}="desktop-attached-remote"`,
-    'ZCODE_SERVER_RUNTIME_ROOT="$HOME/.zcode/server"',
+    'MCODE_SERVER_RUNTIME_ROOT="$HOME/.mcode/server"',
   ];
   for (const [key, value] of Object.entries(
     pickRemoteRuntimeEnv(options?.remoteRuntimeEnv ?? {}),
@@ -406,9 +406,11 @@ function buildRemoteServerCommand(
       );
     }
   }
-  return `${envParts.join(" ")} ~/.zcode/server/node ~/.zcode/server/zcode-server.cjs`;
+  return `${envParts.join(" ")} ~/.mcode/server/node ~/.mcode/server/mcode-server.cjs`;
 }
 
 export function toRemoteContractEnvKey(key: string): string {
-  return key.startsWith("MCODE_") ? `ZCODE_${key.slice("MCODE_".length)}` : key;
+  // Mcode 方案 B：远端组件改为 Mcode 自建发布（mcode.hjh.im），远端同样读取 MCODE_* 变量。
+  // 旧实现把 MCODE_* 改写成 ZCODE_* 以适配 z.ai CDN 上的上游组件，现已不需要。
+  return key;
 }
