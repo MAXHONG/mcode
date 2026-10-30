@@ -1,3 +1,4 @@
+import { MCODE_SITES_PUBLISH_ENABLED } from "@mcode/shared";
 import { MCODE_OFFICIAL_PLUGIN_MARKETPLACE } from "@mcode/contracts";
 
 // 内置插件的商店信息 seed（原样写入官方 marketplace.json 的条目 raw，键名与 CDN 目录
@@ -435,7 +436,9 @@ export const OFFICIAL_PLUGIN_DEFINITIONS: readonly OfficialPluginDefinition[] = 
     // （docs/site/sites-panel.md）。默认开启，用户不必先去设置里打开就能让 Agent 部署站点。
     componentTypes: ["ui"],
     name: "mcode-site",
-    defaultEnabled: true,
+    // Mcode 隐私加固：Sites 会把项目打包上传到 z.ai 云端发布，属于登录与模型调用之外的外发，
+    // 默认不再启用（用户需在插件设置中手动打开才会出现）。
+    defaultEnabled: MCODE_SITES_PUBLISH_ENABLED,
     listing: {
       author: ZAI_AUTHOR,
       category: "productivity",

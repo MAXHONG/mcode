@@ -1,5 +1,6 @@
 /* oxlint-disable eslint(max-lines) -- 发布、远端 staging、安全轮询和原子导入共享同一 attempt 生命周期，拆分会让清理与进度状态失去单一 owner。 */
 import { createHash, randomUUID } from "node:crypto";
+import { MCODE_CONVERSATION_SHARE_ENABLED } from "@mcode/shared";
 import type { Dirent } from "node:fs";
 import { mkdir, readFile, readdir, rename, rm, stat, writeFile } from "node:fs/promises";
 import { basename, join } from "node:path";
@@ -1910,6 +1911,11 @@ export class ConversationShareService implements IConversationShareService {
   }
 
   async publish(input: PublishTextConversationInput, operationId: string) {
+    // Mcode 隐私加固：发布会把选中的对话与工作区文件上传到 z.ai。UI 入口已隐藏，
+    // 这里在服务层兜底拒绝，防止 RPC/旧入口绕过 UI 直接触发上传。
+    if (!MCODE_CONVERSATION_SHARE_ENABLED) {
+      throw new Error("Mcode 已关闭会话分享：不会把对话或代码上传到任何服务器。");
+    }
     return this.publishWithAgent(input, operationId, this.zcodeAgentService);
   }
 
