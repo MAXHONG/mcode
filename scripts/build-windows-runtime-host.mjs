@@ -18,7 +18,13 @@ export function resolveRuntimeHostBuild(
   return {
     configureArgs:
       hostPlatform === "win32"
-        ? ["-G", "Visual Studio 17 2022", "-A", arch === "arm64" ? "ARM64" : "x64"]
+        ? [
+            // Bugfix: GitHub windows-latest 已升级新版 Visual Studio，不硬编码 VS 2022，
+            // 让 CMake 自动选择本机已安装的 Visual Studio Generator（也可通过 CMAKE_GENERATOR 指定）。
+            ...(process.env.CMAKE_GENERATOR ? ["-G", process.env.CMAKE_GENERATOR] : []),
+            "-A",
+            arch === "arm64" ? "ARM64" : "x64",
+          ]
         : [
             "-DCMAKE_SYSTEM_NAME=Windows",
             `-DCMAKE_CXX_COMPILER=${compiler || (arch === "arm64" ? "aarch64-w64-mingw32-clang++" : "x86_64-w64-mingw32-g++")}`,

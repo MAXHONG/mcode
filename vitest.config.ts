@@ -13,8 +13,10 @@ export default defineConfig({
       "@": resolve(__dirname, "packages/ui/src"),
       "@desktop": resolve(__dirname, "packages/desktop/src"),
       "@web": resolve(__dirname, "packages/web/src"),
-      // 未预构建 dist-node 时直接指向源码入口，保证 CI 仅跑 test:engineering 也能解析
+      // 未预构建 dist 时直接指向源码入口，保证 CI 仅跑 test:engineering 也能解析
       "@mcode/e2e-report": resolve(__dirname, "packages/e2e-report/src/node/index.ts"),
+      "@mcode/contracts": resolve(__dirname, "apps/mcode-cli/packages/contracts/src/index.ts"),
+      "@mcode/shared-types": resolve(__dirname, "apps/mcode-cli/packages/shared-types/src/index.ts"),
       // 间接 import desktopNetworkTelemetry 等的单测无需真实 ARMS；需 vi.fn 的用例在文件内 vi.mock 覆盖
       // Bugfix: 具体的 /browser 子路径必须排在包根别名前，否则会被根别名拼成不存在的 stub.ts/browser。
       "@arms/rum-electron/browser": resolve(
