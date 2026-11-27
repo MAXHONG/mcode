@@ -1,4 +1,5 @@
-import { homedir } from "node:os";
+import { access, readFile } from "node:fs/promises";
+import { cpus, freemem, homedir, hostname, loadavg, totalmem } from "node:os";
 import { Socket } from "node:net";
 import type {
   IntegratedTerminalShellOption,
@@ -10,6 +11,8 @@ import type {
   IntranetProbeTarget,
   IntranetProbeTcpTarget,
   IntranetProbeTcpTargetResult,
+  SystemEnvironmentKind,
+  SystemEnvironmentLoad,
   SystemInfo,
 } from "@mcode/shared";
 import type { WindowsGitBashDiscoveryOptions } from "@mcode/shared/node";
@@ -343,6 +346,119 @@ function probeTcpPort(params: TcpProbeParams): Promise<number> {
   });
 }
 
+const ENV_LOAD_CACHE_TTL_MS = 1_000;
+
+async function readTextOptional(path: string): Promise<string | null> {
+  try {
+    return (await readFile(path, "utf8")).trim();
+  } catch {
+    return null;
+  }
+}
+
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function clampPercent(value: number): number {
+  if (!Number.isFinite(value)) return 0;
+  return Math.round(Math.min(100, Math.max(0, value)) * 10) / 10;
+}
+
+async function detectEnvironmentKind(platform: NodeJS.Platform): Promise<SystemEnvironmentKind> {
+  if (platform !== "linux") return "host";
+  if ((await fileExists("/.dockerenv")) || (await fileExists("/run/.containerenv"))) {
+    return "docker";
+  }
+  const cgroup = (await readTextOptional("/proc/1/cgroup")) ?? "";
+  if (/docker|containerd|kubepods|podman/iu.test(cgroup)) return "docker";
+  if (/lxc|sandbox|gvisor|kata/iu.test(cgroup)) return "sandbox";
+  return "host";
+}
+
+async function readContainerCpuCores(hostCores: number): Promise<number> {
+  const cpuMax = await readTextOptional("/sys/fs/cgroup/cpu.max");
+  if (cpuMax) {
+    const [quotaRaw, periodRaw] = cpuMax.split(/\s+/u);
+    const quota = Number(quotaRaw);
+    const period = Number(periodRaw);
+    if (Number.isFinite(quota) && Number.isFinite(period) && quota > 0 && period > 0) {
+      return Math.max(0.1, Math.min(hostCores, Math.round((quota / period) * 10) / 10));
+    }
+  }
+  const quotaV1 = Number(await readTextOptional("/sys/fs/cgroup/cpu/cpu.cfs_quota_us"));
+  const periodV1 = Number(await readTextOptional("/sys/fs/cgroup/cpu/cpu.cfs_period_us"));
+  if (Number.isFinite(quotaV1) && Number.isFinite(periodV1) && quotaV1 > 0 && periodV1 > 0) {
+    return Math.max(0.1, Math.min(hostCores, Math.round((quotaV1 / periodV1) * 10) / 10));
+  }
+  return hostCores;
+}
+
+async function readContainerCpuUsageUsec(): Promise<number | null> {
+  const cpuStat = await readTextOptional("/sys/fs/cgroup/cpu.stat");
+  if (cpuStat) {
+    const match = cpuStat.match(/^usage_usec\s+(\d+)/mu);
+    if (match) return Number(match[1]);
+  }
+  const usageNs = await readTextOptional("/sys/fs/cgroup/cpuacct/cpuacct.usage");
+  if (usageNs && /^\d+$/u.test(usageNs)) return Math.floor(Number(usageNs) / 1_000);
+  return null;
+}
+
+async function readContainerMemory(
+  hostTotalBytes: number,
+): Promise<{ usedBytes: number; totalBytes: number } | null> {
+  const currentV2 = await readTextOptional("/sys/fs/cgroup/memory.current");
+  const maxV2 = await readTextOptional("/sys/fs/cgroup/memory.max");
+  if (currentV2 && /^\d+$/u.test(currentV2)) {
+    const used = Number(currentV2);
+    const limit = maxV2 && /^\d+$/u.test(maxV2) ? Number(maxV2) : hostTotalBytes;
+    const total = limit > 0 && limit < hostTotalBytes * 16 ? Math.min(limit, hostTotalBytes) : hostTotalBytes;
+    return { usedBytes: Math.min(used, total), totalBytes: total };
+  }
+  const currentV1 = await readTextOptional("/sys/fs/cgroup/memory/memory.usage_in_bytes");
+  const maxV1 = await readTextOptional("/sys/fs/cgroup/memory/memory.limit_in_bytes");
+  if (currentV1 && /^\d+$/u.test(currentV1)) {
+    const used = Number(currentV1);
+    const limit = maxV1 && /^\d+$/u.test(maxV1) ? Number(maxV1) : hostTotalBytes;
+    const total = limit > 0 && limit < hostTotalBytes * 16 ? Math.min(limit, hostTotalBytes) : hostTotalBytes;
+    return { usedBytes: Math.min(used, total), totalBytes: total };
+  }
+  return null;
+}
+
+async function readLinuxHostMemory(
+  fallbackTotal: number,
+  fallbackFree: number,
+): Promise<{ usedBytes: number; totalBytes: number }> {
+  const meminfo = await readTextOptional("/proc/meminfo");
+  if (meminfo) {
+    const totalKb = Number(meminfo.match(/^MemTotal:\s+(\d+)/mu)?.[1]);
+    const availKb = Number(meminfo.match(/^MemAvailable:\s+(\d+)/mu)?.[1]);
+    if (Number.isFinite(totalKb) && totalKb > 0 && Number.isFinite(availKb) && availKb >= 0) {
+      const totalBytes = totalKb * 1024;
+      return { usedBytes: Math.max(0, totalBytes - availKb * 1024), totalBytes };
+    }
+  }
+  return { usedBytes: Math.max(0, fallbackTotal - fallbackFree), totalBytes: fallbackTotal };
+}
+
+function readHostCpuTotals(): { idle: number; total: number; cores: number } {
+  const list = cpus();
+  let idle = 0;
+  let total = 0;
+  for (const cpu of list) {
+    idle += cpu.times.idle;
+    total += cpu.times.user + cpu.times.nice + cpu.times.sys + cpu.times.idle + cpu.times.irq;
+  }
+  return { idle, total, cores: Math.max(1, list.length) };
+}
+
 export function createSystemService(options: CreateSystemServiceOptions = {}): ISystemService {
   const tcpProbe = options.tcpProbe ?? probeTcpPort;
   const serviceProbe = options.serviceProbe ?? probeServiceEndpoint;
@@ -350,9 +466,83 @@ export function createSystemService(options: CreateSystemServiceOptions = {}): I
   const env = options.env ?? process.env;
   const platform = options.platform ?? process.platform;
 
+  let cachedKindPromise: Promise<SystemEnvironmentKind> | null = null;
+  let cachedLoad: SystemEnvironmentLoad | null = null;
+  let prevHostCpu: { idle: number; total: number } | null = null;
+  let prevContainerCpu: { usageUsec: number; tsMs: number } | null = null;
+
   return {
     async info(): Promise<SystemInfo> {
       return { homedir: homedir(), platform: process.platform };
+    },
+
+    async getEnvironmentLoad(): Promise<SystemEnvironmentLoad> {
+      const sampledAt = now();
+      if (cachedLoad && sampledAt - cachedLoad.sampledAt < ENV_LOAD_CACHE_TTL_MS) {
+        return cachedLoad;
+      }
+      if (!cachedKindPromise) {
+        cachedKindPromise = detectEnvironmentKind(platform);
+      }
+      const environmentKind = await cachedKindPromise;
+      const hostTotalMem = totalmem();
+      const hostFreeMem = freemem();
+      const hostCpu = readHostCpuTotals();
+      const isContainer = environmentKind !== "host";
+
+      let cpuCores = hostCpu.cores;
+      let cpuPercent = 0;
+      if (isContainer) {
+        cpuCores = await readContainerCpuCores(hostCpu.cores);
+        const usageUsec = await readContainerCpuUsageUsec();
+        if (usageUsec !== null) {
+          if (prevContainerCpu && sampledAt > prevContainerCpu.tsMs) {
+            const deltaUsec = Math.max(0, usageUsec - prevContainerCpu.usageUsec);
+            const elapsedUsec = (sampledAt - prevContainerCpu.tsMs) * 1_000;
+            cpuPercent = clampPercent((deltaUsec / (elapsedUsec * cpuCores)) * 100);
+          }
+          prevContainerCpu = { usageUsec, tsMs: sampledAt };
+        }
+      }
+      if (!isContainer || prevContainerCpu === null) {
+        if (prevHostCpu && hostCpu.total > prevHostCpu.total) {
+          const totalDelta = hostCpu.total - prevHostCpu.total;
+          const idleDelta = Math.max(0, hostCpu.idle - prevHostCpu.idle);
+          cpuPercent = clampPercent(((totalDelta - idleDelta) / totalDelta) * 100);
+        } else if (platform !== "win32") {
+          const avg1 = loadavg()[0] ?? 0;
+          cpuPercent = clampPercent((avg1 / cpuCores) * 100);
+        }
+        prevHostCpu = { idle: hostCpu.idle, total: hostCpu.total };
+      }
+
+      const mem = isContainer
+        ? ((await readContainerMemory(hostTotalMem)) ?? {
+            usedBytes: Math.max(0, hostTotalMem - hostFreeMem),
+            totalBytes: hostTotalMem,
+          })
+        : platform === "linux"
+          ? await readLinuxHostMemory(hostTotalMem, hostFreeMem)
+          : { usedBytes: Math.max(0, hostTotalMem - hostFreeMem), totalBytes: hostTotalMem };
+
+      const memoryPercent =
+        mem.totalBytes > 0 ? clampPercent((mem.usedBytes / mem.totalBytes) * 100) : 0;
+      const loadAvg1m =
+        platform === "win32" ? undefined : Math.round(((loadavg()[0] ?? 0) * 100)) / 100;
+
+      cachedLoad = {
+        environmentKind,
+        hostname: hostname(),
+        platform,
+        cpuPercent,
+        cpuCores,
+        memoryUsedBytes: mem.usedBytes,
+        memoryTotalBytes: mem.totalBytes,
+        memoryPercent,
+        ...(loadAvg1m !== undefined ? { loadAvg1m } : {}),
+        sampledAt,
+      };
+      return cachedLoad;
     },
 
     async listIntegratedTerminalShells(): Promise<IntegratedTerminalShellOption[]> {

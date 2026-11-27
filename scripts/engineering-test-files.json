@@ -183,6 +183,7 @@
   "packages/services/test/botsDingTalkProvider.test.ts",
   "packages/services/test/discoverProviderModels.test.ts",
   "packages/services/test/mcodePrivacyGuards.test.ts",
+  "packages/services/test/systemEnvironmentLoad.test.ts",
   "packages/shared/test/mcodeEndpoint.test.ts",
   "packages/ui/test/botsDialogConfig.test.ts",
   "packages/ui/test/highspeed/highspeedShare.test.ts",

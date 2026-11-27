@@ -14,6 +14,8 @@ export type {
   FileWatchEvent,
   WorkspaceFileEntry,
   SystemInfo,
+  SystemEnvironmentKind,
+  SystemEnvironmentLoad,
   AppSettings,
   ElectronReleaseChannel,
   IntegratedTerminalShellDialect,

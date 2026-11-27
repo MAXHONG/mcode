@@ -73,6 +73,21 @@ export interface SystemInfo {
   platform: string;
 }
 
+export type SystemEnvironmentKind = "host" | "docker" | "sandbox";
+
+export interface SystemEnvironmentLoad {
+  readonly environmentKind: SystemEnvironmentKind;
+  readonly hostname: string;
+  readonly platform: string;
+  readonly cpuPercent: number;
+  readonly cpuCores: number;
+  readonly memoryUsedBytes: number;
+  readonly memoryTotalBytes: number;
+  readonly memoryPercent: number;
+  readonly loadAvg1m?: number;
+  readonly sampledAt: number;
+}
+
 /**
  * 支持的界面语言（BCP-47）。顺序即设置页下拉的展示顺序。
  * 新增语言的步骤见 docs/i18n/ui-locales.md。
