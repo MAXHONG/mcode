@@ -2,8 +2,12 @@
 export { type ServiceDescriptor, createServiceDescriptor } from "./descriptors.js";
 export { ServiceCollection, type ServiceExposurePolicy } from "./collection.js";
 export {
+  FALLBACK_DISCOVERED_MODEL_CONFIG,
   IModelSelectionService,
   IProviderSettingsService,
+  type DiscoverProviderModelsInput,
+  type DiscoverProviderModelsResult,
+  type DiscoveredProviderModel,
   type ModelSelectionView,
   type ModelSelectionViewInput,
   type ProviderSettingsProviderView,

@@ -4,32 +4,42 @@ import { callBrokerMethod } from "../broker.js";
 import { startInProcessComputerUseBroker } from "../broker-in-process.js";
 import { BROKER_SOCKET_ENV, IN_PROCESS_BROKER_SOCKET, mintBrokerSocketPath } from "../broker-socket-path.js";
 
-describe("Computer Use placeholder", () => {
-  it("执行入口明确报告不可用，且不触发真实 broker 准备", async () => {
-    let prepared = false;
-    const runtime = createComputerUseRuntime({
-      ensureBrokerAvailable: async () => {
-        prepared = true;
-      },
+describe("Mcode open-source Computer Use runtime", () => {
+  it("request_access 返回当前平台与开源后端状态，未知工具返回结构化错误", async () => {
+    const runtime = createComputerUseRuntime();
+    const access = await runtime.execute({
+      toolName: "request_access",
+      arguments: {},
+      context: { sessionId: "s1", runtimeScope: "main", workspaceKey: "ws1" },
     });
-    await expect(
-      runtime.execute({
-        toolName: "computer_use",
-        arguments: {},
-        context: { sessionId: "example", runtimeScope: "main", workspaceKey: "example" },
-      }),
-    ).resolves.toMatchObject({ isError: true });
-    expect(prepared).toBe(false);
+    expect(access.isError).toBeFalsy();
+    const parsed = JSON.parse((access.content[0] as { text: string }).text);
+    expect(parsed).toMatchObject({
+      granted: true,
+      platform: process.platform,
+      backend: "mcode-open-cua",
+    });
+
+    const unknown = await runtime.execute({
+      toolName: "non_existent_tool",
+      arguments: {},
+      context: { sessionId: "s1", runtimeScope: "main", workspaceKey: "ws1" },
+    });
+    expect(unknown.isError).toBe(true);
+
+    const stopped = await runtime.execute({
+      toolName: "stop_computer_control",
+      arguments: {},
+      context: { sessionId: "s1", runtimeScope: "main", workspaceKey: "ws1" },
+    });
+    expect(stopped.isError).toBeFalsy();
     await runtime.dispose();
   });
 
-  it("broker 方法拒绝执行真实系统能力", async () => {
+  it("broker 方法保留占位不可用契约，不破坏独立打包检测", async () => {
     await expect(
       callBrokerMethod({ method: "example", socketPath: "unused" }),
     ).rejects.toMatchObject({ code: "unavailable" });
-  });
-
-  it("进程内 broker 入口明确报告不可用，socketPath 入口保留独立 CLI 需要的常量", async () => {
     await expect(startInProcessComputerUseBroker()).rejects.toMatchObject({
       code: "helper_unavailable",
     });

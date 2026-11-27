@@ -7,6 +7,7 @@ import {
   type ModelSelectionFacade,
   type ModelSelectionView,
   type ModelSelectionViewInput,
+  type ProviderApiType,
   type ProviderConfigObject,
   type ProviderId,
   type ProviderSettingsFacade,
@@ -19,6 +20,206 @@ import {
 import { createServiceDescriptor } from "../descriptors.js";
 import type { ModelConnectivityResult } from "@mcode/shared";
 import { createServiceLogger } from "../logger/serviceLogger.js";
+
+export interface DiscoverProviderModelsInput {
+  readonly providerId: ProviderId;
+  readonly baseUrl?: string;
+  readonly apiKey?: string;
+  readonly apiType?: ProviderApiType;
+  readonly headers?: Record<string, string>;
+}
+
+export interface DiscoveredProviderModel {
+  readonly modelId: string;
+  readonly displayName?: string;
+  readonly ownedBy?: string;
+  readonly matchedBuiltinRule: boolean;
+  readonly resolution: ModelConfigResolution;
+}
+
+export interface DiscoverProviderModelsResult {
+  readonly models: readonly DiscoveredProviderModel[];
+  readonly endpointUrl: string;
+}
+
+const DISCOVER_TIMEOUT_MS = 15_000;
+const ANTHROPIC_API_VERSION = "2023-06-01";
+const KNOWN_ENDPOINT_SUFFIXES = [
+  "/chat/completions",
+  "/completions",
+  "/responses",
+  "/messages",
+  "/models",
+];
+
+/** 未命中内置规则时的保守默认参数，确保用户勾选后立即可用。 */
+export const FALLBACK_DISCOVERED_MODEL_CONFIG: ModelConfigObject = {
+  enabled: true,
+  properties: {
+    contextWindow: 128_000,
+    inputFormat: {
+      supportsText: true,
+      supportsImage: false,
+      supportsVideo: false,
+      supportsAudio: false,
+      supportsPdf: false,
+    },
+  },
+  optionSpecs: { maxOutputTokens: { max: 8_192 } },
+};
+
+export function buildDiscoverModelsUrls(rawBaseUrl: string): string[] {
+  const trimmed = rawBaseUrl.trim().replace(/\/+$/u, "");
+  if (!trimmed) throw new Error("Base URL is required to discover models");
+  let parsed: URL;
+  try {
+    parsed = new URL(trimmed);
+  } catch {
+    throw new Error(`Invalid Base URL: ${trimmed}`);
+  }
+  if (parsed.protocol !== "http:" && parsed.protocol !== "https:") {
+    throw new Error(`Unsupported Base URL protocol: ${parsed.protocol}`);
+  }
+  let pathname = parsed.pathname.replace(/\/+$/u, "");
+  for (const suffix of KNOWN_ENDPOINT_SUFFIXES) {
+    if (pathname.toLowerCase().endsWith(suffix)) {
+      pathname = pathname.slice(0, -suffix.length);
+      break;
+    }
+  }
+  const base = `${parsed.origin}${pathname}`;
+  const hasVersionSegment = /\/v\d+(?:alpha|beta)?$/iu.test(pathname);
+  return [...new Set(hasVersionSegment ? [`${base}/models`] : [`${base}/v1/models`, `${base}/models`])];
+}
+
+function hasHeaderIgnoreCase(headers: Record<string, string>, target: string): boolean {
+  const lower = target.toLowerCase();
+  return Object.keys(headers).some((key) => key.toLowerCase() === lower);
+}
+
+export function parseDiscoveredModelsPayload(
+  payload: unknown,
+): Array<{ readonly modelId: string; readonly displayName?: string; readonly ownedBy?: string }> {
+  const list = Array.isArray(payload)
+    ? payload
+    : payload && typeof payload === "object" && Array.isArray((payload as { data?: unknown }).data)
+      ? (payload as { data: unknown[] }).data
+      : payload &&
+          typeof payload === "object" &&
+          Array.isArray((payload as { models?: unknown }).models)
+        ? (payload as { models: unknown[] }).models
+        : [];
+  const seen = new Set<string>();
+  const results: Array<{
+    readonly modelId: string;
+    readonly displayName?: string;
+    readonly ownedBy?: string;
+  }> = [];
+  for (const item of list) {
+    if (typeof item === "string") {
+      const id = item.trim();
+      if (id && !seen.has(id)) {
+        seen.add(id);
+        results.push({ modelId: id });
+      }
+      continue;
+    }
+    if (!item || typeof item !== "object") continue;
+    const record = item as Record<string, unknown>;
+    const rawId =
+      typeof record["id"] === "string"
+        ? record["id"]
+        : typeof record["name"] === "string"
+          ? record["name"].replace(/^models\//u, "")
+          : "";
+    const modelId = rawId.trim();
+    if (!modelId || seen.has(modelId)) continue;
+    seen.add(modelId);
+    const displayName =
+      typeof record["display_name"] === "string"
+        ? record["display_name"].trim()
+        : typeof record["displayName"] === "string"
+          ? record["displayName"].trim()
+          : undefined;
+    const ownedBy =
+      typeof record["owned_by"] === "string" ? record["owned_by"].trim() : undefined;
+    results.push({
+      modelId,
+      ...(displayName ? { displayName } : {}),
+      ...(ownedBy ? { ownedBy } : {}),
+    });
+  }
+  return results.sort((left, right) => left.modelId.localeCompare(right.modelId));
+}
+
+export async function fetchAndMatchProviderModels(options: {
+  readonly providerId: ProviderId;
+  readonly baseUrl: string;
+  readonly apiKey?: string;
+  readonly apiType?: ProviderApiType;
+  readonly headers?: Record<string, string>;
+  readonly resolveModelConfig: (modelId: string) => Promise<ModelConfigResolution>;
+  readonly fetchImpl?: typeof fetch;
+}): Promise<DiscoverProviderModelsResult> {
+  const fetchImpl = options.fetchImpl ?? fetch;
+  const candidateUrls = buildDiscoverModelsUrls(options.baseUrl);
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    ...(options.headers ?? {}),
+  };
+  const trimmedKey = options.apiKey?.trim();
+  if (trimmedKey) {
+    if (options.apiType === "anthropic-messages") {
+      if (!hasHeaderIgnoreCase(headers, "x-api-key")) headers["x-api-key"] = trimmedKey;
+      if (!hasHeaderIgnoreCase(headers, "anthropic-version")) {
+        headers["anthropic-version"] = ANTHROPIC_API_VERSION;
+      }
+    } else if (!hasHeaderIgnoreCase(headers, "authorization")) {
+      headers["Authorization"] = `Bearer ${trimmedKey}`;
+    }
+  }
+
+  let lastError: Error | undefined;
+  for (const endpointUrl of candidateUrls) {
+    try {
+      const response = await fetchImpl(endpointUrl, {
+        method: "GET",
+        headers,
+        signal: AbortSignal.timeout(DISCOVER_TIMEOUT_MS),
+      });
+      if (!response.ok) {
+        const bodyText = (await response.text().catch(() => "")).slice(0, 200).trim();
+        lastError = new Error(
+          `HTTP ${response.status} ${response.statusText}${bodyText ? `: ${bodyText}` : ""}`,
+        );
+        if (response.status === 404 && endpointUrl !== candidateUrls.at(-1)) continue;
+        throw lastError;
+      }
+      const payload: unknown = await response.json();
+      const rawModels = parseDiscoveredModelsPayload(payload);
+      const matchedModels = await Promise.all(
+        rawModels.map(async (raw): Promise<DiscoveredProviderModel> => {
+          const resolution = await options.resolveModelConfig(raw.modelId);
+          const matchedBuiltinRule =
+            resolution.issues.length === 0 &&
+            resolution.inheritedConfig.properties?.contextWindow != null;
+          return {
+            modelId: raw.modelId,
+            ...(raw.displayName ? { displayName: raw.displayName } : {}),
+            ...(raw.ownedBy ? { ownedBy: raw.ownedBy } : {}),
+            matchedBuiltinRule,
+            resolution,
+          };
+        }),
+      );
+      return { models: matchedModels, endpointUrl };
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+      if (endpointUrl === candidateUrls.at(-1)) throw lastError;
+    }
+  }
+  throw lastError ?? new Error("Failed to discover models");
+}
 
 export type {
   ProviderSettingsProviderView,
@@ -68,6 +269,10 @@ export interface IProviderSettingsService {
   testModelConnectivity(
     input: ProviderSettingsConnectivityRequest,
   ): Promise<ModelConnectivityResult>;
+  /** 调用服务商 /models 端点自动发现可用模型，并按内置规则匹配参数框架。 */
+  discoverProviderModels(
+    input: DiscoverProviderModelsInput,
+  ): Promise<DiscoverProviderModelsResult>;
 }
 
 export const IProviderSettingsService = createServiceDescriptor<IProviderSettingsService>(
@@ -204,6 +409,19 @@ export function createProviderSettingsService(
         ...(input.workspaceIdentity ? { workspaceIdentity: input.workspaceIdentity } : {}),
         providerId: input.providerId,
         modelId: input.modelId,
+      });
+    },
+    discoverProviderModels: async (input) => {
+      await ensureReady();
+      const baseUrl = input.baseUrl?.trim() || "";
+      return fetchAndMatchProviderModels({
+        providerId: input.providerId,
+        baseUrl,
+        ...(input.apiKey ? { apiKey: input.apiKey } : {}),
+        ...(input.apiType ? { apiType: input.apiType } : {}),
+        ...(input.headers ? { headers: input.headers } : {}),
+        resolveModelConfig: async (modelId) =>
+          facade.resolveModelConfig({ providerId: input.providerId, modelId }),
       });
     },
   };
