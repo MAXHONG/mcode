@@ -8,6 +8,8 @@ export {
   type DiscoverProviderModelsInput,
   type DiscoverProviderModelsResult,
   type DiscoveredProviderModel,
+  type ProbeProviderModelCapabilitiesInput,
+  type ProbeProviderModelCapabilitiesResult,
   type ModelSelectionView,
   type ModelSelectionViewInput,
   type ProviderSettingsProviderView,

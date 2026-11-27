@@ -668,19 +668,49 @@ function formatContextBadge(contextWindow: number | null | undefined): string | 
   return `${Math.round(contextWindow / 1000)}K`;
 }
 
-function buildDiscoveredFormModel(item: DiscoveredProviderModel): ProviderSettingsFormModel {
-  const effectiveConfig: ModelConfigObject = item.matchedBuiltinRule
-    ? { ...item.resolution.inheritedConfig, enabled: true }
+function buildDiscoveredFormModel(
+  item: DiscoveredProviderModel,
+  probed?: { supportsImage: boolean | null; supportsReasoning: boolean | null },
+): ProviderSettingsFormModel {
+  const hasKnownConfig = item.matchedBuiltinRule || item.inferredCapabilities === true;
+  const initialConfig: ModelConfigObject = hasKnownConfig
+    ? structuredClone({ ...item.resolution.inheritedConfig, enabled: true })
     : structuredClone(FALLBACK_DISCOVERED_MODEL_CONFIG);
+  const baseConfig: ModelConfigObject = {
+    ...initialConfig,
+    ...(probed && probed.supportsImage !== null
+      ? {
+          properties: {
+            ...(initialConfig.properties ?? {}),
+            inputFormat: {
+              supportsText: true,
+              supportsImage: probed.supportsImage,
+              supportsVideo: initialConfig.properties?.inputFormat?.supportsVideo ?? false,
+              supportsAudio: initialConfig.properties?.inputFormat?.supportsAudio ?? false,
+              supportsPdf: initialConfig.properties?.inputFormat?.supportsPdf ?? false,
+            },
+          },
+        }
+      : {}),
+    ...(probed &&
+    probed.supportsReasoning === true &&
+    !initialConfig.optionSpecs?.reasoningLevel?.values?.length
+      ? {
+          optionSpecs: {
+            ...(initialConfig.optionSpecs ?? {}),
+            reasoningLevel: { values: ["low", "medium", "high"] },
+          },
+        }
+      : {}),
+  };
+  const useRecommended = item.matchedBuiltinRule && !probed;
   return {
     ...createEmptyModel(),
     modelId: item.modelId,
-    useRecommendedConfig: item.matchedBuiltinRule,
+    useRecommendedConfig: useRecommended,
     inheritedConfig: item.resolution.inheritedConfig,
-    personalConfig: item.matchedBuiltinRule
-      ? {}
-      : structuredClone(FALLBACK_DISCOVERED_MODEL_CONFIG),
-    config: effectiveConfig,
+    personalConfig: useRecommended ? {} : structuredClone(baseConfig),
+    config: baseConfig,
     issues: [],
   };
 }
@@ -709,6 +739,8 @@ function DiscoverModelsDialog({
   const { providerSettingsService } = useServices();
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [probing, setProbing] = useState(false);
+  const [autoProbe, setAutoProbe] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [discovered, setDiscovered] = useState<readonly DiscoveredProviderModel[]>([]);
@@ -789,11 +821,44 @@ function DiscoverModelsDialog({
     setSaving(true);
     setError(null);
     try {
-      await onAddModels(chosen.map(buildDiscoveredFormModel));
+      const probeMap = new Map<
+        string,
+        { supportsImage: boolean | null; supportsReasoning: boolean | null }
+      >();
+      const targetsToProbe = autoProbe
+        ? chosen.filter((item) => !item.matchedBuiltinRule)
+        : [];
+      if (targetsToProbe.length > 0 && baseUrl?.trim()) {
+        setProbing(true);
+        await Promise.all(
+          targetsToProbe.map(async (item) => {
+            try {
+              const res = await providerSettingsService.probeProviderModelCapabilities({
+                providerId,
+                modelId: item.modelId,
+                baseUrl: baseUrl.trim(),
+                ...(apiKey?.trim() ? { apiKey: apiKey.trim() } : {}),
+                ...(apiType ? { apiType } : {}),
+              });
+              if (res.supportsImage !== null || res.supportsReasoning !== null) {
+                probeMap.set(item.modelId, {
+                  supportsImage: res.supportsImage,
+                  supportsReasoning: res.supportsReasoning,
+                });
+              }
+            } catch {
+              // 探测失败静默回退启发式/默认配置，不阻塞添加
+            }
+          }),
+        );
+        setProbing(false);
+      }
+      await onAddModels(chosen.map((item) => buildDiscoveredFormModel(item, probeMap.get(item.modelId))));
       onOpenChange(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : String(err));
     } finally {
+      setProbing(false);
       setSaving(false);
     }
   };
@@ -918,6 +983,10 @@ function DiscoverModelsDialog({
                         <span className="rounded bg-primary/10 px-1.5 py-0.5 text-primary">
                           {isZh ? "已匹配参数" : "Matched"}
                         </span>
+                      ) : item.inferredCapabilities ? (
+                        <span className="rounded bg-primary/10 px-1.5 py-0.5 text-primary">
+                          {isZh ? "智能推断" : "Inferred"}
+                        </span>
                       ) : null}
                       {ctxBadge ? (
                         <span className="rounded bg-muted px-1.5 py-0.5 text-foreground-subtle">
@@ -942,25 +1011,43 @@ function DiscoverModelsDialog({
           )}
         </div>
 
-        <DialogFooter>
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={saving}
-            onClick={() => onOpenChange(false)}
-          >
-            {isZh ? "取消" : "Cancel"}
-          </Button>
-          <Button
-            type="button"
-            disabled={loading || saving || selectedIds.size === 0}
-            onClick={() => void handleConfirm()}
-          >
-            {saving ? <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" /> : null}
+        <DialogFooter className="flex-wrap items-center justify-between gap-2 sm:justify-between">
+          <label className="flex cursor-pointer items-center gap-2 text-ui-xs text-foreground-subtle select-none">
+            <input
+              type="checkbox"
+              checked={autoProbe}
+              disabled={saving}
+              onChange={(event) => setAutoProbe(event.target.checked)}
+              className="size-3.5 rounded border-input-border accent-primary"
+            />
             {isZh
-              ? `添加所选模型 (${selectedIds.size})`
-              : `Add Selected (${selectedIds.size})`}
-          </Button>
+              ? "添加时自动实测未知模型的视觉与推理能力"
+              : "Auto-probe vision & reasoning for new models"}
+          </label>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="ghost"
+              disabled={saving}
+              onClick={() => onOpenChange(false)}
+            >
+              {isZh ? "取消" : "Cancel"}
+            </Button>
+            <Button
+              type="button"
+              disabled={loading || saving || selectedIds.size === 0}
+              onClick={() => void handleConfirm()}
+            >
+              {saving ? <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" /> : null}
+              {probing
+                ? isZh
+                  ? "正在探测模型能力..."
+                  : "Probing capabilities..."
+                : isZh
+                  ? `添加所选模型 (${selectedIds.size})`
+                  : `Add Selected (${selectedIds.size})`}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
