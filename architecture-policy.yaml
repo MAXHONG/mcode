@@ -949,6 +949,15 @@ modules:
       - packages/ui/src/settings/PluginAutoRecommendationSetting.tsx
     layers: {app: .}
     owner: plugin
+  - id: env-load-monitor
+    roots:
+      - packages/ui/src/env-load-monitor
+    managed: true
+    requires: [shared, ui]
+    publicEntrypoints:
+      - packages/ui/src/env-load-monitor/index.ts
+    layers: {app: .}
+    owner: ui
   - id: tool-discovery
     roots:
       - apps/mcode-cli/packages/core/src/tool/search

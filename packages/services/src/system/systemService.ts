@@ -1,6 +1,10 @@
+import { execFile } from "node:child_process";
 import { access, readFile } from "node:fs/promises";
 import { cpus, freemem, homedir, hostname, loadavg, totalmem } from "node:os";
 import { Socket } from "node:net";
+import { promisify } from "node:util";
+
+const execFileAsync = promisify(execFile);
 import type {
   IntegratedTerminalShellOption,
   IntranetProbeRequest,
@@ -448,6 +452,35 @@ async function readLinuxHostMemory(
   return { usedBytes: Math.max(0, fallbackTotal - fallbackFree), totalBytes: fallbackTotal };
 }
 
+async function readDarwinHostMemory(
+  fallbackTotal: number,
+  fallbackFree: number,
+): Promise<{ usedBytes: number; totalBytes: number }> {
+  try {
+    const { stdout } = await execFileAsync("vm_stat", [], { timeout: 1_500 });
+    const pageSize = Number(stdout.match(/page size of (\d+) bytes/u)?.[1]) || 16_384;
+    const readPages = (label: string): number => {
+      const match = stdout.match(new RegExp(`^${label}:\\s+(\\d+)`, "mu"));
+      return match ? Number(match[1]) : 0;
+    };
+    // 与 macOS 活动监视器口径一致：App Memory (Anonymous - Purgeable) + Wired + Compressed
+    const anonymous = readPages("Anonymous pages");
+    const purgeable = readPages("Pages purgeable");
+    const wired = readPages("Pages wired down");
+    const compressed = readPages("Pages occupied by compressor");
+    const usedPages = Math.max(0, anonymous - purgeable) + wired + compressed;
+    if (usedPages > 0) {
+      return {
+        usedBytes: Math.min(fallbackTotal, usedPages * pageSize),
+        totalBytes: fallbackTotal,
+      };
+    }
+  } catch {
+    // 回退 os.freemem()
+  }
+  return { usedBytes: Math.max(0, fallbackTotal - fallbackFree), totalBytes: fallbackTotal };
+}
+
 function readHostCpuTotals(): { idle: number; total: number; cores: number } {
   const list = cpus();
   let idle = 0;
@@ -523,7 +556,9 @@ export function createSystemService(options: CreateSystemServiceOptions = {}): I
           })
         : platform === "linux"
           ? await readLinuxHostMemory(hostTotalMem, hostFreeMem)
-          : { usedBytes: Math.max(0, hostTotalMem - hostFreeMem), totalBytes: hostTotalMem };
+          : platform === "darwin"
+            ? await readDarwinHostMemory(hostTotalMem, hostFreeMem)
+            : { usedBytes: Math.max(0, hostTotalMem - hostFreeMem), totalBytes: hostTotalMem };
 
       const memoryPercent =
         mem.totalBytes > 0 ? clampPercent((mem.usedBytes / mem.totalBytes) * 100) : 0;
