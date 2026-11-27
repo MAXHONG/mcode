@@ -1,4 +1,4 @@
-import { MCODE_REMOTE_UPSTREAM_VERSION } from "@mcode/shared";
+import { MCODE_VERSION } from "@mcode/shared";
 import type { IRemoteBackend, RemoteEnvironment } from "@mcode/server/remote/backend.js";
 import {
   REMOTE_BASE,
@@ -141,7 +141,7 @@ export async function deployNodePtyPrebuilds(
     ) {
       loggers.logWarn(`WARNING: no node-pty prebuild for ${platformArch}. Terminal will not work.`);
       loggers.logWarn(
-        `Run: node scripts/prepare-prebuilds.mjs to prepare mock-cdn release assets.`,
+        `Legacy component assets are no longer built; use the R3 Source Server archive flow.`,
       );
     } else {
       logDeployRequired({
@@ -183,7 +183,7 @@ export async function deployNodePtyPrebuilds(
         `WARNING: no node-pty spawn-helper for ${platformArch}. Terminal may fail to start.`,
       );
       loggers.logWarn(
-        `Run: node scripts/prepare-prebuilds.mjs to prepare mock-cdn release assets.`,
+        `Legacy component assets are no longer built; use the R3 Source Server archive flow.`,
       );
       return;
     }
@@ -300,7 +300,7 @@ async function resolveComponentManifest(
         remoteCdnBaseUrl: options.remoteCdnBaseUrl,
         remoteCdnBaseUrls: options.remoteCdnBaseUrls,
         remoteCacheDir: options.remoteCacheDir,
-        version: MCODE_REMOTE_UPSTREAM_VERSION,
+        version: MCODE_VERSION,
         platformArch: `${env.platform}-${env.arch}`,
         manifestRequestTimeoutMs: options.manifestRequestTimeoutMs,
         remoteAssetNetwork: options.remoteAssetNetwork,

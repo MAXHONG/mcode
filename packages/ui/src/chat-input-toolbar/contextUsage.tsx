@@ -9,11 +9,11 @@ import {
   type CSSProperties,
 } from "react";
 import {
-  TID_CHAT_CONTEXT_USAGE_TRIGGER,
   type CodingPlanResetType,
   type McodeContextUsageBreakdownItem,
   type McodeProvider,
 } from "@mcode/shared";
+import { TID_CHAT_CONTEXT_USAGE_TRIGGER } from "@mcode/shared/test-ids";
 import {
   Context,
   ContextContentBody,

@@ -4,7 +4,7 @@ import {
   TID_V4_BACKGROUND_WORK_CANCEL,
   TID_V4_BACKGROUND_WORK_ITEM,
   testId,
-} from "@mcode/shared";
+} from "@mcode/shared/test-ids";
 import type { BackgroundWorkSummary } from "@mcode/shared/mcode-protocol-v4";
 import { runUserAction } from "@/lib/userActionTelemetry.js";
 

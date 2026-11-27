@@ -1,4 +1,4 @@
-import { TID_V4_TIMELINE } from "@mcode/shared";
+import { TID_V4_TIMELINE } from "@mcode/shared/test-ids";
 import { DEFAULT_WORKSPACE, waitForWorkspaceApp } from "../helpers/desktop-app.js";
 import { restartWithSeededOpenAIProviders } from "../helpers/custom-openai-provider.js";
 import {

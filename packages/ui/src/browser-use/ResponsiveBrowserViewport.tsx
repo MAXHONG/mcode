@@ -8,11 +8,11 @@ import {
   type PointerEvent as ReactPointerEvent,
   type ReactNode,
 } from "react";
+import { type BrowserViewportSize } from "@mcode/shared";
 import {
   TID_BROWSER_RESPONSIVE_SCALED_FRAME,
   TID_BROWSER_RESPONSIVE_VIEWPORT,
-  type BrowserViewportSize,
-} from "@mcode/shared";
+} from "@mcode/shared/test-ids";
 import {
   resolveBrowserViewportRendererScale,
   resolveBrowserViewportScale,

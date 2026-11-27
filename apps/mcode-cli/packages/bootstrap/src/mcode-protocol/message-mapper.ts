@@ -1,8 +1,17 @@
+import { normalizeGenUiInput } from "@mcode/core";
+import { genUiModelContextSchema } from "@mcode/shared/gen-ui";
 import type { McodeMessagePart, McodeMessageWithParts, McodeToolState } from "@mcode/shared";
 import type { MessagePart, MessageWithParts, ToolState } from "@mcode/contracts";
 import { shouldHideInvalidToolCallFromProduct } from "../tool-call-product-visibility.js";
 
 export function mapMessageWithParts(message: MessageWithParts): McodeMessageWithParts {
+  const intent =
+    message.info.metadata?.conversationInputIntent ?? message.info.metadata?.inputIntent;
+  const context = genUiModelContextSchema.safeParse(
+    intent && typeof intent === "object"
+      ? (intent as Record<string, unknown>).genUiContext
+      : undefined,
+  );
   return {
     info:
       message.info.role === "user"
@@ -56,7 +65,21 @@ export function mapMessageWithParts(message: MessageWithParts): McodeMessageWith
         (part) =>
           part.type !== "tool" || !shouldHideInvalidToolCallFromProduct(part.tool, part.metadata),
       )
-      .map(mapMessagePart),
+      .map((part) => {
+        // 历史读取和搜索索引同走此出口，旧尾块复用 CLI 解码器，不改持久正文。
+        if (
+          message.info.role === "user" &&
+          !message.info.synthetic &&
+          part.type === "text" &&
+          !part.synthetic
+        ) {
+          return mapMessagePart({
+            ...part,
+            text: normalizeGenUiInput(part.text, context.success ? context.data : undefined).text,
+          });
+        }
+        return mapMessagePart(part);
+      }),
   };
 }
 

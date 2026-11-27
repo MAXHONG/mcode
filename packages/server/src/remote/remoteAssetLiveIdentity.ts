@@ -1,6 +1,6 @@
 import { readFile } from "node:fs/promises";
 import { join } from "node:path";
-import { MCODE_REMOTE_UPSTREAM_VERSION } from "@mcode/shared";
+import { MCODE_VERSION } from "@mcode/shared";
 import type { IRemoteBackend } from "@mcode/server/remote/backend.js";
 import type { RemoteEnvironment } from "@mcode/server/remote/backend.js";
 import {
@@ -205,14 +205,14 @@ async function resolveFreshComponentManifest(
   if (options.mockCdnDir) {
     try {
       const content = await readFile(
-        join(options.mockCdnDir, "releases", MCODE_REMOTE_UPSTREAM_VERSION, `manifest-${platformArch}.json`),
+        join(options.mockCdnDir, "releases", MCODE_VERSION, `manifest-${platformArch}.json`),
         "utf8",
       );
       return {
         manifest: JSON.parse(content) as RemoteAssetManifest,
         releaseBaseCandidatesForComponents: buildReleaseBaseCandidates(
           resolveRemoteCdnBaseUrls(options),
-          MCODE_REMOTE_UPSTREAM_VERSION,
+          MCODE_VERSION,
         ),
       };
     } catch (error) {
@@ -229,7 +229,7 @@ async function resolveFreshComponentManifest(
         remoteCdnBaseUrl: options.remoteCdnBaseUrl,
         remoteCdnBaseUrls: options.remoteCdnBaseUrls,
         remoteCacheDir: options.remoteCacheDir,
-        version: MCODE_REMOTE_UPSTREAM_VERSION,
+        version: MCODE_VERSION,
         platformArch,
         manifestRequestTimeoutMs: options.manifestRequestTimeoutMs,
         remoteAssetNetwork: options.remoteAssetNetwork,

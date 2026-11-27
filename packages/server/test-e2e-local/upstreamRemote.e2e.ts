@@ -1,4 +1,4 @@
-// 本地端到端：把 z.ai CDN 上游 zcode-server.cjs 当作「远端」，验证 Mcode 桌面侧的握手与 RPC 契约。
+// 本地端到端：把 z.ai CDN 上游 mcode-server.cjs 当作「远端」，验证 Mcode 桌面侧的握手与 RPC 契约。
 // 用法：bash scripts/dev/remote-upstream-e2e.sh（自动下载并校验上游组件）
 import { spawn } from "node:child_process";
 import { existsSync, readFileSync } from "node:fs";

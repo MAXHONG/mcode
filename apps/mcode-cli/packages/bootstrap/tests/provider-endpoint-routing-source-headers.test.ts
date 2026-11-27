@@ -62,7 +62,7 @@ describe("createProviderEndpointRoutingSourceHeaders", () => {
       env: {
         MCODE_DATA_BASE_DIR: dataBaseDir,
         MCODE_ENV: "production",
-        ZCODE_APP_VERSION: "2.0.0",
+        MCODE_APP_VERSION: "2.0.0",
       },
     });
 

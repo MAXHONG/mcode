@@ -1,5 +1,5 @@
 import { EyeIcon, EyeOffIcon } from "lucide-react";
-import { TID_MODEL_PROVIDER_API_KEY_INPUT } from "@mcode/shared";
+import { TID_MODEL_PROVIDER_API_KEY_INPUT } from "@mcode/shared/test-ids";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";

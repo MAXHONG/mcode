@@ -13,6 +13,21 @@ export interface McodeAgentWorkspaceTarget {
   remoteSessionId?: string;
 }
 
+export interface McodeAgentPluginMutationTarget extends McodeAgentWorkspaceTarget {
+  /** 仅 Host 观测使用；不会传给 CLI。 */
+  telemetry?: {
+    entry?:
+      | "store_list"
+      | "store_detail"
+      | "side_pane_market"
+      | "recommended_prompt"
+      | "recommended_ui"
+      | "component_settings";
+    client_kind?: "desktop" | "mobile";
+    trigger?: "user" | "automatic" | "dependency" | "restore" | "sync";
+  };
+}
+
 export interface McodeAgentPluginViewParams extends McodeAgentWorkspaceTarget {
   configScope?: "user" | "workspace";
 }
@@ -22,22 +37,22 @@ export interface McodeAgentListMcpServerStatusesParams extends McodeAgentWorkspa
   mode?: McodeMcpListMode;
 }
 
-export interface McodeAgentAddPluginMarketplaceParams extends McodeAgentWorkspaceTarget {
+export interface McodeAgentAddPluginMarketplaceParams extends McodeAgentPluginMutationTarget {
   dryRun?: boolean;
   operationId?: string;
   source: string;
 }
 
-export interface McodeAgentRemovePluginMarketplaceParams extends McodeAgentWorkspaceTarget {
+export interface McodeAgentRemovePluginMarketplaceParams extends McodeAgentPluginMutationTarget {
   marketplace: string;
 }
 
-export interface McodeAgentUpdatePluginMarketplaceParams extends McodeAgentWorkspaceTarget {
+export interface McodeAgentUpdatePluginMarketplaceParams extends McodeAgentPluginMutationTarget {
   marketplace?: string;
   operationId?: string;
 }
 
-export interface McodeAgentInstallPluginParams extends McodeAgentWorkspaceTarget {
+export interface McodeAgentInstallPluginParams extends McodeAgentPluginMutationTarget {
   dryRun?: boolean;
   marketplace: string;
   operationId?: string;
@@ -49,23 +64,23 @@ export interface McodeAgentCancelPluginOperationParams {
   operationId: string;
 }
 
-export interface McodeAgentUninstallPluginParams extends McodeAgentWorkspaceTarget {
+export interface McodeAgentUninstallPluginParams extends McodeAgentPluginMutationTarget {
   marketplace?: string;
   pluginId?: string;
   pluginName?: string;
   removeCache?: boolean;
 }
 
-export interface McodeAgentUpdatePluginParams extends McodeAgentWorkspaceTarget {
+export interface McodeAgentUpdatePluginParams extends McodeAgentPluginMutationTarget {
   pluginId?: string;
   marketplace?: string;
 }
 
-export interface McodeAgentRestoreBuiltinPluginParams extends McodeAgentWorkspaceTarget {
+export interface McodeAgentRestoreBuiltinPluginParams extends McodeAgentPluginMutationTarget {
   pluginId: string;
 }
 
-export interface McodeAgentConfigurePluginParams extends McodeAgentWorkspaceTarget {
+export interface McodeAgentConfigurePluginParams extends McodeAgentPluginMutationTarget {
   clearOptionKeys?: string[];
   dryRun?: boolean;
   options: Record<string, unknown>;
@@ -73,7 +88,7 @@ export interface McodeAgentConfigurePluginParams extends McodeAgentWorkspaceTarg
   scope?: "user" | "workspace";
 }
 
-export interface McodeAgentResetPluginConfigParams extends McodeAgentWorkspaceTarget {
+export interface McodeAgentResetPluginConfigParams extends McodeAgentPluginMutationTarget {
   pluginId: string;
   scope?: "user" | "workspace";
 }
@@ -89,7 +104,7 @@ export interface McodeAgentDescribePluginParams extends McodeAgentWorkspaceTarge
   pluginName: string;
 }
 
-export interface McodeAgentSetPluginEnabledParams extends McodeAgentWorkspaceTarget {
+export interface McodeAgentSetPluginEnabledParams extends McodeAgentPluginMutationTarget {
   enabled: boolean;
   operationId?: string;
   pluginId: string;
@@ -185,6 +200,7 @@ export interface McodeAgentResolveSuggestedPluginReferenceParams extends McodeAg
 // ---- 定时任务(automation)管理参数 ----
 
 export interface McodeAgentCreateAutomationParams extends McodeAgentWorkspaceTarget {
+  projectId?: string | null;
   title: string;
   cronExpr: string;
   relativeDelayMinutes?: number;

@@ -1,6 +1,6 @@
 import { memo, useMemo } from "react";
 import { ActivityIcon, BotIcon, SquareTerminalIcon, Workflow } from "lucide-react";
-import { TID_V4_COMPOSER_BACKGROUND_WORK_TRIGGER } from "@mcode/shared";
+import { TID_V4_COMPOSER_BACKGROUND_WORK_TRIGGER } from "@mcode/shared/test-ids";
 import type { BackgroundWorkSummary } from "@mcode/shared/mcode-protocol-v4";
 import { Button } from "@/components/ui/button.js";
 import { ControlHintTooltip } from "@/ControlHintTooltip.js";

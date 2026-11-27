@@ -117,6 +117,25 @@ export async function openStartupSessionStore(
   return store;
 }
 
+export async function openStartupMcodeProtocolSessionStore(
+  configResult: ConfigResult,
+  startupTimer: StartupTimer,
+): Promise<SqliteSessionStore> {
+  const dbPath = getSessionDbPath(configResult);
+  startupTimer.start("Mcode Protocol SQLite migration started", {
+    context: { dbPath },
+    event: "mcode_protocol.startup.sqlite_migration.started",
+    stage: "migrate_session_db",
+  });
+  const store = await SqliteSessionStore.openStartup({ dbPath });
+  startupTimer.mark("Mcode Protocol SQLite migration completed", {
+    context: { dbPath },
+    event: "mcode_protocol.startup.sqlite_migration.completed",
+    stage: "migrate_session_db",
+  });
+  return store;
+}
+
 export function getSessionDbPath(configResult: ConfigResult, workingDirectory?: string): string {
   const configured = configResult.config.storage.sessionDbPath;
   // 存储 Worker 不能 chdir；显式传入业务实际 cwd，保持相对路径与普通 Agent 一致。

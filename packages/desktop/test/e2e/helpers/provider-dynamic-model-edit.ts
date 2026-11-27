@@ -1,4 +1,5 @@
-import { BUILTIN_MODEL_PROVIDER_IDS, TID_MODEL_PROVIDER_ADD_MODEL_BUTTON } from "@mcode/shared";
+import { BUILTIN_MODEL_PROVIDER_IDS } from "@mcode/shared";
+import { TID_MODEL_PROVIDER_ADD_MODEL_BUTTON } from "@mcode/shared/test-ids";
 import { ModelConfig } from "@mcode/provider";
 import { NodePersonalProviderConfigRepository } from "@mcode/provider-node";
 import { clickTestIdByDom, getE2EAppDataPaths } from "./desktop-app.js";

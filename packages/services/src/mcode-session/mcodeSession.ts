@@ -58,7 +58,6 @@ export interface McodeSessionResumeParams extends McodeTaskTarget {
 }
 
 export interface McodeSessionListParams extends McodeSessionWorkspaceTarget {
-  includeArchived?: boolean;
   limit?: number;
 }
 

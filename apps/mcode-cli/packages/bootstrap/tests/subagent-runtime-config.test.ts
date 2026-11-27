@@ -5,7 +5,7 @@ import { describe, expect, it, vi } from "vitest";
 import { createAgentStateId, type SubagentRuntimeConfig } from "@mcode/shared";
 import type { ModelRequest } from "@mcode/contracts";
 import { createNodeLoggerFactory } from "@mcode/adapters/logging";
-import { parseRuntimeSubagentConfig } from "../src/subagent-runtime-config.js";
+import { parseRuntimeSubagentConfig } from "../src/runtime-subagents/index.js";
 import * as subagents from "../src/subagents.js";
 import { createRegistryBackedTestApp } from "./helpers/registry-backed-test-app.js";
 

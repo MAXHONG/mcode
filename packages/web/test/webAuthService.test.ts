@@ -47,17 +47,17 @@ function createService(options?: {
   allowDevReturnToRedirect?: boolean;
 }) {
   const localStorage = new MemoryStorage();
-  const sessionStorage = new MemoryStorage();
   const assigned: string[] = [];
   const replaced: string[] = [];
   const config = {
     ...createProductionWebZaiOAuthConfig(),
     allowDevReturnToRedirect: options?.allowDevReturnToRedirect ?? false,
   };
+  const repo = new BrowserOAuthCredentialRepo({ localStorage });
   const service = new WebAuthService({
     config,
     provider: new ZaiWebOAuthProvider(config, () => 1_000),
-    repo: new BrowserOAuthCredentialRepo({ localStorage, sessionStorage }),
+    repo,
     runtime: {
       assign: (url) => assigned.push(url),
       createNonce: () => "nonce-1",
@@ -69,7 +69,7 @@ function createService(options?: {
     },
   });
 
-  return { assigned, localStorage, replaced, service, sessionStorage };
+  return { assigned, localStorage, repo, replaced, service };
 }
 
 describe("WebAuthService", () => {
@@ -85,12 +85,11 @@ describe("WebAuthService", () => {
       VITE_ZAI_OAUTH_ORIGIN: "https://chat.z.ai/",
     });
     const localStorage = new MemoryStorage();
-    const sessionStorage = new MemoryStorage();
     const assigned: string[] = [];
     const service = new WebAuthService({
       config: testConfig,
       provider: new ZaiWebOAuthProvider(testConfig, () => 1_000),
-      repo: new BrowserOAuthCredentialRepo({ localStorage, sessionStorage }),
+      repo: new BrowserOAuthCredentialRepo({ localStorage }),
       runtime: {
         assign: (url) => assigned.push(url),
         createNonce: () => "nonce-1",
@@ -106,14 +105,12 @@ describe("WebAuthService", () => {
     expect(authorizeUrl.origin + authorizeUrl.pathname).toBe(
       "https://chat.z.ai/api/oauth/authorize",
     );
-    expect(authorizeUrl.searchParams.get("redirect_uri")).toBe(
-      "https://zcode.z.ai/web-remote/callback",
-    );
+    expect(authorizeUrl.searchParams.get("redirect_uri")).toBe("https://zcode.z.ai/remote/v4");
     expect(authorizeUrl.searchParams.get("client_id")).toBe("client_P8X5CMWmlaRO9gyO-KSqtg");
   });
 
   it("starts ZAI login with nonce, dev return_to, and original app_return_to", () => {
-    const { assigned, service, sessionStorage } = createService();
+    const { assigned, localStorage, service } = createService();
 
     service.startLogin({
       devReturnTo: "http://192.168.1.8:5173/web-remote/callback",
@@ -121,13 +118,17 @@ describe("WebAuthService", () => {
 
     const authorizeUrl = new URL(assigned[0]!);
     const state = parseOAuthState(authorizeUrl.searchParams.get("state")!);
-    expect(sessionStorage.getItem("oauth_pending_nonce")).toBe("nonce-1");
+    expect(JSON.parse(localStorage.getItem("oauth_pending_logins") ?? "[]")).toEqual([
+      {
+        nonce: "nonce-1",
+        provider: "zai",
+        redirectUri: "https://zcode.z.ai/remote/v4",
+      },
+    ]);
     expect(authorizeUrl.origin + authorizeUrl.pathname).toBe(
       "https://chat.z.ai/api/oauth/authorize",
     );
-    expect(authorizeUrl.searchParams.get("redirect_uri")).toBe(
-      "https://zcode.z.ai/web-remote/callback",
-    );
+    expect(authorizeUrl.searchParams.get("redirect_uri")).toBe("https://zcode.z.ai/remote/v4");
     expect(state).toEqual({
       nonce: "nonce-1",
       return_to: "http://192.168.1.8:5173/web-remote/callback",
@@ -164,36 +165,38 @@ describe("WebAuthService", () => {
     const { replaced, service } = createService({
       allowDevReturnToRedirect: true,
       currentOrigin: "https://zcode.z.ai",
-      currentHref: "https://zcode.z.ai/web-remote/callback",
+      currentHref: "https://zcode.z.ai/remote/v4",
     });
     const state = buildOAuthState({
       nonce: "nonce-1",
-      return_to: "http://192.168.1.8:5173/web-remote/callback",
-      app_return_to: "http://192.168.1.8:5173/web-remote?remoteControlToken=token",
+      return_to: "http://192.168.1.8:5173/remote/v4",
+      app_return_to: "http://192.168.1.8:5173/remote/v4?sid=dev-1",
     });
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);
 
     const result = await service.handleCallback(
-      `https://zcode.z.ai/web-remote/callback?code=code-1&state=${state}`,
+      `https://zcode.z.ai/remote/v4?code=code-1&state=${state}`,
     );
 
     expect(result).toBeNull();
     expect(fetchMock).not.toHaveBeenCalled();
     const redirectUrl = new URL(replaced[0]!);
-    expect(redirectUrl.origin + redirectUrl.pathname).toBe(
-      "http://192.168.1.8:5173/web-remote/callback",
-    );
+    expect(redirectUrl.origin + redirectUrl.pathname).toBe("http://192.168.1.8:5173/remote/v4");
     expect(redirectUrl.searchParams.get("code")).toBe("code-1");
     expect(redirectUrl.searchParams.get("state")).toBe(state);
   });
 
   it("exchanges token, persists complete session, and returns sanitized app_return_to", async () => {
-    const { localStorage, service, sessionStorage } = createService();
-    sessionStorage.setItem("oauth_pending_nonce", "nonce-1");
+    const { localStorage, repo, service } = createService();
+    repo.savePendingLogin({
+      nonce: "nonce-1",
+      provider: "zai",
+      redirectUri: "https://zcode.z.ai/remote/v4",
+    });
     const state = buildOAuthState({
       nonce: "nonce-1",
-      app_return_to: "http://192.168.1.8:5173/web-remote?remoteControlToken=token&ignored=1",
+      app_return_to: "http://192.168.1.8:5173/remote/v4?sid=dev-1&ignored=1",
     });
     vi.stubGlobal(
       "fetch",
@@ -212,11 +215,11 @@ describe("WebAuthService", () => {
     );
 
     const result = await service.handleCallback(
-      `http://192.168.1.8:5173/web-remote/callback?code=code-1&state=${state}`,
+      `http://192.168.1.8:5173/remote/v4?code=code-1&state=${state}`,
     );
 
     expect(result).toEqual({
-      appReturnTo: "/web-remote?remoteControlToken=token",
+      appReturnTo: "/remote/v4?sid=dev-1",
       userInfo: {
         id: "u_1",
         username: "Ada",
@@ -226,12 +229,16 @@ describe("WebAuthService", () => {
     expect(localStorage.getItem("zcodejwttoken")).toBe("jwt-token");
     expect(localStorage.getItem("oauth:zai:access_token")).toBe("zai-token");
     expect(localStorage.getItem("oauth:active_provider")).toBe("zai");
-    expect(sessionStorage.getItem("oauth_pending_nonce")).toBeNull();
+    expect(localStorage.getItem("oauth_pending_logins")).toBeNull();
   });
 
   it("does not persist a half-login state when token response is incomplete", async () => {
-    const { localStorage, service, sessionStorage } = createService();
-    sessionStorage.setItem("oauth_pending_nonce", "nonce-1");
+    const { localStorage, repo, service } = createService();
+    repo.savePendingLogin({
+      nonce: "nonce-1",
+      provider: "zai",
+      redirectUri: "https://zcode.z.ai/remote/v4",
+    });
     const state = buildOAuthState({ nonce: "nonce-1" });
     vi.stubGlobal(
       "fetch",
@@ -273,7 +280,7 @@ describe("WebAuthService BigModel provider", () => {
   });
 
   it("授权 URL 用 BigModel 的参数名（redirect/appId），不是 ZAI 的那套", () => {
-    const { assigned, service, sessionStorage } = createService();
+    const { assigned, localStorage, service } = createService();
 
     service.startLogin({
       provider: "bigmodel",
@@ -289,13 +296,22 @@ describe("WebAuthService BigModel provider", () => {
     expect(url.searchParams.get("client_id")).toBeNull();
     expect(url.searchParams.get("response_type")).toBeNull();
     // 回调页要靠它知道用哪个 provider 换 token
-    expect(sessionStorage.getItem("oauth_pending_provider")).toBe("bigmodel");
+    expect(JSON.parse(localStorage.getItem("oauth_pending_logins") ?? "[]")).toEqual([
+      {
+        nonce: "nonce-1",
+        provider: "bigmodel",
+        redirectUri: "https://zcode.z.ai/cn/share/callback",
+      },
+    ]);
   });
 
   it("换 token 时带 provider，并从 data.bigmodel.access_token 取值", async () => {
-    const { localStorage, service, sessionStorage } = createService();
-    sessionStorage.setItem("oauth_pending_nonce", "nonce-1");
-    sessionStorage.setItem("oauth_pending_provider", "bigmodel");
+    const { localStorage, repo, service } = createService();
+    repo.savePendingLogin({
+      nonce: "nonce-1",
+      provider: "bigmodel",
+      redirectUri: "https://zcode.z.ai/cn/share/callback",
+    });
     const state = buildOAuthState({ nonce: "nonce-1" });
     const fetchMock = vi.fn(async () => ({
       ok: true,
@@ -319,13 +335,17 @@ describe("WebAuthService BigModel provider", () => {
     expect(localStorage.getItem("oauth:active_provider")).toBe("bigmodel");
     expect(localStorage.getItem("oauth:bigmodel:access_token")).toBe("bigmodel-token");
     expect(localStorage.getItem("zcodejwttoken")).toBe("jwt-token");
-    // pending provider 用完即清，避免污染下一次登录
-    expect(sessionStorage.getItem("oauth_pending_provider")).toBeNull();
+    // pending login 用完即清，避免污染下一次登录
+    expect(localStorage.getItem("oauth_pending_logins")).toBeNull();
   });
 
   it("缺少 pending provider 时按 zai 兜底，保持旧回调链接可用", async () => {
-    const { localStorage, service, sessionStorage } = createService();
-    sessionStorage.setItem("oauth_pending_nonce", "nonce-1");
+    const { localStorage, repo, service } = createService();
+    repo.savePendingLogin({
+      nonce: "nonce-1",
+      provider: "zai",
+      redirectUri: "https://zcode.z.ai/cn/share/callback",
+    });
     const state = buildOAuthState({ nonce: "nonce-1" });
     const fetchMock = vi.fn(async () => ({
       ok: true,
@@ -347,9 +367,12 @@ describe("WebAuthService BigModel provider", () => {
   });
 
   it("BigModel 响应缺 access_token 时不落半个登录态", async () => {
-    const { localStorage, service, sessionStorage } = createService();
-    sessionStorage.setItem("oauth_pending_nonce", "nonce-1");
-    sessionStorage.setItem("oauth_pending_provider", "bigmodel");
+    const { localStorage, repo, service } = createService();
+    repo.savePendingLogin({
+      nonce: "nonce-1",
+      provider: "bigmodel",
+      redirectUri: "https://zcode.z.ai/cn/share/callback",
+    });
     const state = buildOAuthState({ nonce: "nonce-1" });
     vi.stubGlobal(
       "fetch",

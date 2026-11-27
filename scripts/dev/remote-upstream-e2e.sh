@@ -8,7 +8,7 @@ WORK="${REMOTE_E2E_WORK:-$ROOT/.local-logs/remote-e2e}"
 BASE="https://cdn-zcode.z.ai/zcode/electron/releases"
 mkdir -p "$WORK/dl"
 curl -fsSL "$BASE/$VER/manifest-linux-x64.json" -o "$WORK/dl/manifest.json"
-FAKE="$WORK/home"; S="$FAKE/.zcode/server"
+FAKE="$WORK/home"; S="$FAKE/.mcode/server"
 rm -rf "$FAKE"; mkdir -p "$S/agents/glm" "$FAKE/ws"
 node -e '
 const m=require(process.argv[1]);
@@ -25,7 +25,7 @@ for (const c of m.components) console.log([c.id,c.artifactPath,c.sha256,c.mount]
 done
 ( cd "$ROOT/packages/server" && npx tsx -e '
 import { buildRemoteAgentBundleWrapper } from "./src/remote/mcodeAgentBundleWrapper.ts";
-process.stdout.write(buildRemoteAgentBundleWrapper("glm"));' ) > "$S/agents/glm/zcode-agent"
-chmod +x "$S/agents/glm/zcode-agent" "$S/node"
+process.stdout.write(buildRemoteAgentBundleWrapper("glm"));' ) > "$S/agents/glm/mcode-agent"
+chmod +x "$S/agents/glm/mcode-agent" "$S/node"
 cd "$ROOT/packages/server"
 UPSTREAM_FAKE_HOME="$FAKE" npx tsx test-e2e-local/upstreamRemote.e2e.ts

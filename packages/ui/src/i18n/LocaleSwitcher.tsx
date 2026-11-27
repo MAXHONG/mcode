@@ -1,6 +1,6 @@
 import { useCallback } from "react";
 import type { Locale } from "@mcode/shared";
-import { TID_LOCALE_TOGGLE } from "@mcode/shared";
+import { TID_LOCALE_TOGGLE } from "@mcode/shared/test-ids";
 import { useMcodeIntl } from "./IntlProvider.js";
 
 const LOCALE_CYCLE: Locale[] = ["zh-CN", "en-US"];

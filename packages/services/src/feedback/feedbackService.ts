@@ -1,3 +1,4 @@
+import { MCODE_FEEDBACK_ENABLED } from "@mcode/shared";
 import { basename, join } from "node:path";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 
@@ -67,6 +68,8 @@ export const MCODE_FEEDBACK_DISABLED_MESSAGE =
   "Mcode 不会把反馈或日志上传到第三方服务器。请在 https://github.com/MAXHONG/mcode/issues 提交问题，日志可通过「帮助 → 导出日志」保存到本地后自行附上。";
 
 export function isRemoteFeedbackEnabled(explicit?: string): boolean {
+  // Mcode：反馈整体关闭后，连自建 MCODE_FEEDBACK_API_BASE 也不再启用，保证服务层不会发出任何反馈上传请求。
+  if (!MCODE_FEEDBACK_ENABLED) return false;
   return Boolean(explicit?.trim() || process.env.MCODE_FEEDBACK_API_BASE?.trim());
 }
 

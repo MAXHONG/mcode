@@ -242,3 +242,22 @@ describe("createProtocolOffPeakPort", () => {
     );
   });
 });
+
+it.each([false, true])("闲时任务列表按协商能力携带自身工作区：%s", async (enabled) => {
+  const workspace = { workspaceKey: "/tasks/b", workspacePath: "/tasks/b" };
+  const requestClient = vi.fn(async () => ({ tasks: [] }));
+  const port = createProtocolOffPeakPort(
+    {
+      requestClient,
+      sessionWorkspaceRoutingEnabled: enabled,
+    } as unknown as McodeProtocolAgentServerContext,
+    () =>
+      ({ workspace }) as import("../src/mcode-protocol/server-types.js").McodeProtocolSessionRecord,
+  );
+  await port.list({ sessionId: "session-b" });
+  expect(requestClient).toHaveBeenCalledWith(
+    mcodeProtocolMethods.offPeakList,
+    enabled ? { workspace } : {},
+    expect.anything(),
+  );
+});

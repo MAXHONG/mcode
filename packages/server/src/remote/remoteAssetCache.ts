@@ -1645,7 +1645,11 @@ async function writeResponseBodyToFile(
     },
   });
 
-  await pipeline(Readable.fromWeb(response.body as globalThis.ReadableStream), byteMeter, output);
+  await pipeline(
+    Readable.fromWeb(response.body as unknown as import("node:stream/web").ReadableStream),
+    byteMeter,
+    output,
+  );
   reportProgress(transferredBytes, true);
 }
 
@@ -1836,7 +1840,7 @@ async function isValidReleaseDir(releaseDir: string, platformArch: string): Prom
     return false;
   }
 
-  if (!(await fileExists(releaseDir, "server", "zcode-server.cjs"))) {
+  if (!(await fileExists(releaseDir, "server", "mcode-server.cjs"))) {
     return false;
   }
 

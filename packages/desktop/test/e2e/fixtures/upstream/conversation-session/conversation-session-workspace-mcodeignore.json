@@ -1,0 +1,6 @@
+{
+  "version": 1,
+  "caseName": "conversation-session-workspace-mcodeignore",
+  "spec": "./test/e2e/conversation-session/conversation-session-workspace-mcodeignore.test.ts",
+  "fixtures": []
+}

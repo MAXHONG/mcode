@@ -59,6 +59,43 @@ jobs:
       - name: Typecheck
         run: pnpm typecheck
 
+  # Mcode 方案 B：验证远程开发组件可以自建（四个平台的 mcode-server 包 + descriptor）。
+  remote-assets:
+    name: Remote-dev server bundles
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+    env:
+      MCODE_ENV: production
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.2
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24.14.0
+          cache: pnpm
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Stage remote server bundles
+        run: pnpm prepare:remote-assets
+      - name: Show descriptor
+        shell: bash
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          cat "packages/desktop/mock-cdn/releases/$VERSION/source-server-release.json"
+          ls -la "packages/desktop/mock-cdn/releases/$VERSION"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mcode-remote-server-${{ github.sha }}
+          path: packages/desktop/mock-cdn/releases/*/
+          retention-days: 7
+
   unit-tests:
     name: Unit tests
     runs-on: ubuntu-22.04
@@ -79,8 +116,10 @@ jobs:
           python-version: "3.12"
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Unit tests
-        run: pnpm run test:unit
+      # 上游 3.17 退役了 App 单测执行链（test:unit），只保留显式清单的工程测试；
+      # Mcode 自有功能的测试已加入 scripts/engineering-test-files.json。
+      - name: Engineering tests
+        run: pnpm run test:engineering
 
   plan:
     name: Plan test builds

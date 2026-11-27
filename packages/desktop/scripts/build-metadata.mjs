@@ -85,6 +85,9 @@ export function collectBuildMetadata() {
 
   return {
     appVersion: normalizeVersion(rootPackageJson.version),
+    minCompatibleVersion: normalizeVersion(
+      rootPackageJson.mcodeCompatibility?.minCompatibleVersion ?? rootPackageJson.version,
+    ),
     // 远程开发锁定的上游 ZCode 组件版本（z.ai CDN 只按上游版本发布 manifest）。
     upstreamVersion: normalizeVersion(
       rootPackageJson.mcodeUpstreamVersion ?? rootPackageJson.version,
@@ -104,7 +107,14 @@ export function readBuildMetadata() {
   }
 
   try {
-    return readJson(metadataPath);
+    const metadata = readJson(metadataPath);
+    return {
+      ...metadata,
+      minCompatibleVersion:
+        typeof metadata.minCompatibleVersion === "string" && metadata.minCompatibleVersion.length > 0
+          ? normalizeVersion(metadata.minCompatibleVersion)
+          : normalizeVersion(metadata.appVersion),
+    };
   } catch {
     return null;
   }

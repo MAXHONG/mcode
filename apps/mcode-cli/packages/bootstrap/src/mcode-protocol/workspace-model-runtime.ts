@@ -15,6 +15,8 @@ import {
 } from "./server-types.js";
 import { runSessionModelConfigMutation } from "../mcode-protocol-v4/model-config-mutation.js";
 import { createProviderRuntimeHeadersPort } from "./provider-runtime-headers.js";
+import { offPeakLifecycleNotificationSchema } from "@mcode/shared";
+import { V4_NOTIFICATIONS } from "@mcode/shared/mcode-protocol-v4";
 
 export async function readWorkspacePresentation(
   context: McodeProtocolAgentServerContext,
@@ -75,6 +77,11 @@ export async function createWorkspaceMcodeApp(
     options.providerRuntimeHeadersPort ?? createProviderRuntimeHeadersPort(context, workspace);
   return context.deps.createMcodeApp({
     ...options,
+    onOffPeakLifecycleEvent: (event) =>
+      context.notify({
+        method: V4_NOTIFICATIONS.offPeakLifecycle,
+        params: offPeakLifecycleNotificationSchema.parse(event),
+      }),
     includeVisualize: true,
     platform: context.deps.platform,
     providerRuntimeHeadersPort,

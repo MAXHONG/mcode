@@ -1,7 +1,8 @@
+import { migrateApplicationStorage, createSettingService } from "@mcode/services/node";
 import { disposeServiceResourcesAndWait, getAppConfigDir } from "@mcode/services/node";
 import type { IChannel } from "@mcode/rpc";
 import {
-  MCODE_REMOTE_UPSTREAM_VERSION,
+  MCODE_VERSION,
   TOPIC_RESOURCE_RELAY_CHANNEL,
   SERVICE_AUTHORITY_MODE_ENV,
   formatLogPrefix,
@@ -34,15 +35,15 @@ console.debug = stderrConsoleLog;
 
 // --version flag: print version and exit (used by deploy version check)
 if (process.argv.includes("--version")) {
-  process.stdout.write(MCODE_REMOTE_UPSTREAM_VERSION + "\n");
+  process.stdout.write(MCODE_VERSION + "\n");
   process.exit(0);
 }
 
 async function main() {
   // Phase 1: Send hello message
   const hello: HelloMessage = {
-    type: "zcode-hello",
-    version: MCODE_REMOTE_UPSTREAM_VERSION,
+    type: "mcode-hello",
+    version: MCODE_VERSION,
     platform: process.platform,
     arch: process.arch,
     pid: process.pid,
@@ -64,6 +65,7 @@ async function main() {
     environmentConfigRoot: getAppConfigDir(),
     content: readBundledMcodeBuiltinProviderConfig(),
   });
+  await migrateApplicationStorage(await createSettingService().get());
   const { authorityModeParseResult, services } = createStdioServices({
     env: process.env,
     zcodeBuiltinProviderConfigFilePath,

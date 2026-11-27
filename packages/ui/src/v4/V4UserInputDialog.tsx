@@ -4,7 +4,7 @@ import {
   TID_V4_USER_INPUT_OPTION,
   TID_V4_USER_INPUT_TEXT,
   testId,
-} from "@mcode/shared";
+} from "@mcode/shared/test-ids";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import type { V4UserInputViewModel } from "@/v4/pendingInteractionAdapter.js";

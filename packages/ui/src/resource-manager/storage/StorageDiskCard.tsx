@@ -1,10 +1,10 @@
 import { HardDrive } from "lucide-react";
+import { type StorageVolumeGroup } from "@mcode/shared";
 import {
-  type StorageVolumeGroup,
   TID_RESOURCE_MANAGER_STORAGE_DISK_CARD,
   TID_RESOURCE_MANAGER_STORAGE_ROOT,
   testId,
-} from "@mcode/shared";
+} from "@mcode/shared/test-ids";
 import { cn } from "@/components/lib/utils.js";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";
 import { formatBytes } from "@/resource-manager/resourceUsageView.js";

@@ -1,3 +1,4 @@
+import { MCODE_CONVERSATION_SHARE_ENABLED } from "@mcode/shared";
 import { WorkspaceEditorButtonGroup } from "@/WorkspaceEditorButtonGroup.js";
 import { WorkspaceSidePaneToggleButton } from "@/WorkspaceSidePaneToggleButton.js";
 import { WorkspaceTerminalToggleButton } from "@/WorkspaceTerminalToggleButton.js";
@@ -49,7 +50,9 @@ export function WorkspaceHeaderActionSection({
         />
       ) : null}
       {/* 分享发布接口依赖登录态；未登录时隐藏入口，避免用户打开后只能得到鉴权失败。 */}
-      {activeTaskId &&
+      {/* Mcode 隐私加固：会话分享会把对话内容和工作区文件上传到 z.ai 生成公开链接，默认关闭入口。 */}
+      {MCODE_CONVERSATION_SHARE_ENABLED &&
+      activeTaskId &&
       user &&
       isDesktop !== false &&
       !isWebRemoteControl &&

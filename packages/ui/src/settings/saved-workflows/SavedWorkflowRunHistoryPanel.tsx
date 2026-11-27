@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Ban, ChevronRight, CircleCheck, Loader2, TriangleAlert } from "lucide-react";
-import { TID_WORKFLOW_RUN_ROW, testId, type McodeSavedWorkflowRun } from "@mcode/shared";
+import { TID_WORKFLOW_RUN_ROW, type McodeSavedWorkflowRun } from "@mcode/shared";
+import { testId } from "@mcode/shared/test-ids";
 import { Button } from "@/components/ui/button.js";
 import { cn } from "@/components/lib/utils.js";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";

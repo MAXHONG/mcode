@@ -39,13 +39,18 @@ export function extractPrebuiltArchive({ archivePath, archiveExt, extractDir, cw
   mkdirSync(extractDir, { recursive: true });
   if (archiveExt === "zip") {
     if (process.platform === "win32") {
+      // Bugfix: Windows PowerShell 5.1 在 PSModulePath 含 PowerShell 7 模块时会加载新版
+      // Microsoft.PowerShell.Archive，调用 .NET Framework 不存在的 3 参数 ExtractToDirectory。
+      // extractDir 为新建空临时目录，直接调用全版本 .NET 通用的 2 参数 ZipFile.ExtractToDirectory。
+      const escapedArchive = archivePath.replaceAll("'", "''");
+      const escapedExtractDir = extractDir.replaceAll("'", "''");
       runCommand("powershell.exe", [
         "-NoProfile",
         "-NonInteractive",
         "-ExecutionPolicy",
         "Bypass",
         "-Command",
-        `Expand-Archive -LiteralPath '${archivePath.replaceAll("'", "''")}' -DestinationPath '${extractDir.replaceAll("'", "''")}' -Force`,
+        `Add-Type -AssemblyName System.IO.Compression.FileSystem; [System.IO.Compression.ZipFile]::ExtractToDirectory('${escapedArchive}', '${escapedExtractDir}')`,
       ]);
       return;
     }

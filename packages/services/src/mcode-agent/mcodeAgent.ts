@@ -1,9 +1,11 @@
+import type { PluginUiToolResultNotification } from "@mcode/shared/mcp-apps";
 import type {
   BackgroundBashOutputResult,
   SessionDebugSnapshot,
   McodeSessionContentProfile,
 } from "@mcode/shared";
 /* eslint-disable max-lines -- Mcode agent service 接口集中声明 protocol/session/workspace 方法，拆分会增加 service descriptor 迁移成本。 */
+import type { RemoteConversationTelemetryEvent } from "@mcode/shared/conversation-telemetry";
 import type { Event, IDisposable } from "@mcode/rpc";
 import { ServiceChannels } from "@mcode/shared";
 import type { AppUsageRange, AppUsageSnapshot, McodeTaskTokenUsageResult } from "@mcode/shared";
@@ -28,6 +30,8 @@ import type {
   McodeToolExecResource,
   McodeProcessChildProcess,
   McodeMcpListResult,
+  WorkspaceMcpTrustDecision,
+  McodeWorkspaceMcpTrustResult,
   McodePluginsListResult,
   McodePluginsOverviewResult,
   McodePluginsMarketplaceMutationResult,
@@ -61,6 +65,7 @@ import type {
   McodePluginsCancelOperationResult,
   McodePluginOperationProgressNotification,
   McodeProviderRuntimeHeadersRequestParams,
+  RequestVerificationConfig,
   McodeProviderRuntimeHeadersCancelled,
   McodeProviderTestModelConnectivityParams,
   McodeProviderTestModelConnectivityResult,
@@ -96,6 +101,7 @@ import type {
   ConversationRowTarget,
   HelloMessage,
   SessionsIndexTopicWireCandidate,
+  SessionsIndexReconcileResult,
   V4AttachmentBeginResult,
   V4AttachmentChunkResult,
   V4AttachmentCommitResult,
@@ -106,6 +112,7 @@ import type {
   V4ConnectionFlowState,
   V4ConversationFileChangesResult,
   V4ConversationFileRewindPreviewResult,
+  V4ConversationInputPredictionResult,
   V4ConversationPlansResult,
   V4ConversationWorkflowRunEventsResult,
   V4ConversationWorkflowRunArtifactDataResult,
@@ -120,6 +127,11 @@ import type {
   V4SessionsIndexSubscribeResult,
   V4WorkspaceConfigSubscribeResult,
   WorkspaceConfigTopicWireCandidate,
+} from "@mcode/shared/mcode-protocol-v4";
+import type {
+  V4SessionDataMeasureResult,
+  V4SessionDataParams,
+  V4SessionDataPurgeResult,
 } from "@mcode/shared/mcode-protocol-v4";
 import { createServiceDescriptor } from "../descriptors.js";
 
@@ -177,6 +189,7 @@ export interface McodeAgentSessionTarget extends McodeAgentWorkspaceTarget {
 }
 
 export interface McodeAgentResumeSessionParams extends McodeAgentSessionTarget {
+  additionalDirectories?: string[];
   model?: ModelSelection;
   thoughtLevel?: string;
   mcpServers?: McodeAgentMcpServer[];
@@ -221,6 +234,8 @@ export type McodeAgentCuaPermissionObservation = CuaPermissionObservation &
   McodeAgentWorkspaceTarget;
 
 export interface McodeAgentCreateSessionParams extends McodeAgentWorkspaceTarget {
+  projectId?: string | null;
+  additionalDirectories?: string[];
   sessionId?: string;
   sessionTraceId?: TraceId;
   parentSessionId?: string;
@@ -239,7 +254,6 @@ export interface McodeAgentCreateSessionParams extends McodeAgentWorkspaceTarget
 export interface McodeAgentListSessionsParams extends McodeAgentWorkspaceTarget {
   sessionIds?: string[];
   runtimePolicy?: McodeAgentRuntimePolicy;
-  includeArchived?: boolean;
   limit?: number;
 }
 
@@ -394,6 +408,7 @@ export interface McodeAgentSessionSubscribeParams extends McodeAgentSessionTarge
 // v4/conversation/frame 通知按 workspace fan-out 给 renderer。
 
 export interface McodeAgentConversationSubscribeParams extends McodeAgentSessionTarget {
+  retryInitialization?: string;
   /** 水位不变量：仅当客户端真持有该时刻一致状态才允许带。 */
   base?: { logEpoch: string; seq: number };
   visibility?: "foreground" | "background";
@@ -417,10 +432,25 @@ export interface McodeAgentConversationRowsRangeParams extends McodeAgentSession
   beforeRowId?: number;
   /** 1..rowsRangeMaxLimit（200）。 */
   limit: number;
+  /**
+   * 手机预加载：只读热会话。工作区 CLI 未运行、执行端不支持、会话不在内存都报
+   * proto.sessionNotResident，不拉起进程、不冷恢复。
+   */
+  residency?: "resident-only";
 }
 
 /** 当前有效分支里的终态 ExitPlanMode 目录。 */
 export type McodeAgentConversationPlansParams = McodeAgentSessionTarget;
+
+/** 手机远控输入预测（ghost hint）；线格式见 docs/web-remote-control/mobile-input-prediction.md。 */
+export interface McodeAgentConversationInputPredictionParams extends McodeAgentSessionTarget {
+  /** 手机当前看到的会话 revision；参与 CLI 侧缓存键，回包据此丢弃过期结果。 */
+  revision: number;
+  /** 当前草稿；缺省/空 = 预测下一条输入，非空 = 续写草稿。 */
+  draft?: string;
+  /** 手机侧请求 id，原样回声，用于丢弃过期回包。 */
+  requestId?: string;
+}
 
 /** workflow run 的事件日志分页（详情页审计面）；cursor = journal sequence。 */
 export interface McodeAgentConversationWorkflowRunEventsParams extends McodeAgentSessionTarget {
@@ -491,6 +521,8 @@ export interface McodeAgentConversationFileRewindPreviewParams extends McodeAgen
 }
 
 export interface McodeAgentConversationCommandParams extends McodeAgentWorkspaceTarget {
+  /** 仅 Host 消费；显式 NULL 表示全局任务，不向 CLI 发送项目概念。 */
+  projectId?: string | null;
   envelope: CommandEnvelope;
   /** 仅 host 内部用于 Browser Use runtime 边界，不进入 v4 wire envelope。 */
   clientMode?: McodeTaskClientMode;
@@ -579,6 +611,11 @@ export interface McodeAgentWorkspaceConfigSubscribeParams extends McodeAgentWork
   runtimePolicy?: McodeAgentRuntimePolicy;
 }
 
+/** Host 为 App 应答方绑定的本次配置；不扩展 Agent wire 协议。 */
+export type McodeAgentProviderRuntimeHeadersRequest = McodeProviderRuntimeHeadersRequestParams & {
+  requestVerificationConfig?: RequestVerificationConfig;
+};
+
 export type McodeAgentServiceEvent =
   | { type: "session.event"; event: McodeSessionEvent }
   | { type: "state.updated"; notification: McodeStateUpdatedNotification }
@@ -589,7 +626,7 @@ export type McodeAgentServiceEvent =
       requestId: string;
       response: McodeUserInputResponse;
     }
-  | { type: "providerRuntimeHeaders.request"; request: McodeProviderRuntimeHeadersRequestParams }
+  | { type: "providerRuntimeHeaders.request"; request: McodeAgentProviderRuntimeHeadersRequest }
   | { type: "snapshot"; snapshot: McodeSessionStateSnapshot };
 
 export interface McodeAgentAppRuntimePreferences {
@@ -640,6 +677,15 @@ export interface IMcodeAgentService {
     params: McodeAgentListSessionSubagentsParams,
   ): Promise<McodeSessionSubagentsResult>;
   getAppUsageStats(params: McodeAgentAppUsageParams): Promise<AppUsageSnapshot>;
+  /** 项目数据删除前的测量：只读，用本机已有 runtime 或管理面进程，不为某个项目拉起 Agent。 */
+  measureSessionData?(params: V4SessionDataParams): Promise<V4SessionDataMeasureResult>;
+  /**
+   * 彻底删除会话与目录记忆。workspace 已有 Agent 进程时交给它（它持有会话运行态，能判断运行中
+   * 并释放已加载会话）；否则交给管理面进程。只用于本机。
+   */
+  purgeSessionData?(
+    params: V4SessionDataParams & { workspace: McodeAgentWorkspaceTarget },
+  ): Promise<V4SessionDataPurgeResult>;
   getTaskTokenUsage(params: McodeAgentTaskTokenUsageParams): Promise<McodeTaskTokenUsageResult>;
   readSession(params: McodeAgentReadSessionParams): Promise<McodeSessionStateSnapshot>;
   readSessionMessages(
@@ -654,6 +700,7 @@ export interface IMcodeAgentService {
   grantWorkspaceHookTrust(
     params: McodeAgentGrantWorkspaceHookTrustParams,
   ): Promise<McodeWorkspaceHookTrustGrantResult>;
+  setWorkspaceMcpTrust(params: WorkspaceMcpTrustDecision): Promise<McodeWorkspaceMcpTrustResult>;
   listMcpServerStatuses(params: McodeAgentListMcpServerStatusesParams): Promise<McodeMcpListResult>;
   listPlugins(params: McodeAgentPluginViewParams): Promise<McodePluginsListResult>;
   /**
@@ -834,7 +881,7 @@ export interface IMcodeAgentService {
    */
   onDynamicProviderRuntimeHeadersRequest(
     params: McodeAgentSessionTarget,
-  ): Event<McodeProviderRuntimeHeadersRequestParams>;
+  ): Event<McodeAgentProviderRuntimeHeadersRequest>;
   /**
    * Start Plan runtime headers 的 workspace 级订阅入口（生产应答方使用）。
    * Bug 原因（2026-08-16 web 远控卡死）：session 级入口只随桌面 pane 挂载订阅，
@@ -844,7 +891,7 @@ export interface IMcodeAgentService {
    */
   onDynamicWorkspaceProviderRuntimeHeadersRequest(
     params: McodeAgentWorkspaceTarget,
-  ): Event<McodeProviderRuntimeHeadersRequestParams>;
+  ): Event<McodeAgentProviderRuntimeHeadersRequest>;
   /** 只投递本 workspace 的校验取消，不属于 conversation stream。 */
   onDynamicWorkspaceProviderRuntimeHeadersCancelled(
     params: McodeAgentWorkspaceTarget,
@@ -857,6 +904,9 @@ export interface IMcodeAgentService {
    */
   onDynamicProcessResourceSample(): Event<AgentLaneResourceSample>;
   /** MCP 进程生命周期与低频内存事件，仅供可信 Host relay 上报 ARMS。 */
+  /** 仅 trusted Host relay 订阅；手机统计不依赖 renderer 生命周期。 */
+  onDynamicRemoteConversationTelemetry(): Event<RemoteConversationTelemetryEvent>;
+
   onDynamicMcpTelemetry(): Event<McodeMcpTelemetryEvent>;
   /** MCP 进程树资源事实，只供可信 Host 汇总上报。 */
   onDynamicMcpResourceSamples(): Event<McodeMcpResourceSample[]>;
@@ -890,6 +940,10 @@ export interface IMcodeAgentService {
   conversationPlansV4(
     params: McodeAgentConversationPlansParams,
   ): Promise<V4ConversationPlansResult>;
+  /** 输入预测：只读、无状态；Host 开关关闭 / 无运行时 / 失败一律回空结果，不抛错。 */
+  conversationInputPredictionV4(
+    params: McodeAgentConversationInputPredictionParams,
+  ): Promise<V4ConversationInputPredictionResult>;
   /** workflow run 事件日志分页；与 plans 同族（只读、无状态、超时重发安全）。 */
   conversationWorkflowRunEventsV4(
     params: McodeAgentConversationWorkflowRunEventsParams,
@@ -947,6 +1001,16 @@ export interface IMcodeAgentService {
   conversationAttachmentStatV4(
     params: McodeAgentConversationAttachmentStatParams,
   ): Promise<V4ConversationAttachmentStatResult>;
+  getSessionLifecycle(
+    params: McodeAgentSessionTarget,
+  ): Promise<import("@mcode/shared").SessionLifecycleSnapshot | null>;
+  ensureSessionReady(params: McodeAgentSessionTarget): Promise<void>;
+  stopSessionRuntime(params: McodeAgentSessionTarget): Promise<void>;
+  restartSessionRuntime(params: McodeAgentSessionTarget): Promise<void>;
+  /** 独立于可被释放的 conversation publisher 的生命周期事实。 */
+  onDynamicSessionLifecycle(
+    params: McodeAgentWorkspaceTarget,
+  ): Event<import("@mcode/shared").SessionLifecycleSnapshot>;
   /** workspace 级下行帧流（v4/conversation/frame），renderer 侧按 topic 自行路由。 */
   onDynamicConversationFrame(
     params: McodeAgentWorkspaceTarget,
@@ -958,9 +1022,24 @@ export interface IMcodeAgentService {
   onDynamicConversationTelemetryFact(
     params: McodeAgentWorkspaceTarget,
   ): Event<ConversationTelemetryFact>;
+  /** Host 消费驻留 CLI 的闲时生命周期；不参与聊天快照恢复。 */
+  onDynamicOffPeakLifecycle(
+    params: McodeAgentWorkspaceTarget,
+  ): Event<import("@mcode/shared").OffPeakLifecycleNotification>;
+  controlOffPeakExecutionV4(
+    params: McodeAgentWorkspaceTarget & { control: import("@mcode/shared").OffPeakControlParams },
+  ): Promise<import("@mcode/shared").OffPeakControlResult>;
   /** 当前窗口全部本地 live task 的 CUA 权限观察；历史、远程与 replayable 不在此事件面。 */
   onDynamicCuaPermissionObservation(): Event<McodeAgentCuaPermissionObservation>;
-  // ── sessions-index 通道（列表活性）──
+  /** 本地桌面窗口创建插件页面，不依赖 conversation 订阅。 */
+  onDynamicPluginUiToolResult(): Event<
+    PluginUiToolResultNotification & { workspacePath: string; workspaceIdentity?: string }
+  >;
+  /** 只读 CLI 持久事实；不恢复会话运行实例。旧远端可以不提供此能力。 */
+  reconcileSessionsIndexV4?(
+    params: McodeAgentWorkspaceTarget & { sessionIds: string[] },
+  ): Promise<SessionsIndexReconcileResult>;
+  // ── M5 sessions-index 通道（列表活性）──
   subscribeSessionsIndexV4(
     params: McodeAgentSessionsIndexSubscribeParams,
   ): Promise<V4SessionsIndexSubscribeResult>;
@@ -999,7 +1078,9 @@ export interface IMcodeAgentService {
   ) => IDisposable;
   /** 当前 desktop-local CUA turn 是否仍在执行，用于 Helper recovery 避免中途回收 Agent。 */
   hasActiveCuaOperationTurn(): boolean;
-  disposeWorkspace(params: McodeAgentWorkspaceTarget): Promise<void>;
+  disposeWorkspace(
+    params: McodeAgentWorkspaceTarget & { releasePreparation?: boolean },
+  ): Promise<void>;
   disposeAll(): void;
 }
 

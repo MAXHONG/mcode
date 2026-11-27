@@ -2,13 +2,15 @@ import { readFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
-  TID_WORKSPACE_HELP_MENU_TRIGGER,
-  TID_TASK_SETTINGS_BUTTON,
-  TID_SETTINGS_PAGE,
   PlatformChannels,
   type UpdateStatePayload,
   type UpdateCheckResultPayload,
 } from "@mcode/shared";
+import {
+  TID_WORKSPACE_HELP_MENU_TRIGGER,
+  TID_TASK_SETTINGS_BUTTON,
+  TID_SETTINGS_PAGE,
+} from "@mcode/shared/test-ids";
 import {
   DEFAULT_WORKSPACE,
   clickTestIdByWebDriver,
@@ -188,6 +190,7 @@ describe(`问号菜单应用入口（${expectedFlavor}）`, () => {
       "Report an issue",
       "Request a feature",
       "Export logs",
+      "Copy device MID",
       "Resource manager",
       ...(production ? ["Check for updates"] : []),
       "About Mcode",
@@ -298,6 +301,7 @@ describe(`问号菜单应用入口（${expectedFlavor}）`, () => {
       "问题上报",
       "给产品提需求",
       "导出日志",
+      "复制设备 MID",
       "资源管理器",
       ...(production ? ["检查更新"] : []),
       "关于 Mcode",

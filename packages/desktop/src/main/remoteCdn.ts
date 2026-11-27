@@ -2,10 +2,14 @@ import { MCODE_VERSION, type McodeEnv } from "@mcode/shared";
 
 declare const __MCODE_REMOTE_CDN_RELEASE_ROOTS__: readonly string[] | undefined;
 
+// Mcode 方案 B：远程开发组件（mcode-server-<平台>.tar.gz + source-server-release.json）
+// 由 Mcode 发布流程自行构建并上传到官网 R2（releases/<版本>/），不再依赖 z.ai CDN。
+// z.ai CDN 只托管上游 ZCode 组件，目录/文件名（~/.zcode/server、zcode-server-*.tar.gz）
+// 与 Mcode 不同，继续使用会导致远程开发无法安装。国内外暂用同一官网入口。
+const MCODE_REMOTE_RELEASE_ROOT = "https://mcode.hjh.im/releases";
 const REMOTE_CDN_RELEASE_ROOTS = {
-  domestic: "https://cdn.codegeex.cn/zcode/electron/releases",
-  // 开发构建未注入 CDN_DOMAIN 时也须使用当前发布域名，避免仍请求旧域名。
-  overseas: "https://cdn-zcode.z.ai/zcode/electron/releases",
+  domestic: MCODE_REMOTE_RELEASE_ROOT,
+  overseas: MCODE_REMOTE_RELEASE_ROOT,
 } as const;
 const TEST_REMOTE_CDN_RELEASE_ROOT = "http://intranet.example.invalid:12345/ssh-remote-assets";
 
@@ -70,7 +74,7 @@ export function resolveRemoteCdnBaseUrls(options: ResolveRemoteCdnOptions = {}):
     );
   }
 
-  return orderedReleaseRoots.map((releaseRoot) => `${releaseRoot}/${version}`);
+  return Array.from(new Set(orderedReleaseRoots)).map((releaseRoot) => `${releaseRoot}/${version}`);
 }
 
 export function resolvePrimaryRemoteCdnBaseUrl(

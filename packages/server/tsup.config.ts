@@ -12,13 +12,22 @@ const { stageThirdPartyNotices } = await import(
 
 // tsup config 可能从不同 cwd 加载，基于配置文件自身目录解析仓库根 package.json。
 const rootPackageJsonPath = resolve(import.meta.dirname, "../../package.json");
-const { version, mcodeUpstreamVersion } = JSON.parse(readFileSync(rootPackageJsonPath, "utf-8"));
+const { version, mcodeCompatibility, mcodeUpstreamVersion } = JSON.parse(
+  readFileSync(rootPackageJsonPath, "utf-8"),
+) as {
+  version: string;
+  mcodeCompatibility?: { minCompatibleVersion?: string };
+  // Mcode：远程开发锁定的上游 ZCode 组件版本（z.ai CDN 只按上游版本发布 manifest）。
+  mcodeUpstreamVersion?: string;
+};
+const minCompatibleVersion = mcodeCompatibility?.minCompatibleVersion ?? version;
 
 const { environment: zcodeEnv, content: mcodeBuiltinProviderConfigJson } =
   await loadBuiltinProviderConfig();
 
 export const SERVER_HTTP_DEFINES = {
   __MCODE_VERSION__: JSON.stringify(version),
+  __MCODE_MIN_COMPATIBLE_VERSION__: JSON.stringify(minCompatibleVersion),
   __MCODE_UPSTREAM_VERSION__: JSON.stringify(mcodeUpstreamVersion ?? version),
   __MCODE_ENV__: JSON.stringify(zcodeEnv),
   __MCODE_BUILTIN_PROVIDER_CONFIG_JSON__: JSON.stringify(mcodeBuiltinProviderConfigJson),
@@ -62,6 +71,8 @@ export default defineConfig({
   outDir: "dist",
   format: "esm",
   platform: "node",
+  // node:sqlite 只有带前缀的内置入口；tsup 去掉 node: 会错误加载第三方 sqlite 包。
+  removeNodeProtocol: false,
   target: "node22",
   // workspace 包的 exports 指向 .ts 源码，node 运行时无法直接加载，需要 bundle 进来
   noExternal: [

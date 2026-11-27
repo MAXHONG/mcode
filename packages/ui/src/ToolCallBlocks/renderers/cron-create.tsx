@@ -1,5 +1,5 @@
 import { ClockIcon } from "lucide-react";
-import { TID_CRON_CREATE_CARD, TID_CRON_CREATE_OPEN } from "@mcode/shared";
+import { TID_CRON_CREATE_CARD, TID_CRON_CREATE_OPEN } from "@mcode/shared/test-ids";
 import type { McodeAutomationScheduleRule } from "@mcode/shared";
 import { Button } from "@/components/ui/button.js";
 import { cn } from "@/components/lib/utils.js";

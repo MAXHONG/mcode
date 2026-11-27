@@ -5,6 +5,7 @@ import {
   getDesktopMenuMessage,
   isValidShortcutBinding,
   MCODE_ENV,
+  MCODE_FEEDBACK_ENABLED,
   MCODE_PRODUCT_FLAVOR,
   type DesktopCommandId,
   type Locale,
@@ -342,10 +343,15 @@ function buildApplicationMenuTemplate(options: {
           click: () => void options.executeDesktopCommand(DesktopCommandIds.OpenResourceManager),
         },
         { type: "separator" as const },
-        {
-          label: getLabel(desktopMenuMessageIds.helpFeedback),
-          click: () => void options.executeDesktopCommand(DesktopCommandIds.OpenFeedback),
-        },
+        // Mcode：反馈功能关闭（不上传反馈/日志到任何服务器），原生菜单不再展示「问题反馈」。
+        ...(MCODE_FEEDBACK_ENABLED
+          ? [
+              {
+                label: getLabel(desktopMenuMessageIds.helpFeedback),
+                click: () => void options.executeDesktopCommand(DesktopCommandIds.OpenFeedback),
+              },
+            ]
+          : []),
         {
           label: getLabel(desktopMenuMessageIds.helpExportLogs),
           click: () => void options.executeDesktopCommand(DesktopCommandIds.ExportLogs),

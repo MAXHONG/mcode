@@ -1,4 +1,4 @@
-import { DesktopCommandIds } from "@mcode/shared";
+import { DesktopCommandIds, MCODE_FEEDBACK_ENABLED } from "@mcode/shared";
 import type { UpdateStatePayload } from "@mcode/shared";
 import { useCallback, useEffect, useState } from "react";
 import { useFeedbackStore } from "@/feedback/feedbackStore.js";
@@ -262,12 +262,16 @@ export function WindowsCaptionMenuButton({
           {intl.formatMessage({ id: "titleBar.menu.help.resourceManager" })}
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onSelect={helpMenuActions.openIssueReport}>
-          {intl.formatMessage({ id: "titleBar.menu.help.feedback" })}
-        </DropdownMenuItem>
-        <DropdownMenuItem onSelect={openFeatureRequest}>
-          {intl.formatMessage({ id: "workspaceHeader.help.productRequest" })}
-        </DropdownMenuItem>
+        {MCODE_FEEDBACK_ENABLED ? (
+          <>
+            <DropdownMenuItem onSelect={helpMenuActions.openIssueReport}>
+              {intl.formatMessage({ id: "titleBar.menu.help.feedback" })}
+            </DropdownMenuItem>
+            <DropdownMenuItem onSelect={openFeatureRequest}>
+              {intl.formatMessage({ id: "workspaceHeader.help.productRequest" })}
+            </DropdownMenuItem>
+          </>
+        ) : null}
         {showCommunityMenuItem ? (
           <DropdownMenuItem
             onSelect={() => handleExecuteDesktopCommand(DesktopCommandIds.OpenCommunity)}

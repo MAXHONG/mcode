@@ -12,7 +12,7 @@ import {
   TID_TASK_ITEM,
   TID_WORKSPACE_TITLE,
   testId,
-} from "@mcode/shared";
+} from "@mcode/shared/test-ids";
 import {
   clearAppData,
   clickTestIdByDom,

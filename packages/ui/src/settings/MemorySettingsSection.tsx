@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { type IMemoryService, type ProjectMemoryWorkspaceSummary } from "@mcode/services";
-import { TID_SETTINGS_MEMORY_SWITCH } from "@mcode/shared";
+import { TID_SETTINGS_MEMORY_SWITCH } from "@mcode/shared/test-ids";
 import { runUserAction, runUserActionAsync } from "@/lib/userActionTelemetry.js";
 import { Switch } from "@/components/ui/switch.js";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";
