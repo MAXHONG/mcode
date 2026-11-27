@@ -1,6 +1,6 @@
 {
   "name": "mcode",
-  "version": "4.0.1",
+  "version": "4.0.2",
   "mcodeUpstreamVersion": "4.0.0",
   "private": true,
   "type": "module",

@@ -339,17 +339,21 @@ async function linuxPaste(text) {
 // ─────────────────────────────── macOS (JXA AX + Quartz CGEvent) ───────────────────────────────
 
 async function macListApps() {
-  const out = await runCmd("osascript", [
-    "-e",
-    'tell application "System Events" to get {name, unix id} of every application process whose background only is false',
-  ]);
-  const parts = out.trim().split(", ");
-  const half = Math.floor(parts.length / 2);
-  const apps = [];
-  for (let i = 0; i < half; i += 1) {
-    apps.push({ name: parts[i], pid: Number(parts[half + i]), running: true });
+  const jxa = `
+const se = Application("System Events");
+const procs = se.applicationProcesses.whose({ backgroundOnly: false })();
+const apps = procs.map((p) => {
+  try {
+    return { name: String(p.name()), pid: Number(p.unixId()), running: true };
+  } catch {
+    return null;
   }
-  return apps;
+}).filter(Boolean);
+JSON.stringify(apps);
+`;
+  const out = await runCmd("osascript", ["-l", "JavaScript", "-e", jxa]);
+  const parsed = JSON.parse(out.trim() || "[]");
+  return Array.isArray(parsed) ? parsed : [];
 }
 
 async function macActivateApp(appRef) {
