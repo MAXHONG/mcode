@@ -16,11 +16,8 @@ import {
   type WebRemoteControlDeviceTransportState,
 } from "../src/web-remote-control/webRemoteControlTransport.js";
 import { createNodeWebRemoteControlRelayAuthProvider } from "../src/web-remote-control/webRemoteControlRelayAuthProvider.js";
-import {
-  WebRemoteControlTerminalTransport,
-  type WebRemoteControlTerminalTransportState,
-} from "../../web/src/webRemoteControlTransport.js";
-import { createBrowserWebRemoteControlRelayAuthProvider } from "../../web/src/webRemoteControlRelayAuthProvider.js";
+import { WebRemoteControlTerminalTransport } from "../../web/src/web-remote-control/adapters/webRemoteControlTransport.js";
+import type { WebRemoteControlTerminalTransportState } from "../../web/src/web-remote-control/contracts/transport.js";
 
 const relayUrl = process.env["MCODE_RELAY_IT_URL"]?.trim();
 
@@ -78,7 +75,7 @@ describe.skipIf(!relayUrl)("self-hosted relay interoperability", () => {
         passHash: registered!.passHash,
         deviceMid,
         WebSocketCtor: WebSocket as unknown as typeof globalThis.WebSocket,
-        authProvider: createBrowserWebRemoteControlRelayAuthProvider(),
+        getToken: async () => "",
         onPayload: (payload) => terminalPayloads.push(payload),
         onStateChange: (state) => terminalStates.push(state),
         onFailure: () => {},

@@ -1725,7 +1725,9 @@ export async function initAutoUpdater(options: InitAutoUpdaterOptions = {}): Pro
   // 由 before-quit 主动安装，避免目标已经升高后退出装上旧包。
   autoUpdater.autoInstallOnAppQuit = false;
   autoUpdater.logger = logger;
-  if (autoUpdater instanceof pkg.NsisUpdater) {
+  // 修复：测试环境 mock electron-updater 或非 NSIS 平台可能未导出 NsisUpdater，
+  // 直接执行 instanceof 会抛出 TypeError，需先判断构造器存在。
+  if (typeof pkg.NsisUpdater === "function" && autoUpdater instanceof pkg.NsisUpdater) {
     // 保留包内 publisherName 来激活 NSIS hook，但不把旧 DN 当作未来换证的准入条件。
     autoUpdater.verifyUpdateCodeSignature = (_publisherNames, filePath) =>
       verifyWindowsAuthenticodeSignature(filePath);

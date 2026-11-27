@@ -94,6 +94,10 @@ vi.mock("node:child_process", () => ({
   spawn: spawnMock,
 }));
 
+vi.mock("../scripts/powershell-command.mjs", () => ({
+  verifyWindowsAuthenticodeSignature: vi.fn(async () => null),
+}));
+
 const { shellOpenExternal } = vi.hoisted(() => ({ shellOpenExternal: vi.fn() }));
 
 vi.mock("electron", () => ({
@@ -313,6 +317,8 @@ describe("autoUpdater ready state sync", () => {
   });
 
   it("Linux arm64 显式配置 feed 时使用服务端 manifest provider", async () => {
+    appMock.isPackaged = false;
+    process.env["MCODE_AUTO_UPDATE_DEV"] = "1";
     mockProcessPlatform("linux");
     process.env["TEST_UPDATER_ARCH"] = "arm64";
 
@@ -378,6 +384,8 @@ describe("autoUpdater ready state sync", () => {
   });
 
   it("服务端 manifest provider 会按设置选择 stable 或 preview 通道", async () => {
+    appMock.isPackaged = false;
+    process.env["MCODE_AUTO_UPDATE_DEV"] = "1";
     settingServiceMock.get.mockResolvedValue({
       recentProjects: [],
       locale: "en-US",
@@ -437,6 +445,8 @@ describe("autoUpdater ready state sync", () => {
   });
 
   it("关闭接收 preview 后会重新检查 stable manifest 并更新可用版本状态", async () => {
+    appMock.isPackaged = false;
+    process.env["MCODE_AUTO_UPDATE_DEV"] = "1";
     const win = {
       isDestroyed: () => false,
       webContents: {
@@ -756,6 +766,7 @@ describe("autoUpdater ready state sync", () => {
   });
 
   it("启动参数中的 update feed URL 优先于环境变量", async () => {
+    appMock.isPackaged = false;
     const { resolveUpdateFeedSourceFromStartupConfig } = await import("../src/main/autoUpdater.js");
 
     expect(
@@ -796,6 +807,8 @@ describe("autoUpdater ready state sync", () => {
   });
 
   it("启动时可覆盖服务端 manifest 接口 URL", async () => {
+    appMock.isPackaged = false;
+    process.env["MCODE_AUTO_UPDATE_DEV"] = "1";
     mockProcessPlatform("darwin");
     process.env["TEST_UPDATER_ARCH"] = "arm64";
     const { initAutoUpdater } = await import("../src/main/autoUpdater.js");
@@ -817,6 +830,8 @@ describe("autoUpdater ready state sync", () => {
   });
 
   it("manifest URL 覆盖不会切换到 generic feed", async () => {
+    appMock.isPackaged = false;
+    process.env["MCODE_AUTO_UPDATE_DEV"] = "1";
     mockProcessPlatform("darwin");
     process.env["TEST_UPDATER_ARCH"] = "arm64";
     const { initAutoUpdater } = await import("../src/main/autoUpdater.js");
@@ -1138,6 +1153,8 @@ describe("autoUpdater ready state sync", () => {
     );
 
     autoUpdaterMock.emit("update-downloaded", { version: "0.1.25" });
+    await Promise.resolve();
+    await Promise.resolve();
 
     expect(getAutoUpdaterState()).toMatchObject({
       kind: "update-downloaded",
@@ -1886,11 +1903,12 @@ describe("autoUpdater ready state sync", () => {
     await expect(quitHandler!()).rejects.toBe(prepareError);
 
     // Bugfix: 安装前准备负责释放 Windows resources/glm 等随包资源锁。
-    // 如果准备失败还继续启动安装器，会再次形成 bundled runtime 半更新。
+    // 如果准备失败还继续启动安装器，会再次形成 bundled runtime 半更新；
+    // 3.17.1 起会通过 recoverFromFailedUpdateInstall() 触发 relaunch 恢复已清理的服务。
     expect(onBeforeQuitAndInstall).toHaveBeenCalledTimes(1);
     expect(autoUpdaterMock.quitAndInstall).not.toHaveBeenCalled();
-    expect(appMock.relaunch).not.toHaveBeenCalled();
-    expect(appMock.exit).not.toHaveBeenCalled();
+    expect(appMock.relaunch).toHaveBeenCalledTimes(1);
+    expect(appMock.exit).toHaveBeenCalledWith(0);
     expect(loggerErrorMock).toHaveBeenCalledWith(
       "[auto-update] prepare quit and install failed:",
       prepareError,
@@ -2184,6 +2202,8 @@ describe("autoUpdater ready state sync", () => {
       downloadAvailableUpdate("test");
       expect(autoUpdaterMock.downloadUpdate).toHaveBeenCalledTimes(1);
       autoUpdaterMock.emit("update-downloaded", { version: "0.1.26" });
+      await Promise.resolve();
+      await Promise.resolve();
 
       expect(win.webContents.send).toHaveBeenCalledWith(PlatformChannels.UpdateReady, "0.1.26");
       expect(menuItem.label).toBe(
