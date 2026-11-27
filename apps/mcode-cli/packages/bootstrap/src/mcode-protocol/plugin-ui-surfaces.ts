@@ -37,8 +37,12 @@ export async function listPluginUiSurfaces(
   rawParams: unknown,
 ): Promise<McodePluginsListUiSurfacesResult> {
   const params = parseParams(mcodePluginsListUiSurfacesParamsSchema, rawParams);
-  const outcome = resolveMcodePlugins({
+  const outcome = await resolveMcodePlugins({
     logger: context.logger,
+    pluginPreparation: context.deps?.pluginPreparation,
+    pluginDiscovery: context.deps?.pluginDiscovery,
+    workspaceIdentity: params.workspace.workspaceIdentity,
+    remoteSessionId: params.workspace.remoteSessionId,
     workingDirectory: params.workspace.workspacePath,
   });
   return { surfaces: listPluginUiSurfacesFromPlugins(outcome.plugins) };

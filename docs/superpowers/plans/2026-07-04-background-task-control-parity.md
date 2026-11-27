@@ -99,14 +99,14 @@
 Commands run during implementation and cleanup:
 
 ```bash
-pnpm exec oxfmt --check apps/mcode-cli/packages/core/src/tool/executor/impl.ts apps/mcode-cli/packages/core/tests/task-stop-tool.test.ts apps/mcode-cli/packages/core/tests/tool-contracts.test.ts packages/desktop/test/e2e/conversation-session/conversation-session-background.test.ts
+pnpm exec oxfmt --check apps/mcode-cli/packages/core/src/tool/executor/impl.ts apps/mcode-cli/packages/core/tests/task-stop-tool.test.ts apps/mcode-cli/packages/core/tests/tool-contracts.test.ts packages/desktop/test/e2e/conversation-session/background/conversation-session-background.test.ts
 pnpm --filter @mcode/core exec vitest run tests/task-stop-tool.test.ts tests/background-task-control.test.ts tests/tool-contracts.test.ts tests/subagent-explore.test.ts -t "TaskStop|background task control|orders shared provider-visible|runs through Agent"
 pnpm exec vitest --run packages/ui/test/mcodeSessionProjection.test.ts packages/ui/test/agentToolCallBlock.test.ts -t "task notification|background Agent|single background task"
 pnpm exec vitest --run packages/services/test/mcodeLegacyTaskCompatTaskIndex.test.ts -t "task notification|background Agent"
 pnpm exec vitest --run packages/shared/test/backgroundBashJobs.test.ts packages/ui/test/chatViewSummaryPanel.test.ts packages/ui/test/mcodeBackgroundTaskControl.test.ts -t "background Agent|background task|background Bash|running task"
 pnpm exec vitest --run packages/shared/test/backgroundBashJobs.test.ts packages/ui/test/chatViewSummaryPanel.test.ts packages/ui/test/backgroundTaskSnapshotSync.test.ts packages/ui/test/mcodeBackgroundTaskControl.test.ts packages/ui/test/longRunningToolCalls.test.ts
 pnpm exec vitest --run packages/ui/test/mcodeBackgroundTaskControl.test.ts packages/ui/test/chatViewSummaryPanel.test.ts
-E2E_PROVIDER_REPLAY_FIXTURE_PATH=packages/desktop/test/e2e/fixtures/upstream/common.json,packages/desktop/test/e2e/fixtures/upstream/conversation-session/conversation-session-background.json pnpm --filter @mcode/desktop exec wdio run wdio.conf.ts --spec './test/e2e/conversation-session/conversation-session-background.test.ts'
+E2E_PROVIDER_REPLAY_FIXTURE_PATH=packages/desktop/test/e2e/fixtures/upstream/common.json,packages/desktop/test/e2e/fixtures/upstream/conversation-session/conversation-session-background.json pnpm --filter @mcode/desktop exec wdio run wdio.conf.ts --spec './test/e2e/conversation-session/background/conversation-session-background.test.ts'
 pnpm typecheck
 pnpm lint
 git diff --check

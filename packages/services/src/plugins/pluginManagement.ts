@@ -20,6 +20,7 @@ import type {
   McodePluginsReferenceCatalogResult,
   McodePluginsRestoreBuiltinResult,
   McodePluginsSetEnabledResult,
+  McodePluginsWorkspaceTrustResult,
   McodePluginsUninstallResult,
   McodePluginsValidateResult,
 } from "@mcode/shared";
@@ -38,6 +39,7 @@ import type {
   McodeAgentRemovePluginMarketplaceParams,
   McodeAgentRestoreBuiltinPluginParams,
   McodeAgentSetPluginEnabledParams,
+  McodeAgentSetWorkspacePluginTrustParams,
   McodeAgentUninstallPluginParams,
   McodeAgentUpdatePluginMarketplaceParams,
   McodeAgentUpdatePluginParams,
@@ -86,6 +88,10 @@ export interface IPluginManagementService {
   validatePlugin(params: McodeAgentValidatePluginParams): Promise<McodePluginsValidateResult>;
   describePlugin(params: McodeAgentDescribePluginParams): Promise<McodePluginsDescribeResult>;
   setPluginEnabled(params: McodeAgentSetPluginEnabledParams): Promise<McodePluginsSetEnabledResult>;
+  /** 信任项目目录插件：只写目标 Host 的用户域记录，对之后新建的会话生效。 */
+  setWorkspacePluginTrust(
+    params: McodeAgentSetWorkspacePluginTrustParams,
+  ): Promise<McodePluginsWorkspaceTrustResult>;
 }
 
 export const IPluginManagementService = createServiceDescriptor<IPluginManagementService>(

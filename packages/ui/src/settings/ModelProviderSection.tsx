@@ -17,8 +17,13 @@ import {
   type ProviderFamilyConnectionSelectionSettings,
   type ProviderFamilyDomain,
   type OAuthProviderId,
+  type OAuthAccountAvailability,
+  isZaiOAuthProvider,
+  resolveModelProviderFamilyIdByProviderId,
   resolveModelProviderFamilySpecByProviderId,
   resolveProviderFamilyDomainFromOAuthProvider,
+  resolveStartPlanFamilyFromOAuthProvider,
+  toZhOrEnLocale,
   ZAI_PROVIDER_ID,
 } from "@mcode/shared";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";
@@ -58,6 +63,7 @@ import {
   useCodingPlanEntitlements,
 } from "./model-provider-section/useCodingPlanEntitlements.js";
 import { sortModelProvidersForDisplay } from "@/lib/modelProviderOrdering.js";
+import { readCodingPlanPurchaseTokenState } from "@/settings/model-provider-section/codingPlanPurchaseAuth.js";
 import { useSettings } from "@/hooks/useSettingService.js";
 import { resolveLogoutProviderFamilyDomain } from "@/lib/providerFamilyDomainSettings.js";
 import {
@@ -79,19 +85,17 @@ type CodingPlanConnectionNavItem = Extract<
 >;
 
 export function resolveCodingPlanProviderSyncAttemptKey({
-  activeOAuthProvider,
+  accountAvailability,
   oauthProviderId,
   providerId,
 }: {
-  activeOAuthProvider: OAuthProviderId | null;
+  accountAvailability: OAuthAccountAvailability | null;
   oauthProviderId: OAuthProviderId;
   providerId: BuiltinModelProviderId;
 }): string | null {
-  if (activeOAuthProvider !== oauthProviderId) {
-    return null;
-  }
-  // 操作身份只由稳定的 provider/auth 事实组成，禁止把 checking 等展示状态放入 key。
-  return `${providerId}:${activeOAuthProvider}`;
+  const family = resolveProviderFamilyDomainFromOAuthProvider(oauthProviderId);
+  if (!family || !accountAvailability?.families.includes(family)) return null;
+  return `${providerId}:${accountAvailability.userId}:${accountAvailability.sessionRevision}`;
 }
 
 export function shouldRetryUnchangedCodingPlanProviderSync({
@@ -152,6 +156,7 @@ function shouldRefreshCodingPlanEntitlementsAfterSave(
 function shouldShowPresetProviderForActiveOAuth(
   _presetId: BuiltinModelProviderId,
   _providerFamilyDomain: ProviderFamilyDomain | null | undefined,
+  _availableFamilies: readonly ProviderFamilyDomain[] = [],
 ): boolean {
   return true;
 }
@@ -226,7 +231,7 @@ export function ModelProviderSection({
   const { intl, locale } = useMcodeIntl();
   const confirmDialog = useConfirmDialog();
   const platform = usePlatform();
-  const { modelSelectionService, oauthService, credentialService } = useServices();
+  const { modelSelectionService, oauthService } = useServices();
   const {
     modelProviders,
     providerTemplates,
@@ -351,11 +356,15 @@ export function ModelProviderSection({
       }),
     [applyModelProviderTarget],
   );
-  const [
-    codingPlanPurchaseTokenAuthenticatedByProviderId,
-    setCodingPlanPurchaseTokenAuthenticatedByProviderId,
-  ] = useState<Partial<Record<BuiltinModelProviderId, boolean>>>({});
-  const [activeOAuthProvider, setActiveOAuthProvider] = useState<OAuthProviderId | null>(null);
+  const [accountAvailability, setAccountAvailability] = useState<OAuthAccountAvailability | null>(
+    null,
+  );
+  const activeOAuthProvider = accountAvailability?.loginProvider ?? null;
+  const codingPlanPurchaseTokenAuthenticatedByProviderId = useMemo(
+    () => readCodingPlanPurchaseTokenState(accountAvailability),
+    [accountAvailability],
+  );
+  const purchaseAuthReadSequence = useRef(0);
   const [pendingConnectionSelections, setPendingConnectionSelections] =
     useState<ProviderFamilyConnectionSelectionSettings>({});
   const presetSubscriptionCompletionProviderIdRef = useRef<BuiltinModelProviderId | null>(null);
@@ -429,6 +438,10 @@ export function ModelProviderSection({
   const effectiveProviderFamilyDomain =
     sharedSettings?.providerFamilyDomain ??
     resolveProviderFamilyDomainFromOAuthProvider(activeOAuthProvider);
+  // Start 与 Host 共用登录渠道映射：国内登录（zai_cn）未关联时付费家族为空，Start 仍属于 BigModel。
+  const startPlanFamilyDomain =
+    sharedSettings?.providerFamilyDomain ??
+    resolveStartPlanFamilyFromOAuthProvider(activeOAuthProvider);
   const { entitlements: codingPlanEntitlements, refresh: refreshCodingPlanEntitlements } =
     useCodingPlanEntitlements({
       providerSettingsView,
@@ -463,45 +476,21 @@ export function ModelProviderSection({
         shouldApply?: () => boolean;
       } = {},
     ) => {
-      const [activeProvider, zaiToken, bigmodelToken] = await Promise.all([
-        credentialService.load("oauth:active_provider"),
-        credentialService.load(`oauth:${ZAI_PROVIDER_ID}:access_token`),
-        credentialService.load(`oauth:${BIGMODEL_PROVIDER_ID}:access_token`),
-      ]);
-      if (options.shouldApply && !options.shouldApply()) {
+      const sequence = ++purchaseAuthReadSequence.current;
+      const availability = await oauthService.getAccountAvailability();
+      if (
+        sequence !== purchaseAuthReadSequence.current ||
+        (options.shouldApply && !options.shouldApply())
+      )
         return null;
-      }
-      const normalizedActiveProvider =
-        activeProvider === ZAI_PROVIDER_ID || activeProvider === BIGMODEL_PROVIDER_ID
-          ? activeProvider
-          : null;
-      setActiveOAuthProvider(normalizedActiveProvider);
-      setCodingPlanPurchaseTokenAuthenticatedByProviderId({
-        [BUILTIN_MODEL_PROVIDER_IDS.zaiIndividualCodingPlan]:
-          normalizedActiveProvider === ZAI_PROVIDER_ID && (zaiToken?.trim().length ?? 0) > 0,
-        [BUILTIN_MODEL_PROVIDER_IDS.zaiTeamCodingPlan]:
-          normalizedActiveProvider === ZAI_PROVIDER_ID && (zaiToken?.trim().length ?? 0) > 0,
-        [BUILTIN_MODEL_PROVIDER_IDS.zaiStartPlan]:
-          normalizedActiveProvider === ZAI_PROVIDER_ID && (zaiToken?.trim().length ?? 0) > 0,
-        [BUILTIN_MODEL_PROVIDER_IDS.bigmodelIndividualCodingPlan]:
-          normalizedActiveProvider === BIGMODEL_PROVIDER_ID &&
-          (bigmodelToken?.trim().length ?? 0) > 0,
-        [BUILTIN_MODEL_PROVIDER_IDS.bigmodelTeamCodingPlan]:
-          normalizedActiveProvider === BIGMODEL_PROVIDER_ID &&
-          (bigmodelToken?.trim().length ?? 0) > 0,
-        [BUILTIN_MODEL_PROVIDER_IDS.bigmodelStartPlan]:
-          normalizedActiveProvider === BIGMODEL_PROVIDER_ID &&
-          (bigmodelToken?.trim().length ?? 0) > 0,
-      });
-      if (!normalizedActiveProvider && options.clearUserWhenLoggedOut) {
-        // provider Unlink 已等价于 App logout。
-        // 服务端 token 已清理后，设置页也要同步清掉 Zustand user，否则侧边栏会一直显示旧登录态直到重启。
+      setAccountAvailability(availability);
+      if (!availability.loginProvider && options.clearUserWhenLoggedOut) {
         setUser(null);
         setOAuthError(null);
       }
-      return normalizedActiveProvider;
+      return availability.loginProvider;
     },
-    [credentialService, setOAuthError, setUser],
+    [oauthService, setOAuthError, setUser],
   );
 
   const refreshProviderPanelAfterAuthChange = useCallback(
@@ -538,7 +527,7 @@ export function ModelProviderSection({
       options: { userTransition?: boolean; refreshPlanSnapshots?: boolean } = {},
     ) => {
       const attemptKey = resolveCodingPlanProviderSyncAttemptKey({
-        activeOAuthProvider,
+        accountAvailability,
         oauthProviderId: item.oauthProviderId,
         providerId: item.presetId,
       });
@@ -569,7 +558,7 @@ export function ModelProviderSection({
         );
       }
     },
-    [activeOAuthProvider, refreshProviderPanelAfterAuthChange],
+    [accountAvailability, refreshProviderPanelAfterAuthChange],
   );
 
   useEffect(() => {
@@ -587,12 +576,16 @@ export function ModelProviderSection({
   const presetProviders = useMemo(
     () =>
       PRESET_PROVIDER_SPECS.filter((preset) =>
-        shouldShowPresetProviderForActiveOAuth(preset.id, effectiveProviderFamilyDomain),
+        shouldShowPresetProviderForActiveOAuth(
+          preset.id,
+          effectiveProviderFamilyDomain,
+          accountAvailability?.families,
+        ),
       ).map((preset) => ({
         ...preset,
         provider: modelProviders.find((provider) => provider.providerId === preset.id) ?? null,
       })),
-    [effectiveProviderFamilyDomain, modelProviders],
+    [effectiveProviderFamilyDomain, accountAvailability, modelProviders],
   );
 
   useEffect(() => {
@@ -668,6 +661,8 @@ export function ModelProviderSection({
       codingPlanEntitlements,
       subscribedTeamProducts,
       providerFamilyDomain: effectiveProviderFamilyDomain,
+      startPlanFamilyDomain,
+      availableFamilies: accountAvailability?.families,
       connectionSelections: effectiveConnectionSelections,
       pendingConnectionSelections,
       showPurchasedTeamPlanFallback,
@@ -693,7 +688,7 @@ export function ModelProviderSection({
       return;
     }
     if (
-      activeOAuthProvider !== selectedNavItem.oauthProviderId ||
+      codingPlanPurchaseTokenAuthenticatedByProviderId[selectedNavItem.presetId] !== true ||
       presetSubscriptionProviderId === selectedNavItem.presetId ||
       codingPlanDisconnectProviderId === selectedNavItem.presetId
     ) {
@@ -714,7 +709,7 @@ export function ModelProviderSection({
       });
     });
   }, [
-    activeOAuthProvider,
+    codingPlanPurchaseTokenAuthenticatedByProviderId,
     codingPlanDisconnectProviderId,
     presetSubscriptionProviderId,
     selectedNavItem,
@@ -780,17 +775,42 @@ export function ModelProviderSection({
         status,
         forceOAuth: options?.forceOAuth === true,
       });
-      if (activeOAuthProvider === providerId && options?.forceOAuth !== true) {
-        void refreshProviderPanelAfterAuthChange({}).finally(() => {
-          setPresetSubscriptionProviderId((current) => (current === presetId ? null : current));
-          setCodingPlanStatusSyncProviderId((current) => (current === presetId ? null : current));
-        });
-        return;
-      }
-      // ZAI/BigModel provider 不再有独立 connection，Connect 必须切换 App active provider。
-      return requestLoginEntry(providerId);
+      void (async () => {
+        let availability = accountAvailability;
+        const family = resolveProviderFamilyDomainFromOAuthProvider(providerId);
+        if (
+          options?.forceOAuth !== true &&
+          family &&
+          !availability?.families.includes(family) &&
+          availability?.loginProvider
+        ) {
+          try {
+            availability = await oauthService.refreshAccountProfile();
+            setAccountAvailability(availability);
+          } catch (error) {
+            logger.warn("[ModelProviderSection] 补关联失败，保留当前登录", {
+              name: error instanceof Error ? error.name : "unknown",
+            });
+          }
+        }
+        if (options?.forceOAuth !== true && family && availability?.families.includes(family)) {
+          try {
+            await refreshProviderPanelAfterAuthChange({});
+          } finally {
+            setPresetSubscriptionProviderId((current) => (current === presetId ? null : current));
+            setCodingPlanStatusSyncProviderId((current) => (current === presetId ? null : current));
+          }
+          return;
+        }
+        const provider = availability?.loginProvider;
+        requestLoginEntry(provider && isZaiOAuthProvider(provider) ? provider : undefined);
+      })().catch((error) =>
+        logger.warn("[ModelProviderSection] 连接套餐失败", {
+          name: error instanceof Error ? error.name : "unknown",
+        }),
+      );
     },
-    [activeOAuthProvider, refreshProviderPanelAfterAuthChange, requestLoginEntry],
+    [accountAvailability, oauthService, refreshProviderPanelAfterAuthChange, requestLoginEntry],
   );
 
   const handleCodingPlanDisconnect = useCallback(
@@ -812,7 +832,7 @@ export function ModelProviderSection({
         const nextProviderFamilyDomain = resolveLogoutProviderFamilyDomain({
           currentDomain: sharedSettings?.providerFamilyDomain,
         });
-        await oauthService.logout(providerId);
+        await oauthService.logout();
         // Coding Plan 官网 webview 使用独立持久 partition，provider Unlink 也属于账号边界。
         if (typeof platform.executeDesktopCommand === "function") {
           await platform.executeDesktopCommand(DesktopCommandIds.ClearCodingPlanWebviewStorage);
@@ -873,7 +893,7 @@ export function ModelProviderSection({
       const planSyncAttemptKey =
         item.type === "codingPlan" || item.type === "teamPlan"
           ? resolveCodingPlanProviderSyncAttemptKey({
-              activeOAuthProvider,
+              accountAvailability,
               oauthProviderId: item.oauthProviderId,
               providerId: item.presetId,
             })
@@ -954,7 +974,7 @@ export function ModelProviderSection({
       }
     },
     [
-      activeOAuthProvider,
+      accountAvailability,
       connectionSelections,
       sharedSettings,
       syncCodingPlanProviderOnce,
@@ -962,21 +982,26 @@ export function ModelProviderSection({
     ],
   );
 
-  const handleSelectNavItem = useCallback(
+  const handleSelectNavItem = useCallback((item: (typeof navigationItems)[number]) => {
+    setInvalidProviderTarget(false);
+    setSelectedNodeKey(resolveModelProviderSideSelectionKey(item));
+    setTemplatePickerOpen(false);
+  }, []);
+
+  const handleSelectConnectionItem = useCallback(
     (item: (typeof navigationItems)[number]) => {
-      setInvalidProviderTarget(false);
-      setSelectedNodeKey(resolveModelProviderSideSelectionKey(item));
-      setTemplatePickerOpen(false);
+      handleSelectNavItem(item);
       void persistProviderFamilyModeForNavItem(item);
     },
-    [persistProviderFamilyModeForNavItem],
+    [handleSelectNavItem, persistProviderFamilyModeForNavItem],
   );
 
   const handleCreateProvider = useCallback(
     async (input: { templateId?: string; providerName?: string }) => {
       setCreatingProvider(true);
       try {
-        const created = await createPersonalProvider({ ...input, locale });
+        // Provider 模板名只有中英两套，非中文界面语言用英文名。
+        const created = await createPersonalProvider({ ...input, locale: toZhOrEnLocale(locale) });
         setPendingCreatedProviderId(created.providerId);
         setSelectedNodeKey(createCustomProviderNodeKey(created.providerId));
         setTemplatePickerOpen(false);
@@ -1086,13 +1111,25 @@ export function ModelProviderSection({
       presetLoading={presetLoading}
       customLoading={customLoading}
       onRefresh={() => {
-        void refreshModelProviderSection({
-          refresh,
-          // 手动刷新设置页时也要同时刷新 Z.ai / BigModel Team Plan 快照；
-          // 原来只刷新 BigModel，Z.ai Team Plan 购买或订阅变化后会继续显示旧项目。
-          refreshTeamPlanProducts: refreshAuthenticatedEnterpriseProducts,
-        });
-        refreshCodingPlanEntitlements();
+        void (async () => {
+          try {
+            await oauthService.refreshAccountProfile();
+          } catch (error) {
+            logger.warn("[ModelProviderSection] 补关联失败，继续刷新已有套餐", {
+              name: error instanceof Error ? error.name : "unknown",
+            });
+          }
+          await refreshCodingPlanPurchaseTokenState();
+          await refreshModelProviderSection({
+            refresh,
+            refreshTeamPlanProducts: refreshAuthenticatedEnterpriseProducts,
+          });
+          await refreshCodingPlanEntitlements();
+        })().catch((error) =>
+          logger.warn("[ModelProviderSection] 刷新套餐失败", {
+            name: error instanceof Error ? error.name : "unknown",
+          }),
+        );
       }}
       addProviderLabel={intl.formatMessage({ id: "settings.modelProvider.addProviderAction" })}
       onAddProvider={() => setTemplatePickerOpen(true)}
@@ -1126,6 +1163,7 @@ export function ModelProviderSection({
       ) : (
         <ModelProviderSectionDetail
           connectionSelections={effectiveConnectionSelections}
+          activeProviderFamily={effectiveProviderFamilyDomain}
           providerSettingsView={providerSettingsView}
           selectedNavItem={selectedNavItem}
           navigationItems={navigationItems}
@@ -1170,7 +1208,7 @@ export function ModelProviderSection({
           }}
           onCodingPlanDisconnect={handleCodingPlanDisconnect}
           onOpenApiKeyUrl={handleOpenApiKeyUrl}
-          onSelectNavItem={handleSelectNavItem}
+          onSelectNavItem={handleSelectConnectionItem}
           onOpenBigModelRegistration={() => {
             // 未注册提示来自一次失败的 OAuth checking 状态；跳转注册后要恢复普通状态，避免提示卡住。
             setOAuthError(null);

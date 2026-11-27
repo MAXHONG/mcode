@@ -12,7 +12,7 @@
     "./web-remote-control/*.js": "./src/web-remote-control/*.ts"
   },
   "scripts": {
-    "dev": "tsup --watch --onSuccess 'node dist/entry-http.js'",
+    "dev": "node ../../scripts/build-windows-runtime-host.mjs --if-windows --ensure && tsup --watch --onSuccess 'node dist/entry-http.js'",
     "build": "tsup && pnpm run build:remote",
     "build:remote": "tsx build-remote.ts",
     "lint": "oxlint",
@@ -25,6 +25,7 @@
     "@lydell/node-pty-darwin-x64": "1.2.0-beta.10",
     "@lydell/node-pty-linux-arm64": "1.2.0-beta.10",
     "@lydell/node-pty-linux-x64": "1.2.0-beta.10",
+    "@napi-rs/keyring": "2.1.2",
     "@mcode/client": "workspace:*",
     "@mcode/rpc": "workspace:*",
     "@mcode/services": "workspace:*",

@@ -14,5 +14,5 @@ export interface McodeProtocolTransport extends IDisposable {
   readonly onMessage: Event<McodeProtocolMessage>;
   readonly onClose: Event<McodeProtocolTransportClosedEvent>;
   send(message: McodeProtocolMessage): Promise<void>;
-  disposeAndWait?(): Promise<void>;
+  disposeAndWait?(options?: { deadlineAtMs?: number }): Promise<void>;
 }

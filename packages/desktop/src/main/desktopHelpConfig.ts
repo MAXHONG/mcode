@@ -3,6 +3,8 @@ import {
   buildHelpAppConfigUrl,
   buildMcodeSourceHeadersFromContext,
   createHelpAppConfigReader,
+  resolveOptionalMcodeAuthorization,
+  type McodeJwtTokenResolver,
   MCODE_ENV,
 } from "@mcode/shared";
 
@@ -12,28 +14,33 @@ export function createDesktopHelpConfigReader(options: {
   deviceMid: string;
   /** 当前界面语言；以前不传，X-Client-Language 固定为 unknown。 */
   getClientLanguage: () => string;
+  resolveMcodeJwtToken?: McodeJwtTokenResolver;
 }) {
   const read = createHelpAppConfigReader({
     fetchImpl: (input, init) => net.fetch(input instanceof URL ? input.href : input, init),
   });
   return async () => {
     const endpointOrigin = await options.resolveEndpointOrigin();
+    const authorization = await resolveOptionalMcodeAuthorization(options.resolveMcodeJwtToken);
     return read(
       buildHelpAppConfigUrl(
         endpointOrigin,
         options.appVersion,
         `${process.platform}-${process.arch}`,
       ),
-      buildMcodeSourceHeadersFromContext({
-        endpointOrigin,
-        appVersion: options.appVersion,
-        clientLanguage: options.getClientLanguage(),
-        deviceMid: options.deviceMid,
-        platform: process.platform,
-        arch: process.arch,
-        releaseChannel: MCODE_ENV,
-        sourceTitle: "electron",
-      }),
+      {
+        ...(authorization ? { Authorization: authorization } : {}),
+        ...buildMcodeSourceHeadersFromContext({
+          endpointOrigin,
+          appVersion: options.appVersion,
+          clientLanguage: options.getClientLanguage(),
+          deviceMid: options.deviceMid,
+          platform: process.platform,
+          arch: process.arch,
+          releaseChannel: MCODE_ENV,
+          sourceTitle: "electron",
+        }),
+      },
     );
   };
 }

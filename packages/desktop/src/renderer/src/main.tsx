@@ -9,10 +9,11 @@ import {
   GlobalDatabaseStartupLoading,
   UpdateStatusWindowRoot,
   McodeIntlProvider,
+  getRemoteWorkspaceSession,
   registerBaseWorkspaceServices,
   registerRemoteWorkspaceSession,
+  unregisterRemoteWorkspaceSession,
   createRemoteWorkspaceDisconnectedError,
-  installDocumentHiddenMotionPause,
   playTaskNotificationSound,
   setStreamClientId,
   setReactErrorArmsReporter,
@@ -21,12 +22,14 @@ import "@mcode/ui/styles.css";
 import { connectViaMessagePort, createMessagePortServiceConnection } from "@mcode/client";
 import {
   InternalChannels,
+  DesktopCommandIds,
   databaseStartupStateSchema,
   type DatabaseStartupControl,
   parseLaunchMarks,
   LAUNCH_MARKS_QUERY_KEY,
   type LaunchMarks,
   DEFAULT_LOCALE,
+  isLocale,
 } from "@mcode/shared";
 import type { Locale } from "@mcode/shared";
 import type { IServiceAccessor } from "@mcode/services";
@@ -38,6 +41,7 @@ import { handleSourceSettingsServicePortMessage } from "./sourceSettingsServiceP
 import {
   notifyRemoteWorkspaceServicePortReady,
   parseRemoteWorkspaceServicePortMessage,
+  parseRemoteWorkspaceServicePortReleasedMessage,
   type RemoteWorkspaceServicePortRegistration,
 } from "./remoteWorkspaceServicePortBridge.js";
 
@@ -137,14 +141,15 @@ const initialWorkspacePurpose = readStringFlag("initialWorkspacePurpose");
 const unavailableWorkspacePath = readStringFlag("unavailableWorkspacePath");
 const windowKind = readStringFlag("windowKind");
 const initialLocaleFlag = readStringFlag("locale");
-const initialLocale: Locale =
-  initialLocaleFlag === "zh-CN" || initialLocaleFlag === "en-US"
-    ? initialLocaleFlag
-    : DEFAULT_LOCALE;
+const initialLocale: Locale = isLocale(initialLocaleFlag) ? initialLocaleFlag : DEFAULT_LOCALE;
 let baseServicesForRemoteSessions: IServiceAccessor | null = null;
 const pendingRemoteWorkspaceServicePorts: RemoteWorkspaceServicePortRegistration[] = [];
+// 登记对象 → attachment：释放通知只作用于当时那次登记；用 WeakMap 随 session 注销自动回收。
+const remoteSessionAttachmentIds = new WeakMap<object, string>();
 
 const desktopPlatform = createDesktopPlatform({ isLocalDevelopmentRuntime });
+const restartAfterCrash = () =>
+  desktopPlatform.executeDesktopCommand(DesktopCommandIds.RestartAfterCrash);
 initializeDesktopLocalTtft(desktopPlatform);
 initializeDesktopUserActionTrace({
   platform: desktopPlatform,
@@ -160,8 +165,6 @@ initializeDesktopUserActionTrace({
  */
 // 之前用匿名函数注册 addEventListener("message")，reload/HMR 时会重复注册，
 // 导致多次 createRoot 在同一 DOM 节点上挂载。用 flag 防止重复初始化。
-// 窗口 hidden 时禁用 CSS 动画，避免 DocumentTimeline 持有已卸载的 DOM 子树。
-installDocumentHiddenMotionPause();
 let appInitialized = false;
 const databaseStartupAdmission = new DatabaseStartupAdmission();
 const appRoot =
@@ -170,7 +173,12 @@ const sendStartupControl = (control: DatabaseStartupControl) =>
   window.postMessage({ type: InternalChannels.DatabaseStartupControl, control }, "*");
 function renderDatabaseStartup(): void {
   appRoot?.render(
-    <AppErrorBoundary isDesktop isMacDesktop={isMacDesktop} isWindowsDesktop={isWindowsDesktop}>
+    <AppErrorBoundary
+      isDesktop
+      isMacDesktop={isMacDesktop}
+      isWindowsDesktop={isWindowsDesktop}
+      onRestart={restartAfterCrash}
+    >
       <McodeIntlProvider
         initialLocale={initialLocaleFlag ? initialLocale : undefined}
         resolveSystemLocale={desktopPlatform.getSystemLocale}
@@ -186,6 +194,7 @@ function renderDatabaseStartup(): void {
               });
           }}
           onCopy={(details) => navigator.clipboard.writeText(details)}
+          onExportLogs={() => desktopPlatform.exportLogs()}
           onExit={() => sendStartupControl({ action: "exit" })}
         />
       </McodeIntlProvider>
@@ -230,7 +239,7 @@ function registerRemoteWorkspaceServicePort(params: RemoteWorkspaceServicePortRe
     targetKind: params.target.kind,
     sourceServerId: params.sourceServerId,
   });
-  registerRemoteWorkspaceSession({
+  const session = {
     sessionId: params.sessionId,
     ...(params.sourceServerId ? { sourceServerId: params.sourceServerId } : {}),
     ...(params.workspacePath ? { workspacePath: params.workspacePath } : {}),
@@ -238,12 +247,22 @@ function registerRemoteWorkspaceServicePort(params: RemoteWorkspaceServicePortRe
     ...(params.workspacePurpose ? { workspacePurpose: params.workspacePurpose } : {}),
     target: params.target,
     services,
-    dispose: (reason) =>
+    dispose: (reason?: Error) =>
       remoteConnection.dispose(reason ?? createRemoteWorkspaceDisconnectedError()),
-  });
+  };
+  remoteSessionAttachmentIds.set(session, params.attachmentId);
+  registerRemoteWorkspaceSession(session);
   // canonical workspace bind 会换代 remote-scoped port。
   // 只有 store 已注册新 services 后才能确认 ready，bind IPC 返回后的调用方才可重新读取并使用新代 services。
   notifyRemoteWorkspaceServicePortReady(params);
+}
+
+function releaseRemoteWorkspaceServicePort(params: { attachmentId: string; sessionId: string }) {
+  const session = getRemoteWorkspaceSession(params.sessionId);
+  // 只释放通知所指的那次登记；同一 session 已被后续 attachment 覆盖时不受影响。
+  if (session && remoteSessionAttachmentIds.get(session) === params.attachmentId) {
+    unregisterRemoteWorkspaceSession(params.sessionId);
+  }
 }
 
 function flushPendingRemoteWorkspaceServicePorts(): void {
@@ -302,6 +321,12 @@ function handleServicePortMessage(event: MessageEvent): void {
     return;
   }
 
+  const releasedRemoteWorkspacePort = parseRemoteWorkspaceServicePortReleasedMessage(event);
+  if (releasedRemoteWorkspacePort) {
+    releaseRemoteWorkspaceServicePort(releasedRemoteWorkspacePort);
+    return;
+  }
+
   if (
     event.source !== window ||
     event.data?.type !== InternalChannels.ServicePort ||
@@ -319,6 +344,9 @@ function initializeBusinessRoot(port: MessagePort): void {
   const services = connectViaMessagePort(port, {
     sourceServerManagementService: true,
     deviceSyncStateService: true,
+    managedWorktreeService: true,
+    // 扩展门面只在桌面本机 Host 注册（docs/plugins/extension-host.md）。
+    extensionsService: true,
   });
   baseServicesForRemoteSessions = services;
   registerBaseWorkspaceServices(services);
@@ -334,7 +362,12 @@ function initializeBusinessRoot(port: MessagePort): void {
   setReactErrorArmsReporter(desktopPlatform);
 
   appRoot?.render(
-    <AppErrorBoundary isDesktop isMacDesktop={isMacDesktop} isWindowsDesktop={isWindowsDesktop}>
+    <AppErrorBoundary
+      isDesktop
+      isMacDesktop={isMacDesktop}
+      isWindowsDesktop={isWindowsDesktop}
+      onRestart={restartAfterCrash}
+    >
       <McodeIntlProvider
         settingService={settingService}
         broadcastService={services.broadcastService}
@@ -369,7 +402,12 @@ if (windowKind !== "update-status") {
 
 if (windowKind === "update-status") {
   createRoot(document.getElementById("root")!).render(
-    <AppErrorBoundary isDesktop isMacDesktop={isMacDesktop} isWindowsDesktop={isWindowsDesktop}>
+    <AppErrorBoundary
+      isDesktop
+      isMacDesktop={isMacDesktop}
+      isWindowsDesktop={isWindowsDesktop}
+      onRestart={restartAfterCrash}
+    >
       <StartupReadyNotifier />
       <UpdateStatusWindowRoot
         platform={desktopPlatform}

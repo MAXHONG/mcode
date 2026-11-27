@@ -74,6 +74,15 @@ describe("createProviderEndpointRoutingSourceHeaders", () => {
     });
     expect(headers).not.toHaveProperty("X-Device-Mid");
   });
+
+  it("uses the Desktop-provided UI language for X-Client-Language", async () => {
+    const dataBaseDir = await mkdtemp(join(tmpdir(), "mcode-routing-client-language-"));
+    tempDirs.push(dataBaseDir);
+    const headers = await createProviderEndpointRoutingSourceHeaders({
+      env: { MCODE_CLIENT_LANGUAGE: "ru-RU", MCODE_DATA_BASE_DIR: dataBaseDir },
+    });
+    expect(headers["X-Client-Language"]).toBe("ru-RU");
+  });
 });
 
 function osCategory(platform: NodeJS.Platform): string {

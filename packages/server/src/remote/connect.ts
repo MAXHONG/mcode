@@ -406,7 +406,7 @@ function buildRemoteServerCommand(
       );
     }
   }
-  return `${envParts.join(" ")} ~/.mcode/server/node ~/.mcode/server/mcode-server.cjs`;
+  return `${envParts.join(" ")} ~/.mcode/server/node ~/.mcode/server/mcode-server.cjs --prepare-credentials`;
 }
 
 export function toRemoteContractEnvKey(key: string): string {

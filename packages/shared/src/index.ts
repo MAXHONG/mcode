@@ -34,7 +34,24 @@ export type {
   PersistedWorkspaceSessionEntry,
 } from "./protocol.js";
 export type { WorkspacePurpose } from "./workspacePurpose.js";
-export { DEFAULT_LOCALE } from "./protocol.js";
+export { DEFAULT_LOCALE, SUPPORTED_LOCALES } from "./protocol.js";
+export {
+  hasLegacyIncompatiblePersistedLocale,
+  isLocale,
+  isLocalePreference,
+  LOCALE_NATIVE_NAMES,
+  resolveLocaleFromLanguageTag,
+  resolvePersistedUiLocale,
+  resolvePersistedUiLocalePreference,
+  toLegacyPersistedLocalePreference,
+  toPersistedSettingsLocaleFields,
+  toZhOrEnLocale,
+} from "./locale.js";
+export type {
+  LegacyPersistedLocale,
+  LegacyPersistedLocalePreference,
+  PersistedSettingsLocaleFields,
+} from "./locale.js";
 export {
   MCODE_VERSION,
   MCODE_COMMIT,
@@ -77,6 +94,7 @@ export {
   MCODE_PRODUCT_FLAVOR,
   MCODE_APP_VERSION_ENV,
   MCODE_BUILD_COMMIT_ID_ENV,
+  MCODE_CLIENT_LANGUAGE_ENV,
   RUNTIME_MCODE_DEBUG,
   MCODE_ARMS_RUM_ENDPOINT,
   MCODE_TELEMETRY_REPORT_ENDPOINT,
@@ -151,6 +169,9 @@ export {
   BROWSER_SCREENSHOT_SURFACE_PREPARE_TIMEOUT_MS,
   BROWSER_VIEW_RESTORE_BOOTSTRAP_URL,
   LOCAL_MEDIA_PREVIEW_SCHEME,
+  BROWSER_VIEW_DRAFT_SESSION_ID,
+  BROWSER_LOCAL_PREVIEW_SCHEME,
+  browserPreviewSourceUrl,
   DesktopCommandIds,
   buildLocalMediaPreviewUrl,
   createOpenInEditorRemoteTarget,
@@ -178,6 +199,8 @@ export {
   sanitizeTelemetryErrorMessage,
   sanitizeTelemetrySkillName,
   sanitizeTelemetryEventDetail,
+  normalizeToolErrorCode,
+  sanitizeToolErrorCode,
 } from "./telemetry.js";
 export type {
   RedactTelemetryTextOptions,
@@ -206,6 +229,7 @@ export type {
   BrowserTabResidencyState,
   BrowserViewCloseTabNotification,
   BrowserViewCloseTabRequest,
+  BrowserViewPromoteDraftTabsRequest,
   BrowserViewOperationPayload,
   BrowserViewResidencyReportPayload,
   BrowserViewResidencyTransitionPayload,
@@ -228,6 +252,12 @@ export type {
   SaveFileRequest,
   SaveFileResult,
   PrintPageToPdfResult,
+  MicrophoneAccessResetResult,
+  MicrophoneAccessResult,
+  MicrophoneSettingsTarget,
+  CaptureBrowserGuestPageClip,
+  CaptureBrowserGuestPageRequest,
+  CaptureBrowserGuestPageResult,
   DesktopCloseToTrayCapability,
   DesktopCommandId,
   CuaOsSupport,
@@ -251,6 +281,11 @@ export type {
   EmbeddedBrowserSitePermissionUpdateRequest,
   EmbeddedBrowserSitePermissionsSnapshot,
   IPlatformService,
+  AppNavigationTarget,
+  AppNavigationResult,
+  AppNavigationHandler,
+  DesktopZoomState,
+  WindowControlsOverlayMetrics,
   OpenInEditorRemoteTarget,
   OpenInEditorOptions,
   PostUpdateReleaseNotesPayload,
@@ -367,7 +402,9 @@ export * from "./session-debug.js";
 export { redactFeedbackText } from "./feedbackPrivacy.js";
 export { API_KEY_USAGE_SCENE, type ApiKeyCreationUsageScene } from "./api-key-usage-scene.js";
 export {
+  isProjectTokenTransportFailureCode,
   projectAccessTokenFingerprint,
+  projectAccessTokenRetryAfterMs,
   ProjectAccessTokenError,
   ProjectAccessTokenHttpStatusError,
   ProjectAccessTokenTransientError,
@@ -383,6 +420,7 @@ export * from "./conversationSelection.js";
 export * from "./attachment-source.js";
 
 export * from "./channel-mention.js";
+export * from "./plugin-store-visibility.js";
 
 export {
   requestSecuritySensitiveHeaders,

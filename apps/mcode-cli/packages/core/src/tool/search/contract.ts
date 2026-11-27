@@ -15,3 +15,5 @@ export { searchTools } from "./search.js";
 export { toolSearchToolEntry } from "../handlers/tool-search.js";
 export { deferredToolCallEntry } from "../handlers/deferred-tool-call.js";
 export { ToolSearchInputSchema, TOOL_SEARCH_NAME, LOCAL_TOOL_SEARCH_NAME } from "@mcode/contracts";
+export { ToolSearchAnnouncementSchema, ToolSearchMcpDeltaSchema } from "@mcode/contracts";
+export type { ToolSearchExecutionContext, ToolSearchLiveView } from "@mcode/contracts";

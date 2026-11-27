@@ -21,7 +21,7 @@ Mcode bundles this package as the official
 `android-emulator@zcode-plugins-official` plugin. Enable the plugin to project
 its skill, slash command, and MCP server into the session.
 At startup Mcode copies the packaged plugin files into
-`~/.mcode/cli/plugins/cache/zcode-plugins-official/android-emulator/0.1.0/`
+`~/.mcode/cli/plugins/cache/zcode-plugins-official/android-emulator/0.1.3/`
 and runs the MCP server from that cache directory. SEA builds rewrite the
 official plugin's Mcode manifest to launch the cached MCP server through Mcode's
 internal plugin host, so the server uses the embedded Node.js runtime.
