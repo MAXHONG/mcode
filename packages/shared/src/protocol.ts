@@ -79,11 +79,16 @@ export interface SystemEnvironmentLoad {
   readonly environmentKind: SystemEnvironmentKind;
   readonly hostname: string;
   readonly platform: string;
+  readonly arch?: string;
+  readonly cpuModel?: string;
+  readonly cpuSpec?: string;
   readonly cpuPercent: number;
   readonly cpuCores: number;
   readonly memoryUsedBytes: number;
   readonly memoryTotalBytes: number;
   readonly memoryPercent: number;
+  readonly memoryType?: string;
+  readonly memorySpeedMhz?: number;
   readonly loadAvg1m?: number;
   readonly sampledAt: number;
 }

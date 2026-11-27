@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
-import { Activity, Eye, EyeOff } from "lucide-react";
+import { Activity, Cpu, Eye, EyeOff, MemoryStick, Server } from "lucide-react";
 import type { SystemEnvironmentLoad } from "@mcode/shared";
 import { cn } from "@/components/lib/utils.js";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card.js";
 import { useServices } from "@/hooks/useServices.js";
 import { useMcodeIntl } from "@/i18n/IntlProvider.js";
 
@@ -139,61 +140,120 @@ export function WorkspaceEnvironmentLoadBar({ isRemote }: { isRemote: boolean })
 
   if (!load) return null;
 
+  const memorySpecText = [
+    load.memoryType,
+    load.memorySpeedMhz ? `${load.memorySpeedMhz} MHz` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
   return (
-    <div
-      className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-background/40 px-2.5 py-2 text-[11px]"
-      data-testid="workspace-env-load-bar"
-    >
-      <div className="flex items-center justify-between gap-2 text-foreground-subtle">
-        <span className="flex min-w-0 items-center gap-1.5 truncate font-medium text-foreground/85">
-          <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />
-          <span className="truncate">{envLabel}</span>
-          <span className="truncate text-[10px] text-foreground-subtle">({load.cpuCores}C)</span>
-        </span>
-        <button
-          type="button"
-          onClick={toggleEnabled}
-          className="inline-flex shrink-0 items-center rounded p-0.5 text-foreground-subtle hover:bg-hover hover:text-foreground"
-          title={isZh ? "暂停实时负载监控" : "Pause load monitor"}
+    <HoverCard openDelay={180} closeDelay={100}>
+      <HoverCardTrigger asChild>
+        <div
+          className="flex flex-col gap-1.5 rounded-lg border border-border/60 bg-background/40 px-2.5 py-2 text-[11px] transition-colors hover:border-border"
+          data-testid="workspace-env-load-bar"
         >
-          <EyeOff className="size-3" aria-hidden="true" />
-        </button>
-      </div>
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center justify-between gap-2 text-[10.5px]">
-          <span className="text-foreground-subtle">CPU</span>
-          <span className="font-mono tabular-nums text-foreground/90">
-            {load.cpuPercent.toFixed(0)}%
-          </span>
+          <div className="flex items-center justify-between gap-2 text-foreground-subtle">
+            <span className="flex min-w-0 items-center gap-1.5 truncate font-medium text-foreground/85">
+              <span className="size-1.5 shrink-0 rounded-full bg-emerald-500" aria-hidden="true" />
+              <span className="truncate">{envLabel}</span>
+              <span className="truncate text-[10px] text-foreground-subtle">({load.cpuCores}C)</span>
+            </span>
+            <button
+              type="button"
+              onClick={toggleEnabled}
+              className="inline-flex shrink-0 items-center rounded p-0.5 text-foreground-subtle hover:bg-hover hover:text-foreground"
+              title={isZh ? "暂停实时负载监控" : "Pause load monitor"}
+            >
+              <EyeOff className="size-3" aria-hidden="true" />
+            </button>
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between gap-2 text-[10.5px]">
+              <span className="text-foreground-subtle">CPU</span>
+              <span className="font-mono tabular-nums text-foreground/90">
+                {load.cpuPercent.toFixed(0)}%
+              </span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-[width] duration-500 ease-out",
+                  getLoadBarToneClass(load.cpuPercent),
+                )}
+                style={{ width: `${Math.min(100, Math.max(2, load.cpuPercent))}%` }}
+              />
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between gap-2 text-[10.5px]">
+              <span className="text-foreground-subtle">{isZh ? "内存" : "MEM"}</span>
+              <span className="font-mono tabular-nums text-foreground/90">
+                {load.memoryPercent.toFixed(0)}% ({formatBytesCompact(load.memoryUsedBytes)}/
+                {formatBytesCompact(load.memoryTotalBytes)})
+              </span>
+            </div>
+            <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+              <div
+                className={cn(
+                  "h-full rounded-full transition-[width] duration-500 ease-out",
+                  getLoadBarToneClass(load.memoryPercent),
+                )}
+                style={{ width: `${Math.min(100, Math.max(2, load.memoryPercent))}%` }}
+              />
+            </div>
+          </div>
         </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className={cn(
-              "h-full rounded-full transition-[width] duration-500 ease-out",
-              getLoadBarToneClass(load.cpuPercent),
-            )}
-            style={{ width: `${Math.min(100, Math.max(2, load.cpuPercent))}%` }}
-          />
+      </HoverCardTrigger>
+      <HoverCardContent side="right" align="end" className="w-72 p-3 text-ui-xs">
+        <div className="flex flex-col gap-2.5">
+          <div className="flex items-center justify-between gap-2 border-b border-border/60 pb-2">
+            <span className="flex items-center gap-1.5 font-semibold text-foreground">
+              <Server className="size-3.5 text-foreground-subtle" aria-hidden="true" />
+              {envLabel}
+            </span>
+            <span className="truncate font-mono text-[10.5px] text-foreground-subtle">
+              {load.platform}
+              {load.arch ? `/${load.arch}` : ""}
+            </span>
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-1.5 font-medium text-foreground">
+              <Cpu className="size-3.5 text-foreground-subtle" aria-hidden="true" />
+              <span>{load.cpuModel ?? "CPU"}</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-between gap-1 text-[11px] text-foreground-subtle">
+              <span>
+                {load.cpuCores} {isZh ? "核" : "cores"}
+                {load.cpuSpec ? ` · ${load.cpuSpec}` : ""}
+              </span>
+              <span className="font-mono tabular-nums text-foreground/90">
+                {load.cpuPercent.toFixed(1)}%
+                {load.loadAvg1m !== undefined ? ` · load ${load.loadAvg1m.toFixed(2)}` : ""}
+              </span>
+            </div>
+          </div>
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center justify-between gap-2 font-medium text-foreground">
+              <span className="flex items-center gap-1.5">
+                <MemoryStick className="size-3.5 text-foreground-subtle" aria-hidden="true" />
+                <span>{isZh ? "内存" : "Memory"}</span>
+              </span>
+              <span className="font-mono tabular-nums text-[11px] text-foreground/90">
+                {formatBytesCompact(load.memoryUsedBytes)} /{" "}
+                {formatBytesCompact(load.memoryTotalBytes)} ({load.memoryPercent.toFixed(1)}%)
+              </span>
+            </div>
+            {memorySpecText ? (
+              <div className="text-[11px] text-foreground-subtle">{memorySpecText}</div>
+            ) : null}
+          </div>
+          <div className="truncate border-t border-border/60 pt-1.5 font-mono text-[10px] text-foreground-subtle">
+            {load.hostname}
+          </div>
         </div>
-      </div>
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center justify-between gap-2 text-[10.5px]">
-          <span className="text-foreground-subtle">{isZh ? "内存" : "MEM"}</span>
-          <span className="font-mono tabular-nums text-foreground/90">
-            {load.memoryPercent.toFixed(0)}% ({formatBytesCompact(load.memoryUsedBytes)}/
-            {formatBytesCompact(load.memoryTotalBytes)})
-          </span>
-        </div>
-        <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-          <div
-            className={cn(
-              "h-full rounded-full transition-[width] duration-500 ease-out",
-              getLoadBarToneClass(load.memoryPercent),
-            )}
-            style={{ width: `${Math.min(100, Math.max(2, load.memoryPercent))}%` }}
-          />
-        </div>
-      </div>
-    </div>
+      </HoverCardContent>
+    </HoverCard>
   );
 }
