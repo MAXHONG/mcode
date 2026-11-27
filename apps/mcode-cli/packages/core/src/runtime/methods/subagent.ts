@@ -2,14 +2,13 @@
 import {
   RESPOND_TO_COORDINATOR_TOOL_NAME,
   SESSION_ENTRY_MODEL_SELECTION,
+  SkillNotFoundError,
   parseModelSelectionValue,
 } from "@mcode/contracts";
-import type { SubagentRunOptions } from "@mcode/contracts";
-import { inheritPermissionMode } from "@mcode/contracts";
+import type { CollaborationMode, SubagentRunOptions, WorkspaceId } from "@mcode/contracts";
+import { inheritPermissionMode, restrictPermissionMode } from "@mcode/contracts";
 import {
   defaultScheduler,
-  PermissionService,
-  defaultPermissionConfig,
   buildExploreAllowedTools,
   buildExploreAgentPrompt,
   createExploreSubagentPort,
@@ -19,7 +18,6 @@ import {
 import type {
   ExploreSubagentRuntimeRequest,
   McpConnectionSnapshot,
-  McpPort,
   Model,
   ModelSelection,
   SkillContent,
@@ -28,18 +26,19 @@ import type {
   SkillPort,
   SubagentPort,
 } from "../deps.js";
+import { resolveExecutionState } from "@mcode/shared";
 import { AgentRuntime } from "../agent-runtime.js";
 import type { AgentRuntimeInternal } from "../internal.js";
 import { cloneModelSelection } from "../model-selection.js";
 import { resolveSubagentSelection } from "../helpers/subagent-selection.js";
 import type { AgentRuntimeDeps } from "../types.js";
 import { toMcpToolName } from "../../mcp/index.js";
-import { createBorrowedSubagentMcpAccess } from "../../subagent/borrowed-mcp-port.js";
 import { createSubagentMessageSink } from "../../subagent/message-steering.js";
 import { latestAnnouncedEnvironment } from "./context-refresh.js";
 import {
   extractRequiredMcpServerNames,
   matchesRequiredMcpServer,
+  resolveReferencedMcpServerNames,
 } from "../../subagent/mcp-config.js";
 import { mirrorSubagentToolEvent } from "../../subagent/tool-event-mirror.js";
 import { isBuiltInExploreAgentProfile } from "../../subagent/profile.js";
@@ -64,6 +63,7 @@ import { computeOfficialCuaServerNames } from "./mcp.js";
 import { persistRuntimeModelSelection, sameModelSelection } from "./turn-model.js";
 import { getOffPeakExecution, markTemporaryRuntimeSelection } from "../off-peak/runtime.js";
 import { getOffPeakModelBinding } from "../off-peak/model-binding.js";
+import { noteSubagentActivity } from "../../subagent/background-stall.js";
 
 export function createDefaultSubagentPort(
   this: AgentRuntimeInternal,
@@ -92,6 +92,9 @@ export function createDefaultSubagentPort(
     inactivityTimeoutMs: this.config.subagents?.inactivityTimeoutMs,
     autoBackgroundMs: this.config.subagents?.autoBackgroundMs,
     outputRootDir: this.config.subagents?.outputRootDir,
+    readChildSessionUpdatedAt: async (childSessionId) =>
+      (await this.sessionStore?.getSession(childSessionId))?.time.updated,
+    findTranscriptAgentOutputFile: (agentId) => this.transcriptAgentOutputFiles.get(agentId),
     getAgentDefinitions: this.getAgentDefinitions,
     builtInModelSelectionOverrides: this.config.subagents?.builtInModelSelectionOverrides,
     runtimeTaskRegistry: this.runtimeTaskRegistry,
@@ -198,9 +201,10 @@ export function createDefaultSubagentPort(
             : {}),
           cwd: request.workingDirectory,
         };
+        const mcpConfiguration = this.mcpSession?.read().configuration;
         const officialCuaServerNames = computeOfficialCuaServerNames(
-          this.config.mcp?.servers ?? {},
-          new Set(this.config.mcp?.trustedOfficialCuaServerNames ?? []),
+          mcpConfiguration?.servers ?? {},
+          new Set(mcpConfiguration?.trustedOfficialCuaServerNames ?? []),
         );
         const preflightCuaPolicy = createOfficialCuaPolicy(
           officialCuaServerNames,
@@ -222,8 +226,13 @@ export function createDefaultSubagentPort(
         const childMode = resolveSubagentPermissionMode(
           this.getPlanEnabled() ? "plan" : this.config.mode,
           request.permissionMode,
-          builtInExplore,
+          request.profile.permissionModeRestrictOnly === true,
         );
+        // 旧 plan 枚举不包含基础权限；拆分后继承父会话的基础模式。新建与恢复子会话共用这一份状态。
+        const childExecutionState = resolveExecutionState({
+          mode: childMode === "plan" ? this.config.mode : childMode,
+          planEnabled: childMode === "plan",
+        });
         const childCuaPolicy = createOfficialCuaPolicy(
           officialCuaServerNames,
           childMcpAccess.parentSnapshot?.tools ?? childMcpAccess.snapshot?.tools ?? [],
@@ -300,9 +309,7 @@ export function createDefaultSubagentPort(
         const childRuntime = new AgentRuntime(
           request.sessionId,
           {
-            // 旧 plan 枚举不包含基础权限；拆分后继承完整状态，避免被构造器回退成 build。
-            mode: childMode === "plan" ? this.config.mode : childMode,
-            planEnabled: childMode === "plan",
+            ...childExecutionState,
             // 模型选择的影响不只在最终 request.model：MCS、内建搜索与 token/media 预算会在
             // child runtime 内按 default model 预先塑形。同步 child 因此必须把整套执行
             // 配置都指向父 turn 快照；runner 禁止它转后台，provider registry 则由父 turn
@@ -310,6 +317,12 @@ export function createDefaultSubagentPort(
             modelSelection: cloneModelSelection(childSelection),
             modelContextBudgetStrategy: this.config.modelContextBudgetStrategy,
             workingDirectory: request.workingDirectory,
+            // Bash cd 只改变执行 cwd；若丢失绑定身份，child 会落到另一个 workspace，重启后无法打开。
+            workspacePath: this.config.workspacePath ?? request.workspaceRoot,
+            workspaceIdentity:
+              this.config.workspaceIdentity ??
+              (this.config.memory?.workspaceIdentity?.trim() as WorkspaceId | undefined),
+            workspaceKey: this.config.workspaceKey,
             // 执行模型只由 child Active Model 投影进 Context；envInfo 不保存第二份模型事实。
             envInfo: childRuntimeEnvInfo,
             // Explore 子运行时之前没有继承主会话的流式配置，Protocol 桌面端虽已默认
@@ -320,6 +333,7 @@ export function createDefaultSubagentPort(
             bashTimeoutPolicy: this.config.bashTimeoutPolicy,
             midConversationSystem: this.config.midConversationSystem,
             toolSearch: this.config.toolSearch,
+            totalTokensReminder: this.config.totalTokensReminder,
             bashShellSelection,
             // child 只复用父 runtime 已解析的 instructions snapshot；Project Context 仍不继承。
             currentDate: this.contextSourceSnapshot?.currentDate ?? this.config.currentDate,
@@ -352,6 +366,11 @@ export function createDefaultSubagentPort(
             subagents: {
               backgroundBashMaxMs: this.config.subagents?.backgroundBashMaxMs,
               enabled: false,
+              // 构造时读一次 runner 的实时状态：前台启动的子代理之后转后台，仍按同步语义说明后台 Bash。
+              // 前提：前台转后台的入口（立即发送的认领、自动转后台计时器）都在 child session 就绪后才打开，
+              // 晚于这里的构造，所以前台启动时读到的一定是 false。以后若允许启动阶段转后台
+              // （例如 runner 的 backgroundTask() 接入 UI），要改为由 runner 传入启动时的静态值。
+              startedInForeground: request.background !== true,
             },
             mcp: childMcpAccess.config,
           },
@@ -390,10 +409,9 @@ export function createDefaultSubagentPort(
               parentToolCallId,
               enqueue: (input) => this.enqueueSubagentMessage(input),
             }),
-            // Explore 使用独立只读权限配置；general-purpose 和自定义 agent 继承父权限服务。
-            permissionService: builtInExplore
-              ? new PermissionService(defaultPermissionConfig)
-              : this.permissionService,
+            // 修复原因：Explore 曾新建默认配置的权限服务，父会话的 allowedTools、disallowedTools 和
+            // 会话内授权都不生效。所有子会话（含 Explore）都继承父会话的权限服务。
+            permissionService: this.permissionService,
             toolScheduler: deps.toolScheduler ?? defaultScheduler,
             executionPort: deps.executionPort,
             fileSystemPort: deps.fileSystemPort,
@@ -403,13 +421,21 @@ export function createDefaultSubagentPort(
             imageProcessorPort: deps.imageProcessorPort,
             pdfDocumentPort: deps.pdfDocumentPort,
             memoryRoot: persistentMemory?.rootDir,
-            mcpPort: childMcpAccess.port,
+            ...childMcpAccess.deps,
             skillPort: childSkillPort,
             artifactStore: deps.artifactStore,
             appVersion: this.appVersion,
             eventSink: {
               onSessionEvent: async (event) => {
                 request.reportActivity?.();
+                request.onEvent?.(event);
+                noteSubagentActivity(
+                  this.runtimeTaskRegistry,
+                  request.agentId,
+                  event,
+                  Date.now(),
+                  request.executionId,
+                );
                 // child runtime 的事件已经按 childSessionId 落库，但旧链路只把
                 // 少量工具事件镜像给 parent sink，导致 UI 订阅 child topic 后只能拿到打开时
                 // 的 hydration，后续流式内容不会更新。raw child event 只通知父 runtime 的
@@ -473,6 +499,9 @@ export function createDefaultSubagentPort(
             });
             previousSelection = parseModelSelectionValue(entries?.at(-1)?.data);
             await childRuntime.resumeFromStore({
+              // 修复原因：恢复曾沿用子会话落盘时的模式，父会话改模式或升级后（Explore 曾固定 yolo）
+              // 恢复的子会话仍按旧模式运行；这里用本次按父会话当前状态算出的模式覆盖。
+              executionStateOverride: childExecutionState,
               persistedMessages,
               traceContext: request.traceContext,
             });
@@ -610,21 +639,29 @@ function createSubagentOverrideModelFactory(
 function resolveSubagentPermissionMode(
   parentMode: AgentRuntimeInternal["config"]["mode"],
   permissionMode: ExploreSubagentRuntimeRequest["permissionMode"],
-  builtInExplore: boolean,
+  restrictOnly: boolean,
 ): AgentRuntimeInternal["config"]["mode"] {
+  // 修复原因：插件 profile 按用户级解析，声明 bypassPermissions 时父会话 build 的子会话
+  // 也会变成 yolo，模型生成的命令全部免审批。插件声明只能收紧：取父会话与声明中更严格的一个。
+  // 父会话未设置模式时按 build 比较，与 getMode 的默认值一致。
+  const applyDeclared = (mode: CollaborationMode): CollaborationMode =>
+    restrictOnly ? restrictPermissionMode(parentMode ?? "build", mode) : mode;
   switch (permissionMode) {
     case "bypassPermissions":
     case "dontAsk":
-      return inheritPermissionMode(parentMode, "yolo");
+      return applyDeclared(inheritPermissionMode(parentMode, "yolo"));
     case "acceptEdits":
-      return "edit";
+      return applyDeclared("edit");
     case "auto":
-      return "auto";
+      return applyDeclared("auto");
     case "plan":
-      return "plan";
+      return applyDeclared("plan");
     case "default":
     case undefined:
-      return inheritPermissionMode(parentMode, builtInExplore ? "yolo" : parentMode);
+      // 修复原因：内置 Explore 曾在这里固定为 yolo，只靠 prompt 约束只读；提示注入后模型可经
+      // Agent(Explore) 在 build 或 Plan 父会话下免审批执行任意 Bash。现在与其他 profile 一样继承
+      // 父会话模式与 Plan 状态，Bash 是否只读交给 shell AST 判定。
+      return parentMode;
     default:
       return parentMode;
   }
@@ -692,7 +729,7 @@ function appendCoordinatorResponseTool(toolNames: readonly string[]): readonly s
 
 interface ResolvedSubagentMcpAccess {
   config: { enabled?: boolean } | undefined;
-  port: McpPort | undefined;
+  deps: Pick<AgentRuntimeDeps, "mcpPort">;
   parentSnapshot: McpConnectionSnapshot | undefined;
   snapshot: McpConnectionSnapshot | undefined;
 }
@@ -703,35 +740,59 @@ async function resolveSubagentMcpAccess(
   officialCuaServerNames: ReadonlySet<string>,
 ): Promise<ResolvedSubagentMcpAccess> {
   if (!shouldBorrowParentMcp(request)) {
-    return { config: undefined, parentSnapshot: undefined, port: undefined, snapshot: undefined };
+    return {
+      config: undefined,
+      parentSnapshot: undefined,
+      deps: { mcpPort: undefined },
+      snapshot: undefined,
+    };
   }
 
   const scopedServerNames = request.profile.mcpServers?.length
     ? request.profile.mcpServers
     : undefined;
-  if (!this.mcpPort || this.config.mcp?.enabled === false) {
+  if (!this.mcpPort || this.mcpSession?.read().configuration.enabled === false) {
     if (scopedServerNames) {
       throw createSubagentMcpUnavailableError(request);
     }
     return {
-      config: this.config.mcp?.enabled === false ? { enabled: false } : undefined,
+      config:
+        this.mcpSession?.read().configuration.enabled === false ? { enabled: false } : undefined,
       parentSnapshot: undefined,
-      port: undefined,
+      deps: { mcpPort: undefined },
       snapshot: undefined,
     };
   }
 
-  // child 不拥有连接生命周期，只能复用 parent constructor 已创建的启动快照。
-  const parentStartupSnapshot = await this.mcpStartupPromise;
-  if (!parentStartupSnapshot) {
+  // 启动任务只负责等待；新 child 的范围必须来自当前目录，否则 list_changed 永久不可继承。
+  // 等待集合 = mcpServers ∪ tools 引用的 server：修复前只等 mcpServers，只在 tools 里写
+  // MCP 工具的子 agent 在启动窗口内会被下面的校验判为工具缺失。继承全部工具时不校验，也不等。
+  const inheritsAvailableTools =
+    request.allowedTools.length === 0 || request.allowedTools.includes("*");
+  const referencedServerNames = inheritsAvailableTools
+    ? []
+    : resolveReferencedMcpServerNames(
+        request.allowedTools,
+        Object.keys(this.mcpPort.getToolSnapshot()),
+      );
+  const access = await this.createChildMcpAccess(scopedServerNames, officialCuaServerNames, {
+    waitFor: [...new Set([...(scopedServerNames ?? []), ...referencedServerNames])],
+  });
+  const parentSnapshot = access.parentSnapshot;
+  if (!parentSnapshot) {
     if (scopedServerNames) {
       throw createSubagentMcpUnavailableError(request);
     }
-    return { config: undefined, parentSnapshot: undefined, port: undefined, snapshot: undefined };
+    return {
+      config: undefined,
+      parentSnapshot: undefined,
+      deps: { mcpPort: undefined },
+      snapshot: undefined,
+    };
   }
 
   const unavailableScopedServerNames = (scopedServerNames ?? []).filter(
-    (serverName) => parentStartupSnapshot.statuses[serverName]?.status !== "connected",
+    (serverName) => parentSnapshot.statuses[serverName]?.status !== "connected",
   );
   if (unavailableScopedServerNames.length > 0) {
     throw createCoreError(
@@ -747,18 +808,7 @@ async function resolveSubagentMcpAccess(
     );
   }
 
-  const borrowed = createBorrowedSubagentMcpAccess(
-    this.mcpPort,
-    parentStartupSnapshot,
-    scopedServerNames,
-    officialCuaServerNames,
-  );
-  return {
-    config: { enabled: true },
-    parentSnapshot: parentStartupSnapshot,
-    port: borrowed.port,
-    snapshot: borrowed.snapshot,
-  };
+  return access;
 }
 
 function shouldBorrowParentMcp(request: ExploreSubagentRuntimeRequest): boolean {
@@ -785,7 +835,7 @@ function validateSubagentMcpRequirements(
     normalizedAllowedTools.filter(isMcpServerSelector),
   );
   if (requiredToolNames.length === 0 && requiredServerNames.length === 0) return;
-  if (!access.port || !access.snapshot) {
+  if (!access.deps.mcpPort || !access.snapshot) {
     throw createSubagentMcpUnavailableError(request, requiredToolNames);
   }
   const snapshot = access.snapshot;
@@ -813,7 +863,7 @@ function validateSubagentMcpRequirements(
 
   throw createCoreError(
     CoreErrorType.ConfigurationError,
-    `Required MCP tool is not available in the parent startup snapshot: ${missingToolNames.join(", ")}`,
+    `Required MCP tool is not available in the parent MCP snapshot: ${missingToolNames.join(", ")}`,
     {
       context: {
         agentType: request.agentType,
@@ -838,7 +888,7 @@ function createSubagentMcpUnavailableError(
 ) {
   return createCoreError(
     CoreErrorType.ConfigurationError,
-    "Subagent MCP is unavailable because the parent startup snapshot is unavailable",
+    "Subagent MCP is unavailable because the parent MCP snapshot is unavailable",
     {
       context: {
         agentType: request.agentType,
@@ -895,20 +945,10 @@ class FilteredSkillPort implements SkillPort {
       throw createSubagentComputerUseUnavailableError(request.name);
     }
     const resolvedName = await this.resolveAllowedSkillRequestName(request, options);
-    if (!resolvedName) {
-      throw createCoreError(
-        CoreErrorType.ToolExecutionFailed,
-        "Skill is not allowed for subagent",
-        {
-          context: {
-            allowedSkills: this.allowedSkills ? [...this.allowedSkills] : [],
-            skill: request.name,
-            toolName: "Skill",
-          },
-          recoverable: true,
-        },
-      );
-    }
+    // 修复原因：名称不在子代理能看到的目录里时原来抛不带 <tool_use_error> 的 `Skill is not allowed for subagent`，
+    // 与主会话的 `Unknown skill` 不一致。子代理看到的只有过滤后的目录，白名单之外与不存在对它是一回事；
+    // 抛 SkillNotFoundError 后由 Skill handler 统一报错，Did you mean 也只从过滤后的目录里选。
+    if (!resolvedName) throw new SkillNotFoundError(request.name);
     return this.parent.loadSkill({ ...request, name: resolvedName }, options);
   }
 

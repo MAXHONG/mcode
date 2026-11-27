@@ -56,6 +56,7 @@ v3.15.6 起从官网检查更新。v3.15.2 – v3.15.5 仍读取 GitHub Releases
 
 ## 更新
 
+- 2026-11-27：v4.0.0 — 同步上游 ZCode v4.0.0（跨越 v3.17.2 / v3.18.2 / v4.0.0，包含文档预装工具链、Regional OAuth 登录优化、远控与远程开发稳定性修复、多语言支持增强等）。完整保留全部 Mcode 二开能力（`mcode.hjh.im` 官网自动更新、自建手机远控中转 `remote.hjh.im` 方案 A、远程开发自建组件方案 B、Linux Web 账号密码登录、钉钉机器人、Mcode 品牌资源）及全部隐私加固策略。
 - 2026-10-30：v3.17.1 — 同步上游 ZCode v3.17.1（Electron 44、远控 V2 新架构、手机日志/推送、设备列表页等）。手机远控仍默认走 Mcode 自建中转 `remote.hjh.im`（relay V1，扫码免登录），z.ai 官方中转（V2，需登录 z.ai）作为备用；远程开发（SSH/WSL/Docker）组件统一为 Mcode 命名并改由 mcode.hjh.im 自建分发。隐私加固：只保留 z.ai/智谱账号登录与模型调用外联，问题反馈（日志/截图上传）、手机推送事件上报、会话分享发布、Sites 默认启用全部关闭，遥测默认关闭。
 - 2026-10-22：v3.15.7 — 新增钉钉机器人渠道：企业内部应用 + Stream 模式长连接（无需公网回调地址），在「机器人」里填写 Client ID / Client Secret 后单聊发送 `/bind` 绑定；支持单聊、群聊 @ 回复、Markdown 长消息分段、图片/文件/语音（语音识别文本）、编号选项、定时任务结果回推，多窗口只保持一条连接。详见 `docs/bots.md`。
 - 2026-10-22：v3.15.6 — 上线官网 <https://mcode.hjh.im>（参考 ZCode 官网，中英文，下载区自动识别系统，版本历史页），源码在私有仓库 `MAXHONG/mcode-web`，安装包与更新清单托管在 Cloudflare R2；桌面端自动更新源改为 `https://mcode.hjh.im/download/latest/`（私有仓库的 GitHub Releases 匿名 404，此前客户端收不到更新）；未签名 macOS 提示更新时打开官网下载页；`install.sh` 默认从官网下载，`curl -fsSL https://mcode.hjh.im/install.sh | sh` 匿名可用；发版工作流新增「Publish to website」步骤（仓库 Secrets `CLOUDFLARE_ACCOUNT_ID` / `R2_ACCESS_KEY_ID` / `R2_SECRET_ACCESS_KEY`，令牌仅限 `mcode-releases` 桶）；Linux 包元数据 homepage 与分享文案链接改为官网。

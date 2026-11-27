@@ -92,6 +92,12 @@ autoUpdaterMock.downloadedUpdateHelper = null;
 
 vi.mock("node:child_process", () => ({
   spawn: spawnMock,
+  execFile: vi.fn((...args: unknown[]) => {
+    const callback = args.find((arg) => typeof arg === "function") as
+      | ((err: Error | null, stdout: string, stderr: string) => void)
+      | undefined;
+    callback?.(null, "", "");
+  }),
 }));
 
 vi.mock("../scripts/powershell-command.mjs", () => ({
@@ -1872,6 +1878,8 @@ describe("autoUpdater ready state sync", () => {
     autoUpdaterMock.emit("update-downloaded", { version: "0.1.25" });
     await Promise.resolve();
     quitHandler?.();
+    await Promise.resolve();
+    await Promise.resolve();
 
     expect(onBeforeQuitAndInstall).toHaveBeenCalledTimes(1);
     expect(autoUpdaterMock.quitAndInstall).toHaveBeenCalledTimes(0);
@@ -1956,7 +1964,9 @@ describe("autoUpdater ready state sync", () => {
     await Promise.resolve();
 
     expect(onBeforeQuitAndInstall).toHaveBeenCalledTimes(1);
-    // Bugfix: 3.3.0 的 detached hidden PowerShell launcher 只证明 powershell.exe
+    await Promise.resolve();
+    await Promise.resolve();
+    // Bugfix: 3.3.0 的 detached hidden PowerShell launcher 只证明 powershell.exe 进程被
     // 创建成功，不能证明安装器脚本实际执行。Windows 也必须回到 electron-updater 原生入口。
     expect(spawnMock).not.toHaveBeenCalled();
     expect(appMock.exit).not.toHaveBeenCalled();

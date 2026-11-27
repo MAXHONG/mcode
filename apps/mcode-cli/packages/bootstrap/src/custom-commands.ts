@@ -1,5 +1,5 @@
 import { resolve } from "node:path";
-import { createConfig } from "@mcode/adapters/config";
+import { createConfigWithPluginMigrations } from "@mcode/adapters/config";
 import { createNodeCustomCommandAdapter } from "@mcode/adapters/commands";
 import type {
   CustomCommandContent,
@@ -7,10 +7,14 @@ import type {
   CustomCommandLoadOutcome,
   Logger,
 } from "@mcode/contracts";
-import { resolveMcodePlugins } from "./plugins.js";
+import { resolveMcodePlugins, type ResolveMcodePluginsOptions } from "./plugins.js";
 import { collectDisabledPaths } from "./skill-command-overrides.js";
 
 export interface ListMcodeCustomCommandsOptions {
+  workspaceIdentity?: string;
+  remoteSessionId?: string;
+  pluginPreparation?: ResolveMcodePluginsOptions["pluginPreparation"];
+  pluginDiscovery?: ResolveMcodePluginsOptions["pluginDiscovery"];
   env?: NodeJS.ProcessEnv;
   homeDirectory?: string;
   logger?: Logger;
@@ -33,7 +37,7 @@ export interface McodeCustomCommandInspection {
 export async function listMcodeCustomCommands(
   options: ListMcodeCustomCommandsOptions = {},
 ): Promise<CustomCommandLoadOutcome> {
-  const discovery = createCustomCommandDiscovery(options);
+  const discovery = await createCustomCommandDiscovery(options);
   return await discovery.adapter.discoverCommands({
     workingDirectory: discovery.workingDirectory,
   });
@@ -42,7 +46,7 @@ export async function listMcodeCustomCommands(
 export async function inspectMcodeCustomCommand(
   options: InspectMcodeCustomCommandOptions,
 ): Promise<McodeCustomCommandInspection> {
-  const discovery = createCustomCommandDiscovery(options);
+  const discovery = await createCustomCommandDiscovery(options);
   const workingDirectory = discovery.workingDirectory;
   const adapter = discovery.adapter;
   const outcome = await adapter.discoverCommands({ workingDirectory });
@@ -63,23 +67,27 @@ export async function inspectMcodeCustomCommand(
 export async function loadMcodeCustomCommand(
   options: InspectMcodeCustomCommandOptions,
 ): Promise<CustomCommandContent> {
-  const discovery = createCustomCommandDiscovery(options);
+  const discovery = await createCustomCommandDiscovery(options);
   return await discovery.adapter.loadCommand({
     name: normalizeCommandName(options.name),
     workingDirectory: discovery.workingDirectory,
   });
 }
 
-function createCustomCommandDiscovery(options: ListMcodeCustomCommandsOptions) {
+async function createCustomCommandDiscovery(options: ListMcodeCustomCommandsOptions) {
   const workingDirectory = resolve(options.workingDirectory ?? process.cwd());
-  const configResult = createConfig({
+  const configResult = await createConfigWithPluginMigrations({
     env: options.env,
     projectConfigPath: options.projectConfigPath,
     workingDirectory,
     skipUserConfig: options.skipUserConfig,
     userConfigPath: options.userConfigPath,
   });
-  const pluginOutcome = resolveMcodePlugins({
+  const pluginOutcome = await resolveMcodePlugins({
+    pluginPreparation: options.pluginPreparation,
+    pluginDiscovery: options.pluginDiscovery,
+    workspaceIdentity: options.workspaceIdentity,
+    remoteSessionId: options.remoteSessionId,
     configResult,
     env: options.env,
     logger: options.logger,

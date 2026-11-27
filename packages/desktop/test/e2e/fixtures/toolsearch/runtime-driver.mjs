@@ -27,8 +27,8 @@ const app = await createMcodeApp({
     toolAllowlist: [
       "Read",
       "ToolSearch",
-      "WebFetch",
-      "TodoWrite",
+      "TaskOutput",
+      "TodoRead",
       "DeferredToolCall",
       ...(options.recording ? [recordingTool] : []),
     ],

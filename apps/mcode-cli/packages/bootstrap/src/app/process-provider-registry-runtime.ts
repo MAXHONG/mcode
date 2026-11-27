@@ -71,13 +71,15 @@ export async function startProcessProviderRegistryRuntime(
               "mcode-builtin-refresh.json",
             ),
             resolveEndpointKey: () => resolveRuntimeMcodeEndpointOrigin(env),
-            fetchRelease: (endpointOrigin, signal) =>
+            fetchRelease: (endpointOrigin, signal, { reuseUrl }) =>
               downloadMcodeBuiltinRelease({
                 endpointOrigin,
                 signal,
                 appVersion: MCODE_VERSION,
                 platform: resolveMcodeBuiltinClientPlatform(),
                 request: options.standalone?.request ?? globalThis.fetch,
+                resolveMcodeJwtToken: () => credentialStore?.load("zcodejwttoken"),
+                ...(reuseUrl ? { reuseUrl } : {}),
               }),
             onRefreshResult: options.standalone?.onBuiltinRefreshResult,
           },

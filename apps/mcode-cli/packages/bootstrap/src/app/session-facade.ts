@@ -60,6 +60,7 @@ type SessionFacade = Pick<
   | "getMcpAppConnectionSnapshot"
   | "waitForMcpAppConnection"
   | "onMcpAppConnectionInvalidated"
+  | "reconnectMcpAppConnection"
   | "replaceMcpAppProvidedTools"
   | "connectMcpServer"
   | "disconnectMcpServer"
@@ -101,7 +102,8 @@ type SessionFacade = Pick<
   | "updateTargetStatus"
 >;
 
-const DEFAULT_SESSION_RESOURCE_CLOSE_TIMEOUT_MS = 6_000;
+/** 打开 MCP App 时重连断开连接的等待上限，与 MCP 默认请求超时一致。 */
+const MCP_APP_OPEN_RECONNECT_BUDGET_MS = 30_000;
 
 interface SessionResourceCloseInput {
   beginShutdown: () => void;
@@ -109,9 +111,9 @@ interface SessionResourceCloseInput {
   closeExecution?: () => Promise<void> | void;
   closeMcp?: () => Promise<void> | void;
   closeNodeReplBrowserBroker?: () => Promise<void> | void;
+  closeSkillCatalog?: () => void;
   closeSessionStore?: () => void;
   logger: Logger;
-  timeoutMs?: number | null;
 }
 
 interface CreateSessionFacadeDeps {
@@ -123,8 +125,10 @@ interface CreateSessionFacadeDeps {
   closeDynamicWorkflowRuns?: () => Promise<void>;
   closeScriptWorkflowRuns?: () => Promise<void>;
   closeNodeReplBrowserBroker?: () => Promise<void> | undefined;
+  /** 释放本 app 获取的 skill 实时目录引用；Memory agent 等借用同一端口，不能由 runtime 关闭。 */
+  closeSkillCatalog?: () => void;
   configResult: ConfigResult;
-  configuredMcpServers: Record<string, McpServerConfig>;
+  getConfiguredMcpServers(): Record<string, McpServerConfig>;
   configuredDefaultModelSelection?: ModelSelection;
   executionPort: ExecutionPort;
   localSettingStore?: LocalSettingStorePort;
@@ -200,9 +204,7 @@ export function createSessionFacade(deps: CreateSessionFacadeDeps): SessionFacad
     const visibleObjective = action === "set" ? (input.objective ?? "").trim() : undefined;
     const visibleGoalQuery =
       action === "set" ? input.displayText?.trim() || visibleObjective : undefined;
-    // /goal 不走普通 prompt 提交流程，但它会先把 session 持久化。
-    // 必须在首次持久化前走统一用户执行边界，否则 runtime/bash_shell_selection
-    // 会因为当时 selection 为空而缺失，冷恢复时退回 legacy shell fallback。
+    // /goal 不走普通 prompt 提交流程，同样先走统一用户执行边界：读取 shell 设置并完成 resume 准备。
     await deps.prepareUserExecutionBoundary({
       traceContext: deps.traceContext,
     });
@@ -288,50 +290,49 @@ export function createSessionFacade(deps: CreateSessionFacadeDeps): SessionFacad
 
   return {
     close: async () => {
-      closePromise ??= closeSessionResourceWithinDeadline(
-        "session_shutdown",
-        async () => {
-          // 关闭入口先阻止新调度并取消在飞 Memory Extraction，再等待取消链路收口。
-          const errors: unknown[] = [];
-          deps.runtime.beginShutdown();
-          const owners: Array<[string, (() => Promise<void>) | undefined]> = [
-            ["runtime_work", () => deps.runtime.closeOwnedWork()],
-            ["dynamic_workflow", deps.closeDynamicWorkflowRuns],
-            ["script_workflow", deps.closeScriptWorkflowRuns],
-          ];
-          // deadline 只限制外部等待；真实 drain 未完成前，依赖资源必须继续由此链持有。
-          const closed = await Promise.allSettled(
-            owners.flatMap(([, close]) => (close ? [Promise.resolve().then(close)] : [])),
-          );
-          for (const result of closed) if (result.status === "rejected") errors.push(result.reason);
-          const closableSessionStore =
-            deps.ownsSessionStore && isClosableSessionStore(deps.sessionStore)
-              ? deps.sessionStore
-              : undefined;
-          try {
-            await closeSessionResources({
-              beginShutdown: () => deps.runtime.beginShutdown(),
-              closeBrowserSession: () => deps.runtime.closeBrowserSession(),
-              closeExecution:
-                deps.ownsExecutionPort && deps.executionPort.close
-                  ? () => deps.executionPort.close?.()
-                  : undefined,
-              closeMcp: deps.ownsMcpPort && deps.mcpPort ? () => deps.mcpPort?.close() : undefined,
-              closeNodeReplBrowserBroker: deps.closeNodeReplBrowserBroker,
-              closeSessionStore: closableSessionStore
-                ? () => closableSessionStore.close()
+      // close 的结果必须代表真实完成；调用方等待超时不能让生命周期永久误判 faulted。
+      // 先登记 Promise 再执行 shutdown 回调，保证同步重入也只关闭一次。
+      closePromise ??= Promise.resolve().then(async () => {
+        // 关闭入口先阻止新调度并取消在飞 Memory Extraction，再等待取消链路收口。
+        const errors: unknown[] = [];
+        deps.runtime.beginShutdown();
+        const owners: Array<[string, (() => Promise<void>) | undefined]> = [
+          ["runtime_work", () => deps.runtime.closeOwnedWork()],
+          ["dynamic_workflow", deps.closeDynamicWorkflowRuns],
+          ["script_workflow", deps.closeScriptWorkflowRuns],
+        ];
+        // 所属工作实际收口后才释放依赖资源；进程退出预算由外层进程 owner 负责。
+        const closed = await closeNamedResources(owners, deps.logger);
+        for (const result of closed) if (result.status === "rejected") errors.push(result.reason);
+        const closableSessionStore =
+          deps.ownsSessionStore && isClosableSessionStore(deps.sessionStore)
+            ? deps.sessionStore
+            : undefined;
+        try {
+          await closeSessionResources({
+            beginShutdown: () => deps.runtime.beginShutdown(),
+            closeBrowserSession: () => deps.runtime.closeBrowserSession(),
+            closeExecution:
+              deps.ownsExecutionPort && deps.executionPort.close
+                ? () => deps.executionPort.close?.()
                 : undefined,
-              logger: deps.logger,
-              timeoutMs: null,
-            });
-          } catch (error) {
-            errors.push(error);
-          }
-          if (errors.length) throw new AggregateError(errors, "Session shutdown failed");
-        },
-        DEFAULT_SESSION_RESOURCE_CLOSE_TIMEOUT_MS,
-        deps.logger,
-      );
+            closeMcp: deps.ownsMcpPort && deps.mcpPort ? () => deps.mcpPort?.close() : undefined,
+            closeNodeReplBrowserBroker: deps.closeNodeReplBrowserBroker,
+            closeSkillCatalog: deps.closeSkillCatalog,
+            closeSessionStore: closableSessionStore
+              ? () => closableSessionStore.close()
+              : undefined,
+            logger: deps.logger,
+          });
+        } catch (error) {
+          errors.push(error);
+        }
+        if (errors.length)
+          throw new AggregateError(
+            errors,
+            `Session shutdown failed: ${errors.map((error) => (error instanceof Error ? error.message : String(error))).join("; ")}`,
+          );
+      });
       return await closePromise;
     },
     getMode: () => deps.runtime.getMode(),
@@ -383,18 +384,20 @@ export function createSessionFacade(deps: CreateSessionFacadeDeps): SessionFacad
     listMcpServers: async () =>
       listMcpServerStatuses(
         deps.mcpPort,
-        deps.configuredMcpServers,
+        deps.getConfiguredMcpServers(),
         deps.untrustedProjectMcpServers,
       ),
     connectMcpServer: async (name) => {
-      const config = deps.configuredMcpServers[name];
+      const config = deps.getConfiguredMcpServers()[name];
       if (!config) {
         throw new Error(`MCP server is not configured: ${name}`);
       }
       if (!deps.mcpPort) {
         throw new Error("MCP is disabled");
       }
+      // 设置页的"连接"是显式操作：同配置也要重新校验，失败的连接据此重连。
       return deps.mcpPort.connectServer(name, config, {
+        revalidate: true,
         trace: deps.traceContext,
         workingDirectory: deps.workingDirectory,
       });
@@ -471,6 +474,12 @@ export function createSessionFacade(deps: CreateSessionFacadeDeps): SessionFacad
       deps.mcpPort?.waitForAppConnection
         ? deps.mcpPort.waitForAppConnection(name)
         : (deps.mcpPort?.appConnectionSnapshot?.(name) ?? null),
+    reconnectMcpAppConnection: async (name) => {
+      await deps.mcpPort?.waitForServer?.(name, {
+        reconnect: true,
+        timeoutMs: MCP_APP_OPEN_RECONNECT_BUDGET_MS,
+      });
+    },
     callMcpToolForUi: async (serverName, toolName, args, options) => {
       if (!deps.mcpPort) {
         throw new Error("MCP is disabled");
@@ -674,6 +683,8 @@ export function createSessionFacade(deps: CreateSessionFacadeDeps): SessionFacad
       } else {
         deps.runtime.setSessionModelSelection(sessionSelection);
       }
+      // 换模型后下一个请求的 context 组成随之变化（context-composition.md §3.4）。
+      deps.runtime.markContextCompositionChanged();
       // transient 切换不产出 modelChange 聊天通知：应用/还原成对出现会刷出两条无意义通知。
       if (!options?.transient) {
         deps.runtime.recordPendingModelChange({
@@ -766,6 +777,49 @@ export function createSessionFacade(deps: CreateSessionFacadeDeps): SessionFacad
   };
 }
 
+/** 慢关闭只提供诊断；不能用超时结果替代资源的真实完成。 */
+async function closeNamedResources(
+  resources: Array<[string, (() => Promise<void> | void) | undefined]>,
+  logger: Logger,
+): Promise<PromiseSettledResult<void>[]> {
+  const pending = new Set(resources.filter(([, close]) => close).map(([name]) => name));
+  const slow = setTimeout(() => {
+    if (pending.size)
+      logger.warn("Session resources are still closing", {
+        event: "session.resource_close.slow",
+        pendingResources: [...pending],
+        elapsedMs: 30_000,
+      });
+  }, 30_000);
+  slow.unref();
+  try {
+    return await Promise.allSettled(
+      resources.flatMap(([name, close]) =>
+        close
+          ? [
+              Promise.resolve()
+                .then(close)
+                .catch((cause: unknown) => {
+                  logger.warn("Session resource close failed", {
+                    event: "session.resource_close.failed",
+                    resource: name,
+                    error: cause instanceof Error ? cause.message : String(cause),
+                  });
+                  throw new Error(
+                    `${name}: ${cause instanceof Error ? cause.message : String(cause)}`,
+                    { cause },
+                  );
+                })
+                .finally(() => pending.delete(name)),
+            ]
+          : [],
+      ),
+    );
+  } finally {
+    clearTimeout(slow);
+  }
+}
+
 export async function closeSessionResources(input: SessionResourceCloseInput): Promise<void> {
   const errors: unknown[] = [];
   try {
@@ -784,28 +838,12 @@ export async function closeSessionResources(input: SessionResourceCloseInput): P
     ["execution", input.closeExecution],
     ["mcp", input.closeMcp],
     ["node_repl_browser_broker", input.closeNodeReplBrowserBroker],
+    ["skill_catalog", input.closeSkillCatalog],
   ];
 
   // 独立资源并行释放；外部超时不能让仍在收尾的借用者碰到已关闭的 store。
   const completion = (async () => {
-    const results = await Promise.allSettled(
-      resources.flatMap(([name, close]) =>
-        close
-          ? [
-              Promise.resolve()
-                .then(close)
-                .catch((error: unknown) => {
-                  input.logger.warn("Session resource close failed", {
-                    event: "session.resource_close.failed",
-                    resource: name,
-                    error: error instanceof Error ? error.message : String(error),
-                  });
-                  throw error;
-                }),
-            ]
-          : [],
-      ),
-    );
+    const results = await closeNamedResources(resources, input.logger);
     for (const result of results) if (result.status === "rejected") errors.push(result.reason);
     try {
       input.closeSessionStore?.();
@@ -813,51 +851,12 @@ export async function closeSessionResources(input: SessionResourceCloseInput): P
       errors.push(error);
     }
     if (errors.length)
-      throw new AggregateError(errors, "Session resources could not be safely released");
+      throw new AggregateError(
+        errors,
+        `Session resources could not be safely released: ${errors.map((error) => (error instanceof Error ? error.message : String(error))).join("; ")}`,
+      );
   })();
-  if (input.timeoutMs === null) return completion;
-  return closeSessionResourceWithinDeadline(
-    "session_resources",
-    () => completion,
-    Math.max(1, Math.trunc(input.timeoutMs ?? DEFAULT_SESSION_RESOURCE_CLOSE_TIMEOUT_MS)),
-    input.logger,
-  );
-}
-
-async function closeSessionResourceWithinDeadline(
-  name: string,
-  close: () => Promise<void> | void,
-  timeoutMs: number,
-  logger: Logger,
-): Promise<void> {
-  let timer: NodeJS.Timeout | undefined;
-  const closePromise = Promise.resolve().then(close);
-  const outcome = await Promise.race([
-    closePromise.then(
-      () => ({ type: "completed" as const }),
-      (error: unknown) => ({ type: "failed" as const, error }),
-    ),
-    new Promise<{ type: "timed_out" }>((resolve) => {
-      timer = setTimeout(() => resolve({ type: "timed_out" }), timeoutMs);
-    }),
-  ]);
-  if (timer) clearTimeout(timer);
-
-  if (outcome.type === "completed") return;
-  if (outcome.type === "timed_out") {
-    logger.warn("Session resource close timed out", {
-      event: "session.resource_close.timed_out",
-      resource: name,
-      timeoutMs,
-    });
-    throw new Error(`Session resource close timed out: ${name}`);
-  }
-  logger.warn("Session resource close failed", {
-    error: outcome.error instanceof Error ? outcome.error.message : String(outcome.error),
-    event: "session.resource_close.failed",
-    resource: name,
-  });
-  throw outcome.error;
+  return completion;
 }
 
 async function persistSessionModelSelection(deps: CreateSessionFacadeDeps): Promise<void> {

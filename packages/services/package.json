@@ -22,6 +22,7 @@
     "@mcode/provider": "workspace:*",
     "@mcode/provider-node": "workspace:*",
     "@mcode/rpc": "workspace:*",
+    "@mcode/session-control": "workspace:*",
     "@mcode/shared": "workspace:*",
     "@mcode/mcode-cua": "workspace:*",
     "chokidar": "4.0.3",

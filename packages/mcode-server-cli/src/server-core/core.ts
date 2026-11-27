@@ -1,9 +1,15 @@
 import { hostname } from "node:os";
 import {
+  createLegacyServerCredentialCipher,
+  resolveServerCredentialFile,
+  MCODE_CREDENTIALS_FILE_ENV,
+} from "@mcode/shared/credential-security";
+import {
   createServerHostServices,
   disposeServiceResourcesAndWait,
   materializeMcodeBuiltinProviderConfig,
   getAppConfigDir,
+  getCredentialsFilePath,
   MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV,
   createTopicResourcePeers,
 } from "@mcode/services/node";
@@ -14,7 +20,11 @@ import { createIngressToken } from "./ingressToken.js";
 import { installParentDisconnectHandler } from "./parentDisconnect.js";
 import { resolveCoreServerId } from "./serverIdentity.js";
 import { createTaskActivityTracker } from "./taskActivityTracker.js";
-import { CORE_HEARTBEAT_INTERVAL_MS } from "../contracts.js";
+import {
+  CORE_HEARTBEAT_INTERVAL_MS,
+  SERVER_CREDENTIAL_FORMAT,
+  SERVER_CREDENTIAL_FORMAT_ENV,
+} from "../contracts.js";
 import { resolveServerLayout } from "../runtime/paths.js";
 
 declare const __MCODE_BUILTIN_PROVIDER_CONFIG_JSON__: string | undefined;
@@ -33,6 +43,18 @@ export async function runServerCore(generation: number): Promise<void> {
     else parentDisconnected = true;
   });
   const layout = resolveServerLayout(process.env.MCODE_SERVER_ROOT?.trim());
+  // Bug 原因（ZCT-2120452663971209216）：共享库被同机 Desktop 固定为系统库后，Core 读不到其密钥。
+  // 准备命令此时已创建 Server 自有库；Core 只读该事实，并在任何凭据读写方创建前写入或清除
+  // 进程环境，Core 内的凭据服务、兼容 cipher 和拉起的 Agent 由此指向同一文件。
+  const credentialsFile = await resolveServerCredentialFile({
+    sharedFilePath: layout.sharedCredentialsFile,
+    serverFilePath: layout.serverCredentialsFile,
+  });
+  if (credentialsFile === layout.serverCredentialsFile) {
+    process.env[MCODE_CREDENTIALS_FILE_ENV] = credentialsFile;
+  } else {
+    delete process.env[MCODE_CREDENTIALS_FILE_ENV];
+  }
   const topicResourcePeers = createTopicResourcePeers();
   const explicitMcodeBuiltinProviderConfigFilePath =
     process.env[MCODE_BUILTIN_PROVIDER_CONFIG_FILE_ENV]?.trim();
@@ -53,12 +75,19 @@ export async function runServerCore(generation: number): Promise<void> {
     );
   }
   const sourceServerId = (await resolveCoreServerId()) ?? hostname() ?? "mcode-server";
+  // 旧 Supervisor 会自行回滚，候选 Core 在 owner 换代前必须保持旧格式可读。
+  const legacyUpdateOwner =
+    process.env[SERVER_CREDENTIAL_FORMAT_ENV] !== String(SERVER_CREDENTIAL_FORMAT);
+  const credentialCipherProvider = legacyUpdateOwner
+    ? await createLegacyServerCredentialCipher({ filePath: getCredentialsFilePath() })
+    : undefined;
   const { services, workspaceIdentityMapper, migrationFailedPathCount } =
     await createServerHostServices({
       sourceServerId,
       zcodeBuiltinProviderConfigFilePath,
       providerProvisioningTargetEnabled: true,
-    topicResourceRelayChannel: (request) => topicResourcePeers.getChannel(request),
+      credentialCipherProvider,
+      topicResourceRelayChannel: (request) => topicResourcePeers.getChannel(request),
     });
   const taskActivityTracker = createTaskActivityTracker(services.getOptional(IMcodeAgentService));
   const ingressToken = await createIngressToken(layout);

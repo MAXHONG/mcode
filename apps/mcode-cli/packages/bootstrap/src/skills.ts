@@ -1,14 +1,18 @@
 import { resolve } from "node:path";
-import { createConfig, resolvePath } from "@mcode/adapters/config";
+import { createConfigWithPluginMigrations, resolvePath } from "@mcode/adapters/config";
 import { createNodeSkillAdapter } from "@mcode/adapters/skills";
 import type { Logger, SkillContent, SkillDiagnostic, SkillLoadOutcome } from "@mcode/contracts";
 import { resolveBundledSkillRoots } from "./app/bundled-skills.js";
 import { getCliStorageRoot } from "./app/paths.js";
 import { filterVisualizeSkillRoots } from "./app/visualize-skill-gate.js";
-import { resolveMcodePlugins } from "./plugins.js";
+import { resolveMcodePlugins, type ResolveMcodePluginsOptions } from "./plugins.js";
 import { collectDisabledPaths } from "./skill-command-overrides.js";
 
 export interface ListMcodeSkillsOptions {
+  workspaceIdentity?: string;
+  remoteSessionId?: string;
+  pluginPreparation?: ResolveMcodePluginsOptions["pluginPreparation"];
+  pluginDiscovery?: ResolveMcodePluginsOptions["pluginDiscovery"];
   env?: NodeJS.ProcessEnv;
   /** 协议宿主草稿目录使用；CLI 命令缺省关闭。 */
   includeVisualize?: boolean;
@@ -31,7 +35,7 @@ export interface McodeSkillInspection {
 export async function listMcodeSkills(
   options: ListMcodeSkillsOptions = {},
 ): Promise<SkillLoadOutcome> {
-  const discovery = createSkillDiscovery(options);
+  const discovery = await createSkillDiscovery(options);
   if (!discovery.enabled) {
     return {
       diagnostics: [],
@@ -48,7 +52,7 @@ export async function listMcodeSkills(
 export async function inspectMcodeSkill(
   options: InspectMcodeSkillOptions,
 ): Promise<McodeSkillInspection> {
-  const discovery = createSkillDiscovery(options);
+  const discovery = await createSkillDiscovery(options);
   if (!discovery.enabled) {
     throw new Error("Skills are disabled.");
   }
@@ -75,7 +79,7 @@ export async function inspectMcodeSkill(
   };
 }
 
-function createSkillDiscovery(options: ListMcodeSkillsOptions):
+async function createSkillDiscovery(options: ListMcodeSkillsOptions): Promise<
   | {
       enabled: false;
       workingDirectory: string;
@@ -84,9 +88,10 @@ function createSkillDiscovery(options: ListMcodeSkillsOptions):
       enabled: true;
       skillPort: ReturnType<typeof createNodeSkillAdapter>;
       workingDirectory: string;
-    } {
+    }
+> {
   const workingDirectory = resolve(options.workingDirectory ?? process.cwd());
-  const configResult = createConfig({
+  const configResult = await createConfigWithPluginMigrations({
     env: options.env,
     projectConfigPath: options.projectConfigPath,
     workingDirectory,
@@ -100,7 +105,11 @@ function createSkillDiscovery(options: ListMcodeSkillsOptions):
       workingDirectory,
     };
   }
-  const pluginOutcome = resolveMcodePlugins({
+  const pluginOutcome = await resolveMcodePlugins({
+    pluginPreparation: options.pluginPreparation,
+    pluginDiscovery: options.pluginDiscovery,
+    workspaceIdentity: options.workspaceIdentity,
+    remoteSessionId: options.remoteSessionId,
     configResult,
     env: options.env,
     logger: options.logger,

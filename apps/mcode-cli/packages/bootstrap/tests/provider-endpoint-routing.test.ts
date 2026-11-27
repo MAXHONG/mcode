@@ -1,8 +1,22 @@
 import { describe, expect, it, vi } from "vitest";
 import type { Logger } from "@mcode/contracts";
+import type { SharedMcodeCredentialStore } from "@mcode/adapters/auth";
 import { resolveProcessProviderEndpointRoutingPort } from "../src/provider-endpoint-routing.js";
 
 describe("resolveProcessProviderEndpointRoutingPort", () => {
+  it("keeps injected credential owners separate while reusing one owner's port", () => {
+    const firstStore = { load: vi.fn(async () => null) } as unknown as SharedMcodeCredentialStore;
+    const secondStore = { load: vi.fn(async () => null) } as unknown as SharedMcodeCredentialStore;
+    const create = (credentialStore: SharedMcodeCredentialStore) =>
+      resolveProcessProviderEndpointRoutingPort({
+        env: { MCODE_ENV: "production", MCODE_BASE_URL: "https://credential-owner.example.test" },
+        logger,
+        network: {},
+        credentialStore,
+      });
+    expect(create(firstStore)).toBe(create(firstStore));
+    expect(create(firstStore)).not.toBe(create(secondStore));
+  });
   it("shares one process snapshot owner for the same endpoint and network policy", () => {
     const env = {
       MCODE_ENV: "test",

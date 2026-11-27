@@ -8,10 +8,8 @@ import {
 import {
   WEB_REMOTE_CONTROL_HEARTBEAT_ACK_TIMEOUT_MS,
   WEB_REMOTE_CONTROL_HEARTBEAT_INTERVAL_MS,
-  WEB_REMOTE_CONTROL_RECONNECT_JITTER_MS,
   getWebRemoteControlHeartbeatDelayMs,
   getWebRemoteControlHeartbeatJitterMs,
-  getWebRemoteControlReconnectJitterMs,
   WEB_REMOTE_CONTROL_RPC_TRANSPORT_LIMITS,
   parseWebRemoteControlAppPayload,
   type WebRemoteControlAppPayload,
@@ -20,6 +18,13 @@ import {
   type WebRemoteControlRelayOutgoingMessage,
 } from "@mcode/shared";
 import type { WebRemoteControlRelayAuthProvider } from "./webRemoteControlRelayAuthProvider.js";
+
+const WEB_REMOTE_CONTROL_RECONNECT_JITTER_MS = 1_500;
+function getWebRemoteControlReconnectJitterMs(
+  jitterMs = WEB_REMOTE_CONTROL_RECONNECT_JITTER_MS,
+): number {
+  return Math.floor(Math.random() * Math.max(0, jitterMs));
+}
 
 /** 宿主可选注入的网络观测钩子（desktop 接 ARMS；server 默认空实现）。 */
 export interface WebRemoteControlRelayNetworkObserver {

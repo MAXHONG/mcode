@@ -34,6 +34,7 @@
     "@mcode/i18n": "workspace:*",
     "@mcode/provider": "workspace:*",
     "@mcode/provider-node": "workspace:*",
+    "@mcode/session-control": "workspace:*",
     "@mcode/shared": "workspace:*",
     "@mcode/telemetry": "workspace:*",
     "diff": "^9.0.0",

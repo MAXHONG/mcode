@@ -1,6 +1,20 @@
 import type { AppSettings, WebRemoteControlAppPayload } from "@mcode/shared";
 import type { WebRemoteControlRelayV2Meta } from "@mcode/shared/web-remote-relay";
 
+/**
+ * Mcode 方案 A：自建中转（remote.hjh.im）走 relay V1 挑战应答握手，不需要 z.ai 登录。
+ * 提供该字段即启用 V1；getToken / resolveDeviceSid 在 V1 下不会被调用。
+ */
+export type WebRemoteControlDeviceTransportV1Auth = {
+  passHash: string;
+  /** 已持久化的设备 SID；缺省时先 device_register_init 注册。 */
+  deviceSid?: string;
+  /** 新注册（或 AUTH_FAILED 后重注册）成功；调用方负责持久化 SID + pass_hash。 */
+  onRegistered: (deviceSid: string) => void;
+  /** 持久化的 SID 被中转拒绝（中转数据被清理等）；调用方清除旧身份。 */
+  onInvalidPersistedAuth?: () => void;
+};
+
 export type WebRemoteControlRegisteredDevice = NonNullable<
   AppSettings["webRemoteControlRelayV2Device"]
 >;
@@ -23,20 +37,6 @@ export type WebRemoteControlDeviceTransportState =
   | "paired"
   | "kicked"
   | "error";
-
-/**
- * Mcode 方案 A：自建中转（remote.hjh.im）走 relay V1 挑战应答握手，不需要 z.ai 登录。
- * 提供该字段即启用 V1；getToken / resolveDeviceSid 在 V1 下不会被调用。
- */
-export interface WebRemoteControlDeviceTransportV1Auth {
-  passHash: string;
-  /** 已持久化的设备 SID；缺省时先 device_register_init 注册。 */
-  deviceSid?: string;
-  /** 新注册（或 AUTH_FAILED 后重注册）成功；调用方负责持久化 SID + pass_hash。 */
-  onRegistered(deviceSid: string): void;
-  /** 持久化的 SID 被中转拒绝（中转数据被清理等）；调用方清除旧身份。 */
-  onInvalidPersistedAuth?(): void;
-}
 
 export interface WebRemoteControlDeviceTransportOptions {
   relayWsUrl: string;

@@ -46,7 +46,20 @@ export default defineConfig(({ mode }) => {
           find: /^@mcode\/shared$/,
           replacement: resolve(REPO_ROOT, "packages/shared/src/index.ts"),
         },
-        // Share 镜像不安装 @mcode/ui（它会带入 services/rpc 闭包），子路径导入必须显式指向源码。
+        // Bugfix：message.tsx 的文件链接菜单静态引用 useWorkspaceServices / file-menu，二者值导入
+        // @mcode/rpc，分享只读时间线因此带上 rpc；镜像未安装它，Docker 构建解析失败。rpc 无三方依赖，
+        // 分享页没有 services 时也不会走到该分支，所以直接指向源码（Dockerfile 同步复制 rpc/src）。
+        {
+          find: /^@mcode\/rpc$/,
+          replacement: resolve(REPO_ROOT, "packages/rpc/src/index.ts"),
+        },
+        // Bugfix：shared/app-control 值导入 session-control 契约；镜像只复制该包源码（唯一三方依赖 zod 已由 shared
+        // 安装），未登记别名时 Docker 构建解析失败。
+        {
+          find: /^@mcode\/session-control\/contracts$/,
+          replacement: resolve(REPO_ROOT, "packages/session-control/src/contract.ts"),
+        },
+        // Share 镜像不安装 @mcode/ui（它会带入 services 闭包），子路径导入必须显式指向源码。
         {
           find: "@mcode/ui/useTheme",
           replacement: resolve(REPO_ROOT, "packages/ui/src/useTheme.ts"),
@@ -61,6 +74,19 @@ export default defineConfig(({ mode }) => {
         {
           find: "@mcode/shared/test-ids",
           replacement: resolve(REPO_ROOT, "packages/shared/src/test-ids.ts"),
+        },
+        // 分享管理页复用的基础控件；只依赖 radix-ui / cva / lucide，均在 share-ui 依赖闭包内。
+        {
+          find: "@mcode/ui/button",
+          replacement: resolve(REPO_ROOT, "packages/ui/src/components/ui/button.tsx"),
+        },
+        {
+          find: "@mcode/ui/dropdown-menu",
+          replacement: resolve(REPO_ROOT, "packages/ui/src/components/ui/dropdown-menu.tsx"),
+        },
+        {
+          find: "@mcode/ui/alert-dialog",
+          replacement: resolve(REPO_ROOT, "packages/ui/src/components/ui/alert-dialog.tsx"),
         },
         {
           find: "@mcode/ui/conversation-share-readonly",
