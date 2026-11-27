@@ -18,7 +18,16 @@ describe("Mcode open-source Computer Use runtime", () => {
       granted: true,
       platform: process.platform,
       backend: "mcode-open-cua",
+      capabilities: expect.arrayContaining(["ax_tree", "screenshot", "click", "drag", "scroll", "set_value"]),
     });
+
+    const missingEl = await runtime.execute({
+      toolName: "left_click",
+      arguments: { element_index: 99 },
+      context: { sessionId: "s1", runtimeScope: "main", workspaceKey: "ws1" },
+    });
+    expect(missingEl.isError).toBe(true);
+    expect((missingEl.content[0] as { text: string }).text).toContain("element_unavailable");
 
     const unknown = await runtime.execute({
       toolName: "non_existent_tool",

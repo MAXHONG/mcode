@@ -163,59 +163,73 @@ export async function fetchAndMatchProviderModels(options: {
 }): Promise<DiscoverProviderModelsResult> {
   const fetchImpl = options.fetchImpl ?? fetch;
   const candidateUrls = buildDiscoverModelsUrls(options.baseUrl);
-  const headers: Record<string, string> = {
-    Accept: "application/json",
-    ...(options.headers ?? {}),
-  };
   const trimmedKey = options.apiKey?.trim();
-  if (trimmedKey) {
-    if (options.apiType === "anthropic-messages") {
-      if (!hasHeaderIgnoreCase(headers, "x-api-key")) headers["x-api-key"] = trimmedKey;
-      if (!hasHeaderIgnoreCase(headers, "anthropic-version")) {
-        headers["anthropic-version"] = ANTHROPIC_API_VERSION;
+  const buildAuthHeaders = (useAnthropicAuth: boolean): Record<string, string> => {
+    const next: Record<string, string> = {
+      Accept: "application/json",
+      ...(options.headers ?? {}),
+    };
+    if (!trimmedKey) return next;
+    if (useAnthropicAuth) {
+      if (!hasHeaderIgnoreCase(next, "x-api-key")) next["x-api-key"] = trimmedKey;
+      if (!hasHeaderIgnoreCase(next, "anthropic-version")) {
+        next["anthropic-version"] = ANTHROPIC_API_VERSION;
       }
-    } else if (!hasHeaderIgnoreCase(headers, "authorization")) {
-      headers["Authorization"] = `Bearer ${trimmedKey}`;
+    } else if (!hasHeaderIgnoreCase(next, "authorization")) {
+      next["Authorization"] = `Bearer ${trimmedKey}`;
     }
-  }
+    return next;
+  };
+  const primaryAnthropic = options.apiType === "anthropic-messages";
+  const authVariants = trimmedKey
+    ? [buildAuthHeaders(primaryAnthropic), buildAuthHeaders(!primaryAnthropic)]
+    : [buildAuthHeaders(false)];
 
   let lastError: Error | undefined;
   for (const endpointUrl of candidateUrls) {
-    try {
-      const response = await fetchImpl(endpointUrl, {
-        method: "GET",
-        headers,
-        signal: AbortSignal.timeout(DISCOVER_TIMEOUT_MS),
-      });
-      if (!response.ok) {
-        const bodyText = (await response.text().catch(() => "")).slice(0, 200).trim();
-        lastError = new Error(
-          `HTTP ${response.status} ${response.statusText}${bodyText ? `: ${bodyText}` : ""}`,
+    for (let authIndex = 0; authIndex < authVariants.length; authIndex += 1) {
+      try {
+        const response = await fetchImpl(endpointUrl, {
+          method: "GET",
+          headers: authVariants[authIndex]!,
+          signal: AbortSignal.timeout(DISCOVER_TIMEOUT_MS),
+        });
+        if (!response.ok) {
+          const bodyText = (await response.text().catch(() => "")).slice(0, 200).trim();
+          lastError = new Error(
+            `HTTP ${response.status} ${response.statusText}${bodyText ? `: ${bodyText}` : ""}`,
+          );
+          // 401/403 时自动切换 Bearer <-> x-api-key 重试，兼容 OneAPI / NewAPI 等各类中转站。
+          if ((response.status === 401 || response.status === 403) && authIndex + 1 < authVariants.length) {
+            continue;
+          }
+          if (response.status === 404 && endpointUrl !== candidateUrls.at(-1)) break;
+          throw lastError;
+        }
+        const payload: unknown = await response.json();
+        const rawModels = parseDiscoveredModelsPayload(payload);
+        const matchedModels = await Promise.all(
+          rawModels.map(async (raw): Promise<DiscoveredProviderModel> => {
+            const resolution = await options.resolveModelConfig(raw.modelId);
+            const matchedBuiltinRule =
+              resolution.issues.length === 0 &&
+              resolution.inheritedConfig.properties?.contextWindow != null;
+            return {
+              modelId: raw.modelId,
+              ...(raw.displayName ? { displayName: raw.displayName } : {}),
+              ...(raw.ownedBy ? { ownedBy: raw.ownedBy } : {}),
+              matchedBuiltinRule,
+              resolution,
+            };
+          }),
         );
-        if (response.status === 404 && endpointUrl !== candidateUrls.at(-1)) continue;
-        throw lastError;
+        return { models: matchedModels, endpointUrl };
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error(String(error));
+        if (endpointUrl === candidateUrls.at(-1) && authIndex + 1 >= authVariants.length) {
+          throw lastError;
+        }
       }
-      const payload: unknown = await response.json();
-      const rawModels = parseDiscoveredModelsPayload(payload);
-      const matchedModels = await Promise.all(
-        rawModels.map(async (raw): Promise<DiscoveredProviderModel> => {
-          const resolution = await options.resolveModelConfig(raw.modelId);
-          const matchedBuiltinRule =
-            resolution.issues.length === 0 &&
-            resolution.inheritedConfig.properties?.contextWindow != null;
-          return {
-            modelId: raw.modelId,
-            ...(raw.displayName ? { displayName: raw.displayName } : {}),
-            ...(raw.ownedBy ? { ownedBy: raw.ownedBy } : {}),
-            matchedBuiltinRule,
-            resolution,
-          };
-        }),
-      );
-      return { models: matchedModels, endpointUrl };
-    } catch (error) {
-      lastError = error instanceof Error ? error : new Error(String(error));
-      if (endpointUrl === candidateUrls.at(-1)) throw lastError;
     }
   }
   throw lastError ?? new Error("Failed to discover models");

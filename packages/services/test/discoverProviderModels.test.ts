@@ -80,4 +80,40 @@ describe("discoverProviderModels", () => {
     expect(result.models[0]).toMatchObject({ modelId: "gpt-4o", matchedBuiltinRule: true });
     expect(result.models[1]).toMatchObject({ modelId: "my-private-model", matchedBuiltinRule: false });
   });
+
+  it("Anthropic 协议遇到 401 时自动回退 Bearer 鉴权重试以兼容各类中转站", async () => {
+    let calls = 0;
+    const fetchMock = vi.fn(async (_url: string | URL, init?: RequestInit) => {
+      calls += 1;
+      const headers = init?.headers as Record<string, string>;
+      if (calls === 1) {
+        expect(headers["x-api-key"]).toBe("sk-relay");
+        return new Response("unauthorized", { status: 401, statusText: "Unauthorized" });
+      }
+      expect(headers["Authorization"]).toBe("Bearer sk-relay");
+      return new Response(JSON.stringify({ data: [{ id: "claude-sonnet-4" }] }), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    });
+
+    const result = await fetchAndMatchProviderModels({
+      providerId: "custom-anthropic",
+      baseUrl: "https://relay.example.com/v1",
+      apiKey: "sk-relay",
+      apiType: "anthropic-messages",
+      resolveModelConfig: async (modelId) => ({
+        providerId: "custom-anthropic",
+        modelId,
+        inheritedConfig: { properties: { contextWindow: 200_000 } },
+        config: { properties: { contextWindow: 200_000 } },
+        issues: [],
+      }),
+      fetchImpl: fetchMock as unknown as typeof fetch,
+    });
+
+    expect(calls).toBe(2);
+    expect(result.models).toHaveLength(1);
+    expect(result.models[0]).toMatchObject({ modelId: "claude-sonnet-4", matchedBuiltinRule: true });
+  });
 });

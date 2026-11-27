@@ -319,7 +319,13 @@ const officialPluginPackages = [
     requiredRuntimePaths: [],
     stagedPath: "packages/design-plugin",
   },
-  // superpowers 已从内置插件下线，改走 UI 推荐区按需安装；这里不再 stage 它的资源。
+  {
+    // Mcode：将仓内 superpowers-plugin 纳入桌面生产包 stage，保证首启即可在插件商店完整可见并启用。
+    packageName: "@mcode/superpowers-plugin",
+    relativePath: "apps/mcode-cli/packages/superpowers-plugin",
+    requiresRuntime: false,
+    stagedPath: "packages/superpowers-plugin",
+  },
 ];
 // 随 CLI 内置的技能包（不是插件）：bootstrap 的 resolveBundledSkillRoots 沿官方插件同款候选目录
 // 在 mcode.cjs 旁找 packages/bundled-skills 并原地读取。漏 stage 它，桌面包的 /workflow 会展开成

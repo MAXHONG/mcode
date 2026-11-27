@@ -519,18 +519,24 @@ export function ProviderModelsSection({
           {intl.formatMessage({ id: "settings.modelProvider.models" })}
         </span>
         <div className="flex items-center gap-2">
-          {providerBaseUrl?.trim() ? (
-            <Button
-              type="button"
-              variant="secondary"
-              size="default"
-              className="rounded-lg"
-              onClick={() => setDiscoverDialogOpen(true)}
-            >
-              <Sparkles data-icon="inline-start" aria-hidden="true" />
-              {isZh ? "发现模型" : "Discover Models"}
-            </Button>
-          ) : null}
+          <Button
+            type="button"
+            variant="secondary"
+            size="default"
+            className="rounded-lg"
+            disabled={!providerBaseUrl?.trim()}
+            title={
+              providerBaseUrl?.trim()
+                ? undefined
+                : isZh
+                  ? "请先填写 API 地址"
+                  : "Enter API Base URL first"
+            }
+            onClick={() => setDiscoverDialogOpen(true)}
+          >
+            <Sparkles data-icon="inline-start" aria-hidden="true" />
+            {isZh ? "发现模型" : "Discover Models"}
+          </Button>
           <Button
             type="button"
             variant="secondary"
