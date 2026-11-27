@@ -49,6 +49,7 @@ The desktop app periodically checks the website feed `https://mcode.hjh.im/downl
 
 ## Updates
 
+- 2026-11-27: v4.0.4 — Added ultra-lightweight real-time environment load monitor across Desktop (macOS/Windows/Linux) and Web: live CPU & memory progress bars in the sidebar footer, automatically distinguishing local host, Docker containers (cgroup v2/v1 limits), sandboxes, and remote hosts; zero child processes, 1s server-side cache, auto-pause when hidden, and one-click toggle.
 - 2026-11-27: v4.0.3 — Upgraded "Discover Models" with 3-tier capability detection: gateway metadata parsing, expanded rules for latest multimodal families (`hy-latest`, `hy-flash-latest`, `qwen-max-latest`, `qwen-max-flash-latest`, etc.), and automatic lightweight 1x1 PNG vision & reasoning probing when adding unknown models.
 - 2026-11-27: v4.0.2 — Enabled in-app download and seamless restart-to-update by default on signed & notarized macOS builds (no longer redirecting to the website); fixed macOS Computer Use `list_apps` process enumeration via JXA.
 - 2026-11-27: v4.0.1 — (1) Removed region-based plugin hiding in Plugin Store and registered built-in `superpowers` plugin for a complete plugin catalog; (2) Added "Discover Models" across Desktop (macOS/Windows/Linux) and Web to fetch `/models` and auto-match built-in context/vision/reasoning parameters for one-click batch import; (3) Added cross-platform open-source Computer Use runtime supporting Ubuntu/Linux (X11/Wayland), macOS, and Windows.
