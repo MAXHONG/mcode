@@ -344,7 +344,7 @@ describe("autoUpdater ready state sync", () => {
 
   it("未签名 macOS 构建点击下载时打开官网版本下载页而不是下载安装", async () => {
     mockProcessPlatform("darwin");
-    delete process.env["MCODE_MAC_SIGNED_UPDATES"];
+    process.env["MCODE_MAC_SIGNED_UPDATES"] = "0";
     const { downloadAvailableUpdate, getAutoUpdaterState, initAutoUpdater } =
       await import("../src/main/autoUpdater.js");
     await initAutoUpdater();

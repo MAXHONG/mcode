@@ -193,7 +193,9 @@ export function resolveMcodeReleasePageUrl(version: string, locale: Locale = men
 }
 
 function shouldOpenReleasePageInsteadOfInstalling(): boolean {
-  return process.platform === "darwin" && process.env.MCODE_MAC_SIGNED_UPDATES !== "1";
+  // Mcode 正式 macOS 发布包已完成 Developer ID 签名与苹果公证，默认支持应用内直接下载并原地安装；
+  // 仅在显式设置 MCODE_MAC_SIGNED_UPDATES=0（未签名自编译包）时回退为打开官网版本下载页。
+  return process.platform === "darwin" && process.env.MCODE_MAC_SIGNED_UPDATES === "0";
 }
 
 function canUseAutoUpdaterInCurrentRuntime(): boolean {
