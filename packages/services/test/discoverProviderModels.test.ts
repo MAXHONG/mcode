@@ -3,7 +3,9 @@ import type { ModelConfigResolution } from "@mcode/provider";
 import {
   buildDiscoverModelsUrls,
   fetchAndMatchProviderModels,
+  inferHeuristicModelConfig,
   parseDiscoveredModelsPayload,
+  probeProviderModelCapabilitiesImpl,
 } from "../src/model-provider/providerFacadeServices.js";
 
 describe("discoverProviderModels", () => {
@@ -115,5 +117,55 @@ describe("discoverProviderModels", () => {
     expect(calls).toBe(2);
     expect(result.models).toHaveLength(1);
     expect(result.models[0]).toMatchObject({ modelId: "claude-sonnet-4", matchedBuiltinRule: true });
+  });
+
+  it("自动为 hy-latest / hy-flash-latest / qwen-max-latest / qwen-max-flash-latest 推断多模态视觉与上下文参数", () => {
+    for (const modelId of [
+      "hy-latest",
+      "hy-flash-latest",
+      "qwen-max-latest",
+      "qwen-max-flash-latest",
+    ]) {
+      const inferred = inferHeuristicModelConfig({ modelId });
+      expect(inferred?.properties?.contextWindow).toBe(256_000);
+      expect(inferred?.properties?.inputFormat?.supportsImage).toBe(true);
+    }
+  });
+
+  it("极轻量 1x1 PNG 探针能准确识别视觉支持与思考推理能力，并识别不支持视觉的报错", async () => {
+    const visionOk = await probeProviderModelCapabilitiesImpl({
+      baseUrl: "https://api.example.com/v1",
+      modelId: "hy-latest",
+      apiKey: "sk-test",
+      apiType: "openai-chat-completions",
+      fetchImpl: (async () =>
+        new Response(
+          JSON.stringify({
+            choices: [{ message: { content: "ok", reasoning_content: "step" } }],
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        )) as unknown as typeof fetch,
+    });
+    expect(visionOk).toEqual({
+      modelId: "hy-latest",
+      reachable: true,
+      supportsImage: true,
+      supportsReasoning: true,
+    });
+
+    const noVision = await probeProviderModelCapabilitiesImpl({
+      baseUrl: "https://api.example.com/v1",
+      modelId: "text-only-v1",
+      apiKey: "sk-test",
+      apiType: "openai-chat-completions",
+      fetchImpl: (async () =>
+        new Response("image_url is not supported by this model", { status: 400 })) as unknown as typeof fetch,
+    });
+    expect(noVision).toEqual({
+      modelId: "text-only-v1",
+      reachable: true,
+      supportsImage: false,
+      supportsReasoning: null,
+    });
   });
 });
