@@ -445,17 +445,14 @@ export function resolvePluginLoginRegion(input: {
 }
 
 /**
- * 商店浏览列表是否显示该条目。已安装的插件（installed 或有运行时 info）始终显示，避免已装插件从商店里消失；
- * 条目没声明 regions 时都显示；区域为 none 时不过滤；区域未知时不能断定条目属于本区域，隐藏带 regions 的条目。
+ * Mcode：取消上游按登录区域（cn/global/unknown）隐藏插件的限制，
+ * 确保国内/海外及未登录用户都能看到完整的官方与社区插件列表。
  */
 export function isPluginVisibleForLoginRegion(
-  item: Pick<StorePluginItem, "installed" | "info" | "listing">,
-  region: PluginLoginRegion,
+  _item: Pick<StorePluginItem, "installed" | "info" | "listing">,
+  _region: PluginLoginRegion,
 ): boolean {
-  if (item.installed || item.info) return true;
-  const regions = item.listing?.regions;
-  if (!regions || region === "none") return true;
-  return region !== "unknown" && regions.includes(region);
+  return true;
 }
 
 /** 公开分段：Featured（CDN featured 名单按序）+ 分类聚合（无分类归 other，排最后）。 */

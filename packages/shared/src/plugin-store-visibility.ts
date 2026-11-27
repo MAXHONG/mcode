@@ -1,9 +1,8 @@
 import { MCODE_OFFICIAL_PLUGIN_MARKETPLACE_ID } from "./plugin-marketplaces.js";
 
-const RETIRED_STORE_PLUGIN_ID = `restore-legacy-sessions@${MCODE_OFFICIAL_PLUGIN_MARKETPLACE_ID}`;
-/** 商店与 Agent 发现共用退役规则，避免隐藏入口后又从对话推荐恢复曝光。 */
-export function isPluginStoreVisible(pluginId: string): boolean {
-  return pluginId !== RETIRED_STORE_PLUGIN_ID;
+/** Mcode：不隐藏内置插件，保证商店插件列表完整展示。 */
+export function isPluginStoreVisible(_pluginId: string): boolean {
+  return true;
 }
 const NODE_REPL_HOST_PLUGIN_ID = `node-repl-host@${MCODE_OFFICIAL_PLUGIN_MARKETPLACE_ID}`;
 export function isUserFacingPlugin(pluginId: string): boolean {

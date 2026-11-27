@@ -1,6 +1,8 @@
 /* eslint-disable max-lines -- 模型供应商卡片仍在迁移期集中维护多个紧耦合区块，后续拆分时再移除。 */
 import {
   useCallback,
+  useEffect,
+  useMemo,
   useRef,
   useState,
   type KeyboardEvent as ReactKeyboardEvent,
@@ -21,7 +23,32 @@ import {
   TID_MODEL_PROVIDER_NAME_INPUT,
   testId,
 } from "@mcode/shared/test-ids";
-import { InfoIcon, LockKeyholeIcon, Plus, Pencil, Trash2, MoreHorizontal } from "lucide-react";
+import {
+  Check,
+  InfoIcon,
+  LoaderCircle,
+  LockKeyholeIcon,
+  Plus,
+  Pencil,
+  RefreshCw,
+  Search,
+  Sparkles,
+  Trash2,
+  MoreHorizontal,
+} from "lucide-react";
+import {
+  FALLBACK_DISCOVERED_MODEL_CONFIG,
+  type DiscoveredProviderModel,
+} from "@mcode/services";
+import type { ModelConfigObject } from "@mcode/provider";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog.js";
 import { Button } from "@/components/ui/button.js";
 import { Input } from "@/components/ui/input.js";
 import {
@@ -352,6 +379,9 @@ export function ProviderModelsSection({
   providerName,
   providerEnabled = true,
   providerAccess,
+  providerBaseUrl,
+  providerApiKey,
+  providerApiType,
   models,
   onTestModel,
   onModelCommit,
@@ -365,6 +395,9 @@ export function ProviderModelsSection({
   providerName?: string;
   providerEnabled?: boolean;
   providerAccess?: ProviderConfigObject["access"];
+  providerBaseUrl?: string;
+  providerApiKey?: string;
+  providerApiType?: ProviderApiType;
   models: ProviderSettingsFormModel[];
   onTestModel?: (model: string) => Promise<ModelConnectivityResult>;
   onModelCommit: (
@@ -378,8 +411,19 @@ export function ProviderModelsSection({
   onReorderModelIds?: (modelIds: string[]) => void;
   settingsRevision?: number;
 }) {
-  const { intl } = useMcodeIntl();
+  const { intl, locale } = useMcodeIntl();
+  const isZh = locale.toLowerCase().startsWith("zh");
   const { providerSettingsService } = useServices();
+  const [discoverDialogOpen, setDiscoverDialogOpen] = useState(false);
+  const existingModelIds = useMemo(() => new Set(models.map((item) => item.modelId)), [models]);
+  const handleAddDiscoveredModels = useCallback(
+    async (discoveredModels: readonly ProviderSettingsFormModel[]) => {
+      for (const model of discoveredModels) {
+        await onAddModel(model);
+      }
+    },
+    [onAddModel],
+  );
   const [addDialogOpen, setAddDialogOpen] = useState(false);
   const [addSaving, setAddSaving] = useState(false);
   const addSavingRef = useRef(false);
@@ -474,17 +518,37 @@ export function ProviderModelsSection({
         <span className="text-ui-base text-foreground-subtle">
           {intl.formatMessage({ id: "settings.modelProvider.models" })}
         </span>
-        <Button
-          type="button"
-          variant="secondary"
-          size="default"
-          className="rounded-lg"
-          data-testid={TID_MODEL_PROVIDER_ADD_MODEL_BUTTON}
-          onClick={openAddDialog}
-        >
-          <Plus data-icon="inline-start" aria-hidden="true" />
-          {intl.formatMessage({ id: "settings.modelProvider.addModel" })}
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            type="button"
+            variant="secondary"
+            size="default"
+            className="rounded-lg"
+            disabled={!providerBaseUrl?.trim()}
+            title={
+              providerBaseUrl?.trim()
+                ? undefined
+                : isZh
+                  ? "请先填写 API 地址"
+                  : "Enter API Base URL first"
+            }
+            onClick={() => setDiscoverDialogOpen(true)}
+          >
+            <Sparkles data-icon="inline-start" aria-hidden="true" />
+            {isZh ? "发现模型" : "Discover Models"}
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            size="default"
+            className="rounded-lg"
+            data-testid={TID_MODEL_PROVIDER_ADD_MODEL_BUTTON}
+            onClick={openAddDialog}
+          >
+            <Plus data-icon="inline-start" aria-hidden="true" />
+            {intl.formatMessage({ id: "settings.modelProvider.addModel" })}
+          </Button>
+        </div>
       </div>
       {models.length > 0 ? (
         <div className="overflow-hidden rounded-lg border border-input-border bg-input">
@@ -580,7 +644,325 @@ export function ProviderModelsSection({
             void editor.flush().catch(() => undefined);
           }}
         />
+        <DiscoverModelsDialog
+          open={discoverDialogOpen}
+          onOpenChange={setDiscoverDialogOpen}
+          providerId={providerId}
+          baseUrl={providerBaseUrl}
+          apiKey={providerApiKey}
+          apiType={providerApiType}
+          existingModelIds={existingModelIds}
+          onAddModels={handleAddDiscoveredModels}
+        />
       </>
     </div>
+  );
+}
+
+function formatContextBadge(contextWindow: number | null | undefined): string | null {
+  if (!contextWindow || contextWindow <= 0) return null;
+  if (contextWindow >= 1_000_000) {
+    const m = contextWindow / 1_000_000;
+    return `${Number.isInteger(m) ? m : m.toFixed(1)}M`;
+  }
+  return `${Math.round(contextWindow / 1000)}K`;
+}
+
+function buildDiscoveredFormModel(item: DiscoveredProviderModel): ProviderSettingsFormModel {
+  const effectiveConfig: ModelConfigObject = item.matchedBuiltinRule
+    ? { ...item.resolution.inheritedConfig, enabled: true }
+    : structuredClone(FALLBACK_DISCOVERED_MODEL_CONFIG);
+  return {
+    ...createEmptyModel(),
+    modelId: item.modelId,
+    useRecommendedConfig: item.matchedBuiltinRule,
+    inheritedConfig: item.resolution.inheritedConfig,
+    personalConfig: item.matchedBuiltinRule
+      ? {}
+      : structuredClone(FALLBACK_DISCOVERED_MODEL_CONFIG),
+    config: effectiveConfig,
+    issues: [],
+  };
+}
+
+function DiscoverModelsDialog({
+  open,
+  onOpenChange,
+  providerId,
+  baseUrl,
+  apiKey,
+  apiType,
+  existingModelIds,
+  onAddModels,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  providerId: string;
+  baseUrl?: string;
+  apiKey?: string;
+  apiType?: ProviderApiType;
+  existingModelIds: ReadonlySet<string>;
+  onAddModels: (models: readonly ProviderSettingsFormModel[]) => Promise<void>;
+}) {
+  const { locale } = useMcodeIntl();
+  const isZh = locale.toLowerCase().startsWith("zh");
+  const { providerSettingsService } = useServices();
+  const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [discovered, setDiscovered] = useState<readonly DiscoveredProviderModel[]>([]);
+  const [selectedIds, setSelectedIds] = useState<ReadonlySet<string>>(new Set());
+
+  const runDiscover = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await providerSettingsService.discoverProviderModels({
+        providerId,
+        ...(baseUrl?.trim() ? { baseUrl: baseUrl.trim() } : {}),
+        ...(apiKey?.trim() ? { apiKey: apiKey.trim() } : {}),
+        ...(apiType ? { apiType } : {}),
+      });
+      setDiscovered(result.models);
+      setSelectedIds(new Set());
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+      setDiscovered([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [apiKey, apiType, baseUrl, providerId, providerSettingsService]);
+
+  useEffect(() => {
+    if (!open) return;
+    setQuery("");
+    void runDiscover();
+  }, [open, runDiscover]);
+
+  const filtered = useMemo(() => {
+    const keyword = query.trim().toLowerCase();
+    if (!keyword) return discovered;
+    return discovered.filter(
+      (item) =>
+        item.modelId.toLowerCase().includes(keyword) ||
+        item.displayName?.toLowerCase().includes(keyword) ||
+        item.ownedBy?.toLowerCase().includes(keyword),
+    );
+  }, [discovered, query]);
+
+  const selectableFiltered = useMemo(
+    () => filtered.filter((item) => !existingModelIds.has(item.modelId)),
+    [existingModelIds, filtered],
+  );
+
+  const toggleModel = (modelId: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(modelId)) next.delete(modelId);
+      else next.add(modelId);
+      return next;
+    });
+  };
+
+  const allSelectableChecked =
+    selectableFiltered.length > 0 &&
+    selectableFiltered.every((item) => selectedIds.has(item.modelId));
+
+  const toggleSelectAll = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (allSelectableChecked) {
+        for (const item of selectableFiltered) next.delete(item.modelId);
+      } else {
+        for (const item of selectableFiltered) next.add(item.modelId);
+      }
+      return next;
+    });
+  };
+
+  const handleConfirm = async () => {
+    const chosen = discovered.filter(
+      (item) => selectedIds.has(item.modelId) && !existingModelIds.has(item.modelId),
+    );
+    if (chosen.length === 0) return;
+    setSaving(true);
+    setError(null);
+    try {
+      await onAddModels(chosen.map(buildDiscoveredFormModel));
+      onOpenChange(false);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : String(err));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={(next) => (!saving ? onOpenChange(next) : undefined)}>
+      <DialogContent className="flex max-h-[82vh] max-w-[580px] flex-col">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="size-4" aria-hidden="true" />
+            {isZh ? "发现模型" : "Discover Models"}
+          </DialogTitle>
+          <DialogDescription>
+            {isZh
+              ? "从当前 API 地址拉取可用模型，并自动匹配内置上下文长度、视觉、推理等参数。"
+              : "Fetch available models from this endpoint and auto-match built-in context, vision, and reasoning parameters."}
+          </DialogDescription>
+        </DialogHeader>
+
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1">
+            <Search
+              className="pointer-events-none absolute top-1/2 left-2.5 size-3.5 -translate-y-1/2 text-foreground-subtle"
+              aria-hidden="true"
+            />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder={isZh ? "搜索模型 ID..." : "Filter model IDs..."}
+              className="pl-8"
+            />
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            disabled={loading || saving}
+            onClick={() => void runDiscover()}
+          >
+            <RefreshCw className={loading ? "size-3.5 animate-spin" : "size-3.5"} aria-hidden="true" />
+            {isZh ? "刷新" : "Refresh"}
+          </Button>
+          {selectableFiltered.length > 0 ? (
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              disabled={loading || saving}
+              onClick={toggleSelectAll}
+            >
+              {allSelectableChecked
+                ? isZh
+                  ? "取消全选"
+                  : "Deselect all"
+                : isZh
+                  ? "全选"
+                  : "Select all"}
+            </Button>
+          ) : null}
+        </div>
+
+        <div className="min-h-[220px] flex-1 overflow-y-auto rounded-lg border border-input-border bg-input">
+          {loading ? (
+            <div className="flex h-[220px] items-center justify-center gap-2 text-ui-sm text-foreground-subtle">
+              <LoaderCircle className="size-4 animate-spin" aria-hidden="true" />
+              {isZh ? "正在拉取模型列表并匹配参数..." : "Fetching models and matching parameters..."}
+            </div>
+          ) : error ? (
+            <div className="flex h-[220px] flex-col items-center justify-center gap-2 px-6 text-center text-ui-sm text-destructive">
+              <p className="break-all">{error}</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div className="flex h-[220px] items-center justify-center text-ui-sm text-foreground-subtle">
+              {discovered.length === 0
+                ? isZh
+                  ? "未发现可用模型，请检查 API 地址和 API Key。"
+                  : "No models returned. Check your Base URL and API Key."
+                : isZh
+                  ? "没有匹配的模型"
+                  : "No matching models"}
+            </div>
+          ) : (
+            <div className="divide-y divide-input-border">
+              {filtered.map((item) => {
+                const alreadyAdded = existingModelIds.has(item.modelId);
+                const checked = alreadyAdded || selectedIds.has(item.modelId);
+                const props = item.resolution.inheritedConfig.properties;
+                const ctxBadge = formatContextBadge(props?.contextWindow);
+                const hasVision = Boolean(props?.inputFormat?.supportsImage);
+                const hasReasoning =
+                  (item.resolution.inheritedConfig.optionSpecs?.reasoningLevel?.values?.length ?? 0) >
+                  0;
+                return (
+                  <button
+                    key={item.modelId}
+                    type="button"
+                    disabled={alreadyAdded || saving}
+                    onClick={() => toggleModel(item.modelId)}
+                    className="flex w-full items-center justify-between gap-3 px-3 py-2 text-left transition-colors hover:bg-hover disabled:cursor-default disabled:opacity-60"
+                  >
+                    <div className="flex min-w-0 items-center gap-2.5">
+                      <span
+                        className={`flex size-4 shrink-0 items-center justify-center rounded border ${
+                          checked
+                            ? "border-primary bg-primary text-primary-foreground"
+                            : "border-input-border bg-background"
+                        }`}
+                      >
+                        {checked ? <Check className="size-3" aria-hidden="true" /> : null}
+                      </span>
+                      <span className="truncate font-mono text-ui-sm text-foreground">
+                        {item.modelId}
+                      </span>
+                    </div>
+                    <div className="flex shrink-0 items-center gap-1.5 text-ui-xs">
+                      {alreadyAdded ? (
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-foreground-subtle">
+                          {isZh ? "已添加" : "Added"}
+                        </span>
+                      ) : null}
+                      {item.matchedBuiltinRule ? (
+                        <span className="rounded bg-primary/10 px-1.5 py-0.5 text-primary">
+                          {isZh ? "已匹配参数" : "Matched"}
+                        </span>
+                      ) : null}
+                      {ctxBadge ? (
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-foreground-subtle">
+                          {ctxBadge}
+                        </span>
+                      ) : null}
+                      {hasVision ? (
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-foreground-subtle">
+                          {isZh ? "视觉" : "Vision"}
+                        </span>
+                      ) : null}
+                      {hasReasoning ? (
+                        <span className="rounded bg-muted px-1.5 py-0.5 text-foreground-subtle">
+                          {isZh ? "推理" : "Reasoning"}
+                        </span>
+                      ) : null}
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        <DialogFooter>
+          <Button
+            type="button"
+            variant="ghost"
+            disabled={saving}
+            onClick={() => onOpenChange(false)}
+          >
+            {isZh ? "取消" : "Cancel"}
+          </Button>
+          <Button
+            type="button"
+            disabled={loading || saving || selectedIds.size === 0}
+            onClick={() => void handleConfirm()}
+          >
+            {saving ? <LoaderCircle className="size-3.5 animate-spin" aria-hidden="true" /> : null}
+            {isZh
+              ? `添加所选模型 (${selectedIds.size})`
+              : `Add Selected (${selectedIds.size})`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

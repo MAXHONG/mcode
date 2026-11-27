@@ -550,6 +550,26 @@ export const OFFICIAL_PLUGIN_DEFINITIONS: readonly OfficialPluginDefinition[] = 
     // 与 package/manifest 和 SEA 的 0.5.1 对齐，避免继续使用旧版本缓存身份。
     version: "0.5.1",
   },
+  {
+    // Mcode：将仓内已有的 Superpowers 技能与钩子插件纳入官方内置插件列表（默认关闭，用户可按需启用）。
+    listing: {
+      author: ZAI_AUTHOR,
+      category: "productivity",
+      displayName: "Superpowers",
+      displayName_i18n: { "zh-CN": "Superpowers 工程工作流" },
+      description_i18n: {
+        "zh-CN": "提供头脑风暴、系统调试、TDD、代码评审与子代理协作等完整工程技能与启动钩子。",
+      },
+    },
+    name: "superpowers",
+    rootCandidates: [
+      "packages/superpowers-plugin",
+      "../superpowers-plugin",
+      "../../superpowers-plugin",
+      "../../../superpowers-plugin",
+    ],
+    version: "5.1.0",
+  },
 ];
 
 // 在 official plugin 定义里标了 defaultEnabled: true 的, 拼成 `<name>@<marketplace>` 形式,
