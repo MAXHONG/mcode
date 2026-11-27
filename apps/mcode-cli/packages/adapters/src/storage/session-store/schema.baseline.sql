@@ -90,6 +90,11 @@ CREATE TABLE local_setting (
         primary key(scope, scope_id, namespace, key)
       );
 
+CREATE TABLE mcode_database_identity (
+      scope TEXT PRIMARY KEY,
+      identity TEXT NOT NULL
+    );
+
 CREATE TABLE message (
         id text primary key,
         session_id text not null references session(id) on delete cascade,
@@ -398,11 +403,6 @@ CREATE TABLE workflow_run (
         time_updated integer not null,
         time_completed integer
       );
-
-CREATE TABLE mcode_database_identity (
-      scope TEXT PRIMARY KEY,
-      identity TEXT NOT NULL
-    );
 
 CREATE INDEX dwf_actor_run_idx on dwf_actor(run_id);
 
