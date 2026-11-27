@@ -1,6 +1,6 @@
 import { execFile } from "node:child_process";
 import { access, readFile } from "node:fs/promises";
-import { cpus, freemem, homedir, hostname, loadavg, totalmem } from "node:os";
+import { arch, cpus, freemem, homedir, hostname, loadavg, totalmem } from "node:os";
 import { Socket } from "node:net";
 import { promisify } from "node:util";
 
@@ -492,6 +492,120 @@ function readHostCpuTotals(): { idle: number; total: number; cores: number } {
   return { idle, total, cores: Math.max(1, list.length) };
 }
 
+interface StaticHardwareSpec {
+  readonly arch: string;
+  readonly cpuModel?: string;
+  readonly cpuSpec?: string;
+  readonly memoryType?: string;
+  readonly memorySpeedMhz?: number;
+}
+
+function parseSpeedMhz(raw: unknown): number | undefined {
+  if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) return Math.round(raw);
+  if (typeof raw === "string") {
+    const match = raw.match(/(\d+(?:\.\d+)?)\s*(?:MHz|MT\/s)/iu);
+    if (match) return Math.round(Number(match[1]));
+  }
+  return undefined;
+}
+
+async function readStaticHardwareSpec(platform: NodeJS.Platform): Promise<StaticHardwareSpec> {
+  const hostCpus = cpus();
+  const baseCpuModel = hostCpus[0]?.model?.trim() || undefined;
+  const baseSpeedMhz = hostCpus[0]?.speed && hostCpus[0].speed > 0 ? hostCpus[0].speed : undefined;
+  const systemArch = arch();
+  let cpuModel = baseCpuModel;
+  let cpuSpec = baseSpeedMhz ? `${(baseSpeedMhz / 1000).toFixed(2)} GHz` : undefined;
+  let memoryType: string | undefined;
+  let memorySpeedMhz: number | undefined;
+
+  if (platform === "darwin") {
+    try {
+      const { stdout } = await execFileAsync(
+        "system_profiler",
+        ["SPMemoryDataType", "SPHardwareDataType", "-json"],
+        { timeout: 3_000, maxBuffer: 2 * 1024 * 1024 },
+      );
+      const parsed = JSON.parse(stdout) as {
+        SPHardwareDataType?: Array<Record<string, unknown>>;
+        SPMemoryDataType?: Array<Record<string, unknown>>;
+      };
+      const hw = parsed.SPHardwareDataType?.[0];
+      if (typeof hw?.["chip_type"] === "string" && hw["chip_type"].trim()) {
+        cpuModel = hw["chip_type"].trim();
+      }
+      if (typeof hw?.["number_processors"] === "string") {
+        // Apple Silicon 格式如 "proc 10:0:4:6" -> 4P+6E
+        const m = hw["number_processors"].match(/proc\s+(\d+):\d+:(\d+):(\d+)/u);
+        if (m) cpuSpec = `${m[2]}P+${m[3]}E`;
+      }
+      const memItem = parsed.SPMemoryDataType?.[0];
+      const dimms = Array.isArray(memItem?.["_items"])
+        ? (memItem["_items"] as Array<Record<string, unknown>>)
+        : memItem
+          ? [memItem]
+          : [];
+      for (const dimm of dimms) {
+        if (!memoryType && typeof dimm["dimm_type"] === "string" && dimm["dimm_type"].trim()) {
+          memoryType = dimm["dimm_type"].trim();
+        }
+        if (!memorySpeedMhz) memorySpeedMhz = parseSpeedMhz(dimm["dimm_speed"]);
+      }
+    } catch {
+      // 忽略，保留 os.cpus() 基础信息
+    }
+  } else if (platform === "win32") {
+    try {
+      const { stdout } = await execFileAsync(
+        "powershell.exe",
+        [
+          "-NoProfile",
+          "-NonInteractive",
+          "-Command",
+          "Get-CimInstance Win32_PhysicalMemory | Select-Object -First 1 SMBIOSMemoryType,Speed | ConvertTo-Json -Compress",
+        ],
+        { timeout: 3_000 },
+      );
+      const parsed = JSON.parse(stdout.trim() || "{}") as {
+        SMBIOSMemoryType?: number;
+        Speed?: number;
+      };
+      const typeMap: Record<number, string> = {
+        24: "DDR3",
+        26: "DDR4",
+        29: "LPDDR3",
+        30: "LPDDR4",
+        34: "DDR5",
+        35: "LPDDR5",
+      };
+      if (parsed.SMBIOSMemoryType && typeMap[parsed.SMBIOSMemoryType]) {
+        memoryType = typeMap[parsed.SMBIOSMemoryType];
+      }
+      memorySpeedMhz = parseSpeedMhz(parsed.Speed);
+    } catch {
+      // 忽略
+    }
+  } else if (platform === "linux") {
+    try {
+      const { stdout } = await execFileAsync("dmidecode", ["-t", "memory"], { timeout: 2_000 });
+      const typeMatch = stdout.match(/^\s*Type:\s*(DDR\d|LPDDR\d\w*)/mu);
+      if (typeMatch) memoryType = typeMatch[1];
+      const speedMatch = stdout.match(/^\s*(?:Configured Memory Speed|Speed):\s*(\d+\s*(?:MHz|MT\/s))/mu);
+      if (speedMatch) memorySpeedMhz = parseSpeedMhz(speedMatch[1]);
+    } catch {
+      // 非 root 或容器环境静默忽略
+    }
+  }
+
+  return {
+    arch: systemArch,
+    ...(cpuModel ? { cpuModel } : {}),
+    ...(cpuSpec ? { cpuSpec } : {}),
+    ...(memoryType ? { memoryType } : {}),
+    ...(memorySpeedMhz ? { memorySpeedMhz } : {}),
+  };
+}
+
 export function createSystemService(options: CreateSystemServiceOptions = {}): ISystemService {
   const tcpProbe = options.tcpProbe ?? probeTcpPort;
   const serviceProbe = options.serviceProbe ?? probeServiceEndpoint;
@@ -500,6 +614,7 @@ export function createSystemService(options: CreateSystemServiceOptions = {}): I
   const platform = options.platform ?? process.platform;
 
   let cachedKindPromise: Promise<SystemEnvironmentKind> | null = null;
+  let cachedHardwareSpecPromise: Promise<StaticHardwareSpec> | null = null;
   let cachedLoad: SystemEnvironmentLoad | null = null;
   let prevHostCpu: { idle: number; total: number } | null = null;
   let prevContainerCpu: { usageUsec: number; tsMs: number } | null = null;
@@ -517,7 +632,13 @@ export function createSystemService(options: CreateSystemServiceOptions = {}): I
       if (!cachedKindPromise) {
         cachedKindPromise = detectEnvironmentKind(platform);
       }
-      const environmentKind = await cachedKindPromise;
+      if (!cachedHardwareSpecPromise) {
+        cachedHardwareSpecPromise = readStaticHardwareSpec(platform);
+      }
+      const [environmentKind, hwSpec] = await Promise.all([
+        cachedKindPromise,
+        cachedHardwareSpecPromise,
+      ]);
       const hostTotalMem = totalmem();
       const hostFreeMem = freemem();
       const hostCpu = readHostCpuTotals();
@@ -569,11 +690,16 @@ export function createSystemService(options: CreateSystemServiceOptions = {}): I
         environmentKind,
         hostname: hostname(),
         platform,
+        arch: hwSpec.arch,
+        ...(hwSpec.cpuModel ? { cpuModel: hwSpec.cpuModel } : {}),
+        ...(hwSpec.cpuSpec ? { cpuSpec: hwSpec.cpuSpec } : {}),
         cpuPercent,
         cpuCores,
         memoryUsedBytes: mem.usedBytes,
         memoryTotalBytes: mem.totalBytes,
         memoryPercent,
+        ...(hwSpec.memoryType ? { memoryType: hwSpec.memoryType } : {}),
+        ...(hwSpec.memorySpeedMhz ? { memorySpeedMhz: hwSpec.memorySpeedMhz } : {}),
         ...(loadAvg1m !== undefined ? { loadAvg1m } : {}),
         sampledAt,
       };

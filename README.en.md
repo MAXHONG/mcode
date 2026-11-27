@@ -49,6 +49,7 @@ The desktop app periodically checks the website feed `https://mcode.hjh.im/downl
 
 ## Updates
 
+- 2026-11-27: v4.0.6 — Added a hover hardware details card to the real-time environment load monitor (sampled once per process with zero polling overhead), displaying CPU model/cores/spec (e.g. `Apple M4 · 10 cores · 4P+6E`), memory capacity/type/speed (e.g. `LPDDR5`, `DDR5 · 5600 MHz`), runtime environment, and hostname.
 - 2026-11-27: v4.0.5 — Extracted the real-time environment load monitor into a standalone managed UI module (`packages/ui/src/env-load-monitor/`); refined macOS memory calculation via `vm_stat` to match Activity Monitor by excluding reclaimable file cache.
 - 2026-11-27: v4.0.4 — Added ultra-lightweight real-time environment load monitor across Desktop (macOS/Windows/Linux) and Web: live CPU & memory progress bars in the sidebar footer, automatically distinguishing local host, Docker containers (cgroup v2/v1 limits), sandboxes, and remote hosts; zero child processes, 1s server-side cache, auto-pause when hidden, and one-click toggle.
 - 2026-11-27: v4.0.3 — Upgraded "Discover Models" with 3-tier capability detection: gateway metadata parsing, expanded rules for latest multimodal families (`hy-latest`, `hy-flash-latest`, `qwen-max-latest`, `qwen-max-flash-latest`, etc.), and automatic lightweight 1x1 PNG vision & reasoning probing when adding unknown models.
